@@ -1,0 +1,235 @@
+{
+    "user": [
+        {
+            "name": "register user",
+            "url": "http://localhost:8800/api-v1/user/register",
+            "method": "POST",
+            "headers": [],
+            "body": {
+                "type": "json",
+                "raw": "{\n  \"firstName\":\"sudhansu\",\n  \"lastName\":\"sekhar\",\n  \"email\":\"sekharr@gmail.com\",\n  \"password\":\"1234567\"\n}",
+                "form": []
+            }
+        },
+        {
+            "name": "login user",
+            "url": "http://localhost:8800/api-v1/user/login",
+            "method": "POST",
+            "body": {
+                "type": "json",
+                "raw": "{\n  \"email\":\"sekharr@gmail.com\",\n  \"password\":\"1234567\"\n}",
+                "form": []
+            }
+        },
+        {
+            "name": "get user",
+            "url": "http://localhost:8800/api-v1/user/get",
+            "method": "GET",
+            "headers": [
+                {
+                    "name": "Authorization",
+                    "value": "Bearer <tokenOfUser>"
+                }
+            ]
+        },
+        {
+            "name": "delete user",
+            "url": "http://localhost:8800/api-v1/user/delete",
+            "method": "DELETE",
+            "headers": [
+                {
+                    "name": "Authorization",
+                    "value": "Bearer <tokenOfUser>"
+                }
+            ]
+        },
+        {
+            "name": "update user",
+            "url": "http://localhost:8800/api-v1/user/update-user",
+            "method": "PUT",
+            "headers": [
+                {
+                    "name": "Authorization",
+                    "value": "Bearer <tokenOfUser>"
+                }
+            ]
+        }
+    ],
+    "company": [
+        {
+            "name": "register company",
+            "url": "http://localhost:8800/api-v1/companies/register",
+            "method": "POST",
+            "headers": [],
+            "body": {
+                "type": "json",
+                "raw": "{\n  \"name\":\"company\",\n  \"email\":\"company@gmail.com\",\n  \"password\":\"1234567\"\n}",
+                "form": []
+            }
+        },
+        {
+            "name": "login company",
+            "url": "http://localhost:8800/api-v1/companies/login",
+            "method": "POST",
+            "headers": [],
+            "body": {
+                "type": "json",
+                "raw": "{\n  \"email\":\"company@gmail.com\",\n  \"password\":\"1234567\"\n}",
+                "form": []
+            }
+        },
+        {
+            "name": "company Profile",
+            "url": "http://localhost:8800/api-v1/companies/get-company-profile",
+            "method": "POST",
+            "headers": [
+                {
+                    "name": "Authorization",
+                    "value": "Bearer <tokenOfCompany>"
+                }
+            ]
+        },
+        {
+            "name": "get companies",
+            "url": "http://localhost:8800/api-v1/companies/get-companies",
+            "method": "GET",
+            "headers": []
+        },
+        {
+            "name": "companies with query params",
+            "url": "http://localhost:8800/api-v1/companies/get-companies?search=company",
+            "method": "GET",
+            "headers": [],
+            "params": [
+                {
+                    "name": "search",
+                    "value": "company",
+                    "isPath": false
+                }
+            ]
+        },
+        {
+            "name": "company by id",
+            "url": "http://localhost:8800/api-v1/companies/get-company/66a9b56767e95b7d13955ce2",
+            "method": "GET",
+            "headers": []
+        },
+        {
+            "name": "company jobs",
+            "url": "http://localhost:8800/api-v1/companies/get-company-joblisting",
+            "method": "POST",
+            "headers": [
+                {
+                    "name": "Authorization",
+                    "value": "Bearer <tokenOfCompany>"
+                }
+            ]
+        }
+    ],
+    "job": [
+        {
+            "name": "add job",
+            "url": "http://localhost:8800/api-v1/jobs/upload-job",
+            "method": "POST",
+            "headers": [
+                {
+                    "name": "Authorization",
+                    "value": "Bearer <tokenOfCompany>"
+                }
+            ],
+            "body": {
+                "type": "json",
+                "raw": "{\n  \"jobTitle\":\"job4\",\n      \"jobType\":\"type5\",\n      \"location\":\"india\",\n      \"salary\":8000,\n      \"vacancies\":12,\n      \"experience\":3,\n      \"desc\":\"desc\",\n      \"requirements\":\"requirements\"\n}",
+                "form": []
+            }
+        },
+        {
+            "name": "get job by id",
+            "url": "http://localhost:8800/api-v1/jobs/get-job-detail/:id",
+            "method": "GET",
+            "headers": []
+        },
+        {
+            "name": "get jobs",
+            "url": "http://localhost:8800/api-v1/jobs/find-jobs",
+            "method": "GET",
+            "headers": []
+        },
+        {
+            "name": "delete job by id",
+            "url": "http://localhost:8800/api-v1/jobs/delete-job/:id",
+            "method": "DELETE",
+            "headers": [
+                {
+                    "name": "Authorization",
+                    "value": "Bearer <tokenOfCompany>"
+                }
+            ]
+        },
+        {
+            "name": "update job",
+            "url": "http://localhost:8800/api-v1/jobs/update-job/:id",
+            "method": "PUT",
+            "headers": [
+                {
+                    "name": "Authorization",
+                    "value": "Bearer <tokenOfCompany>"
+                }
+            ],
+            "body": {
+                "type": "json",
+                "raw": "{\n  \"jobTitle\":\"jobtitle4\",\n      \"jobType\":\"jobtype4\",\n      \"location\":\"india\",\n      \"salary\":8000,\n      \"vacancies\":12,\n      \"experience\":3,\n      \"desc\":\"desc\",\n      \"requirements\":\"requirements\",\n      \"maxApplicants\":12,\n      \"duration\":\"1month\"\n}",
+                "form": []
+            }
+        },
+        {
+            "name": "job with Query parameters",
+            "url": "http://localhost:8800/api-v1/jobs/find-jobs?search=jobtitle4",
+            "method": "GET",
+            "headers": [],
+            "params": [
+                {
+                    "name": "search",
+                    "value": "jobtitle4",
+                    "isPath": false
+                }
+            ]
+        }
+    ],
+    "application": [
+        {
+            "name": "get applications of a job",
+            "url": "http://localhost:8800/api-v1/application/get-applications/:jobid",
+            "method": "GET",
+            "headers": []
+        },
+        {
+            "name": "update status",
+            "url": "http://localhost:8800/api-v1/application/status/:id",
+            "method": "PUT",
+            "headers": [],
+            "body": {
+                "type": "json",
+                "raw": "{\n  \"status\":\"rejected\"\n}",
+                "form": []
+            }
+        },
+        {
+            "name": "get application by id",
+            "url": "http://localhost:8800/api-v1/application/get/:id",
+            "method": "GET",
+            "headers": []
+        },
+        {
+            "name": "add aplication",
+            "url": "http://localhost:8800/api-v1/application/create",
+            "method": "POST",
+            "headers": [],
+            "body": {
+                "type": "json",
+                "raw": "{\n  \"job\":\"66a8db2327ee6f8d8486d6b8\",\n  \"company\":\"66a8c1e0e78bea6e22f2abb4\",\n  \"applicant\":\"66a8f0fd260c6a9c56ff2f60\",\n  \"status\":\"applied\"\n}",
+                "form": []
+            }
+        }
+    ]
+}
