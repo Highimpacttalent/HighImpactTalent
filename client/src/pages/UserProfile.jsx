@@ -24,17 +24,17 @@ const UserProfile = () => {
     if (image) {
       const formData = new FormData();
       formData.append("file", image);
-      formData.append("upload_preset", "jtzzkmlf"); // Use the ml_default preset
+      formData.append("upload_preset", "ml_default");
 
       try {
         const response = await axios.post(
-          `https://api.cloudinary.com/v1_1/db7pikwo4/image/upload`, // Replace 'your_cloud_name' with your actual cloud_name
+          `https://api.cloudinary.com/v1_1/dk2d8tq74/image/upload`, 
           formData
         );
         // This is the URL of the uploaded image
         console.log(response.data.secure_url);
         const profile = await axios.post(
-          `https://demojobportal.onrender.com/api-v1/user/updateprofileurl`,
+          `https://highimpacttalent.onrender.com/api-v1/user/updateprofileurl`,
           { profileUrl: response.data.secure_url },
           {
             headers: {
