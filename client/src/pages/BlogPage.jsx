@@ -6,7 +6,6 @@ import { IoMdHeartEmpty } from "react-icons/io";
 import { IoMdHeart } from "react-icons/io";
 import logo from "../../src/assets/tlogo.png";
 import { useNavigate } from "react-router-dom";
-// import logo from '../assets/tlogo.png';
 const BlogPage = () => {
   const { user } = useSelector((state) => state.user);
   const dispatch = useDispatch();
@@ -54,10 +53,10 @@ const BlogPage = () => {
       if (blogData.image) {
         const formData = new FormData();
         formData.append("file", blogData.image);
-        formData.append("upload_preset", "jtzzkmlf");
+        formData.append("upload_preset", "ml_default");
 
         const response = await axios.post(
-          `https://api.cloudinary.com/v1_1/db7pikwo4/image/upload`,
+          `https://api.cloudinary.com/v1_1/dk2d8tq74/image/upload`,
           formData
         );
 
@@ -67,9 +66,9 @@ const BlogPage = () => {
 
       // Now send the blog data to the backend including the image URL
       // http://localhost:8800
-      // https://demojobportal.onrender.com
+      
       const blogResponse = await axios.post(
-        `https://demojobportal.onrender.com/api-v1/blog/uploadblog`,
+        `https://highimpacttalent.onrender.com/api-v1/blog/uploadblog`,
         {
           title: blogData.title,
           content: blogData.content,
@@ -102,7 +101,7 @@ const BlogPage = () => {
     setLoading(true);
     try {
       const response = await axios.get(
-        `https://demojobportal.onrender.com/api-v1/blog/blogs`
+        `https://highimpacttalent.onrender.com/api-v1/blog/blogs`
       );
       if (response.data.success) {
         setBlogs(response.data.blogs);
@@ -118,7 +117,7 @@ const BlogPage = () => {
   const handleLike = async (blogId) => {
     try {
       const response = await axios.post(
-        `https://demojobportal.onrender.com/api-v1/blog/togglelike`,
+        `https://highimpacttalent.onrender.com/api-v1/blog/togglelike`,
         { blogId },
         {
           headers: {
