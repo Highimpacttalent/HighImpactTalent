@@ -31,11 +31,11 @@ export const apiRequest = async ({ url, token, data, method }) => {
 export const handleFileUpload = async(uploadFile) =>{
     const formData = new FormData();
     formData.append('file', uploadFile);
-    formData.append("upload_preset", "job-app");
+    formData.append("upload_preset", "ml_default");
  
     try {
         const response = await axios.post(
-            "https://api.cloudinary.com/v1_1/dtnxoaxcp/image/upload/ ",
+            "https://api.cloudinary.com/v1_1/dk2d8tq74/image/upload/ ",
             formData
         )
         return response.data.secure.url
