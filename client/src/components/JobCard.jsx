@@ -30,7 +30,7 @@ const JobCard = ({ job }) => {
   const toggleLike = async (jobId) => {
     try {
       const response = await axios.post(
-        "https://demojobportal.onrender.com/api-v1/user/togglelike",
+        "https://highimpacttalent.onrender.com/api-v1/user/togglelike",
         { jobId },
         {
           headers: {
