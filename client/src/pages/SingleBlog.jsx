@@ -13,7 +13,7 @@ const SingleBlog = () => {
     try {
       setLoading(true);
       const response = await axios.post(
-        `https://demojobportal.onrender.com/api-v1/blog/blog`,
+        `https://highimpacttalent.onrender.com/api-v1/blog/blog`,
         { id: blogId }
       );
       console.log(response);
@@ -32,11 +32,11 @@ const SingleBlog = () => {
   // Like handler function
   const handleLike = async (id) => {
     try {
-      await axios.post(`/api/blogs/${id}/like`); // Example API for liking a blog
-      // Logic to update local state after liking
+      await axios.post(`https://highimpacttalent.onrender.com/api/blogs/${id}/like`);
+     
       setBlog((prevBlog) => ({
         ...prevBlog,
-        likes: [...prevBlog.likes, "user-id"], // Append the user's ID (assuming you have it)
+        likes: [...prevBlog.likes, "user-id"], 
       }));
     } catch (err) {
       console.error("Error liking the blog", err);
