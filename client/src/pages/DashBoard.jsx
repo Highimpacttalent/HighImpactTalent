@@ -18,10 +18,10 @@ const Dashboard = () => {
         // const jobsRes = await axios.get('http://localhost:8800/api/jobs');
         // const appsRes = await axios.get('http://localhost:8800/api/applications');
         const usersRes = await axios.get(
-          "https://demojobportal.onrender.com/api-v1/user/users"
+          "https://highimpacttalent.onrender.com/api-v1/user/users"
         );
         const jobsRes = await axios.get(
-          "https://demojobportal.onrender.com/api-v1/jobs/find-jobs"
+          "https://highimpacttalent.onrender.com/api-v1/jobs/find-jobs"
         );
         // const appsRes = await axios.get('https://demojobportal.onrender.com');
 
