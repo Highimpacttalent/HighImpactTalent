@@ -34,7 +34,7 @@ const ScreeningQuestions = () => {
     // axios
     try {
       const res = await apiRequest({
-        url: `https://demojobportal.onrender.com/api-v1/application/create`,
+        url: `https://highimpacttalent.onrender.com/api-v1/application/create`,
         data:{job:jobid,company:companyid,applicant:applicantid},
         method: "POST",
       });
@@ -60,7 +60,7 @@ const ScreeningQuestions = () => {
         url:fileInfo.cdnUrl
       }
       const updateResume = await axios.post(
-        "https://demojobportal.onrender.com/api-v1/user/upload-resume",
+        "https://highimpacttalent.onrender.com/api-v1/user/upload-resume",
         data,
         {
           headers: {
