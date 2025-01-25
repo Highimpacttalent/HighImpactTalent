@@ -95,7 +95,7 @@ const UserInfoForm = () => {
       url: fileInfo.cdnUrl,
     };
     const updateResume = await axios.post(
-      "https://demojobportal.onrender.com/api-v1/user/upload-resume",
+      "https://highimpacttalent.onrender.com/api-v1/user/upload-resume",
       data,
       {
         headers: {
