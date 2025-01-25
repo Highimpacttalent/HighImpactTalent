@@ -1,0 +1,15 @@
+# Ignore everything
+*
+
+# Allow .gitignore file
+!.gitignore
+
+# Allow specific files or directories
+!.env
+!node_modules/
+
+# Ignore everything inside node_modules but keep the folder itself
+node_modules/*
+
+# Ignore the .env file to hide it
+.env
