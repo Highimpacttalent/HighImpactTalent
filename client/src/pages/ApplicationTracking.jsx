@@ -12,7 +12,7 @@ const ApplicationTracking = () => {
   useEffect(() => {
     const application = async()=>{
       try {
-        const res =await axios.get(`https://demojobportal.onrender.com/api-v1/application/get-allapplication/${user._id}`)
+        const res =await axios.get(`https://highimpacttalent.onrender.com/api-v1/application/get-allapplication/${user._id}`)
         console.log(res.data.data)
         if(res){
           setApplications(res.data.data)
