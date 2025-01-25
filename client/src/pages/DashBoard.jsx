@@ -13,7 +13,7 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // https://demojobportal.onrender.com
+        // https://highimpacttalent.onrender.com
         // const usersRes = await axios.get('http://localhost:8800/api/users');
         // const jobsRes = await axios.get('http://localhost:8800/api/jobs');
         // const appsRes = await axios.get('http://localhost:8800/api/applications');
