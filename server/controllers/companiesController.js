@@ -63,27 +63,15 @@ export const signIn = async (req, res, next) => {
   try {
     //validation
     if (!email || !password) {
-      next("Please Provide AUser Credentials");
+      next("Please Provide All Credentials");
       return;
     }
 
     const company = await Companies.findOne({ email });
     if (!company) {
-      next("Invalid email or Password=");
+      next("Company with this email Not Found");
       return;
     }
-    // console.log(company)
-    // const match = await bcrypt.compare(password, company.password)
-    // if(!match){
-    //   return res.status(404).json({
-    //     success:false,
-    //     message:"password not match"
-    //   })
-    // }
-    
-    // const match = await bcrypt.compare("Qwert123$", company.password)
-    // console.log('inside controller -',password,"Qwert123$", company.password,match)
-    // compare password
     const isMatch = await company.comparePassword(password);
     // console.log(isMatch)
     if (!isMatch) {
