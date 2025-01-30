@@ -9,10 +9,11 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 const UserInfoForm = () => {
   const { user } = useSelector((state) => state.user);
-  // useSelector
-  const [loading,setLoading]=useState(false)
+  const [loading, setLoading] = useState(false);
   const [value, setValue] = useState();
   const widgetApi = useRef();
+  const profileWidgetApi = useRef(null);
+  const [profilePic, setProfilePic] = useState(null);
   const [fileUrl, setFileUrl] = useState("");
   const [formData, setFormData] = useState({
     job: "",
@@ -22,23 +23,12 @@ const UserInfoForm = () => {
     salary: "",
     contactNumber: "",
     location: "",
-    relocate: "no", // Set 'no' as default value
+    relocate: "no",
     joinConsulting: "",
     dateOfBirth: "",
     profilePic: null,
     resume: null,
   });
-  // contactNumber,
-  //   profileUrl,
-  //   cvUrl,
-  //   currentJobRole,
-  //   currentSalary,
-  //   currentCompany,
-  //   currentLocation,
-  //   openToRelocate,
-  //   joinConsulting,
-  //   about,
-  //   experience
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -48,7 +38,7 @@ const UserInfoForm = () => {
       ...(name === "job" && value !== "Other" && { company: value }),
     });
   };
-  const navigate = useNavigate()
+  const navigate = useNavigate();
   const handleFileChange = (e) => {
     const { name, files } = e.target;
     setFormData({
@@ -59,13 +49,11 @@ const UserInfoForm = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    // /update-user
-    // const res=await apiRequest()
-    // formData.salary = Number(formData.salary)
     formData.experience = Number(formData.experience);
-    formData.contactNumber=value;
-    console.log(formData)
-    setLoading(true)
+    formData.contactNumber = value;
+    console.log(formData);
+    formData.profilePic = profilePic;
+    setLoading(true);
     if (fileUrl != "") formData.resume = fileUrl;
     try {
       const res = await apiRequest({
@@ -75,16 +63,14 @@ const UserInfoForm = () => {
         token: user?.token,
       });
       console.log(res);
-      if(res.success){
-        alert('successfully user updated')
-        navigate('/find-jobs')
-      }else{
-        alert('error while updating user details')
+      if (res.sucess) {
+        alert("successfully user updated");
+        navigate("/find-jobs");
       }
     } catch (error) {
-      console.log(error)
-    }finally{
-      setLoading(false)
+      console.log(error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -107,15 +93,38 @@ const UserInfoForm = () => {
     );
     console.log(fileInfo, updateResume);
   };
+  const handleImageChange = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      setProfilePic(URL.createObjectURL(file)); // Preview for local file
+    }
+  };
 
+  const handleUploadCareChange = (file) => {
+    if (file) {
+      console.log(file);
+      setProfilePic(file.cdnUrl); // Store uploaded image URL
+    }
+  };
   const openUploadDialog = () => {
-    widgetApi.current.openDialog(null, {
-      accept: "application/pdf", // Only accept PDF files
-    });
+    try {
+      if (!widgetApi.current) {
+        throw new Error("widgetApi is not initialized or is null.");
+      }
+
+      widgetApi.current.openDialog(null, {
+        accept: "application/pdf", // Only accept PDF files
+      });
+    } catch (error) {
+      console.log(error);
+
+      console.error("Error opening upload dialog:", error);
+    }
   };
   useEffect(() => {
     console.log(user);
   }, []);
+
   return (
     <div className="flex judtify-center border">
       <form
@@ -264,21 +273,11 @@ const UserInfoForm = () => {
               </label>
               <div className="border p-1 rounded">
                 <PhoneInput
-                placeholder="Enter phone number"
-                value={value}
-                onChange={setValue}
-              />
+                  placeholder="Enter phone number"
+                  value={value}
+                  onChange={setValue}
+                />
               </div>
-              {/* <input
-                type="tel"
-                pattern="[0-9]{3}-[0-9]{2}-[0-9]{3}"
-                name="contactNumber"
-                value={formData.contactNumber}
-                onChange={handleChange}
-                placeholder="contact number"
-                className="capitalize text-xs border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                required
-              /> */}
             </div>
 
             <div className="mb-4">
@@ -323,16 +322,33 @@ const UserInfoForm = () => {
               </div>
             </div>
             <div className="mb-4">
-              <label className="block text-gray-700 text-sm  mb-2">
+              <label className="block text-gray-700 text-sm mb-2">
                 Upload Profile Picture
               </label>
-              <input
-                type="file"
-                name="profilePic"
-                onChange={handleFileChange}
-                accept="image/*"
-                className="w-full py-2"
-              />
+
+              {/* UploadCare Widget with Separate Ref */}
+              <div className="border bg-blue-500 rounded-lg">
+                <Widget
+                  publicKey="8eeb05a138df98a3c92f" // Uploadcare public api key
+                  ref={profileWidgetApi} // Using a different ref name
+                  onChange={handleUploadCareChange}
+                  imagesOnly
+                  clearable
+                  tabs="file"
+                />
+              </div>
+
+              {/* Image Preview */}
+              {profilePic && (
+                <div className="mt-4">
+                  <p className="text-sm text-gray-600">Preview:</p>
+                  <img
+                    src={profilePic}
+                    alt="Profile Preview"
+                    className="w-32 h-32 rounded-full object-cover mt-2"
+                  />
+                </div>
+              )}
             </div>
             <div className="mb-4">
               <h2 className="text-sm mb-4">Upload Your Resume</h2>
@@ -343,7 +359,7 @@ const UserInfoForm = () => {
                 Upload PDF Resume
               </button>
               <Widget
-                publicKey="886857a9a1571edf40e9"
+                publicKey="8eeb05a138df98a3c92f" // Uploadcare public api key
                 ref={widgetApi}
                 onChange={handleUpload}
                 style={{ display: "none" }} // Hide the default widget
@@ -361,25 +377,13 @@ const UserInfoForm = () => {
                 </div>
               )}
             </div>
-            {/* <div className="mb-4">
-              <label className="block text-gray-700 text-sm  mb-2">
-                Upload Resume
-              </label>
-              <input
-                type="file"
-                name="resume"
-                onChange={handleFileChange}
-                accept=".pdf,.doc,.docx"
-                className="w-full py-2"
-              />
-            </div> */}
           </div>
         </div>
         <button
           type="submit"
           className="bg-blue-500 hover:bg-blue-700 text-white  py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full"
         >
-          {loading?"Loading...":"Submit"}
+          {loading ? "Loading..." : "Submit"}
         </button>
       </form>
     </div>
@@ -387,3 +391,4 @@ const UserInfoForm = () => {
 };
 
 export default UserInfoForm;
+
