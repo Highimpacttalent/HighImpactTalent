@@ -126,267 +126,226 @@ const UserInfoForm = () => {
   }, []);
 
   return (
-    <div className="flex judtify-center border">
-      <form
-        onSubmit={handleSubmit}
-        className="max-w-[1500px] w-full p-4 bg-white  "
-      >
-        <div className="grid max-[700px]:grid-cols-1 grid-cols-2 gap-2">
-          <div>
-            <div className="mb-4">
-              <label className="block text-gray-700 text-sm  mb-2">
-                Current Job
-              </label>
-              <select
-                name="job"
-                value={formData.job}
-                onChange={(e) => {
-                  handleChange(e);
-                  if (e.target.value !== "Other") {
-                    setFormData((prevData) => ({
-                      ...prevData,
-                      company: e.target.value,
-                    }));
-                  }
-                }}
-                className="text-xs border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                required
-              >
-                <option value="">Select job</option>
-                <option value="Accenture strategy">Accenture strategy</option>
-                <option value="Alvarez and marsal">Alvarez and marsal</option>
-                <option value="Bain & Company">Bain & Company</option>
-                <option value="Boston Consulting Group (BCG)">
-                  Boston Consulting Group (BCG)
-                </option>
-                <option value="Deloitte">Deloitte</option>
-                <option value="Ernst & Young">Ernst & Young</option>
-                <option value="Everest">Everest</option>
-                <option value="EY-Parthenon">EY-Parthenon</option>
-                <option value="Kearney">Kearney</option>
-                <option value="KPMG">KPMG</option>
-                <option value="LEK">LEK</option>
-                <option value="McKinsey">McKinsey</option>
-                <option value="Oliver Wyman">Oliver Wyman</option>
-                <option value="PricewaterhouseCoopers">
-                  PricewaterhouseCoopers
-                </option>
-                <option value="Roland Berger">Roland Berger</option>
-                <option value="Strategy&">Strategy&</option>
-                <option value="TSMG">TSMG</option>
-                <option value="Other">Other</option>
-              </select>
-            </div>
-            {formData.job === "Other" && (
-              <div className="mb-4">
-                <label className="block text-gray-700 text-sm  mb-2">
-                  Other Company Name
-                </label>
-                <input
-                  type="text"
-                  name="company"
-                  value={formData.company}
-                  onChange={handleChange}
-                  placeholder="Please Specify Company name...."
-                  className="text-xs capitalize border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                  required
-                />
-              </div>
-            )}
-            <div className="mb-4">
-              <label className="block text-gray-700 text-sm  mb-2">
-                Current Salary (In INR Lakhs)
-              </label>
-              <input
-                type="text"
-                name="salary"
-                value={formData.salary}
-                onChange={handleChange}
-                placeholder="current salary"
-                className="capitalize text-xs border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                required
-              />
-            </div>
-            <div className="mb-4 ">
-              <label className="block text-gray-700 text-sm mb-2">
-                Experience
-              </label>
-              <select
-                name="experience"
-                value={formData.experience}
-                onChange={handleChange}
-                className="capitalize text-xs border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                required
-              >
-                <option value="">Select experience</option>
-                {Array.from({ length: 15 }, (_, i) => (
-                  <option key={i + 1} value={i + 1}>{`${i + 1}+`}</option>
-                ))}
-              </select>
-            </div>
-            <div className="mb-4">
-              <label className="block text-gray-700 text-sm  mb-2">
-                Current Location
-              </label>
-              <input
-                type="text"
-                name="location"
-                value={formData.location}
-                onChange={handleChange}
-                placeholder="current loaction"
-                className="capitalize text-xs border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                required
-              />
-            </div>
-            <div className="mb-4">
-              <label className="block text-gray-700 text-sm  mb-2">
-                About/Summary
-              </label>
-              <textarea
-                name="about"
-                value={formData.about}
-                onChange={handleChange}
-                placeholder="summary..."
-                className="capitalize text-xs border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                required
-              ></textarea>
-            </div>
+    <div className="flex justify-center py-8 px-4 bg-gray-100">
+  <form onSubmit={handleSubmit} className="max-w-4xl w-full p-6 bg-white rounded-lg shadow-lg">
+    <div className="grid md:grid-cols-2 gap-6">
+      {/* Left Column */}
+      <div>
+        <div className="mb-6">
+          <label className="block text-gray-700 text-sm font-semibold mb-2">Current Job</label>
+          <select
+            name="job"
+            value={formData.job}
+            onChange={(e) => {
+              handleChange(e);
+              if (e.target.value !== "Other") {
+                setFormData((prevData) => ({
+                  ...prevData,
+                  company: e.target.value,
+                }));
+              }
+            }}
+            className="w-full px-4 py-3 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            required
+          >
+            <option value="">Select job</option>
+            <option value="Accenture strategy">Accenture strategy</option>
+            <option value="Alvarez and marsal">Alvarez and marsal</option>
+            <option value="Bain & Company">Bain & Company</option>
+            {/* Add other options */}
+            <option value="Other">Other</option>
+          </select>
+        </div>
+        {formData.job === "Other" && (
+          <div className="mb-6">
+            <label className="block text-gray-700 text-sm font-semibold mb-2">Other Company Name</label>
+            <input
+              type="text"
+              name="company"
+              value={formData.company}
+              onChange={handleChange}
+              placeholder="Please Specify Company name...."
+              className="w-full px-4 py-3 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
+            />
           </div>
-          <div>
-            <div className="mb-4">
-              <label className="block text-gray-700 text-sm  mb-2">
-                Date of Birth
-              </label>
-              <input
-                type="date"
-                name="dateOfBirth"
-                value={formData.dateOfBirth}
-                onChange={handleChange}
-                placeholder="date of birth"
-                className="text-xs capitalize border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                required
-              />
-            </div>
-            <div className="mb-4">
-              <label className="block text-gray-700 text-sm  mb-2">
-                Contact Number
-              </label>
-              <div className="border p-1 rounded">
-                <PhoneInput
-                  placeholder="Enter phone number"
-                  value={value}
-                  onChange={setValue}
-                />
-              </div>
-            </div>
+        )}
+        <div className="mb-6">
+          <label className="block text-gray-700 text-sm font-semibold mb-2">Current Salary (INR Lakhs)</label>
+          <input
+            type="text"
+            name="salary"
+            value={formData.salary}
+            onChange={handleChange}
+            placeholder="Enter salary"
+            className="w-full px-4 py-3 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            required
+          />
+        </div>
+        <div className="mb-6">
+          <label className="block text-gray-700 text-sm font-semibold mb-2">Experience</label>
+          <select
+            name="experience"
+            value={formData.experience}
+            onChange={handleChange}
+            className="w-full px-4 py-3 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            required
+          >
+            <option value="">Select experience</option>
+            {Array.from({ length: 15 }, (_, i) => (
+              <option key={i + 1} value={i + 1}>{`${i + 1}+`}</option>
+            ))}
+          </select>
+        </div>
+        <div className="mb-6">
+          <label className="block text-gray-700 text-sm font-semibold mb-2">Current Location</label>
+          <input
+            type="text"
+            name="location"
+            value={formData.location}
+            onChange={handleChange}
+            placeholder="Enter current location"
+            className="w-full px-4 py-3 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            required
+          />
+        </div>
+        <div className="mb-6">
+          <label className="block text-gray-700 text-sm font-semibold mb-2">About/Summary</label>
+          <textarea
+            name="about"
+            value={formData.about}
+            onChange={handleChange}
+            placeholder="Write about your experience"
+            className="w-full px-4 py-3 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 h-28"
+            required
+          ></textarea>
+        </div>
+      </div>
 
-            <div className="mb-4">
-              <label className="block text-gray-700 text-sm mb-2">
-                When did you first join Consulting ?
-              </label>
-              <select
-                name="joinConsulting"
-                value={formData.joinConsulting}
-                onChange={handleChange}
-                className="capitalize text-xs border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                required
-              >
-                <option value="">Select consulting type</option>
-                <option value="Lateral">Lateral</option>
-                <option value="Post Graduation">Post Graduation</option>
-              </select>
-            </div>
-            <div className="mb-4">
-              <label className="block text-gray-700 text-sm  mb-2">
-                Open to Relocation ?
-              </label>
-              <div className="flex items-center">
-                <input
-                  type="radio"
-                  name="relocate"
-                  value="yes"
-                  checked={formData.relocate === "yes"}
-                  onChange={handleChange}
-                  className="mr-2 leading-tight"
-                />
-                <span className="mr-4">Yes</span>
-                <input
-                  type="radio"
-                  name="relocate"
-                  value="no"
-                  checked={formData.relocate === "no"}
-                  onChange={handleChange}
-                  className="mr-2 leading-tight"
-                />
-                <span>No</span>
-              </div>
-            </div>
-            <div className="mb-4">
-              <label className="block text-gray-700 text-sm mb-2">
-                Upload Profile Picture
-              </label>
-
-              {/* UploadCare Widget with Separate Ref */}
-              <div className="border bg-blue-500 rounded-lg">
-                <Widget
-                  publicKey="8eeb05a138df98a3c92f" // Uploadcare public api key
-                  ref={profileWidgetApi} // Using a different ref name
-                  onChange={handleUploadCareChange}
-                  imagesOnly
-                  clearable
-                  tabs="file"
-                />
-              </div>
-
-              {/* Image Preview */}
-              {profilePic && (
-                <div className="mt-4">
-                  <p className="text-sm text-gray-600">Preview:</p>
-                  <img
-                    src={profilePic}
-                    alt="Profile Preview"
-                    className="w-32 h-32 rounded-full object-cover mt-2"
-                  />
-                </div>
-              )}
-            </div>
-            <div className="mb-4">
-              <h2 className="text-sm mb-4">Upload Your Resume</h2>
-              <button
-                onClick={openUploadDialog}
-                className="bg-blue-500  text-white py-2 px-4 rounded"
-              >
-                Upload PDF Resume
-              </button>
-              <Widget
-                publicKey="8eeb05a138df98a3c92f" // Uploadcare public api key
-                ref={widgetApi}
-                onChange={handleUpload}
-                style={{ display: "none" }} // Hide the default widget
-              />
-              {fileUrl && (
-                <div className="mt-4">
-                  <a
-                    href={fileUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-500 hover:text-blue-700"
-                  >
-                    See Your Resume
-                  </a>
-                </div>
-              )}
-            </div>
+      {/* Right Column */}
+      <div>
+        <div className="mb-6">
+          <label className="block text-gray-700 text-sm font-semibold mb-2">Date of Birth</label>
+          <input
+            type="date"
+            name="dateOfBirth"
+            value={formData.dateOfBirth}
+            onChange={handleChange}
+            className="w-full px-4 py-3 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            required
+          />
+        </div>
+        <div className="mb-6">
+          <label className="block text-gray-700 text-sm font-semibold mb-2">Contact Number</label>
+          <div className="border rounded-lg  px-3 py-3">
+            <PhoneInput
+              placeholder="Enter phone number"
+              value={value}
+              onChange={setValue}
+              defaultCountry="Ind"
+            />
           </div>
         </div>
-        <button
-          type="submit"
-          className="bg-blue-500 hover:bg-blue-700 text-white  py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full"
-        >
-          {loading ? "Loading..." : "Submit"}
-        </button>
-      </form>
+        <div className="mb-6">
+          <label className="block text-gray-700 text-sm font-semibold mb-2">When did you first join Consulting?</label>
+          <select
+            name="joinConsulting"
+            value={formData.joinConsulting}
+            onChange={handleChange}
+            className="w-full px-4 py-3 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            required
+          >
+            <option value="">Select consulting type</option>
+            <option value="Lateral">Lateral</option>
+            <option value="Post Graduation">Post Graduation</option>
+          </select>
+        </div>
+        <div className="mb-6">
+          <label className="block text-gray-700 text-sm font-semibold mb-2">Open to Relocation?</label>
+          <div className="flex items-center">
+            <input
+              type="radio"
+              name="relocate"
+              value="yes"
+              checked={formData.relocate === "yes"}
+              onChange={handleChange}
+              className="mr-2 leading-tight"
+            />
+            <span className="mr-4">Yes</span>
+            <input
+              type="radio"
+              name="relocate"
+              value="no"
+              checked={formData.relocate === "no"}
+              onChange={handleChange}
+              className="mr-2 leading-tight"
+            />
+            <span>No</span>
+          </div>
+        </div>
+        <div className="mb-6">
+          <label className="block text-gray-700 text-sm font-semibold mb-2">Upload Profile Picture</label>
+          <button className="bg-blue-500 rounded-lg cursor-pointer">
+            <Widget
+              publicKey="8eeb05a138df98a3c92f"
+              ref={profileWidgetApi}
+              onChange={handleUploadCareChange}
+              imagesOnly
+              clearable
+              tabs="file"
+            />
+          </button>
+          {profilePic && (
+            <div className="mt-4">
+              <p className="text-sm text-gray-600">Preview:</p>
+              <img
+                src={profilePic}
+                alt="Profile Preview"
+                className="w-32 h-32 rounded-full object-cover mt-2"
+              />
+            </div>
+          )}
+        </div>
+        <div className="mb-6">
+          <h2 className="text-sm font-semibold">Upload Your Resume</h2>
+          <button
+            onClick={openUploadDialog}
+            className="bg-blue-500 text-white py-2 px-4 rounded-lg mt-2 hover:bg-blue-600"
+          >
+            Upload PDF Resume
+          </button>
+          <Widget
+            publicKey="8eeb05a138df98a3c92f"
+            ref={widgetApi}
+            onChange={handleUpload}
+            style={{ display: "none" }}
+          />
+          {fileUrl && (
+            <div className="mt-4">
+              <a
+                href={fileUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-500 hover:text-blue-700"
+              >
+                View Your Resume
+              </a>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
+    <div className="mt-6">
+      <button
+        type="submit"
+        className="bg-blue-500 hover:bg-blue-700 text-white py-3 px-6 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+      >
+        {loading ? "Loading..." : "Submit"}
+      </button>
+    </div>
+  </form>
+</div>
+
   );
 };
 
