@@ -1,16 +1,82 @@
-import React from "react";
+import React,{useState,useEffect} from "react";
 import { FaSearch, FaBriefcase, FaUsers } from "react-icons/fa";
+import { Dialog, Transition } from "@headlessui/react";
 import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import man from "../assets/man.png";
+import { useNavigate } from "react-router-dom";
 import tlogo from "../assets/transparentlogo.png";
 import toptt from "../assets/top-tier-talent.jpg";
 import industry from "../assets/industri.jpg";
 import personlized from "../assets/personlized.jpg";
+
 const Landing = () => {
   const { user } = useSelector((state) => state.user);
+  const navigate = useNavigate();
+  const [isOpen, setIsOpen] = useState(false);
+
+  useEffect(() => {
+    if (!user || Object.keys(user).length === 0) {
+      setIsOpen(true);
+    }
+  }, [user]);
+
+  const LoginModal = (
+    <Transition appear show={isOpen} as={React.Fragment}>
+      <Dialog as="div" className="relative z-50" onClose={() => {}}>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
+          <Dialog.Panel className="bg-white p-6 md:p-8 rounded-lg shadow-xl w-[90%] max-w-md text-center">
+            {/* Welcome Section */}
+            <Dialog.Title className="text-2xl md:text-3xl font-bold text-gray-800">
+              Connect. Hire. Grow.
+            </Dialog.Title>
+            <p className="text-gray-600 mt-2 text-sm md:text-base">
+              Whether you're seeking the perfect job or the best talent, we make connections effortless.
+            </p>
+  
+            {/* Benefits Section */}
+            <div className="text-left text-gray-700 text-sm md:text-base mt-2">
+              <p className="font-semibold text-gray-800">For Job Seekers:</p>
+              <ul className="space-y-2">
+                <li>🚀 Explore top job opportunities</li>
+                <li>📈 Get noticed by leading companies</li>
+                <li>🎯 Build your career with expert guidance</li>
+              </ul>
+  
+              <p className="font-semibold text-gray-800 mt-3">For Recruiters:</p>
+              <ul className="space-y-2">
+                <li>🔍 Find top talent quickly & efficiently</li>
+                <li>📢 Post job listings with ease</li>
+                <li>🤝 Connect with the right candidates</li>
+              </ul>
+            </div>
+  
+            {/* Action Buttons */}
+            <div className="mt-6 flex flex-col gap-3">
+              <button
+                onClick={() => navigate("/authlogin")}
+                className="bg-blue-600 text-white py-3 px-6 rounded-lg text-lg shadow-md hover:bg-blue-700 transition duration-300"
+              >
+                Login
+              </button>
+              <button
+                onClick={() => navigate("/authform")}
+                className="bg-gray-600 text-white py-3 px-6 rounded-lg text-lg shadow-md hover:bg-gray-700 transition duration-300"
+              >
+                Sign Up
+              </button>
+            </div>
+          </Dialog.Panel>
+        </div>
+      </Dialog>
+    </Transition>
+  );
+  
+  
+
   return (
     <div className="overflow-x-hidden bg-[#234e94]">
+      {LoginModal}
       <div className="hero h-screen max-[900px]:h-fit">
         <div className="h-full w-full bg-white flex flex-col md:flex-row justify-between items-center p-8 md:p-12">
           <div className="flex flex-col gap-4 md:w-1/2 animate-fadeIn">
