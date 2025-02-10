@@ -7,6 +7,24 @@ import { AiOutlineSearch, AiOutlineCloseCircle } from "react-icons/ai";
 import Header from "../components/Header.jsx";
 import { experience } from "../utils/data";
 import { CustomButton, JobCard, ListBox } from "../components";
+
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
+import FilterListIcon from "@mui/icons-material/FilterList";
+import {
+  Box,
+  Typography,
+} from "@mui/material";
+import {
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
+  FormControlLabel,
+  Checkbox,
+  Button,
+  Modal
+} from "@mui/material";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import InfoIcon from "@mui/icons-material/Info";
 import { apiRequest } from "../utils";
 import { useSelector } from "react-redux";
 
@@ -30,6 +48,16 @@ const FindJobs = () => {
   const navigate = useNavigate();
   const [showLikedJobs, setShowLikedJobs] = useState(false);
   const [likedJobs, setLikedJobs] = useState([]);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+useEffect(() => {
+  const handleResize = () => setIsMobile(window.innerWidth <= 768);
+  window.addEventListener("resize", handleResize);
+  return () => window.removeEventListener("resize", handleResize);
+}, []);
+const [openFilterModal, setOpenFilterModal] = useState(false);
+
+
   const updateURL = ({ query, cmpLoc, exp, sort, pageNum, location }) => {
     const params = new URLSearchParams();
 
@@ -106,134 +134,303 @@ const FindJobs = () => {
     }
   };
 
+  const filters = [
+    {
+      title: "Interested In",
+      options: ["Permanent", "Freelance"],
+    },
+    {
+      title: "Country",
+      options: [
+        "Europe",
+        "Asia Pacific",
+        "North / Central America",
+        "South America",
+        "Middle East",
+        "Africa",
+        "Remote",
+      ],
+    },
+    {
+      title: "Visa sponsorship",
+      options: ["No sponsorship available", "Extension available", "Sponsorship available"],
+    },
+    {
+      title: "Total Compensation",
+      options: [
+        "Minimum",
+        "Desired compensation (basic salary + bonus + benefits)",
+        "Maximum",
+        "Maximum total compensation",
+      ],
+    },
+    {
+      title: "Day rates",
+      options: ["Minimum", "Minimum day rate", "Maximum", "Maximum day rate"],
+    },
+    {
+      title: "Equity available",
+      options: ["Yes", "No"],
+    },
+    {
+      title: "Industry preferences",
+      options: [
+        "Start-up (early stage)",
+        "Start-up (growth stage)",
+        "Private equity & venture capital",
+        "Boutique consultancy",
+        "Large consultancy",
+        "Consumer goods",
+        "Retail",
+        "Media and telecoms",
+        "Ecommerce",
+        "Other online / internet services",
+        "VIEW MORE (14)",
+      ],
+    },
+    {
+      title: "Functional experience",
+      options: [
+        "Strategy",
+        "General Management (P&L, Team)",
+        "Program, Project & Change Management",
+        "Marketing",
+        "Sales",
+        "Corporate & Business Development",
+        "Product Management",
+        "Operations",
+        "Supply chain",
+        "Purchasing & Procurement",
+        "VIEW MORE (9)",
+      ],
+    },
+    {
+      title: "Seniority",
+      options: [
+        "Analyst (c. 0-2 years)",
+        "Associate (c. 3-5 years)",
+        "Manager (c.6-8 years)",
+        "Senior manager",
+        "VP/ Director and above",
+        "Graduate (c. pre-qualified)",
+        "Senior (c. 3-5 years)",
+        "Manager (c. 6-8 years)",
+        "Senior manager",
+        "Director/ Partner",
+      ],
+    },
+  ];
+
+  const [selectedFilters, setSelectedFilters] = useState({});
+
+  const handleChange = (category, option) => {
+    setSelectedFilters((prev) => {
+      const updatedCategory = prev[category] ? [...prev[category]] : [];
+      if (updatedCategory.includes(option)) {
+        return {
+          ...prev,
+          [category]: updatedCategory.filter((item) => item !== option),
+        };
+      } else {
+        return {
+          ...prev,
+          [category]: [...updatedCategory, option],
+        };
+      }
+    });
+  };
+  
+
   useEffect(() => {
     fetchJobs();
   }, [sort, filterJobTypes, selectedCheckbox, filterExp, page]);
 
   return (
-    <div className="bg-gray-100">
-      <div className="relative bg-cover bg-center h-fit  flex items-center justify-center">
-        <div className=" rounded-xl w-full max-w-4xl mx-auto px-5 py-5">
-          <div className="text-center mb-2 max-[550px]:hidden py-2">
-            <p className="text-[#1176DB] font-bold italic text-4xl md:text-6xl">
-              Find your Next Opportunity
-            </p>
-          </div>
+    <div className="bg-gray-50 min-h-screen border-red-200" style={{padding:isMobile?10:40}}>
+      <Box sx={{display:"flex",flexDirection: isMobile ? "column" : "row",gap:2}}>
+      {isMobile ? (
+  <>
+    <Button 
+      variant="contained" 
+      startIcon={<FilterListIcon />} 
+      onClick={() => setOpenFilterModal(true)}
+      sx={{width:"30%"}}
+    >
+      Filters
+    </Button>
 
-          <div className="w-full flex flex-col md:flex-row gap-2 items-center justify-between   rounded-full">
-            <div
-              className={`flex w-full items-center bg-white rounded-full shadow-md`}
-            >
-              <AiOutlineSearch className="text-gray-600 text-xl ml-3" />
-              <input
-                type="text"
-                value={searchKeyword}
-                onChange={handleInputChange}
-                placeholder="Enter job title..."
-                className="capitalize w-full p-3 outline-none bg-transparent text-sm md:text-base"
-              />
-            </div>
-          </div>
-        </div>
-      </div>
-      <div className=" min-h-screen flex gap-4">
-        {/* Job Listings */}
-        <div className="w-full  px-3">
-          <div className="flex items-center justify-end  gap-5 mb-2">
-            <div className="flex items-center gap-2">
-              {/* <p className="text-base text-gray-600">Sort By:</p> */}
-              <ListBox sort={sort} setSort={setSort} />
-              <div className="relative ">
-                {/* Small box to toggle filters */}
-                <button
-                  onClick={() => setShowFilters(!showFilters)}
-                  className="p-2 bg-blue-500 text-white rounded shadow-sm focus:outline-none w-[8rem] md:w-[10rem] "
-                >
-                  Experience
-                </button>
-
-                {/* Filters container */}
-                {showFilters && (
-                  <div className="absolute top-12 left-0 w-64 bg-white shadow-lg rounded-lg z-10">
-                    {/* <p className="text-xl font-semibold text-[#1176DB] mb-4 pl-5 pt-4">
-                      Filter Search
-                    </p> */}
-                    <div className="py-4 border-t border-gray-200">
-                      <div className="flex pl-5 justify-between items-center mb-4">
-                        <p className="flex items-center gap-2 font-semibold text-gray-700">
-                          <BsStars />
-                          Experience
-                        </p>
-                      </div>
-                      <div className="flex flex-col gap-3 pl-5">
-                        <div className="flex flex-col capitalize">
-                          {[
-                            "All",
-                            "1-2 years",
-                            "2-6 years",
-                            "Over 6 years",
-                          ].map((label, index) => (
-                            <div
-                              key={index}
-                              onClick={() => handleCheckboxChange(index)}
-                              className={`flex items-center gap-2 p-2 rounded cursor-pointer transition ${
-                                selectedCheckbox === index
-                                  ? "bg-blue-100 border-l-4 border-blue-500"
-                                  : "hover:bg-gray-100"
-                              }`}
-                            >
-                              <label>
-                                <input
-                                  type="checkbox"
-                                  checked={selectedCheckbox === index}
-                                  onChange={() => {}}
-                                  className="hidden"
-                                />
-                                {label}
-                              </label>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-              <button
-                onClick={() => {
-                  setShowLikedJobs((prevState) => !prevState);
-                  filterLikedJobs();
-                }}
-                className={`p-2 ${
-                  showLikedJobs
-                    ? "bg-blue-600 text-white"
-                    : "bg-white text-gray-700"
-                } rounded shadow-md focus:outline-none`}
-              >
-                {showLikedJobs ? "All" : "Liked"}
-              </button>
-            </div>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-            {filteredJobs &&
-              filteredJobs.length > 0 &&
-              filteredJobs.map((job, index) => (
-                <JobCard job={job} key={index} />
+    <Modal open={openFilterModal} onClose={() => setOpenFilterModal(false)}>
+      <Box sx={{
+        position: 'absolute', 
+        top: '50%', 
+        left: '50%', 
+        transform: 'translate(-50%, -50%)', 
+        width: '90%', 
+        bgcolor: 'background.paper', 
+        boxShadow: 24, 
+        p: 4, 
+        borderRadius: 2
+      }}>
+        <Typography variant="h6">Filters</Typography>
+        {filters.map(({ title, options }) => (
+          <Accordion key={title} sx={{ boxShadow: "none", borderBottom: "1px solid #ddd" }}>
+            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+              <Typography fontWeight={600}>{title}</Typography>
+            </AccordionSummary>
+            <AccordionDetails>
+              {options.map((option) => (
+                <FormControlLabel
+                  key={option}
+                  control={
+                    <Checkbox
+                      checked={selectedFilters[title]?.includes(option) || false}
+                      onChange={() => handleChange(title, option)}
+                    />
+                  }
+                  label={option}
+                  sx={{ display: "block", marginBottom: 0.5 }}
+                />
               ))}
-          </div>
+            </AccordionDetails>
+          </Accordion>
+        ))}
+        <Button 
+          variant="contained" 
+          color="primary" 
+          fullWidth 
+          sx={{ mt: 2 }} 
+          onClick={() => setOpenFilterModal(false)}
+        >
+          Apply Filters
+        </Button>
+      </Box>
+    </Modal>
+  </>
+) : (
+  <Box sx={{ width: 300, padding: 2 }}>
+    <Typography fontWeight={600} sx={{mb:2}}>Filters applied</Typography>
+    {filters.map(({ title, options }) => (
+      <Accordion key={title} sx={{ boxShadow: "none", borderBottom: "1px solid #ddd" }}>
+        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+          <Typography fontWeight={600}>{title}</Typography>
+        </AccordionSummary>
+        <AccordionDetails>
+          {options.map((option) => (
+            <FormControlLabel
+              key={option}
+              control={
+                <Checkbox
+                  checked={selectedFilters[title]?.includes(option) || false}
+                  onChange={() => handleChange(title, option)}
+                />
+              }
+              label={option}
+              sx={{ display: "block", marginBottom: 0.5 }}
+            />
+          ))}
+        </AccordionDetails>
+      </Accordion>
+    ))}
+  </Box>
+)}
 
-          {numPage > page && !isFetching && (
-            <div className="w-full flex items-center justify-center pt-10">
-              <CustomButton
-                title="Load More"
-                containerStyles="text-blue-600 py-2 px-6 focus:outline-none hover:bg-blue-700 hover:text-white rounded-full text-base border border-blue-600 transition"
-                onClick={() => setPage((prevPage) => prevPage + 1)}
-              />
-            </div>
-          )}
-        </div>
-      </div>
+
+<Box>
+  {/* Search Bar */}
+  <div className="max-w-4xl mx-auto mt-3 px-5">
+    <div className="flex items-center bg-white rounded-full shadow-lg px-4 py-3">
+      <AiOutlineSearch className="text-gray-500 text-2xl" />
+      <input
+        type="text"
+        value={searchKeyword}
+        onChange={handleInputChange}
+        placeholder="Enter job title..."
+        className="w-full p-2 text-lg outline-none bg-transparent"
+      />
     </div>
+  </div>
+
+  {/* Main Content */}
+  <div className="max-w-6xl mx-auto mt-6 px-5">
+    {/* Filters & Sorting */}
+    <div className="flex flex-wrap justify-between items-center gap-4">
+      {/* Sorting Dropdown */}
+      <ListBox sort={sort} setSort={setSort} />
+
+      {/* Experience Filter */}
+      <div className="relative">
+        <button
+          onClick={() => setShowFilters(!showFilters)}
+          className="p-2 px-5 bg-blue-600 text-white rounded-full shadow-md hover:bg-blue-700 transition"
+        >
+          Experience
+        </button>
+
+        {/* Filter Dropdown */}
+        {showFilters && (
+          <div className="absolute top-12 left-0 w-64 bg-white shadow-lg rounded-lg z-10 p-4">
+            <h3 className="text-lg font-semibold text-gray-700 mb-3">
+              Experience Level
+            </h3>
+            {["All", "1-2 years", "2-6 years", "Over 6 years"].map((label, index) => (
+              <div
+                key={index}
+                onClick={() => handleCheckboxChange(index)}
+                className={`flex items-center gap-2 p-2 rounded-md cursor-pointer transition ${selectedCheckbox === index ? "bg-blue-100 border-l-4 border-blue-500" : "hover:bg-gray-100"}`}
+              >
+                <input
+                  type="checkbox"
+                  checked={selectedCheckbox === index}
+                  onChange={() => {}}
+                  className="hidden"
+                />
+                {label}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Liked Jobs Toggle */}
+      <button
+        onClick={() => {
+          setShowLikedJobs((prevState) => !prevState);
+          filterLikedJobs();
+        }}
+        className={`p-2 px-5 rounded-full shadow-md transition ${
+          showLikedJobs ? "bg-blue-700 text-white" : "bg-white text-gray-700 border border-gray-300"
+        } hover:bg-blue-600 hover:text-white`}
+      >
+        {showLikedJobs ? "All Jobs" : "Liked Jobs"}
+      </button>
+    </div>
+
+    {/* Job Listings */}
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5 mt-6">
+      {filteredJobs && filteredJobs.length > 0 ? (
+        filteredJobs.map((job, index) => <JobCard job={job} key={index} />)
+      ) : (
+        <p className="text-gray-500 col-span-full text-center text-lg">
+          No jobs found. Try a different search.
+        </p>
+      )}
+    </div>
+
+    {/* Load More Button */}
+    {numPage > page && !isFetching && (
+      <div className="flex items-center justify-center pt-10">
+        <CustomButton
+          title="Load More"
+          containerStyles="py-3 px-8 text-lg font-semibold text-blue-600 border border-blue-600 rounded-full hover:bg-blue-700 hover:text-white transition"
+          onClick={() => setPage((prevPage) => prevPage + 1)}
+        />
+      </div>
+    )}
+  </div>
+  </Box>
+  </Box>
+</div>
+
   );
 };
 

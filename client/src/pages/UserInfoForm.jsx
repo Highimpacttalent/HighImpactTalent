@@ -131,31 +131,21 @@ const UserInfoForm = () => {
     <div className="grid md:grid-cols-2 gap-6">
       {/* Left Column */}
       <div>
-        <div className="mb-6">
-          <label className="block text-gray-700 text-sm font-semibold mb-2">Current Job</label>
-          <select
-            name="job"
-            value={formData.job}
-            onChange={(e) => {
-              handleChange(e);
-              if (e.target.value !== "Other") {
-                setFormData((prevData) => ({
-                  ...prevData,
-                  company: e.target.value,
-                }));
-              }
-            }}
-            className="w-full px-4 py-3 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            required
-          >
-            <option value="">Select job</option>
-            <option value="Accenture strategy">Accenture strategy</option>
-            <option value="Alvarez and marsal">Alvarez and marsal</option>
-            <option value="Bain & Company">Bain & Company</option>
-            {/* Add other options */}
-            <option value="Other">Other</option>
-          </select>
-        </div>
+      <div className="mb-6">
+  <label className="block text-gray-700 text-sm font-semibold mb-2">
+    Current Job
+  </label>
+  <input
+    type="text"
+    name="job"
+    value={formData.job}
+    onChange={handleChange}
+    className="w-full px-4 py-3 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+    placeholder="Enter your Company Name"
+    required
+  />
+</div>
+
         {formData.job === "Other" && (
           <div className="mb-6">
             <label className="block text-gray-700 text-sm font-semibold mb-2">Other Company Name</label>
@@ -242,7 +232,7 @@ const UserInfoForm = () => {
               placeholder="Enter phone number"
               value={value}
               onChange={setValue}
-              defaultCountry="Ind"
+              defaultCountry="US"
             />
           </div>
         </div>
