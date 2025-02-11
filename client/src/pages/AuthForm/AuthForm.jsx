@@ -256,7 +256,7 @@ const AuthForm = () => {
                 </p>
               )}
             </div>
-            <button className="w-full bg-blue-500 text-white p-2  mb-2">
+            <button className="w-full bg-blue-500 text-white p-2  mb-2" disabled={loading}>
               {loading?"Loading...":"Register"}
             </button>
             <div>

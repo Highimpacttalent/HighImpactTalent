@@ -48,7 +48,7 @@ const UserInfoForm = () => {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
+   e.preventDefault();
     formData.experience = Number(formData.experience);
     formData.contactNumber = value;
     console.log(formData);
@@ -72,6 +72,14 @@ const UserInfoForm = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const isFormValid = () => {
+    return (
+      Object.values(formData).every((val) => val !== "" && val !== null) &&
+      resumeUploaded &&
+      profilePicUploaded
+    );
   };
 
   const handleUpload = async (fileInfo) => {
