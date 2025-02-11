@@ -1,10 +1,12 @@
 import React, { useState } from "react";
 import { apiRequest } from "../utils";
+import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 
 const JobUploadPage = () => {
   const { user } = useSelector((state) => state.user);
   const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     jobTitle: "",
     experience: "",
@@ -91,6 +93,8 @@ const JobUploadPage = () => {
         // }, 2000);
       }
       setIsLoading(false);
+      alert("Job Created Successfully. For Uploading more jobs visit Upload Jobs section.")
+      navigate("/find-jobs");
     } catch (error) {
       console.log(error);
       setIsLoading(false);

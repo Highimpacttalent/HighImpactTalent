@@ -222,17 +222,21 @@ const UserInfoForm = () => {
 
       {/* Right Column */}
       <div>
-        <div className="mb-6">
-          <label className="block text-gray-700 text-sm font-semibold mb-2">Date of Birth</label>
-          <input
-            type="date"
-            name="dateOfBirth"
-            value={formData.dateOfBirth}
-            onChange={handleChange}
-            className="w-full px-4 py-3 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            required
-          />
-        </div>
+       <div className="mb-6">
+  <label className="block text-gray-700 text-sm font-semibold mb-2">
+    Date of Birth
+  </label>
+  <input
+    type="date"
+    name="dateOfBirth"
+    value={formData.dateOfBirth}
+    onChange={handleChange}
+    max={new Date().toISOString().split("T")[0]} // Restrict future dates
+    className="w-full px-4 py-3 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+    required
+  />
+</div>
+
         <div className="mb-6">
           <label className="block text-gray-700 text-sm font-semibold mb-2">Contact Number</label>
           <div className="border rounded-lg  px-3 py-3">
@@ -240,7 +244,7 @@ const UserInfoForm = () => {
               placeholder="Enter phone number"
               value={value}
               onChange={setValue}
-              defaultCountry="US"
+              defaultCountry="IN"
             />
           </div>
         </div>
@@ -255,7 +259,7 @@ const UserInfoForm = () => {
           >
             <option value="">Select consulting type</option>
             <option value="Lateral">Lateral</option>
-            <option value="Post Graduation">Post Graduation</option>
+            <option value="Out of campus">Out of campus</option>
           </select>
         </div>
         <div className="mb-6">
