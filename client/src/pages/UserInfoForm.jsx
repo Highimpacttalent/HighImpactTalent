@@ -193,7 +193,7 @@ const UserInfoForm = () => {
         <div className="mb-6">
           <label className="block text-gray-700 text-sm font-semibold mb-2">Current Salary (INR Lakhs)</label>
           <input
-            type="text"
+            type="number"
             name="salary"
             value={formData.salary}
             onChange={handleChange}
