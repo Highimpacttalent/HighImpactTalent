@@ -7,10 +7,11 @@ import PhoneInput from "react-phone-number-input";
 import { Loading } from "../components";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+
 const UserInfoForm = () => {
   const { user } = useSelector((state) => state.user);
   const [loading, setLoading] = useState(false);
-  const [value, setValue] = useState();
+  const [value, setValue] = useState("");
   const widgetApi = useRef();
   const profileWidgetApi = useRef(null);
   const [profilePic, setProfilePic] = useState(null);
@@ -29,7 +30,13 @@ const UserInfoForm = () => {
     profilePic: null,
     resume: null,
   });
-
+  
+  const handlePhoneNumberChange = (inputValue) => {
+    if (inputValue && inputValue.length <= 13) {
+      setValue(inputValue);
+    } 
+  };
+  
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({
@@ -83,24 +90,57 @@ const UserInfoForm = () => {
   };
 
   const handleUpload = async (fileInfo) => {
-    console.log("File uploaded:", fileInfo);
-    // Send the fileInfo.cdnUrl to your backend to save it in the database
-    setFileUrl(fileInfo.cdnUrl);
-    const data = {
-      url: fileInfo.cdnUrl,
-    };
-    const updateResume = await axios.post(
-      "https://highimpacttalent.onrender.com/api-v1/user/upload-resume",
-      data,
-      {
-        headers: {
-          Authorization: `Bearer ${user?.token}`,
-          "Content-Type": "application/json",
-        },
+    if (fileInfo && fileInfo.name) {
+      // Safely check if fileInfo.name exists
+      const fileExtension = fileInfo.name.split('.').pop().toLowerCase();
+      const validExtensions = ["pdf", "doc", "docx"];
+  
+      if (validExtensions.includes(fileExtension)) {
+        setFileUrl(fileInfo.cdnUrl); // Set the file URL for display or storage
+        const data = {
+          url: fileInfo.cdnUrl,
+        };
+        try {
+          const updateResume = await axios.post(
+            "https://highimpacttalent.onrender.com/api-v1/user/upload-resume",
+            data,
+            {
+              headers: {
+                Authorization: `Bearer ${user?.token}`,
+                "Content-Type": "application/json",
+              },
+            }
+          );
+          console.log(fileInfo, updateResume);
+        } catch (error) {
+          console.error("Error uploading resume:", error);
+        }
+      } else {
+        alert("Only PDF, DOC, and DOCX files are allowed.");
+        // Remove the invalid file from the widget
+        if (widgetApi.current) {
+          widgetApi.current.removeFile(fileInfo.uuid);
+        }
       }
-    );
-    console.log(fileInfo, updateResume);
+    } else {
+      console.error("fileInfo or fileInfo.name is undefined");
+    }
   };
+  
+  const openUploadDialog = () => {
+    try {
+      if (!widgetApi.current) {
+        throw new Error("widgetApi is not initialized or is null.");
+      }
+  
+      widgetApi.current.openDialog(null, {
+        accept: ".pdf,.doc,.docx", // Allow PDF, DOC, DOCX only
+      });
+    } catch (error) {
+      console.error("Error opening upload dialog:", error);
+    }
+  };
+
   const handleImageChange = (event) => {
     const file = event.target.files[0];
     if (file) {
@@ -114,21 +154,7 @@ const UserInfoForm = () => {
       setProfilePic(file.cdnUrl); // Store uploaded image URL
     }
   };
-  const openUploadDialog = () => {
-    try {
-      if (!widgetApi.current) {
-        throw new Error("widgetApi is not initialized or is null.");
-      }
-
-      widgetApi.current.openDialog(null, {
-        accept: "application/pdf", // Only accept PDF files
-      });
-    } catch (error) {
-      console.log(error);
-
-      console.error("Error opening upload dialog:", error);
-    }
-  };
+  
   useEffect(() => {
     console.log(user);
   }, []);
@@ -260,16 +286,18 @@ const UserInfoForm = () => {
 </div>
 
         <div className="mb-6">
-          <label className="block text-gray-700 text-sm font-semibold mb-2">Contact Number</label>
-          <div className="border rounded-lg  px-3 py-3">
-            <PhoneInput
-              placeholder="Enter phone number"
-              value={value}
-              onChange={setValue}
-              defaultCountry="IN"
-            />
-          </div>
-        </div>
+      <label className="block text-gray-700 text-sm font-semibold mb-2">Contact Number</label>
+      <div className="border rounded-lg px-3 py-3">
+      <PhoneInput
+        placeholder="Enter phone number"
+        defaultCountry="IN"
+        value={value} 
+        onChange={handlePhoneNumberChange} 
+        maxLength={11}
+      />
+      </div>
+    </div>
+
         <div className="mb-6">
           <label className="block text-gray-700 text-sm font-semibold mb-2">When did you first join Consulting?</label>
           <select
@@ -374,4 +402,3 @@ const UserInfoForm = () => {
 };
 
 export default UserInfoForm;
-
