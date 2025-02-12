@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /private/
+Disallow: /admin/
+Disallow: /authform
+Disallow: /authlogin
+
+Sitemap: https://www.highimpacttalent.com/sitemap.xml
