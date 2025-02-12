@@ -18,7 +18,6 @@ import AuthForm from "./pages/AuthForm/AuthForm";
 import Loginform from "./pages/AuthForm/Loginform";
 import BlogPage from "./pages/BlogPage";
 import SingleBlog from "./pages/SingleBlog";
-import ViewJobs from "./pages/ViewJobs";
 
 function Layout() {
   const { user } = useSelector((state) => state.user);
@@ -47,7 +46,7 @@ function App() {
           /> */}
           <Route path="/" element={<Landing/>}></Route>
           <Route path='/find-jobs' element={<FindJob />} />
-          <Route path='/view-jobs' element={<ViewJobs />} />
+          <Route path='/view-jobs' element={<FindJob />} />
           <Route path='/companies' element={<Companies />} />
           <Route path={"/user-profile"} element={<UserProfile />} />
           <Route path={"/company-profile"} element={<CompaniesProfile />} />
