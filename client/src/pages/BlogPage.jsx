@@ -160,7 +160,7 @@ const BlogPage = () => {
                           //     : "https://upload.wikimedia.org/wikipedia/commons/9/99/Sample_User_Icon.png?20200919003010"
                           // }
                           alt="author"
-                          className="w-6 h-6 rounded-full mr-2 border border"
+                          className="w-6 h-6 rounded-full mr-2 border"
                         />
                         <span className="text-sm font-semibold">
                           {/* {blog.name ? blog.name : "Unknown"} */}

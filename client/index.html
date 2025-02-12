@@ -1,23 +1,79 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <!-- <link rel="shortcut icon" href="../client/src/assets/img.png" type="image/x-icon"> -->
-    <link rel="icon" href="../client/src/assets/logo.jpg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>High Impact Talent</title>
-    <!-- Google tag (gtag.js) -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-5QMZ3HEH1M"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#ffffff">
+    
+    <!-- Performance optimized resource loading -->
+    <link rel="preload" href="/logo.jpg" as="image" fetchpriority="high">
+    <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://www.google-analytics.com" crossorigin>
+    
+    <!-- Favicon with optimized sizes -->
+    <link rel="icon" href="/logo.jpg" type="image/jpeg">
+    <link rel="apple-touch-icon" href="/logo.jpg">
 
-    gtag('config', 'G-5QMZ3HEH1M');
-  </script>
-  </head>
-  <body>
+    <!-- Critical Meta Tags -->
+    <title>High Impact Talent | Leading Job Portal</title>
+    <meta name="description" content="Find your dream job or ideal candidate with High Impact Talent.">
+    <meta name="keywords" content="jobs, careers, recruitment, hiring">
+
+    <!-- Social Meta Tags -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.highimpacttalent.com/">
+    <meta property="og:title" content="High Impact Talent">
+    <meta property="og:description" content="Find your dream job or ideal candidate with High Impact Talent.">
+    <meta property="og:image" content="https://www.highimpacttalent.com/logo.jpg">
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:title" content="High Impact Talent">
+    <meta property="twitter:description" content="Find your dream job or ideal candidate with High Impact Talent.">
+    <meta property="twitter:image" content="https://www.highimpacttalent.com/logo.jpg">
+
+    <link rel="canonical" href="https://www.highimpacttalent.com/">
+
+    <!-- Deferred Schema.org -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "High Impact Talent",
+      "url": "https://www.highimpacttalent.com",
+      "logo": "https://www.highimpacttalent.com/logo.jpg",
+      "sameAs": [
+        "https://www.linkedin.com/company/highimpacttalent",
+        "https://twitter.com/highimpacttalent"
+      ]
+    }
+    </script>
+
+    <!-- Async Analytics -->
+    <script defer src="https://www.googletagmanager.com/gtag/js?id=G-5QMZ3HEH1M"></script>
+    <script>
+        window.addEventListener('load', function() {
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'G-5QMZ3HEH1M', { 
+                'anonymize_ip': true,
+                'send_page_view': false
+            });
+        });
+    </script>
+
+    <!-- Preload critical assets -->
+    <link rel="modulepreload" href="/src/main.jsx">
+    
+    <!-- Inline critical CSS -->
+    <style>
+        body { margin: 0; }
+        #root { min-height: 100vh; }
+    </style>
+</head>
+<body>
     <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
+    <script type="module" src="/src/main.jsx" async></script>
+    <noscript>Please enable JavaScript to use High Impact Talent.</noscript>
+</body>
 </html>
