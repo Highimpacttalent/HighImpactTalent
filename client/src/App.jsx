@@ -47,14 +47,7 @@ function App() {
           <Route path="/" element={<Landing/>}></Route>
           <Route path='/find-jobs' element={<FindJob />} />
           <Route path='/companies' element={<Companies />} />
-          <Route
-            path={
-              user?.user?.accountType === "seeker"
-                ? "/user-profile"
-                : "/user-profile/:id"
-            }
-            element={<UserProfile />} 
-          />
+          <Route path={"/user-profile"} element={<UserProfile />} />
           <Route path={"/company-profile"} element={<CompaniesProfile />} />
           <Route path={"/company-profile/:id"} element={<CompaniesProfile />} />
           <Route path={"/company-profile/job-detail/:id"} element={<CompaniesProfile />} />

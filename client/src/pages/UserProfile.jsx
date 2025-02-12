@@ -13,10 +13,9 @@ import { UpdateUser } from "../redux/userSlice";
 const UserProfile = () => {
   const { user } = useSelector((state) => state.user);
   const dispatch = useDispatch();
+  const [userInfo,setUser] = useState();
   // const [open, setOpen] = useState(false);
   const navigate = useNavigate();
-  const userInfo = user;
-  console.log(user);
   const [image, setImage] = useState(null);
   const [imageUrl, setImageUrl] = useState("");
 
@@ -56,127 +55,124 @@ const UserProfile = () => {
   const handleFileChange = (e) => {
     setImage(e.target.files[0]);
   };
-  return (
-    <div className="container mx-auto flex items-center justify-center py-10 ">
-      <div className="w-full md:w-2/3 2xl:w-2/4 bg-white flex flex-col gap-3 shadow-lg p-10 rounded-lg">
-        <div className="flex gap-3 flex-col">
-          <div className="w-20 h-20  2xl:w-36 2xl:h-36 md:w-24 md:h-24 rounded-full border border-blue-500 flex items-center justify-center overflow-hidden">
-            {imageUrl ? (
-              <img src={imageUrl} alt="Uploaded" />
-            ) : (
-              <div>
-                {user?.profileUrl ? (
-                  <img src={user?.profileUrl} alt="" />
-                ) : (
-                  <img
-                    src="https://upload.wikimedia.org/wikipedia/commons/9/99/Sample_User_Icon.png?20200919003010"
-                    alt=""
-                  />
-                )}
-              </div>
-            )}
-          </div>
 
-          <div className="">
-            <h2 className="text-4xl capitalize">
-              {" "}
-              {userInfo?.firstName + " " + userInfo?.lastName}
-            </h2>
-            <div className="flex flex-col text-sm">
-              <p className="flex gap-1 items-center py-1 text-slate-600 rounded-full">
-                <AiOutlineMail /> {userInfo?.email ?? "No Email"}
-              </p>
-              <p className="flex gap-1 items-center py-1 text-slate-600 rounded-full">
-                <FiPhoneCall /> {userInfo?.contactNumber ?? "No Contact"}
-              </p>
-              <p className="flex gap-1 items-center py-1 text-slate-600 rounded-full">
-                <HiLocationMarker />{" "}
-                {userInfo?.currentLocation ?? "No Location"}
-              </p>
-            </div>
-          </div>
+  useEffect(()=>{
+    const fetchUser = async () => {
+      try {
+        const response = await axios.get("https://highimpacttalent.onrender.com/api-v1/user/get", {
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${user?.token}`,
+          },
+          params: {
+            id: user?.id
+          }
+        });
+  
+        console.log(response?.data?.user);
+        setUser(response?.data?.user)
+        console.log(userInfo)
+      } catch (error) {
+        console.error("Error fetching user:", error);
+      }
+    };
+  
+    fetchUser();
+  },[user?.token, user?.id])
+
+  return (
+    <div className="container mx-auto py-10 px-4 flex items-center justify-center">
+  <div className="w-full md:w-2/3 2xl:w-2/4 bg-white shadow-xl rounded-xl p-8 space-y-8">
+    {/* Profile Picture and Name Section */}
+    <div className="flex flex-col items-center gap-6">
+      <div className="w-24 h-24 md:w-36 md:h-36 2xl:w-48 2xl:h-48 rounded-full overflow-hidden border-4 border-blue-500">
+        {imageUrl ? (
+          <img src={imageUrl} alt="Uploaded" className="w-full h-full object-cover" />
+        ) : (
+          <img
+            src={userInfo?.profileUrl || "https://upload.wikimedia.org/wikipedia/commons/9/99/Sample_User_Icon.png?20200919003010"}
+            alt="Profile"
+            className="w-full h-full object-cover"
+          />
+        )}
+      </div>
+      <h2 className="text-3xl font-semibold capitalize text-gray-800">{userInfo?.firstName + " " + userInfo?.lastName}</h2>
+      <div className="text-sm text-center text-gray-600 space-y-2">
+        <p className="flex gap-2 items-center justify-center"><AiOutlineMail /> {userInfo?.email ?? "No Email"}</p>
+        <p className="flex gap-2 items-center justify-center"><FiPhoneCall /> {userInfo?.contactNumber ?? "No Contact"}</p>
+        <p className="flex gap-2 items-center justify-center"><HiLocationMarker /> {userInfo?.currentLocation ?? "No Location"}</p>
+      </div>
+    </div>
+
+    {/* Upload Profile Picture */}
+    <div className="space-y-4">
+      <input type="file" onChange={handleFileChange} className="w-full px-4 py-2 border rounded-lg text-gray-700 bg-gray-50 focus:ring-2 focus:ring-blue-500" />
+      <button onClick={handleImageUpload} className="w-full py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition duration-300">Upload Profile Pic</button>
+    </div>
+
+    {/* Resume Section */}
+    <div className="border-t pt-4 space-y-4">
+      <h3 className="text-xl font-semibold capitalize">Resume</h3>
+      <div className="h-10 border rounded-lg overflow-hidden">
+        {userInfo?.cvUrl ? (
+          <a href={userInfo?.cvUrl} target="_blank" rel="noopener noreferrer" className="w-full flex items-center justify-center bg-blue-500 text-white py-2 hover:bg-blue-600 transition duration-300">
+            View Resume
+          </a>
+        ) : (
+          <Link to="/upload-resume">
+            <button className="w-full flex items-center justify-center bg-blue-500 text-white py-2 hover:bg-blue-600 transition duration-300">
+              Upload Resume
+            </button>
+          </Link>
+        )}
+      </div>
+    </div>
+
+    {/* Profile Details */}
+    <div className="border-t pt-4 space-y-4">
+      <h3 className="text-xl font-semibold capitalize">Details</h3>
+      <div className="space-y-2">
+        <div className="flex justify-between text-sm">
+          <span>Experience:</span>
+          <span className="text-gray-600">{userInfo?.experience ?? "No Experience"}</span>
         </div>
-        <div className="flex flex-col gap-2">
-          <input type="file" onChange={handleFileChange} />
-          <div
-            onClick={handleImageUpload}
-            className="bg-blue-500 p-2 text-white"
-          >
-            Upload Profile Pic
-          </div>
+        <div className="flex justify-between text-sm">
+          <span>Current Company:</span>
+          <span className="text-gray-600">{userInfo?.currentCompany ?? "Not Available"}</span>
         </div>
-        <div className="capitalize border rounded p-2">
-          <div>resume</div>
-          <div className="border rounded h-10 overflow-hidden">
-            {user?.cvUrl != "" ? (
-              <a href={userInfo?.cvUrl}>
-                <div className="bg-blue-500 p-2 text-white">view Resume</div>
-              </a>
-            ) : (
-              <Link to={"/upload-resume"}>
-                <div className="bg-blue-500 p-2 text-white">Upload Resume</div>
-              </Link>
-            )}
-          </div>
+        <div className="flex justify-between text-sm">
+          <span>Current Job:</span>
+          <span className="text-gray-600">{userInfo?.currentJobRole ?? "Not Available"}</span>
         </div>
-        <div className="capitalize border rounded p-2">
-          <div>Details</div>
-          <div className="pl-2">
-            <div className="flex text-sm gap-2">
-              <p className="">experience :</p>
-              <p className="text-slate-600">
-                {userInfo?.experience ?? "experience"}
-              </p>
-            </div>
-            <div className="flex text-sm gap-2">
-              <p>Current Company :</p>
-              <p className="text-slate-600">
-                {userInfo?.currentCompany ?? "current company"}
-              </p>
-            </div>
-            <div className="flex text-sm gap-2">
-              <p>Current Job :</p>
-              <p className="text-slate-600">
-                {userInfo?.currentJobRole ?? "currentJobRole"}
-              </p>
-            </div>
-            <div className="flex text-sm gap-2">
-              <p>join Consulting :</p>
-              <p className="text-slate-600">
-                {userInfo?.joinConsulting ?? "joinConsulting"}
-              </p>
-            </div>
-            <div className="flex text-sm gap-2">
-              <p>open To Relocate :</p>
-              <p className="text-slate-600">
-                {userInfo?.openToRelocate ?? "openToRelocate"}
-              </p>
-            </div>
-          </div>
+        <div className="flex justify-between text-sm">
+          <span>Join Consulting:</span>
+          <span className="text-gray-600">{userInfo?.joinConsulting ?? "Not Available"}</span>
         </div>
-        <div className="border rounded p-2">
-          <div>Profile summary</div>
-          <p className="text-slate-600 pl-3 text-sm">
-            Lorem ipsum dolor sit amet consectetur adipisicing elit. Placeat
-            facere eveniet nam ut officia iste magni repudiandae cupiditate
-            harum assumenda.
-          </p>
-          {/* {userInfo?.about ?? "No About Found"} */}
-        </div>
-        <div className="border rounded p-2 ">
-          <button
-            className="w-full md:w-64 bg-blue-500 text-white py-2 capitalize rounded"
-            onClick={() => {
-              navigate("/user-additional-details");
-            }}
-          >
-            update details
-          </button>
+        <div className="flex justify-between text-sm">
+          <span>Open to Relocate:</span>
+          <span className="text-gray-600">{userInfo?.openToRelocate ?? "Not Specified"}</span>
         </div>
       </div>
-
-      {/* <UserForm open={open} setOpen={setOpen} /> */}
     </div>
+
+    {/* Profile Summary */}
+    <div className="border-t pt-4 space-y-4">
+      <h3 className="text-xl font-semibold capitalize">Profile Summary</h3>
+      <p className="text-sm text-gray-600">{userInfo?.about ?? "No Summary Available"}</p>
+    </div>
+
+    {/* Update Details Button */}
+    <div className="flex justify-center">
+      <button
+        className="w-full md:w-64 bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600 transition duration-300"
+        onClick={() => navigate("/user-additional-details")}
+      >
+        Update Details
+      </button>
+    </div>
+  </div>
+</div>
+
   );
 };
 

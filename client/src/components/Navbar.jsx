@@ -51,7 +51,7 @@ function MenuList({ user, onClick }) {
               {({ active }) => (
                 <Link
                   to={`${
-                    user?.accountType ? `/user-profile/${user?._id}` : "company-profile"
+                    user?.accountType ? `/user-profile` : "company-profile"
                   }`}
                   className={`${
                     active ? "bg-[#1176DB] text-white" : "text-gray-700"
@@ -123,6 +123,11 @@ const Navbar = () => {
           {user?.token && user?.accountType !== "seeker" && (
             <li className="hover:text-[#1176DB] transition">
               <Link to="/upload-job">Upload Job</Link>
+            </li>
+          )}
+          {user?.token && user?.accountType !== "seeker" && (
+            <li className="hover:text-[#1176DB] transition">
+              <Link to="/upload-job">View Job</Link>
             </li>
           )}
           <li className="hover:text-[#1176DB] transition">
