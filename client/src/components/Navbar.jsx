@@ -127,7 +127,7 @@ const Navbar = () => {
           )}
           {user?.token && user?.accountType !== "seeker" && (
             <li className="hover:text-[#1176DB] transition">
-              <Link to="/upload-job">View Job</Link>
+              <Link to="/view-jobs">Job Posts</Link>
             </li>
           )}
           <li className="hover:text-[#1176DB] transition">
@@ -174,9 +174,13 @@ const Navbar = () => {
       >
         <div className="lg:hidden bg-white shadow-md">
           <div className="container mx-auto flex flex-col p-5 gap-3">
+          {user?.accountType === "seeker" ? (
             <Link to="/find-jobs" onClick={handleCloseNavbar}>
               Find Job
             </Link>
+            ):(
+              <Link to="/view-jobs">Job Posts</Link>
+            )}
             {user?.accountType === "seeker" && (
               <Link to="/companies" onClick={handleCloseNavbar}>
                 Companies

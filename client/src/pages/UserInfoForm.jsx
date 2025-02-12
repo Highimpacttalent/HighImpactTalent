@@ -141,33 +141,55 @@ const UserInfoForm = () => {
       <div>
       <div className="mb-6">
   <label className="block text-gray-700 text-sm font-semibold mb-2">
-    Current Job
+    Last/Current Consulting Company
   </label>
-  <input
-    type="text"
+  <select
     name="job"
     value={formData.job}
     onChange={handleChange}
     className="w-full px-4 py-3 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-    placeholder="Enter your Company Name"
     required
-  />
+  >
+    <option value="">Select your Company</option>
+    <option value="McKinsey & Company">McKinsey & Company</option>
+    <option value="Boston Consulting Group">Boston Consulting Group</option>
+    <option value="Bain & Company">Bain & Company</option>
+    <option value="Deloitte">Deloitte</option>
+    <option value="Accenture">Accenture</option>
+    <option value="Kearney">Kearney</option>
+    <option value="EY">EY</option>
+    <option value="PwC">PwC</option>
+    <option value="KPMG">KPMG</option>
+    <option value="TSMG">TSMG</option>
+    <option value="Strategy&">Strategy&</option>
+    <option value="Oliver Wyman">Oliver Wyman</option>
+    <option value="IBM">IBM</option>
+    <option value="Capgemini E.L.I.T.E.">Capgemini E.L.I.T.E.</option>
+    <option value="ZS Associates">ZS Associates</option>
+    <option value="Roland Berger">Roland Berger</option>
+    <option value="Alvarez & Marsal">Alvarez & Marsal</option>
+    <option value="Parthenon Group">Parthenon Group</option>
+    <option value="Siemens Management Consulting">Siemens Management Consulting</option>
+    <option value="Arthur D. Little">Arthur D. Little</option>
+    <option value="Other">Other</option>
+  </select>
 </div>
 
-        {formData.job === "Other" && (
-          <div className="mb-6">
-            <label className="block text-gray-700 text-sm font-semibold mb-2">Other Company Name</label>
-            <input
-              type="text"
-              name="company"
-              value={formData.company}
-              onChange={handleChange}
-              placeholder="Please Specify Company name...."
-              className="w-full px-4 py-3 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              required
-            />
-          </div>
-        )}
+{formData.job === "Other" && (
+  <div className="mb-6">
+    <label className="block text-gray-700 text-sm font-semibold mb-2">Other Company Name</label>
+    <input
+      type="text"
+      name="company"
+      value={formData.company}
+      onChange={handleChange}
+      placeholder="Please Specify Company name...."
+      className="w-full px-4 py-3 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+      required
+    />
+  </div>
+)}
+
         <div className="mb-6">
           <label className="block text-gray-700 text-sm font-semibold mb-2">Current Salary (INR Lakhs)</label>
           <input
