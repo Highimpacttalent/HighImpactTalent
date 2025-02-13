@@ -17,6 +17,7 @@ import JobUploadPage from "./pages/JobUploadPage";
 import AuthForm from "./pages/AuthForm/AuthForm";
 import Loginform from "./pages/AuthForm/Loginform";
 import BlogPage from "./pages/BlogPage";
+import ViewJobs from "./pages/ViewJobs";
 import SingleBlog from "./pages/SingleBlog";
 
 function Layout() {
@@ -46,7 +47,7 @@ function App() {
           /> */}
           <Route path="/" element={<Landing/>}></Route>
           <Route path='/find-jobs' element={<FindJob />} />
-          <Route path='/view-jobs' element={<FindJob />} />
+          <Route path='/view-jobs' element={<ViewJobs />} />
           <Route path='/companies' element={<Companies />} />
           <Route path={"/user-profile"} element={<UserProfile />} />
           <Route path={"/company-profile"} element={<CompaniesProfile />} />
