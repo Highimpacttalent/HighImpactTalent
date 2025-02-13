@@ -337,7 +337,8 @@ const UserInfoForm = () => {
         </div>
         <div className="mb-6">
           <label className="block text-gray-700 text-sm font-semibold mb-2">Upload Profile Picture</label>
-          <button className="bg-blue-500 rounded-lg cursor-pointer">
+          <button className="bg-blue-500 rounded-lg cursor-pointer"
+          type="button">
             <Widget
               publicKey="8eeb05a138df98a3c92f"
               ref={profileWidgetApi}
@@ -362,6 +363,7 @@ const UserInfoForm = () => {
           <h2 className="text-sm font-semibold">Upload Your Resume</h2>
           <button
             onClick={openUploadDialog}
+            type="button"
             className="bg-blue-500 text-white py-2 px-4 rounded-lg mt-2 hover:bg-blue-600"
           >
             Upload PDF Resume
