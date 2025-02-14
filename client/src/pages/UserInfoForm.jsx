@@ -12,6 +12,7 @@ const UserInfoForm = () => {
   const { user } = useSelector((state) => state.user);
   const [loading, setLoading] = useState(false);
   const [value, setValue] = useState("");
+  const [error, setError] = useState("");
   const widgetApi = useRef();
   const profileWidgetApi = useRef(null);
   const [profilePic, setProfilePic] = useState(null);
@@ -91,11 +92,15 @@ const UserInfoForm = () => {
 
   const handleUpload = async (fileInfo) => {
     if (fileInfo && fileInfo.name) {
-      // Safely check if fileInfo.name exists
       const fileExtension = fileInfo.name.split('.').pop().toLowerCase();
       const validExtensions = ["pdf", "doc", "docx"];
+      const validMimeTypes = [
+        "application/pdf",
+        "application/msword",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+      ];
   
-      if (validExtensions.includes(fileExtension)) {
+      if (validExtensions.includes(fileExtension) && validMimeTypes.includes(fileInfo.mimeType)) {
         setFileUrl(fileInfo.cdnUrl); // Set the file URL for display or storage
         const data = {
           url: fileInfo.cdnUrl,
@@ -119,7 +124,7 @@ const UserInfoForm = () => {
         alert("Only PDF, DOC, and DOCX files are allowed.");
         // Remove the invalid file from the widget
         if (widgetApi.current) {
-          widgetApi.current.removeFile(fileInfo.uuid);
+          widgetApi.current.value(null);
         }
       }
     } else {
@@ -291,10 +296,12 @@ const UserInfoForm = () => {
       <PhoneInput
         placeholder="Enter phone number"
         defaultCountry="IN"
-        value={value} 
-        onChange={handlePhoneNumberChange} 
+        value={value}
+        onChange={handlePhoneNumberChange}
+        inputMode="numeric" // Restrict input to numbers on mobile devices
         maxLength={11}
       />
+      {error && <p style={{ color: "red" }}>{error}</p>}
       </div>
     </div>
 
@@ -369,11 +376,23 @@ const UserInfoForm = () => {
             Upload PDF Resume
           </button>
           <Widget
-            publicKey="8eeb05a138df98a3c92f"
-            ref={widgetApi}
-            onChange={handleUpload}
-            style={{ display: "none" }}
-          />
+              publicKey="8eeb05a138df98a3c92f"
+              ref={widgetApi}
+              onChange={handleUpload}
+              style={{ display: "none" }}
+              validators={[
+                fileInfo => {
+                  const allowedTypes = [
+                    "application/pdf",
+                    "application/msword",
+                    "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                  ];
+                  if (!allowedTypes.includes(fileInfo.mimeType)) {
+                    return false; // Prevents upload
+                  }
+                }
+              ]}
+            />
           {fileUrl && (
             <div className="mt-4">
               <a
