@@ -123,11 +123,23 @@ const ScreeningQuestions = () => {
             Upload PDF Resume
           </button>
           <Widget
-            publicKey="886857a9a1571edf40e9"
+            publicKey="8eeb05a138df98a3c92f"
             ref={widgetApi}
             onChange={handleUpload}
             style={{ display: "none" }}
-          />
+            validators={[
+            fileInfo => {
+            const allowedTypes = [
+            "application/pdf",
+            "application/msword",
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+            ];
+            if (!allowedTypes.includes(fileInfo.mimeType)) {
+            return false; // Prevents upload
+            }
+            }
+            ]}
+            />
           {fileUrl && (
             <div className="mt-4">
               <a
