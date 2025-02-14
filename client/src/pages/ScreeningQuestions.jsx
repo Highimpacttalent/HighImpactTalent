@@ -4,64 +4,59 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { apiRequest } from "../utils";
 import { Widget } from "@uploadcare/react-widget";
 import { useSelector } from "react-redux";
-// import axios from "axios";
 
 const ScreeningQuestions = () => {
   const { state } = useLocation();
-  const [applied,setApplied]=useState(false)
-  const [status,setStatus]=useState('applied')
+  console.log(state)
+  const navigate = useNavigate();
+  const widgetApi = useRef();
+
+  const [applied, setApplied] = useState(false);
+  const [fileUrl, setFileUrl] = useState("");
+  const [applyButton, setApplyButton] = useState(false);
   const [formData, setFormData] = useState({
-    answers: ["", ""], // Assuming there are 2 screening questions
+    answers: state?.questions ? Array(state.questions.length).fill("") : [],
   });
+
+  const { user } = useSelector((state) => state.user);
+
   const handleAnswerChange = (index, value) => {
     const newAnswers = [...formData.answers];
     newAnswers[index] = value;
-    setFormData({
-      ...formData,
-      answers: newAnswers,
-    });
+    setFormData({ ...formData, answers: newAnswers });
   };
 
-//   const handleSubmit = (e) => {
-//     e.preventDefault();
-//     console.log("Form submitted:", formData);
-//   };
-
-  const applyHandler = async (jobid,companyid,applicantid)=>{
-    // alert('clicked')
-    // e.preventDefault();
-    console.log(jobid,companyid,applicantid)
-    // axios
-    try {
-      const res = await apiRequest({
-        url: `https://highimpacttalent.onrender.com/api-v1/application/create`,
-        data:{job:jobid,company:companyid,applicant:applicantid},
-        method: "POST",
-      });
-      if(res){
-        setApplied(true)
-        console.log('applied',res)
+  const applyHandler = async () => {
+    if (!applied) {
+      try {
+        const res = await apiRequest({
+          url: "https://highimpacttalent.onrender.com/api-v1/application/create",
+          method: "POST",
+          data: {
+            job: state?.jobid,
+            company: state?.companyid,
+            applicant: state?.userid,
+          },
+        });
+        if (res) {
+          setApplied(true);
+          console.log("Successfully applied", res);
+        }
+      } catch (error) {
+        console.error("Error while applying for job:", error);
       }
-    } catch (error) {
-      console.log('Error while apply for job')
-      
+    } else {
+      navigate("/application-tracking");
     }
-  }
-  ///resume
-  const { user } = useSelector((state) => state.user);
-  const widgetApi = useRef();
-  const [fileUrl, setFileUrl] = useState("");
-  const [applyButton,setApplyButton]=useState(false)
-  const handleUpload =async (fileInfo) => {
-    console.log("File uploaded:", fileInfo);
-    // Send the fileInfo.cdnUrl to your backend to save it in the database
+  };
+
+  const handleUpload = async (fileInfo) => {
     setFileUrl(fileInfo.cdnUrl);
-          const data ={
-        url:fileInfo.cdnUrl
-      }
-      const updateResume = await axios.post(
+
+    try {
+      const response = await axios.post(
         "https://highimpacttalent.onrender.com/api-v1/user/upload-resume",
-        data,
+        { url: fileInfo.cdnUrl },
         {
           headers: {
             Authorization: `Bearer ${user?.token}`,
@@ -69,95 +64,105 @@ const ScreeningQuestions = () => {
           },
         }
       );
-      console.log(fileInfo,updateResume.data.success);
-      if(updateResume.data.success){
+
+      if (response.data.success) {
         setApplyButton(true);
-      }else{
-        alert('please Login First')
+      } else {
+        alert("Please login first.");
       }
+    } catch (error) {
+      console.error("Error uploading resume:", error);
+    }
   };
 
   const openUploadDialog = () => {
     widgetApi.current.openDialog(null, {
-      accept: "application/pdf", // Only accept PDF files
+      accept: "application/pdf",
     });
   };
-  const navigate=useNavigate()
-  useEffect(() => {
-    console.log(formData)
-    console.log(state);
-    console.log(state.questions.length)
-  });
+
+  // Filter out empty questions
+  const filteredQuestions = state?.questions?.filter(
+    (question) => question.question.trim() !== ""
+  );
+
   return (
-    <div className="h-screen">
-        {/* onSubmit={handleSubmit} */}
-        <div >
-      {state.questions.length>0&&<div><div>
-        <label>
-          <div><span>Question 1:</span><span>{state?.questions?.[0]}</span></div>
-          <input
-            type="text"
-            className="p-2 bg-zinc-200 w-full rounded-lg"
-            value={formData.answers[0]}
-            onChange={(e) => handleAnswerChange(0, e.target.value)}
-            required
-          />
-        </label>
-      </div>
-      <div>
-        <label>
-        <div><span>Question 2:</span><span>{state?.questions?.[1]}</span></div>
-          <input
-            type="text"
-            className="p-2 bg-zinc-200 w-full rounded-lg"
-            value={formData.answers[1]}
-            onChange={(e) => handleAnswerChange(1, e.target.value)}
-            required
-          />
-        </label>
-      </div></div>}
-      <div>
-      <h2 className="text-lg font-bold mb-4">Upload Your Resume</h2>
-      <button
-        onClick={openUploadDialog}
-        className="bg-blue-500  text-white font-bold py-2 px-4 rounded"
-      >
-        Upload PDF Resume
-      </button>
-      <Widget
-        publicKey="886857a9a1571edf40e9"
-        ref={widgetApi}
-        onChange={handleUpload}
-        style={{ display: "none" }} // Hide the default widget
-      />
-      {fileUrl && (
-        <div className="mt-4">
-          <a
-            href={fileUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-blue-500 hover:text-blue-700"
+    <div className="min-h-screen bg-gray-100 p-6 flex flex-col items-center">
+      <div className="w-full max-w-2xl bg-white p-6 shadow-lg rounded-lg">
+        {filteredQuestions?.length > 0 ? (
+          <div className="mb-6">
+            <h2 className="text-lg font-semibold mb-4">Screening Questions</h2>
+            {filteredQuestions.map((question, index) => (
+              <div key={index} className="mb-4">
+                <label className="block font-medium text-gray-700">
+                  Question {index + 1}: {question.question}
+                </label>
+                <input
+                  type="text"
+                  className="mt-2 p-2 w-full border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+                  value={formData.answers[index] || ""}
+                  onChange={(e) => handleAnswerChange(index, e.target.value)}
+                  required
+                />
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="mb-6 text-gray-600 font-medium">
+            No screening question provided by company.
+          </div>
+        )}
+
+        {/* Upload Resume Section */}
+        <div className="mb-6">
+          <h2 className="text-lg font-semibold mb-4">Upload Your Resume</h2>
+          <button
+            onClick={openUploadDialog}
+            className="bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700 transition duration-200"
           >
-            See Your Resume
-          </a>
+            Upload PDF Resume
+          </button>
+          <Widget
+            publicKey="886857a9a1571edf40e9"
+            ref={widgetApi}
+            onChange={handleUpload}
+            style={{ display: "none" }}
+          />
+          {fileUrl && (
+            <div className="mt-4">
+              <a
+                href={fileUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-500 hover:underline"
+              >
+                View Uploaded Resume
+              </a>
+            </div>
+          )}
         </div>
-      )}
+
+        {/* Apply Button */}
+        {applyButton ? (
+          <button
+            onClick={applyHandler}
+            className={`w-full py-2 text-white font-bold rounded-lg transition duration-200 ${
+              applied
+                ? "bg-green-600 hover:bg-green-700"
+                : "bg-blue-600 hover:bg-blue-700"
+            }`}
+          >
+            {applied ? "View Application Status" : "Apply Now"}
+          </button>
+        ) : (
+          <button
+            onClick={() => alert("Upload Your Resume First")}
+            className="w-full py-2 bg-gray-400 text-white font-bold rounded-lg cursor-not-allowed"
+          >
+            Apply
+          </button>
+        )}
       </div>
-      {/* <div onClick={()=>{
-        navigate('/upload-resume')
-      }} className="capitalize my-3 p-2 bg-blue-500 text-white rounded-lg text-center">Upload Resume</div> */}
-      {applyButton?<div
-      onClick={()=>{
-          !applied&&applyHandler(state.jobid,state.companyid,state.userid)
-          applied&&navigate('/application-tracking')
-        }} 
-      className={`py-2 px-4 flex bg-blue-500 w-full text-white items-center justify-center text-black rounded-[10px] my-3 capitalize`}
-    > 
-      {applied?`view application status`:'apply now'}
-        </div>:<div onClick={()=>{
-            alert('Upload Your Resume First')
-        }} className="capitalize py-2 px-4 flex bg-blue-500/40 w-full text-white items-center justify-center text-black rounded-[10px] my-3">Apply</div>}
-    </div>
     </div>
   );
 };

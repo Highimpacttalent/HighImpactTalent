@@ -1,60 +1,62 @@
 import { useEffect, useState } from "react";
-import { Linkedin } from "../assets";
-import moment from "moment";
-import { AiOutlineSafetyCertificate } from "react-icons/ai";
-import { Navigate, useNavigate, useParams } from "react-router-dom";
-import { jobs } from "../utils/data";
-import { CustomButton, JobCard } from "../components";
+import { useParams, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { apiRequest } from "../utils";
-import axios from "axios";
-import ScreeningQuestions from "./ScreeningQuestions";
+import moment from "moment";
+import JobCard from "../components/JobCard";
+import {
+  Box,
+  Button,
+  Card,
+  CardContent,
+  Typography,
+  Grid,
+  Stack,
+  CircularProgress,
+} from "@mui/material";
+import { AiOutlineSafetyCertificate } from "react-icons/ai";
 
 const JobDetail = () => {
   const { id } = useParams();
   const { user } = useSelector((state) => state.user);
   const [job, setJob] = useState(null);
   const [similarJobs, setSimilarJobs] = useState([]);
-  const [selected, setSelected] = useState("0");
   const [isFetching, setIsFetching] = useState(false);
-  const [applied, setApplied] = useState(false);
-  const [status, setStatus] = useState("applied");
   const navigate = useNavigate();
 
-  const getJobDetails = async () => {
-    setIsFetching(true);
-    try {
-      const res = await apiRequest({
-        url: `/jobs/get-job-detail/${id}`,
-        method: "GET",
-      });
-      console.log("API Response:", res); // Log the entire response
-      if (res && res.data) {
-        setJob(res.data);
-        console.log(job);
-        setSimilarJobs(res.similarJobs);
-      } else {
-        console.error("Invalid response data:", res);
-      }
-    } catch (error) {
-      console.error("Error fetching job details:", error); // Log the error
-    } finally {
-      setIsFetching(false);
-    }
-  };
-
-  const handleDelete = async () => {
-    console.log("Job ID to delete:", id);
-    setIsFetching(true);
-    if (window.confirm("Are you sure you want to delete this job?")) {
+  useEffect(() => {
+    const getJobDetails = async () => {
+      setIsFetching(true);
       try {
         const res = await apiRequest({
+          url: `/jobs/get-job-detail/${id}`,
+          method: "GET",
+        });
+        if (res?.data) {
+          setJob(res.data);
+          setSimilarJobs(res.similarJobs);
+        }
+      } catch (error) {
+        console.error("Error fetching job details:", error);
+      } finally {
+        setIsFetching(false);
+      }
+    };
+
+    if (id) getJobDetails();
+    window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
+  }, [id]);
+
+  const handleDelete = async () => {
+    if (window.confirm("Are you sure you want to delete this job?")) {
+      setIsFetching(true);
+      try {
+        await apiRequest({
           url: `/jobs/delete-job/${job?.id}`,
           token: user?.token,
           method: "DELETE",
         });
-        console.log("Delete Response:", res);
-        window.location.href = "/";
+        navigate("/");
       } catch (error) {
         console.error("Error deleting job:", error);
       } finally {
@@ -63,149 +65,170 @@ const JobDetail = () => {
     }
   };
 
-  useEffect(() => {
-    console.log(job);
-    id && getJobDetails();
-    window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
-  }, [id]);
-
   if (isFetching || !job) {
-    return <div>Loading...</div>;
+    return (
+      <CircularProgress sx={{ display: "block", mx: "auto", mt: 5, mb: 5 }} />
+    );
   }
-  // useEffect(()=>{
-  //   console.log(job)
-  // })
+
   return (
-    <div className="container mx-auto pb-4 bg-[#f3f4f6]">
-      <div className="w-full flex flex-col md:flex-row gap-2">
-        {/* LEFT SIDE */}
-        <div className="w-full m-2 rounded h-fit md:w-2/3 2xl:2/4 bg-white px-5 py-5 md:px-10 shadow-md flex flex-col gap-1">
-          <div className="w-full flex items-center justify-between">
-            <div className="w-3/4 flex gap-2">
-              {/* <img
-                src={job?.company?.profileUrl}
-                alt={job?.company?.name}
-                className="w-20 h-20 md:w-24 md:h-20 rounded"
-              /> */}
-
-              <div className="flex flex-col">
-                <p className="text-xl font-semibold text-gray-600">
+    <Box sx={{ maxWidth: "1200px", mx: "auto", p: 3, bgcolor: "#f3f4f6" }}>
+      <Grid container spacing={2}>
+        <Grid item xs={12} md={8}>
+          <Card sx={{ p: 3, boxShadow: 2 }}>
+            <Box
+              sx={{
+                display: "flex",
+                flexDirection: "row",
+                justifyContent: "space-between",
+              }}
+            >
+              <Stack>
+                <Typography variant="h5" fontWeight={600}>
                   {job?.jobTitle}
-                </p>
-
-                <span className="text-base">{job?.location}</span>
-
-                <span className="text-base text-blue-600">
+                </Typography>
+                <Typography color="primary" fontWeight={500}>
                   {job?.company?.name}
-                </span>
+                </Typography>
+                <Typography color="textSecondary" fontWeight={500}>
+                  {job?.jobLocation}
+                </Typography>
+                <Typography color="textSecondary">
+                  Posted {moment(job?.createdAt).fromNow()}...
+                </Typography>
+              </Stack>
 
-                <span className="text-gray-500 text-sm">
-                  {/* {moment(job?.createdAt).fromNow()} */}
-                </span>
-              </div>
-            </div>
+              <Box sx={{ display: "flex", alignItems: "flex-start", mt: 1 }}>
+                <AiOutlineSafetyCertificate size={28} color="blue" />
+              </Box>
+            </Box>
 
-            <div className="">
-              <AiOutlineSafetyCertificate className="text-3xl text-blue-500" />
-            </div>
-          </div>
+            <Typography variant="h6" mt={2} sx={{ fontWeight: "bold" }}>
+              Job Description
+            </Typography>
+            <Typography>{job?.jobDescription}</Typography>
 
-          <div className="my-2">
-            <div>
-              <p className="text-xl font-semibold text-zinc-700">Job Description</p>
+            <Typography fontWeight="bold" mt={2}>
+              Experience: {job?.experience} Year+
+            </Typography>
+            <Typography fontWeight="bold" mt={2}>
+              Salary:{" "}
+              {job?.salaryConfidential
+                ? "Confidential"
+                : `₹${job?.salary?.toLocaleString()}`}{" "}
+              per year
+            </Typography>
 
-              <span className="text-zinc-600 text-sm">{job?.jobDescription}</span>
-
-              <div className="flex gap-1 items-center mt-3">
-                <p className="font-semibold text-md text-zinc-700">Experience :</p>
-                <span className="text-zinc-600 text-sm flex items-center">{job?.experience}<span>Year+</span></span> 
-              </div>
-            </div>
-          </div>
-          {job?.requirements.length>0&&<div className="my-2">
-            <div>
-            {job.requirements[0]!=""&&<p className="text-md text-zinc-700 font-semibold ">Requirements</p>}
-                <div className="flex flex-col gap-1">
-                  {job.requirements.map((para,index)=>{
-                    return para!=''&&<li key={index} className="pl-2  text-sm text-zinc-600">{para}</li>
-                  })}
-                </div>
-            </div>
-          </div>}
-          {job?.qualifications.length>0&&<div className="my-2">
-            <div>
-            {job.qualifications[0]!=""&&<p className="text-ms text-zinc-700 font-semibold ">Qualifications</p>}
-                <div className="flex flex-col gap-1">
-                  {job.qualifications.map((para,index)=>{
-                    return para!=''&&<li key={index} className="pl-2 text-zinc-600 text-sm">{para}</li>
-                  })}
-                </div>
-            </div>
-          </div>}
-          
-
-          {user?.token == null ? (
-            <div
-              onClick={() => {
-                navigate("/user-auth");
-              }}
-              className="p-2 bg-blue-500 my-2 text-white rounded-lg text-center"
-            >
-              Login/Register To Apply
-            </div>
-          ) : user?.accountType == "seeker" ? (
-            <div
-              onClick={() => {
-                navigate("screening-questions", {
-                  state: {
-                    questions: job?.screeningQuestions,
-                    jobid: job._id,
-                    companyid: job?.company?._id,
-                    userid: user._id,
-                  },
-                });
-                // navigate("/screening-questions")
-              }}
-              className="p-2 bg-blue-500 my-2 text-white rounded-lg text-center"
-            >
-              {" "}
-              Apply now
-            </div>
-          ) : (
-            <></>
-          )}
-
-          <div className="w-full">
-            {user?.id === job?.company?._id ? (
-              <CustomButton
-                onClick={handleDelete}
-                title="Delete Job"
-                containerStyles="w-full flex items-center justify-center bg-red-500 py-3 px-5 outline-none rounded-full text-base"
-              />
-            ) : (
-              <></>
+            {job?.requirements?.length > 0 && (
+              <Box mt={2}>
+                <Typography fontWeight={600}>Requirements</Typography>
+                <ul>
+                  {job.requirements.length > 0 &&
+                  job.requirements.some((req) => req.trim() !== "") ? (
+                    job.requirements
+                      .filter((req) => req.trim() !== "")
+                      .map((req, index) => <li key={index}>{req}</li>)
+                  ) : (
+                    <li style={{ color: 'rgba(0, 0, 0, 0.60)' }}>No requirement mentioned by the company.</li>
+                  )}
+                </ul>
+              </Box>
             )}
-          </div>
-        </div>
 
-        {/* RIGHT SIDE */}
-        <div className="w-full md:w-1/3 2xl:w-2/4 p-2 md:mt-0 ">
-          <p className="text-gray-500 font-semibold mb-3">Similar Job Post</p>
+            {job?.qualifications?.some((qual) => qual.trim() !== "") ? (
+              <Box mt={2}>
+                <Typography fontWeight={600}>Qualifications</Typography>
+                <ol>
+                  {job.qualifications.map(
+                    (qual, index) =>
+                      qual.trim() && (
+                        <li key={index}>
+                          {index + 1}. {qual}
+                        </li>
+                      )
+                  )}
+                </ol>
+              </Box>
+            ) : (
+              <>
+                <Typography mt={2} fontWeight={600}>
+                  Qualifications:
+                </Typography>
+                <Typography mt={1} color="textSecondary">
+                  No qualification mentioned by company.
+                </Typography>
+              </>
+            )}
 
-          <div className="w-full flex flex-wrap gap-4">
-            {similarJobs.slice(0, 6).map((job, index) => {
-              const data = {
-                name: job?.company?.name,
-                logo: job?.company?.profileUrl,
-                ...job,
-              };
+            {user?.token == null ? (
+              <Button
+                variant="contained"
+                color="primary"
+                fullWidth
+                sx={{ mt: 2 }}
+                onClick={() => navigate("/user-auth")}
+              >
+                Login/Register To Apply
+              </Button>
+            ) : user?.accountType === "seeker" ? (
+              <Button
+                variant="contained"
+                color="primary"
+                fullWidth
+                sx={{ mt: 2 }}
+                onClick={() => {
+                  if (!job || !user || !job?.company) {
+                    console.error("Missing required data for navigation.");
+                    return;
+                  }
 
-              return <JobCard job={data} key={index} />;
-            })}
-          </div>
-        </div>
-      </div>
-    </div>
+                  navigate("screening-questions", {
+                    state: {
+                      questions: job?.screeningQuestions ?? [],
+                      jobid: job?._id,
+                      companyid: job?.company?._id,
+                      userid: user?._id,
+                    },
+                  });
+                }}
+              >
+                Apply Now
+              </Button>
+            ) : null}
+
+            {user?.id === job?.company?._id && (
+              <Button
+                variant="contained"
+                color="error"
+                fullWidth
+                sx={{ mt: 2 }}
+                onClick={handleDelete}
+              >
+                Delete Job
+              </Button>
+            )}
+          </Card>
+        </Grid>
+
+        <Grid item xs={12} md={4}>
+          <Typography
+            variant="h6"
+            color="textSecondary"
+            mb={2}
+            sx={{ fontWeight: "bold" }}
+          >
+            Similar Job Posts
+          </Typography>
+          <Grid container spacing={2}>
+            {similarJobs.slice(0, 6).map((job, index) => (
+              <Grid item xs={12} key={index}>
+                <JobCard job={job} />
+              </Grid>
+            ))}
+          </Grid>
+        </Grid>
+      </Grid>
+    </Box>
   );
 };
 
