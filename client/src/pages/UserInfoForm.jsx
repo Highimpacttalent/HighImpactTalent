@@ -388,7 +388,7 @@ const UserInfoForm = () => {
                     "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
                   ];
                   if (!allowedTypes.includes(fileInfo.mimeType)) {
-                    return false; // Prevents upload
+                    return false; 
                   }
                 }
               ]}
