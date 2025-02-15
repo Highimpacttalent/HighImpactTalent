@@ -8,12 +8,6 @@ export const createApplication = async (req, res) => {
   try {
     const { job, company, applicant, status } = req.body;
     console.log(job, company, applicant, status)
-    const newApplication = await Application.create({
-      job,
-      company,
-      applicant,
-      status: status || "applied",
-    });
     const isAlreadyApplied = await Application.findOne({applicant,job})
     if(isAlreadyApplied){
       return res.status(400).json({
@@ -21,6 +15,12 @@ export const createApplication = async (req, res) => {
         message:'You have already applied for this job.'
       })
     }
+    const newApplication = await Application.create({
+      job,
+      company,
+      applicant,
+      status: status || "applied",
+    });
     const user = await Users.findByIdAndUpdate(
       { _id: applicant },
       { $push: { appliedJobs: newApplication._id } }
