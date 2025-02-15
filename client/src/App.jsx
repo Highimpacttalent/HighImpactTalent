@@ -53,7 +53,7 @@ function App() {
           <Route path={"/company-profile"} element={<CompaniesProfile />} />
           <Route path={"/company-profile/:id"} element={<CompaniesProfile />} />
           <Route path={"/company-profile/job-detail/:id"} element={<CompaniesProfile />} />
-          <Route path={"/upload-job"} element={<UploadJobs />} />
+          <Route path={"/upload-job"} element={<JobUploadPage />} />
           <Route path={"/job-detail/:id"} element={<JobDetails />} />
           <Route path="/job-detail/:id/screening-questions" element={<ScreeningQuestions/>}></Route>
           <Route path={'/applicationstatus'} element={<ApplicationStatus/>}></Route>

@@ -4,15 +4,16 @@ import { BiChevronDown } from "react-icons/bi";
 import { CgProfile } from "react-icons/cg";
 import { HiMenuAlt3 } from "react-icons/hi";
 import { AiOutlineClose, AiOutlineLogout } from "react-icons/ai";
+import { MdAssignment } from "react-icons/md";
 import { Link } from "react-router-dom";
 import CustomButton from "./CustomButton";
 import { useSelector, useDispatch } from "react-redux";
 import { Logout } from "../redux/userSlice";
-import logo from '../assets/tlogo.png';
+import logo from "../assets/tlogo.png";
 
 function MenuList({ user, onClick }) {
   const dispatch = useDispatch();
-  
+
   const handleLogout = () => {
     dispatch(Logout());
     window.location.replace("/");
@@ -23,14 +24,19 @@ function MenuList({ user, onClick }) {
       <div>
         <Menu.Button className="flex items-center gap-2 bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-full">
           <div className="p-1 border border-black/20 rounded-full">
-          <img
-            src={user?.profileUrl || "https://upload.wikimedia.org/wikipedia/commons/9/99/Sample_User_Icon.png?20200919003010"}
-            alt="user profile"
-            className="w-4 h-4 rounded-full object-cover"
-          />
+            <img
+              src={
+                user?.profileUrl ||
+                "https://upload.wikimedia.org/wikipedia/commons/9/99/Sample_User_Icon.png?20200919003010"
+              }
+              alt="user profile"
+              className="w-4 h-4 rounded-full object-cover"
+            />
           </div>
           <div className="text-left">
-            <p className="text-sm font-semibold">{user?.firstName ?? user?.name}</p>
+            <p className="text-sm font-semibold">
+              {user?.firstName ?? user?.name}
+            </p>
           </div>
           <BiChevronDown className="h-6 w-6 text-gray-600" aria-hidden="true" />
         </Menu.Button>
@@ -68,6 +74,27 @@ function MenuList({ user, onClick }) {
                 </Link>
               )}
             </Menu.Item>
+            {/* Application Status (Only for seekers) */}
+            {user?.accountType === "seeker" && (
+              <Menu.Item>
+                {({ active }) => (
+                  <Link
+                    to="/application-tracking"
+                    className={`${
+                      active ? "bg-[#1176DB] text-white" : "text-gray-700"
+                    } group flex items-center px-4 py-2 text-sm`}
+                  >
+                     <MdAssignment
+                    className={`${
+                      active ? "text-white" : "text-gray-600"
+                    } mr-2 h-5 w-5`}
+                    aria-hidden="true"
+                  />
+                    Application Status
+                  </Link>
+                )}
+              </Menu.Item>
+            )}
             <Menu.Item>
               {({ active }) => (
                 <button
@@ -106,14 +133,18 @@ const Navbar = () => {
       <nav className="container mx-auto flex items-center justify-between p-1 lg:px-10">
         <Link to="/" className="flex items-center gap-2">
           <img src={logo} alt="Logo" className="w-8 h-8 rounded-full" />
-          <span className="text-md font-semibold text-blue-500">High Impact Talent</span>
+          <span className="text-md font-semibold text-blue-500">
+            High Impact Talent
+          </span>
         </Link>
 
         <ul className="hidden lg:flex gap-8 text-base text-gray-700">
-          {(!user?.jobPosts) && (
-            <li className="hover:text-[#1176DB] transition">
-              <Link to="/find-jobs">Find Job</Link>
-            </li>
+          {user?.accountType === "seeker" ? (
+            <Link to="/find-jobs" onClick={handleCloseNavbar}>
+              Find Job
+            </Link>
+          ) : (
+            <Link to="/view-jobs">Job Posts</Link>
           )}
           {user?.accountType === "seeker" && (
             <li className="hover:text-[#1176DB] transition">
@@ -123,11 +154,6 @@ const Navbar = () => {
           {user?.token && user?.accountType !== "seeker" && (
             <li className="hover:text-[#1176DB] transition">
               <Link to="/upload-job">Upload Job</Link>
-            </li>
-          )}
-          {user?.token && user?.accountType !== "seeker" && (
-            <li className="hover:text-[#1176DB] transition">
-              <Link to="/view-jobs">Job Posts</Link>
             </li>
           )}
           <li className="hover:text-[#1176DB] transition">
@@ -174,11 +200,11 @@ const Navbar = () => {
       >
         <div className="lg:hidden bg-white shadow-md">
           <div className="container mx-auto flex flex-col p-5 gap-3">
-          {user?.accountType === "seeker" ? (
-            <Link to="/find-jobs" onClick={handleCloseNavbar}>
-              Find Job
-            </Link>
-            ):(
+            {user?.accountType === "seeker" ? (
+              <Link to="/find-jobs" onClick={handleCloseNavbar}>
+                Find Job
+              </Link>
+            ) : (
               <Link to="/view-jobs">Job Posts</Link>
             )}
             {user?.accountType === "seeker" && (

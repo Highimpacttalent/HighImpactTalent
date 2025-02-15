@@ -47,23 +47,23 @@ const JobDetail = () => {
     window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
   }, [id]);
 
-  const handleDelete = async () => {
-    if (window.confirm("Are you sure you want to delete this job?")) {
-      setIsFetching(true);
-      try {
-        await apiRequest({
-          url: `/jobs/delete-job/${job?.id}`,
-          token: user?.token,
-          method: "DELETE",
-        });
-        navigate("/");
-      } catch (error) {
-        console.error("Error deleting job:", error);
-      } finally {
-        setIsFetching(false);
-      }
-    }
-  };
+  // const handleDelete = async () => {
+  //   if (window.confirm("Are you sure you want to delete this job?")) {
+  //     setIsFetching(true);
+  //     try {
+  //       await apiRequest({
+  //         url: `/jobs/delete-job/${job?.id}`,
+  //         token: user?.token,
+  //         method: "DELETE",
+  //       });
+  //       navigate("/");
+  //     } catch (error) {
+  //       console.error("Error deleting job:", error);
+  //     } finally {
+  //       setIsFetching(false);
+  //     }
+  //   }
+  // };
 
   if (isFetching || !job) {
     return (
@@ -177,26 +177,30 @@ const JobDetail = () => {
                 fullWidth
                 sx={{ mt: 2 }}
                 onClick={() => {
-                  if (!job || !user || !job?.company) {
-                    console.error("Missing required data for navigation.");
-                    return;
+                  if (job?.applicationLink && job?.applicationLink.trim() !== "") {
+                    window.open(job.applicationLink, "_blank"); 
+                  } else {
+                    if (!job || !user || !job?.company) {
+                      console.error("Missing required data for navigation.");
+                      return;
+                    }
+            
+                    navigate("screening-questions", {
+                      state: {
+                        questions: job?.screeningQuestions ?? [],
+                        jobid: job?._id,
+                        companyid: job?.company?._id,
+                        userid: user?._id,
+                      },
+                    });
                   }
-
-                  navigate("screening-questions", {
-                    state: {
-                      questions: job?.screeningQuestions ?? [],
-                      jobid: job?._id,
-                      companyid: job?.company?._id,
-                      userid: user?._id,
-                    },
-                  });
                 }}
               >
                 Apply Now
               </Button>
             ) : null}
 
-            {user?.id === job?.company?._id && (
+            {/* {user?.id === job?.company?._id && (
               <Button
                 variant="contained"
                 color="error"
@@ -206,7 +210,7 @@ const JobDetail = () => {
               >
                 Delete Job
               </Button>
-            )}
+            )} */}
           </Card>
         </Grid>
 

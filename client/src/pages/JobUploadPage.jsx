@@ -15,6 +15,7 @@ const JobUploadPage = () => {
     salaryConfidential: false,
     jobLocation: "",
     jobDescription: "",
+    applicationLink: "",
     requirements: [""],
     qualifications: [""],
     screeningQuestions: [{ question: "", mandatory: false }],
@@ -134,7 +135,7 @@ const JobUploadPage = () => {
             <option key={i + 1} value={i + 1}>{`${i + 1}+`}</option>
           ))}
         </select>
-      </div>
+      </div>  
 
       <div className="mb-4">
         <label className="block text-gray-700 text-sm  mb-2">
@@ -148,18 +149,16 @@ const JobUploadPage = () => {
           className=" border rounded text-xs w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
           required
         />
-        {/* <div className="flex items-center mt-2">
-          <input
-            type="checkbox"
-            name="salaryConfidential"
-            checked={formData.salaryConfidential}
-            onChange={handleChange}
-            className="mr-2 leading-tight"
-          />
-          <label className="text-gray-700 text-sm ">
-            Keep Salary Confidential
-          </label>
-        </div> */}
+        <div className="mb-4 mt-4">
+        <label className="block text-gray-700 text-sm  mb-2">Application Link</label>
+        <input
+          type="text"
+          name="applicationLink"
+          value={formData.applicationLink}
+          onChange={handleChange}
+          className=" border rounded text-xs w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+        />
+      </div>
       </div>
       <div className="mb-4">
         <label className="block text-gray-700 text-sm mb-2">
