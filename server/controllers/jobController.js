@@ -18,6 +18,7 @@ export const createJob = async (req, res, next) => {
       requirements,
       qualifications,
       screeningQuestions,
+      applicationLink,
     } = req.body;
     // Validate required fields
     if (!jobTitle||!jobLocation||!jobDescription) {
@@ -46,6 +47,7 @@ export const createJob = async (req, res, next) => {
       qualifications,
       screeningQuestions,
       company: id,
+      ...(applicationLink && { applicationLink }),
     };
 
     // Create new job and save to database
@@ -86,6 +88,7 @@ export const updateJob = async (req, res, next) => {
       requirements,
       maxApplicants,
       screeningQuestions,
+      applicationLink,
       duration,
     } = req.body;
     const { jobId } = req.params;
@@ -118,6 +121,7 @@ export const updateJob = async (req, res, next) => {
       detail: { desc, requirements },
       maxApplicants,
       screeningQuestions,
+      ...(applicationLink !== undefined && { applicationLink }),
       duration,
       _id: jobId,
     };
