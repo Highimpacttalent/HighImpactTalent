@@ -32,9 +32,14 @@ export const uploadResume = async (req, res) => {
 };
 // update user details
 export const updateUser = async (req, res, next) => {
+  console.log("updateUser function called"); // Log statement to verify function call
+  console.log("Request body:", req.body);
   const {
     job,
     company,
+    currentCompany,
+    currentDesignation,
+    linkedinLink,
     experience,
     about,
     contactNumber,
@@ -51,7 +56,6 @@ export const updateUser = async (req, res, next) => {
     // if (!about || !experience) {
     //   next("Please provide all required fields");
     // }
-
     const id = req.body.user.userId;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -64,7 +68,10 @@ export const updateUser = async (req, res, next) => {
       cvUrl: resume,
       currentJobRole: job,
       currentSalary: salary,
-      currentCompany: company,
+      currentConsultingCompany: company,
+      currentCompany,
+      currentDesignation,
+      linkedinLink,
       currentLocation: location,
       openToRelocate: relocate,
       joinConsulting,

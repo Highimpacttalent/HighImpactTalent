@@ -32,9 +32,21 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
+    currentConsultingCompany: {
+      type: String,
+      default: "",
+    },
     currentCompany: {
       type: String,
       default: "",
+    },
+    currentDesignation: {
+      type: String,
+      default: ""
+    },
+    linkedinLink: {
+      type: String,
+      default: ""
     },
     currentLocation: { type: String, default: "india" },
     openToRelocate: {
