@@ -82,7 +82,15 @@ const UserInfoForm = () => {
     console.log(formData);
     formData.profilePic = profilePic;
     setLoading(true);
-    if (fileUrl != "") formData.resume = fileUrl;
+    if (!profilePic) {
+      alert("Profile picture is required.");
+      return; // Stop form submission
+    }
+  
+    if (fileUrl === "") {
+      alert("Resume is required.");
+      return; // Stop form submission
+    }
     try {
       const res = await apiRequest({
         url: "user/update-user",
@@ -362,6 +370,7 @@ const UserInfoForm = () => {
                   onChange={handlePhoneNumberChange}
                   inputMode="numeric" // Restrict input to numbers on mobile devices
                   maxLength={11}
+                  required
                 />
                 {error && <p style={{ color: "red" }}>{error}</p>}
               </div>
@@ -374,7 +383,6 @@ const UserInfoForm = () => {
                 value={formData.joinConsulting}
                 onChange={handleChange}
                 className="w-full px-4 py-3 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                required
               >
                 <option value="">Select consulting type</option>
                 <option value="Lateral">Lateral</option>
@@ -416,6 +424,7 @@ const UserInfoForm = () => {
                   imagesOnly
                   clearable
                   tabs="file"
+                  required
                 />
               </button>
               {profilePic && (
@@ -456,6 +465,7 @@ const UserInfoForm = () => {
                     }
                   }
                 ]}
+                required
               />
               {fileUrl && (
                 <div className="mt-4">
