@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 
 const ViewJobs = () => {
   const { user } = useSelector((state) => state.user);
   const [jobs, setJobs] = useState([]);
   const [selectedJob, setSelectedJob] = useState(null);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchJobs = async () => {
@@ -155,7 +157,7 @@ const ViewJobs = () => {
 
     {/* Apply Button */}
     <div className="mt-8 flex justify-center">
-      <button className="bg-blue-600 text-white font-semibold px-6 py-3 rounded-lg hover:bg-blue-700 transition">
+      <button className="bg-blue-600 text-white font-semibold px-6 py-3 rounded-lg hover:bg-blue-700 transition" onClick={() => navigate(`/applicant/${selectedJob._id}`)}>
         View Applications
       </button>
     </div>

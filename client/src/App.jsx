@@ -19,6 +19,7 @@ import Loginform from "./pages/AuthForm/Loginform";
 import BlogPage from "./pages/BlogPage";
 import ViewJobs from "./pages/ViewJobs";
 import SingleBlog from "./pages/SingleBlog";
+import JobApplications from "./pages/ViewApplicants";
 
 function Layout() {
   const { user } = useSelector((state) => state.user);
@@ -48,6 +49,7 @@ function App() {
           <Route path="/" element={<Landing/>}></Route>
           <Route path='/find-jobs' element={<FindJob />} />
           <Route path='/view-jobs' element={<ViewJobs />} />
+          <Route path="/applicant/:jobId" element={<JobApplications />}/>
           <Route path='/companies' element={<Companies />} />
           <Route path={"/user-profile"} element={<UserProfile />} />
           <Route path={"/company-profile"} element={<CompaniesProfile />} />
@@ -72,7 +74,6 @@ function App() {
         <Route path="/blog/:blogId" element={<SingleBlog/>}></Route>
         <Route path="/application-tracking" element={<ApplicationTracking />} />
         <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-
 
 
       </Routes>
