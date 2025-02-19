@@ -138,7 +138,15 @@ const UserProfile = () => {
         </div>
         <div className="flex justify-between text-sm">
           <span>Current Company:</span>
-          <span className="text-gray-600">{userInfo?.currentCompany ?? "Not Available"}</span>
+          <span className="text-gray-600">{userInfo?.currentConsultingCompany ?? userInfo?.currentCompany ?? "Not Available"}</span>
+        </div>
+        <div className="flex justify-between text-sm">
+          <span>Current Designation:</span>
+          <span className="text-gray-600">{userInfo?.currentDesignation ?? "Not Available"}</span>
+        </div>
+        <div className="flex justify-between text-sm">
+          <span>Linkiden Profile:</span>
+          <span className="text-gray-600">{userInfo?.linkedinLink ?? "Not Available"}</span>
         </div>
         <div className="flex justify-between text-sm">
           <span>Current Job:</span>
@@ -165,7 +173,7 @@ const UserProfile = () => {
     <div className="flex justify-center">
       <button
         className="w-full md:w-64 bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600 transition duration-300"
-        onClick={() => navigate("/user-additional-details")}
+        onClick={() => navigate("/update-user-additional-details")}
       >
         Update Details
       </button>
