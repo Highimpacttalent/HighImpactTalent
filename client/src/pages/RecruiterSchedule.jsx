@@ -48,7 +48,7 @@ const RecruiterSchedule = () => {
     };
 
     try {
-      const response = await fetch("http://localhost:8800/api-v1/sendmail/send", {
+      const response = await fetch("https://highimpacttalent.onrender.com/api-v1/sendmail/send", {
         method: "POST",
         headers: { "Content-Type": "application/json" },  
         body: JSON.stringify(payload),
