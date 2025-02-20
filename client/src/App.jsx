@@ -20,6 +20,7 @@ import BlogPage from "./pages/BlogPage";
 import ViewJobs from "./pages/ViewJobs";
 import SingleBlog from "./pages/SingleBlog";
 import JobApplications from "./pages/ViewApplicants";
+import RecruiterSchedule from "./pages/RecruiterSchedule";
 
 function Layout() {
   const { user } = useSelector((state) => state.user);
@@ -59,6 +60,7 @@ function App() {
           <Route path={"/job-detail/:id"} element={<JobDetails />} />
           <Route path="/job-detail/:id/screening-questions" element={<ScreeningQuestions/>}></Route>
           <Route path={'/applicationstatus'} element={<ApplicationStatus/>}></Route>
+          <Route path={'/recruiterSchedule'} element={<RecruiterSchedule/>}></Route>
           
         </Route>
         <Route path="/authform" element={<AuthForm/>}></Route>

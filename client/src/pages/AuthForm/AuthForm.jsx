@@ -144,7 +144,7 @@ const AuthForm = () => {
           const userData = { token: res?.token, ...res?.user };
           dispatch(Login(userData));
           localStorage.setItem("userInfo", JSON.stringify(userData));
-          navigate("/upload-a-job");
+          navigate("/recruiterSchedule");
         } else {
           console.log(res.message);
         }
