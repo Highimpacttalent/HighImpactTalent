@@ -21,6 +21,7 @@ import ViewJobs from "./pages/ViewJobs";
 import SingleBlog from "./pages/SingleBlog";
 import JobApplications from "./pages/ViewApplicants";
 import RecruiterSchedule from "./pages/RecruiterSchedule";
+import UpdateUserForm from "./pages/UpdateUserDetails";
 
 function Layout() {
   const { user } = useSelector((state) => state.user);
@@ -66,6 +67,7 @@ function App() {
         <Route path="/authform" element={<AuthForm/>}></Route>
         <Route path="/authlogin" element={<Loginform/>}></Route>
         <Route path="/user-additional-details" element={<UserInfoForm/>}></Route>
+        <Route path="/update-user-additional-details" element={<UpdateUserForm/>}></Route>
         <Route path="/upload-a-job" element={<JobUploadPage/>}></Route>
         <Route path='/about-us' element={<About />} />
         <Route path='/user-auth' element={<Auth/>} />

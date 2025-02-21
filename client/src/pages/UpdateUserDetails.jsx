@@ -4,16 +4,15 @@ import { apiRequest } from "../utils";
 import { Widget } from "@uploadcare/react-widget";
 import "react-phone-number-input/style.css";
 import PhoneInput from "react-phone-number-input";
-import { Loading } from "../components";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
-const UserInfoForm = () => {
+const UpdateUserForm = () => {
   const { user } = useSelector((state) => state.user);
   const [loading, setLoading] = useState(false);
-  const [uploadingResume, setUploadingResume] = useState(false);
+  const [fetchError, setFetchError] = useState(null);
   const [value, setValue] = useState("");
-  const [error, setError] = useState("");
+  const [initialDataLoaded, setInitialDataLoaded] = useState(false);
   const widgetApi = useRef();
   const profileWidgetApi = useRef(null);
   const [profilePic, setProfilePic] = useState(null);
@@ -36,6 +35,67 @@ const UserInfoForm = () => {
     resume: null,
   });
 
+  const navigate = useNavigate();
+
+  // Fetch user data when component mounts
+  useEffect(() => {
+    const fetchUserData = async () => {
+      if (!user?.token) {
+        setFetchError("No authentication token found. Please login again.");
+        return;
+      }
+
+      try {
+        setLoading(true);
+        const res = await apiRequest({
+          url: "user/get",
+          method: "GET",
+          token: user.token,
+        });
+
+        console.log("API Response:", res);
+
+        if (res?.success && res?.user) {
+          const userData = res.user;
+
+          setFormData({
+            job: userData?.job ?? "",
+            company: userData?.company ?? "",
+            currentCompany: userData?.currentCompany ?? "",
+            currentDesignation: userData?.currentDesignation ?? "",
+            linkedinLink: userData?.linkedinLink ?? "",
+            experience: userData?.experience ?? "",
+            about: userData?.about ?? "",
+            salary: userData?.currentSalary ?? "",
+            location: userData?.currentLocation ?? "",
+            relocate: userData?.openToRelocate ?? "no",
+            joinConsulting: userData?.joinConsulting ?? "",
+            dateOfBirth: userData?.dateOfBirth ? userData.dateOfBirth.split('T')[0] : "",
+          });
+
+          setValue(userData?.contactNumber || "");
+          setProfilePic(userData?.profileUrl || null);
+          setFileUrl(userData?.cvUrl || "");
+          setInitialDataLoaded(true);
+          setFetchError(null);
+        } else {
+          throw new Error(res?.message || "Invalid response format from server");
+        }
+      } catch (error) {
+        console.error("Error fetching user data:", error);
+        setFetchError(
+          error.response?.data?.message ||
+          error.message ||
+          "Failed to fetch user data. Please try again."
+        );
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUserData();
+  }, [user?.token]);
+
   const handlePhoneNumberChange = (inputValue) => {
     if (inputValue && inputValue.length <= 13) {
       setValue(inputValue);
@@ -43,120 +103,67 @@ const UserInfoForm = () => {
   };
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    
-    setFormData(prevState => {
-      const newState = {
-        ...prevState,
-        [name]: value,
-      };
-      
-      if (name === "job" && value !== "Other") {
-        newState.company = value;
-      }
-      
-      return newState;
-    });
-  };
-
-  const navigate = useNavigate();
-
-  const handleFileChange = (e) => {
-    const { name, files } = e.target;
-    setFormData({
-      ...formData,
-      [name]: files[0],
-    });
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    
-    // Validate resume URL
-    if (!fileUrl) {
-      alert("Please upload your resume");
-      return;
-    }
-
-    if (!profilePic) {
-      alert("Profile picture is required.");
-      return;
-    }
-
-    // Add resume URL to form data
-    const updatedFormData = {
-      ...formData,
-      resume: fileUrl,
-      experience: Number(formData.experience),
-      contactNumber: value,
-      profilePic: profilePic
-    };
-
-    setLoading(true);
-    
-    try {
-      const res = await apiRequest({
-        url: "user/update-user",
-        method: "PUT",
-        data: updatedFormData,
-        token: user?.token,
-      });
-
-      if (res) {
-        alert("Profile updated successfully");
-        navigate("/find-jobs");
-      } else {
-        throw new Error("Update failed");
-      }
-    } catch (error) {
-      console.error("Form submission error:", error);
-      alert("Failed to update profile. Please try again.");
-    } finally {
-      setLoading(false);
-    }
+    const { name, value: inputValue } = e.target;
+    setFormData((prevState) => ({
+      ...prevState,
+      [name]: inputValue,
+    }));
   };
 
   const handleUpload = async (fileInfo) => {
-    // Reset state and validate input
-    setFileUrl("");
-    setUploadingResume(true);
-    
-    if (!fileInfo || !fileInfo.cdnUrl) {
-      console.error("Invalid file information received");
-      alert("Upload failed. Please try again.");
-      setUploadingResume(false);
-      return;
-    }
+    if (!fileInfo) return;
 
     try {
-      // Set the URL first
-      setFileUrl(fileInfo.cdnUrl);
-      
-      // Make API call
-      const response = await axios.post(
-        "https://highimpacttalent.onrender.com/api-v1/user/upload-resume",
-        { url: fileInfo.cdnUrl },
-        {
-          headers: {
-            Authorization: `Bearer ${user?.token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      if (fileInfo.name) {
+        const fileExtension = fileInfo.name.split('.').pop().toLowerCase();
+        const validExtensions = ["pdf", "doc", "docx"];
+        const validMimeTypes = [
+          "application/pdf",
+          "application/msword",
+          "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        ];
 
-      if (!response.data) {
-        throw new Error("No response from server");
+        if (validExtensions.includes(fileExtension) && validMimeTypes.includes(fileInfo.mimeType)) {
+          setFileUrl(fileInfo.cdnUrl);
+
+          if (!user?.token) {
+            throw new Error("No authentication token found");
+          }
+
+          const data = { url: fileInfo.cdnUrl };
+          await axios.post(
+            "https://highimpacttalent.onrender.com/api-v1/user/upload-resume",
+            data,
+            {
+              headers: {
+                Authorization: `Bearer ${user.token}`,
+                "Content-Type": "application/json",
+              },
+            }
+          );
+        } else {
+          throw new Error("Invalid file type. Only PDF, DOC, and DOCX files are allowed.");
+        }
       }
-      
     } catch (error) {
-      console.error("Resume upload error:", error);
-      alert("Failed to save resume. Please try again.");
-      setFileUrl("");
+      console.error("Error uploading resume:", error);
+      alert(error.message || "Failed to upload resume. Please try again.");
       if (widgetApi.current) {
         widgetApi.current.value(null);
       }
-    } finally {
-      setUploadingResume(false);
+    }
+  };
+
+  const handleUploadCareChange = (file) => {
+    try {
+      if (file?.cdnUrl) {
+        setProfilePic(file.cdnUrl);
+      } else {
+        throw new Error("Invalid file upload response");
+      }
+    } catch (error) {
+      console.error("Error uploading profile picture:", error);
+      alert("Failed to upload profile picture. Please try again.");
     }
   };
 
@@ -167,30 +174,96 @@ const UserInfoForm = () => {
       }
 
       widgetApi.current.openDialog(null, {
-        accept: ".pdf,.doc,.docx",
+        accept: ".pdf,.doc,.docx", // Allow PDF, DOC, DOCX only
       });
     } catch (error) {
       console.error("Error opening upload dialog:", error);
     }
   };
 
-  const handleImageChange = (event) => {
-    const file = event.target.files[0];
-    if (file) {
-      setProfilePic(URL.createObjectURL(file));
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!user?.token) {
+      alert("Please login to update your profile");
+      navigate("/login");
+      return;
+    }
+
+    // Validate required fields
+    const requiredFields = ["currentDesignation"];
+    const missingFields = requiredFields.filter(field => !formData[field]);
+    if (missingFields.length > 0) {
+      alert(`Please fill in the following required fields: ${missingFields.join(", ")}`);
+      return;
+    }
+
+    // Create update payload with only changed fields
+    const changedFields = {};
+    Object.keys(formData).forEach(key => {
+      if (formData[key] !== "" && formData[key] !== null) {
+        changedFields[key] = formData[key];
+      }
+    });
+
+    // Add additional fields
+    if (value) changedFields.contactNumber = value;
+    if (profilePic) changedFields.profilePic = profilePic;
+    if (fileUrl) changedFields.resume = fileUrl;
+
+    if (typeof changedFields.experience === 'string' && changedFields.experience !== "") {
+      changedFields.experience = Number(changedFields.experience);
+    }
+
+    setLoading(true);
+    try {
+      const res = await apiRequest({
+        url: "user/update-user",
+        method: "PUT",
+        data: changedFields,
+        token: user.token,
+      });
+
+      console.log("Update response:", res);
+
+      if (res) {
+        alert("Profile successfully updated");
+        navigate("/user-profile");
+      } else {
+        throw new Error(res?.message || "Failed to update profile");
+      }
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      alert(error.message || "Failed to update profile. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleUploadCareChange = (file) => {
-    if (file) {
-      setProfilePic(file.cdnUrl);
-    }
-  };
+  if (fetchError) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4">
+        <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
+          <h2 className="text-xl font-bold text-red-600 mb-4">Error Loading Profile</h2>
+          <p className="text-gray-700 mb-4">{fetchError}</p>
+          <button
+            onClick={() => navigate("/login")}
+            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 w-full"
+          >
+            Return to Login
+          </button>
+        </div>
+      </div>
+    );
+  }
 
-  useEffect(() => {
-    console.log(user);
-  }, []);
-
+  if (loading && !initialDataLoaded) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex justify-center py-8 px-4 bg-gray-100">
@@ -326,14 +399,11 @@ const UserInfoForm = () => {
                 required
               />
             </div>
-
-
           </div>
 
           {/* Right Column */}
           <div>
-
-          <div className="mb-6">
+            <div className="mb-6">
               <label className="block text-gray-700 text-sm font-semibold mb-2">About/Summary</label>
               <textarea
                 name="about"
@@ -370,7 +440,6 @@ const UserInfoForm = () => {
                   maxLength={11}
                   required
                 />
-                {error && <p style={{ color: "red" }}>{error}</p>}
               </div>
             </div>
 
@@ -485,7 +554,7 @@ const UserInfoForm = () => {
             type="submit"
             className="bg-blue-500 hover:bg-blue-700 text-white py-3 px-6 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
-            {loading ? "Loading..." : "Submit"}
+            {loading ? "Loading..." : "Update Details"}
           </button>
         </div>
       </form>
@@ -493,4 +562,4 @@ const UserInfoForm = () => {
   );
 };
 
-export default UserInfoForm;
+export default UpdateUserForm;
