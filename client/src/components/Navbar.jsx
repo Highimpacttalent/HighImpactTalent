@@ -163,7 +163,7 @@ const Navbar = () => {
             <Link to="/contact-us">Contact Us</Link>
           </li>
           <li className="hover:text-[#1176DB] transition">
-            <Link to="/blog">blog</Link>
+            <Link to="/blog">Blog</Link>
           </li>
         </ul>
 
