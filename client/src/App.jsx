@@ -15,6 +15,7 @@ import ScreeningQuestions from "./pages/ScreeningQuestions";
 import UserInfoForm from "./pages/UserInfoForm";
 import JobUploadPage from "./pages/JobUploadPage";
 import AuthForm from "./pages/AuthForm/AuthForm";
+import UserLoginForm from "./pages/AuthForm/u-login";
 import Loginform from "./pages/AuthForm/Loginform";
 import BlogPage from "./pages/BlogPage";
 import ViewJobs from "./pages/ViewJobs";
@@ -22,6 +23,9 @@ import SingleBlog from "./pages/SingleBlog";
 import JobApplications from "./pages/ViewApplicants";
 import RecruiterSchedule from "./pages/RecruiterSchedule";
 import UpdateUserForm from "./pages/UpdateUserDetails";
+import RecruiterSignup from "./pages/AuthForm/Recruiter-Auth";
+import UserSignUp from "./pages/AuthForm/User-Auth";
+import CompanyLoginForm from "./pages/AuthForm/r-login";
 
 function Layout() {
   const { user } = useSelector((state) => state.user);
@@ -65,6 +69,10 @@ function App() {
           
         </Route>
         <Route path="/authform" element={<AuthForm/>}></Route>
+        <Route path="/r-authform" element={<RecruiterSignup/>}></Route>
+        <Route path="/u-authform" element={<UserSignUp/>}></Route>
+        <Route path="/u-login" element={<UserLoginForm/>}></Route>
+        <Route path="/r-login" element={<CompanyLoginForm/>}></Route>
         <Route path="/authlogin" element={<Loginform/>}></Route>
         <Route path="/user-additional-details" element={<UserInfoForm/>}></Route>
         <Route path="/update-user-additional-details" element={<UpdateUserForm/>}></Route>

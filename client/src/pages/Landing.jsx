@@ -5,10 +5,13 @@ import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import man from "../assets/man.png";
 import { useNavigate } from "react-router-dom";
+import { Fragment } from "react";
 import tlogo from "../assets/transparentlogo.png";
 import toptt from "../assets/top-tier-talent.jpg";
 import industry from "../assets/industri.jpg";
 import personlized from "../assets/personlized.jpg";
+import { WorkOutline, GroupAdd } from "@mui/icons-material";
+
 
 const Landing = () => {
   const { user } = useSelector((state) => state.user);
@@ -22,49 +25,39 @@ const Landing = () => {
   }, [user]);
 
   const LoginModal = (
-    <Transition appear show={isOpen} as={React.Fragment}>
+    <Transition appear show={isOpen} as={Fragment}>
       <Dialog as="div" className="relative z-50" onClose={() => {}}>
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
-          <Dialog.Panel className="bg-white p-6 md:p-8 rounded-lg shadow-xl w-[90%] max-w-md text-center">
-            {/* Welcome Section */}
-            <Dialog.Title className="text-2xl md:text-3xl font-bold text-gray-800">
-              Connect. Hire. Grow.
+        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4">
+          <Dialog.Panel className="bg-white p-8 md:p-10 rounded-xl shadow-2xl w-[90%] max-w-lg text-center transform transition-all">
+            {/* Header */}
+            <Dialog.Title className="text-3xl font-bold text-blue-600 tracking-wide " >
+              Find Opportunities. Build Success.
             </Dialog.Title>
-            <p className="text-gray-600 mt-2 text-sm md:text-base">
-              Whether you're seeking the perfect job or the best talent, we make connections effortless.
+            <p className="text-gray-600 mt-3 text-base md:text-lg leading-relaxed">
+              Whether you're seeking <bold>top talent</bold> or <bold>exciting career opportunities</bold>, we've got you covered.
             </p>
-  
-            {/* Benefits Section */}
-            <div className="text-left text-gray-700 text-sm md:text-base mt-2">
-              <p className="font-semibold text-gray-800">For Job Seekers:</p>
-              <ul className="space-y-2">
-                <li>🚀 Explore top job opportunities</li>
-                <li>📈 Get noticed by leading companies</li>
-                <li>🎯 Build your career with expert guidance</li>
-              </ul>
-  
-              <p className="font-semibold text-gray-800 mt-3">For Recruiters:</p>
-              <ul className="space-y-2">
-                <li>🔍 Find top talent quickly & efficiently</li>
-                <li>📢 Post job listings with ease</li>
-                <li>🤝 Connect with the right candidates</li>
-              </ul>
-            </div>
-  
-            {/* Action Buttons */}
-            <div className="mt-6 flex flex-col gap-3">
-              <button
-                onClick={() => navigate("/authlogin")}
-                className="bg-blue-600 text-white py-3 px-6 rounded-lg text-lg shadow-md hover:bg-blue-700 transition duration-300"
+
+            {/* Selection Boxes */}
+            <div className="mt-8 grid grid-cols-2 gap-6">
+              {/* Hire Talent Box */}
+              <div
+                onClick={() => navigate("/r-login")}
+                className="p-8 bg-gradient-to-b from-blue-50 to-blue-100 border border-blue-300 rounded-xl shadow-lg cursor-pointer transition transform hover:-translate-y-1 hover:shadow-2xl flex flex-col items-center text-center"
               >
-                Login
-              </button>
-              <button
-                onClick={() => navigate("/authform")}
-                className="bg-gray-600 text-white py-3 px-6 rounded-lg text-lg shadow-md hover:bg-gray-700 transition duration-300"
+                <GroupAdd className="text-blue-700 text-7xl drop-shadow-lg" />
+                <h3 className="mt-4 text-xl font-semibold text-gray-800">Hire Talent</h3>
+                <p className="text-sm text-gray-600 mt-2">Find skilled professionals to power your business.</p>
+              </div>
+
+              {/* Search Job Box */}
+              <div
+                onClick={() => navigate("/u-login")}
+                className="p-8 bg-gradient-to-b from-green-50 to-green-100 border border-green-300 rounded-xl shadow-lg cursor-pointer transition transform hover:-translate-y-1 hover:shadow-2xl flex flex-col items-center text-center"
               >
-                Sign Up
-              </button>
+                <WorkOutline className="text-green-700 text-7xl drop-shadow-lg" />
+                <h3 className="mt-4 text-xl font-semibold text-gray-800">Search Job</h3>
+                <p className="text-sm text-gray-600 mt-2">Explore new career paths and exciting opportunities.</p>
+              </div>
             </div>
           </Dialog.Panel>
         </div>
