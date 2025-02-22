@@ -1,6 +1,6 @@
 import express from "express";
 import userAuth from "../middlewares/authMiddleware.js";
-import { getUser, updateUser,register, signIn,deleteUser,uploadResume,getUsers, toggleJobLike, updateProfileUrl } from "../controllers/userController.js";
+import { getUser, updateUser,register, signIn,deleteUser,uploadResume,getUsers, toggleJobLike, updateProfileUrl, changePassword } from "../controllers/userController.js";
 
 const router = express.Router();
 
@@ -17,6 +17,8 @@ router.get("/users",getUsers)
 
 // UPDATE USER || PUT
 router.put("/update-user", userAuth, updateUser);
+
+router.put("/change-password",userAuth,changePassword)
 
 router.delete("/delete",userAuth,deleteUser);
 

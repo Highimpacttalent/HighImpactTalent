@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import Users from "../models/userModel.js";
 import { application } from "express";
 import Application from "../models/ApplicationModel.js";
+import bcrypt from "bcryptjs";
 
 // upload resume
 export const uploadResume = async (req, res) => {
@@ -357,3 +358,42 @@ export const updateProfileUrl = async (req, res, next) => {
     });
   }
 };
+
+
+export const changePassword = async (req, res, next) => {
+  console.log("changePassword function called"); // Log statement to verify function call
+  console.log("Request body:", req.body);
+  
+  const { oldPassword, newPassword } = req.body;
+
+  try {
+    const id = req.body.user.userId;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(404).send(`No User with id: ${id}`);
+    }
+
+    const user = await Users.findById(id);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const isMatch = await user.comparePassword(oldPassword);
+    if (!isMatch) {
+      return res.status(400).json({ message: "Incorrect old password" });
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    user.password = await bcrypt.hash(newPassword, salt);
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Password updated successfully",
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
