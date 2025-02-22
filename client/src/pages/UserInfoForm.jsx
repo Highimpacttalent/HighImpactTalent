@@ -7,6 +7,7 @@ import PhoneInput from "react-phone-number-input";
 import { Loading } from "../components";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import Select from "react-select";
 
 const UserInfoForm = () => {
   const { user } = useSelector((state) => state.user);
@@ -18,6 +19,11 @@ const UserInfoForm = () => {
   const profileWidgetApi = useRef(null);
   const [profilePic, setProfilePic] = useState(null);
   const [fileUrl, setFileUrl] = useState("");
+  const [cities, setCities] = useState([]);
+  const [selectedCity, setSelectedCity] = useState(null);
+  const [inputValue, setInputValue] = useState("");
+  const [isOtherSelected, setIsOtherSelected] = useState(false);
+  const [customCity, setCustomCity] = useState("");
   const [formData, setFormData] = useState({
     job: "",
     company: "",
@@ -35,6 +41,49 @@ const UserInfoForm = () => {
     profilePic: null,
     resume: null,
   });
+
+  // Fetch cities from CSV (or any other source)
+  useEffect(() => {
+    const fetchCities = async () => {
+      try {
+        const response = await fetch("/cities.csv");
+        const text = await response.text();
+        const rows = text.split("\n");
+        const cityList = rows.slice(1).map((row) => row.trim()).filter(Boolean).sort();
+
+        setCities([...new Set(cityList)]);
+      } catch (error) {
+        console.error("Error loading cities:", error);
+        setCities([]);
+      }
+    };
+
+    fetchCities();
+  }, []);
+
+  // Handle city selection
+  const handleCityChange = (selectedOption) => {
+    if (selectedOption?.value === "Other") {
+      setIsOtherSelected(true);
+      setSelectedCity(null);
+    } else {
+      setIsOtherSelected(false);
+      setSelectedCity(selectedOption);
+    }
+  };
+
+  // Handle custom city input
+  const handleCustomCityChange = (e) => {
+    setCustomCity(e.target.value);
+  };
+
+  // Prepare city options with "Other" at the bottom
+  const filteredCities = [
+    ...cities
+      .filter((city) => city.toLowerCase().includes(inputValue.toLowerCase()))
+      .map((city) => ({ value: city, label: city })),
+    { value: "Other", label: "Other" }, // Always at the bottom
+  ];
 
   const handlePhoneNumberChange = (inputValue) => {
     if (inputValue && inputValue.length <= 13) {
@@ -58,6 +107,7 @@ const UserInfoForm = () => {
       return newState;
     });
   };
+
 
   const navigate = useNavigate();
 
@@ -185,6 +235,43 @@ const UserInfoForm = () => {
     if (file) {
       setProfilePic(file.cdnUrl);
     }
+  };
+
+  const customStyles = {
+    control: (provided, state) => ({
+      ...provided,
+      padding: "0.5rem", 
+      fontSize: "0.875rem", 
+      borderRadius: "0.5rem", 
+      borderColor: state.isFocused ? "#3b82f6" : "#d1d5db", 
+      boxShadow: state.isFocused ? "0 0 0 2px #3b82f6" : "none", 
+      "&:hover": {
+        borderColor: "#d1d5db", 
+      },
+    }),
+    menu: (provided) => ({
+      ...provided,
+      borderRadius: "0.5rem", 
+      boxShadow: "0 2px 10px rgba(0, 0, 0, 0.1)", 
+      border: "1px solid #d1d5db", 
+    }),
+    option: (provided, state) => ({
+      ...provided,
+      backgroundColor: state.isSelected ? "#3b82f6" : "white", 
+      color: state.isSelected ? "white" : "black", 
+      "&:hover": {
+        backgroundColor: "white", 
+        color: "black", 
+      },
+    }),
+    placeholder: (provided) => ({
+      ...provided,
+      color: "black", 
+    }),
+    singleValue: (provided) => ({
+      ...provided,
+      color: "black", 
+    }),
   };
 
   useEffect(() => {
@@ -315,17 +402,32 @@ const UserInfoForm = () => {
             </div>
 
             <div className="mb-6">
-              <label className="block text-gray-700 text-sm font-semibold mb-2">Current Location</label>
-              <input
-                type="text"
-                name="location"
-                value={formData.location}
-                onChange={handleChange}
-                placeholder="Enter current location"
-                className="w-full px-4 py-3 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                required
-              />
-            </div>
+      <label className="block text-gray-700 text-sm font-semibold mb-2">Current Location</label>
+      <Select
+        options={filteredCities}
+        value={selectedCity}
+        styles={customStyles}
+        onChange={handleCityChange}
+        onInputChange={(value) => setInputValue(value)}
+        inputValue={inputValue}
+        placeholder="Search or select a city..."
+        isClearable
+        isSearchable
+        noOptionsMessage={() => (inputValue ? "No matching cities found" : "Start typing to search")}
+      />
+
+      {isOtherSelected && (
+        <div className="mt-2 flex gap-2">
+          <input
+            type="text"
+            className="px-4 py-2 border rounded-lg w-full"
+            placeholder="Enter your city"
+            value={customCity}
+            onChange={handleCustomCityChange}
+          />
+        </div>
+      )}
+    </div>
 
 
           </div>
