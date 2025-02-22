@@ -141,7 +141,7 @@ const Landing = () => {
               <br />
               Founded by seasoned experts from{" "}
               <span className="text-blue-600 font-semibold">
-                Bain & Company
+                Bain ,{" "}BCG
               </span>{" "}
               and the{" "}
               <span className="text-blue-600 font-semibold">
