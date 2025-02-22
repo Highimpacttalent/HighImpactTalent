@@ -38,27 +38,28 @@ const Landing = () => {
             </p>
 
             {/* Selection Boxes */}
-            <div className="mt-8 grid grid-cols-2 gap-6">
-              {/* Hire Talent Box */}
-              <div
-                onClick={() => navigate("/r-login")}
-                className="p-8 bg-gradient-to-b from-blue-50 to-blue-100 border border-blue-300 rounded-xl shadow-lg cursor-pointer transition transform hover:-translate-y-1 hover:shadow-2xl flex flex-col items-center text-center"
-              >
-                <GroupAdd className="text-blue-700 text-7xl drop-shadow-lg" />
-                <h3 className="mt-4 text-xl font-semibold text-gray-800">Hire Talent</h3>
-                <p className="text-sm text-gray-600 mt-2">Find skilled professionals to power your business.</p>
-              </div>
-
-              {/* Search Job Box */}
-              <div
-                onClick={() => navigate("/u-login")}
-                className="p-8 bg-gradient-to-b from-green-50 to-green-100 border border-green-300 rounded-xl shadow-lg cursor-pointer transition transform hover:-translate-y-1 hover:shadow-2xl flex flex-col items-center text-center"
-              >
-                <WorkOutline className="text-green-700 text-7xl drop-shadow-lg" />
-                <h3 className="mt-4 text-xl font-semibold text-gray-800">Search Job</h3>
-                <p className="text-sm text-gray-600 mt-2">Explore new career paths and exciting opportunities.</p>
-              </div>
+          <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Hire Talent Box */}
+            <div
+              onClick={() => navigate("/r-login")}
+              className="p-8 bg-gradient-to-b from-blue-50 to-blue-100 border border-blue-300 rounded-xl shadow-lg cursor-pointer transition transform hover:-translate-y-1 hover:shadow-2xl flex flex-col items-center text-center"
+            >
+              <GroupAdd className="text-blue-700 text-7xl drop-shadow-lg" />
+              <h3 className="mt-4 text-xl font-semibold text-gray-800">Hire Talent</h3>
+              <p className="text-sm text-gray-600 mt-2">Find skilled professionals to power your business.</p>
             </div>
+
+          {/* Search Job Box */}
+          <div
+            onClick={() => navigate("/u-login")}
+            className="p-8 bg-gradient-to-b from-green-50 to-green-100 border border-green-300 rounded-xl shadow-lg cursor-pointer transition transform hover:-translate-y-1 hover:shadow-2xl flex flex-col items-center text-center"
+          >
+            <WorkOutline className="text-green-700 text-7xl drop-shadow-lg" />
+            <h3 className="mt-4 text-xl font-semibold text-gray-800">Search Job</h3>
+            <p className="text-sm text-gray-600 mt-2">Explore new career paths and exciting opportunities.</p>
+          </div>
+        </div>
+
           </Dialog.Panel>
         </div>
       </Dialog>
