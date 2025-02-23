@@ -169,7 +169,7 @@ const Navbar = () => {
 
         <div className="hidden lg:flex items-center gap-4">
           {!user?.token ? (
-            <Link to="/authform">
+            <Link to="/">
               <CustomButton
                 title="Sign In"
                 containerStyles="text-[#14a800] border border-[#14a800] py-1.5 px-5 hover:bg-[#14a800] hover:text-white rounded-full transition"
