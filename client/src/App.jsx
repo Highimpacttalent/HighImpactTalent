@@ -26,6 +26,7 @@ import UpdateUserForm from "./pages/UpdateUserDetails";
 import RecruiterSignup from "./pages/AuthForm/Recruiter-Auth";
 import UserSignUp from "./pages/AuthForm/User-Auth";
 import CompanyLoginForm from "./pages/AuthForm/r-login";
+import RecruiterRedirectPage from "./pages/EndSignUp";
 
 function Layout() {
   const { user } = useSelector((state) => state.user);
@@ -74,6 +75,7 @@ function App() {
         <Route path="/u-login" element={<UserLoginForm/>}></Route>
         <Route path="/r-login" element={<CompanyLoginForm/>}></Route>
         <Route path="/authlogin" element={<Loginform/>}></Route>
+        <Route path="/endlogin" element={<RecruiterRedirectPage/>}></Route>
         <Route path="/user-additional-details" element={<UserInfoForm/>}></Route>
         <Route path="/update-user-additional-details" element={<UpdateUserForm/>}></Route>
         <Route path="/upload-a-job" element={<JobUploadPage/>}></Route>

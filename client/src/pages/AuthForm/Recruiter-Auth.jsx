@@ -133,7 +133,7 @@ const RecruiterSignup = () => {
         setSuccessModalOpen(true);
         setTimeout(() => {
           setSuccessModalOpen(false);
-          navigate("/");
+          navigate("/endlogin");
         }, 2000);
       } else {
         alert(registerData.message || "Registration failed");
