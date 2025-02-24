@@ -39,7 +39,7 @@ function UserLoginForm() {
         const userData = { token: res?.token, ...res?.user };
         dispatch(Login(userData));
         localStorage.setItem("userInfo", JSON.stringify(userData));
-        navigate("/");
+        navigate("/find-jobs");
       }
     } catch (error) {
       console.log(error);

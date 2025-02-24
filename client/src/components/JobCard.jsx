@@ -87,7 +87,7 @@ const JobCard = ({ job }) => {
             <Work color="primary" sx={{ mr: 1 }} /> {job?.experience}+ years experience
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            Salary: {job.salaryConfidential ? "Confidential" : `₹${job.salary.toLocaleString()} (${job.salaryCategory})`}
+            Salary: {job.salaryConfidential ? "Confidential" : `${job.salary.toLocaleString()} (${job.salaryCategory})`}
           </Typography>
         </Box>
       </CardContent>

@@ -1,12 +1,18 @@
-import React, { useState } from "react";
+import React, { useState,useEffect } from "react";
 import { apiRequest } from "../utils";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
+import Select from "react-select";
 
 const JobUploadPage = () => {
   const { user } = useSelector((state) => state.user);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const [cities, setCities] = useState([]);
+  const [selectedCity, setSelectedCity] = useState(null);
+  const [inputValue, setInputValue] = useState("");
+  const [isOtherSelected, setIsOtherSelected] = useState(false);
+  const [customCity, setCustomCity] = useState("");
   const [formData, setFormData] = useState({
     jobTitle: "",
     experience: "",
@@ -20,6 +26,48 @@ const JobUploadPage = () => {
     qualifications: [""],
     screeningQuestions: [{ question: "", mandatory: false }],
   });
+
+  useEffect(() => {
+      const fetchCities = async () => {
+        try {
+          const response = await fetch("/cities.csv");
+          const text = await response.text();
+          const rows = text.split("\n");
+          const cityList = rows.slice(1).map((row) => row.trim()).filter(Boolean).sort();
+  
+          setCities([...new Set(cityList)]);
+        } catch (error) {
+          console.error("Error loading cities:", error);
+          setCities([]);
+        }
+      };
+  
+      fetchCities();
+    }, []);
+  
+    // Handle city selection
+    const handleCityChange = (selectedOption) => {
+      if (selectedOption?.value === "Other") {
+        setIsOtherSelected(true);
+        setSelectedCity(null);
+      } else {
+        setIsOtherSelected(false);
+        setSelectedCity(selectedOption);
+      }
+    };
+  
+    // Handle custom city input
+    const handleCustomCityChange = (e) => {
+      setCustomCity(e.target.value);
+    };
+  
+    // Prepare city options with "Other" at the bottom
+    const filteredCities = [
+      ...cities
+        .filter((city) => city.toLowerCase().includes(inputValue.toLowerCase()))
+        .map((city) => ({ value: city, label: city })),
+      { value: "Other", label: "Other" }, // Always at the bottom
+    ];
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -67,6 +115,44 @@ const JobUploadPage = () => {
     };
     setFormData({ ...formData, screeningQuestions: updatedQuestions });
   };
+
+  const customStyles = {
+    control: (provided, state) => ({
+      ...provided,
+      padding: "0.5rem", 
+      fontSize: "0.875rem", 
+      borderRadius: "0.5rem", 
+      borderColor: state.isFocused ? "#3b82f6" : "#d1d5db", 
+      boxShadow: state.isFocused ? "0 0 0 2px #3b82f6" : "none", 
+      "&:hover": {
+        borderColor: "#d1d5db", 
+      },
+    }),
+    menu: (provided) => ({
+      ...provided,
+      borderRadius: "0.5rem", 
+      boxShadow: "0 2px 10px rgba(0, 0, 0, 0.1)", 
+      border: "1px solid #d1d5db", 
+    }),
+    option: (provided, state) => ({
+      ...provided,
+      backgroundColor: state.isSelected ? "#3b82f6" : "white", 
+      color: state.isSelected ? "white" : "black", 
+      "&:hover": {
+        backgroundColor: "white", 
+        color: "black", 
+      },
+    }),
+    placeholder: (provided) => ({
+      ...provided,
+      color: "black", 
+    }),
+    singleValue: (provided) => ({
+      ...provided,
+      color: "black", 
+    }),
+  };
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -132,7 +218,7 @@ const JobUploadPage = () => {
         >
           <option value="">Select experience</option>
           {Array.from({ length: 15 }, (_, i) => (
-            <option key={i + 1} value={i + 1}>{`${i + 1}+`}</option>
+            <option key={i + 1} value={i + 1}>{i + 1}+</option>
           ))}
         </select>
       </div>  
@@ -201,14 +287,30 @@ const JobUploadPage = () => {
         <label className="block text-gray-700 text-sm  mb-2">
           Job Location
         </label>
-        <input
-          type="text"
-          name="jobLocation"
-          value={formData.jobLocation}
-          onChange={handleChange}
-          className=" border rounded text-xs w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-          required
-        />
+        <Select
+        options={filteredCities}
+        value={selectedCity}
+        styles={customStyles}
+        onChange={handleCityChange}
+        onInputChange={(value) => setInputValue(value)}
+        inputValue={inputValue}
+        placeholder="Search or select a city..."
+        isClearable
+        isSearchable
+        noOptionsMessage={() => (inputValue ? "No matching cities found" : "Start typing to search")}
+      />
+
+      {isOtherSelected && (
+        <div className="mt-2 flex gap-2">
+          <input
+            type="text"
+            className="px-4 py-2 border rounded-lg w-full"
+            placeholder="Enter your city"
+            value={customCity}
+            onChange={handleCustomCityChange}
+          />
+        </div>
+      )}
       </div>
 
       <div className="mb-4">

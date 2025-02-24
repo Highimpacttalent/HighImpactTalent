@@ -1,136 +1,87 @@
 import React from "react";
 import {
-  FaFacebook,
-  FaTwitter,
-  FaLinkedin,
-  FaInstagram,
-  FaMapMarkerAlt,
-  FaEnvelope,
-  FaPhone,
-} from "react-icons/fa";
+  Box,
+  Typography,
+  Grid,
+  Paper,
+  TextField,
+  Button,
+  IconButton,
+  Divider,
+} from "@mui/material";
+import { FaFacebook, FaTwitter, FaLinkedin, FaInstagram, FaEnvelope } from "react-icons/fa";
 
 const Contact = () => {
   return (
-    <div className="min-h-screen flex flex-col items-center py-8 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-7xl w-full space-y-8">
-      
-        <div className="text-center">
-          <h1 className="text-4xl font-extrabold text-[#1176DB]">
+    <Box sx={{ minHeight: "100vh", display: "flex", justifyContent: "center", py: 8, px: 4 }}>
+      <Box sx={{ maxWidth: "1200px", width: "100%" }}>
+        {/* Header */}
+        <Box textAlign="center" mb={6}>
+          <Typography variant="h4" fontWeight="bold" color="primary">
             Get in Touch with High Impact Talent
-          </h1>
-          <p className="mt-2 text-lg text-gray-600">
-            We'd love to hear from you! Whether you have questions about our
-            services, need support, or want to provide feedback, our team is
-            here to help.
-          </p>
-        </div>
+          </Typography>
+          <Typography variant="body1" color="text.secondary" mt={1}>
+            Have questions? Need support? We're here to help.
+          </Typography>
+        </Box>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-8">
-          <div className="space-y-6">
-            <div className="bg-white p-6 shadow rounded-lg">
-              <h2 className="text-2xl font-bold text-gray-900">Our Address</h2>
-              <div className="mt-4 text-gray-600">
-                {/* <p className="flex items-center gap-2">
-                  <FaMapMarkerAlt className="text-[#1176DB]" /> 1234 Main Street, Anytown, USA
-                </p> */}
-                <p className="flex items-center gap-2 mt-2">
-                  <FaEnvelope className="text-[#1176DB]" />{" "}
-                  highimpacttalentenquiry@gmail.com
-                </p>
-                {/* <p className="flex items-center gap-2 mt-2">
-                  <FaPhone className="text-[#1176DB]" /> +1 (123) 456-7890
-                </p> */}
-              </div>
-              <div className="mt-6">
-                <img
-                  src="https://via.placeholde.com/400"
-                  alt="Company Building"
-                  className="w-full rounded-lg shadow-lg"
-                />
-              </div>
-            </div>
+        {/* Contact Section */}
+        <Grid container spacing={4}>
+          {/* Contact Info & Socials */}
+          <Grid item xs={12} md={5}>
+            <Paper elevation={3} sx={{ p: 4, borderRadius: 3 }}>
+              <Typography variant="h6" fontWeight="bold" color="text.primary">
+                Contact Information
+              </Typography>
+              <Divider sx={{ my: 2 }} />
 
-            <div className="bg-white p-6 shadow rounded-lg">
-              <p className="text-xl font-bold text-gray-900">
-                Connect with us on social media for the latest updates and
-                industry insights.
-              </p>
-              {/* <div className="flex justify-center mt-4 space-x-6 text-gray-600">
-                <a href="https://www.facebook.com" className="hover:text-[#14a800]">
-                  <FaFacebook size={30} />
-                </a>
-                <a href="https://www.twitter.com" className="hover:text-[#14a800]">
-                  <FaTwitter size={30} />
-                </a>
-                <a href="https://www.linkedin.com" className="hover:text-[#14a800]">
-                  <FaLinkedin size={30} />
-                </a>
-                <a href="https://www.instagram.com" className="hover:text-[#14a800]">
-                  <FaInstagram size={30} />
-                </a>
-              </div> */}
-            </div>
-          </div>
+              <Typography variant="body1" color="text.secondary" sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                <FaEnvelope color="#1176DB" /> highimpacttalentenquiry@gmail.com
+              </Typography>
 
-          <div className="bg-white p-6 shadow rounded-lg">
-            <h2 className="text-2xl font-bold text-[#1176DB]">
-              Send Us a Message
-            </h2>
-            <form className="mt-4 space-y-4">
-              <div>
-                <label htmlFor="name" className="sr-only">
-                  Name
-                </label>
-                <input
-                  id="name"
-                  name="name"
-                  type="text"
-                  autoComplete="name"
-                  required
-                  className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-[#14a800] focus:border-[#14a800] sm:text-sm"
-                  placeholder="Name"
-                />
-              </div>
-              <div>
-                <label htmlFor="email" className="sr-only">
-                  Email address
-                </label>
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  autoComplete="email"
-                  required
-                  className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-[#14a800] focus:border-[#14a800] sm:text-sm"
-                  placeholder="Email address"
-                />
-              </div>
-              <div>
-                <label htmlFor="message" className="sr-only">
-                  Message
-                </label>
-                <textarea
-                  id="message"
-                  name="message"
-                  rows="4"
-                  required
-                  className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-[#14a800] focus:border-[#14a800] sm:text-sm"
-                  placeholder="Message"
-                ></textarea>
-              </div>
-              <div>
-                <button
-                  type="submit"
-                  className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-[#1176DB] hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#14a800]"
-                >
+              {/* Social Links */}
+              <Typography variant="body1" fontWeight="bold" sx={{ mt: 3, mb: 1 }}>
+                Connect with us:
+              </Typography>
+              <Box sx={{ display: "flex", gap: 2 }}>
+                <IconButton href="https://facebook.com" target="_blank" sx={{ color: "#3b5998" }}>
+                  <FaFacebook size={24} />
+                </IconButton>
+                <IconButton href="https://twitter.com" target="_blank" sx={{ color: "#00acee" }}>
+                  <FaTwitter size={24} />
+                </IconButton>
+                <IconButton href="https://linkedin.com" target="_blank" sx={{ color: "#0e76a8" }}>
+                  <FaLinkedin size={24} />
+                </IconButton>
+                <IconButton href="https://instagram.com" target="_blank" sx={{ color: "#C13584" }}>
+                  <FaInstagram size={24} />
+                </IconButton>
+              </Box>
+            </Paper>
+          </Grid>
+
+          {/* Contact Form */}
+          <Grid item xs={12} md={7}>
+            <Paper elevation={3} sx={{ p: 4, borderRadius: 3 }}>
+              <Typography variant="h6" fontWeight="bold" color="primary">
+                Send Us a Message
+              </Typography>
+              <Divider sx={{ my: 2 }} />
+
+              <Box component="form" sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                <TextField label="Name" variant="outlined" fullWidth required />
+                <TextField label="Email Address" type="email" variant="outlined" fullWidth required />
+                <TextField label="Message" variant="outlined" fullWidth multiline rows={4} required />
+
+                <Button variant="contained" color="primary" size="large" sx={{ mt: 2 }}>
                   Send Message
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      </div>
-    </div>
+                </Button>
+              </Box>
+            </Paper>
+          </Grid>
+        </Grid>
+      </Box>
+    </Box>
   );
 };
 

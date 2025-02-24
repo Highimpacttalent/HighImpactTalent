@@ -53,6 +53,7 @@ function MenuList({ user, onClick }) {
       >
         <Menu.Items className="absolute z-50 right-0 mt-2 w-56 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
           <div className="py-1">
+          {user?.accountType === "seeker" && (
             <Menu.Item>
               {({ active }) => (
                 <Link
@@ -74,6 +75,7 @@ function MenuList({ user, onClick }) {
                 </Link>
               )}
             </Menu.Item>
+            )}
             {/* Application Status (Only for seekers) */}
             {user?.accountType === "seeker" && (
               <Menu.Item>
