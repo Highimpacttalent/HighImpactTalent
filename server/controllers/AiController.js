@@ -1,8 +1,5 @@
 import pdfParse from "pdf-parse";
 import axios from "axios";
-import dotenv from "dotenv";
-
-dotenv.config();
 
 const GEMINI_API_KEY = "AIzaSyChz49v4j96SIOqL3_kAbWi6RJgTyuzIfI";
 
