@@ -32,8 +32,9 @@ function UserLoginForm() {
         data: newData,
       });
 
-      if (res?.status === "failed") {
+      if (res?.status != 200) {
         setErrMsg(res?.message);
+        return;     
       } else {
         setErrMsg("");
         const userData = { token: res?.token, ...res?.user };

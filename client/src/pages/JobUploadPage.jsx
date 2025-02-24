@@ -181,7 +181,7 @@ const JobUploadPage = () => {
       }
       setIsLoading(false);
       alert("Job Created Successfully. For Uploading more jobs visit Upload Jobs section.")
-      navigate("/find-jobs");
+      navigate("/view-jobs");
     } catch (error) {
       console.log(error);
       setIsLoading(false);

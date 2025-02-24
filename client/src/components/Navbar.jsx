@@ -230,7 +230,7 @@ const Navbar = () => {
             </Link>
             <div className="mt-5">
               {!user?.token ? (
-                <Link to="/authform" onClick={handleCloseNavbar}>
+                <Link to="/" onClick={handleCloseNavbar}>
                   <CustomButton
                     title="Sign In"
                     containerStyles="text-[#14a800] border border-[#14a800] py-1.5 px-5 w-full text-center hover:bg-[#14a800] hover:text-white rounded-full transition"
