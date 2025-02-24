@@ -98,7 +98,7 @@ const ViewJobs = () => {
         💰 <span className="font-semibold">Salary:</span>{" "}
         {selectedJob.salaryConfidential
           ? "Confidential"
-          : `$${selectedJob.salary} (${selectedJob.salaryCategory})`}
+          : `${selectedJob.salary} (${selectedJob.salaryCategory})`}
       </p>
       <p className="text-gray-700 text-lg">
         🎓 <span className="font-semibold">Experience Required:</span>{" "}
