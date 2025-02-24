@@ -95,57 +95,90 @@ const BlogPage = () => {
       )}
 
 <Grid container spacing={4}>
-  {blogs.slice(1).map((blog) => (
-    <Grid item xs={12} sm={6} md={4} key={blog._id}>
-      <Card 
-        sx={{ 
-          boxShadow: 3, 
-          transition: "0.3s", 
-          "&:hover": { boxShadow: 6 }
-        }}
+{blogs.slice(1).map((blog) => (
+  <Grid item xs={12} sm={6} md={4} key={blog._id}>
+    <Card
+      sx={{
+        boxShadow: 3,
+        transition: "0.3s",
+        "&:hover": { boxShadow: 6 },
+        height: 400, // Fixed height for uniformity
+        display: "flex",
+        flexDirection: "column",
+      }}
+    >
+      <CardActionArea
+        sx={{ display: "flex", flexDirection: "column", height: "100%" }}
+        onClick={() => navigate(`/blog/${blog._id}`)}
       >
-        <CardActionArea onClick={() => navigate(`/blog/${blog._id}`)}>
-          <CardMedia
-            component="img"
-            image={blog.image}
-            alt="Blog Cover"
-            sx={{ objectFit: "contain",p:2 }}
-          />
-          
-        <CardContent 
-          sx={{ 
-            display: "flex", 
-            alignItems: "center", 
-            justifyContent: "space-between", 
-            height:10
+        {/* Image */}
+        <CardMedia
+          component="img"
+          image={blog.image}
+          alt="Blog Cover"
+          sx={{
+            objectFit: "cover",
+            height: 150, // Fixed height for the image
+            width: "100%",
+          }}
+        />
+
+        {/* Date & Like Section */}
+        <CardContent
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            width: "100%",
+            paddingBottom: "0px",
           }}
         >
           <Typography variant="caption" color="text.secondary">
             {new Date(blog.createdAt).toDateString()}
           </Typography>
           <Box sx={{ display: "flex", alignItems: "center" }}>
-          <IconButton onClick={() => handleLike(blog._id)} color="error">
-            {blog.likes.includes(user._id) ? <IoMdHeart /> : <IoMdHeartEmpty />}
-          </IconButton>
-          <Typography variant="body2">{blog.likes.length}</Typography>
+            <IconButton onClick={() => handleLike(blog._id)} color="error">
+              {blog.likes.includes(user._id) ? <IoMdHeart /> : <IoMdHeartEmpty />}
+            </IconButton>
+            <Typography variant="body2">{blog.likes.length}</Typography>
           </Box>
         </CardContent>
-          <CardContent >
-            <Typography variant="h6" fontWeight="bold">
-              {blog.title}
-            </Typography>
-            <Typography 
-              variant="body2" 
-              color="text.secondary" 
-              sx={{ mt: 1, display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden" }}
-            >
-              {blog.content}
-            </Typography>
-          </CardContent>
-        </CardActionArea>
-      </Card>
-    </Grid>
-  ))}
+
+        {/* Title & Content */}
+        <CardContent sx={{ flexGrow: 1, overflow: "hidden" }}>
+          <Typography
+            variant="h6"
+            fontWeight="bold"
+            sx={{
+              display: "-webkit-box",
+              WebkitLineClamp: 2, // Limits title to 2 lines
+              WebkitBoxOrient: "vertical",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+            }}
+          >
+            {blog.title}
+          </Typography>
+          <Typography
+            variant="body2"
+            color="text.secondary"
+            sx={{
+              mt: 1,
+              display: "-webkit-box",
+              WebkitLineClamp: 3, // Limits content to 3 lines
+              WebkitBoxOrient: "vertical",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+            }}
+          >
+            {blog.content}
+          </Typography>
+        </CardContent>
+      </CardActionArea>
+    </Card>
+  </Grid>
+))}
+
 </Grid>
 
     </Container>

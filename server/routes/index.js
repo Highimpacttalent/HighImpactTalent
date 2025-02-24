@@ -7,6 +7,7 @@ import jobRoute from "./jobsRoutes.js";
 import applicationRoute from "./applicationRoutes.js";
 import blogRoute from './blogRoutes.js'
 import sendMailRoute from "./sendMailRoutes.js";
+import aiRoutes from "./aiRoutes.js";
 const router = express.Router();
 
 const path = "/api-v1/";
@@ -18,5 +19,6 @@ router.use(`${path}jobs`, jobRoute);
 router.use(`${path}application`,applicationRoute)
 router.use(`${path}blog`,blogRoute)
 router.use(`${path}sendmail`, sendMailRoute);
+router.use(`${path}ai`, aiRoutes);
 
 export default router;
