@@ -66,15 +66,20 @@ const UserInfoForm = () => {
     if (selectedOption?.value === "Other") {
       setIsOtherSelected(true);
       setSelectedCity(null);
+      // Clear the jobLocation when switching to Other
+      setFormData(prev => ({...prev, location: ""}));
     } else {
       setIsOtherSelected(false);
       setSelectedCity(selectedOption);
+      // Set the jobLocation when a city is selected
+      setFormData(prev => ({...prev, location: selectedOption?.value || ""}));
     }
   };
-
-  // Handle custom city input
+  
   const handleCustomCityChange = (e) => {
     setCustomCity(e.target.value);
+    // Update formData with the custom city
+    setFormData(prev => ({...prev, jobLocation: e.target.value}));
   };
 
   // Prepare city options with "Other" at the bottom

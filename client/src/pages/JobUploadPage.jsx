@@ -45,22 +45,25 @@ const JobUploadPage = () => {
       fetchCities();
     }, []);
   
-    // Handle city selection
     const handleCityChange = (selectedOption) => {
       if (selectedOption?.value === "Other") {
         setIsOtherSelected(true);
         setSelectedCity(null);
+        // Clear the jobLocation when switching to Other
+        setFormData(prev => ({...prev, jobLocation: ""}));
       } else {
         setIsOtherSelected(false);
         setSelectedCity(selectedOption);
+        // Set the jobLocation when a city is selected
+        setFormData(prev => ({...prev, jobLocation: selectedOption?.value || ""}));
       }
     };
-  
-    // Handle custom city input
+    
     const handleCustomCityChange = (e) => {
       setCustomCity(e.target.value);
+      // Update formData with the custom city
+      setFormData(prev => ({...prev, jobLocation: e.target.value}));
     };
-  
     // Prepare city options with "Other" at the bottom
     const filteredCities = [
       ...cities
@@ -119,8 +122,8 @@ const JobUploadPage = () => {
   const customStyles = {
     control: (provided, state) => ({
       ...provided,
-      padding: "0.5rem", 
-      fontSize: "0.875rem", 
+      padding: "0.2rem", 
+      fontSize: "0.7rem", 
       borderRadius: "0.5rem", 
       borderColor: state.isFocused ? "#3b82f6" : "#d1d5db", 
       boxShadow: state.isFocused ? "0 0 0 2px #3b82f6" : "none", 
@@ -157,7 +160,7 @@ const JobUploadPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     formData.experience = Number(formData.experience);
-    formData.salary = Number(formData.salary);
+    formData.salary=formData.salary
     console.log(formData);
     // Handle form submission logic here
     setIsLoading(true);
@@ -225,10 +228,10 @@ const JobUploadPage = () => {
 
       <div className="mb-4">
         <label className="block text-gray-700 text-sm  mb-2">
-          Annual Salary (INR Lakh)
+          Annual Salary
         </label>
         <input
-          type="number"
+          type="text"
           name="salary"
           value={formData.salary}
           onChange={handleChange}
