@@ -1,6 +1,6 @@
 import express from "express";
 import multer from "multer";
-import { parseResume } from "../controllers/resumeParserController.js";
+import { parseResume } from "../controllers/AiController";
 
 const router = express.Router();
 const storage = multer.memoryStorage();
