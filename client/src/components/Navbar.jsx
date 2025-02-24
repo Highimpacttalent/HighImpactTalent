@@ -51,7 +51,7 @@ function MenuList({ user, onClick }) {
         leaveFrom="transform opacity-100 scale-100"
         leaveTo="transform opacity-0 scale-95"
       >
-        <Menu.Items className="absolute z-50 right-0 mt-2 w-56 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+        <Menu.Items className="absolute z-50 left-4 sm:right-8 sm:left-auto mt-2 w-56 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
           <div className="py-1">
           {user?.accountType === "seeker" && (
             <Menu.Item>
@@ -230,7 +230,7 @@ const Navbar = () => {
             </Link>
             <div className="mt-5">
               {!user?.token ? (
-                <Link to="/authform" onClick={handleCloseNavbar}>
+                <Link to="/" onClick={handleCloseNavbar}>
                   <CustomButton
                     title="Sign In"
                     containerStyles="text-[#14a800] border border-[#14a800] py-1.5 px-5 w-full text-center hover:bg-[#14a800] hover:text-white rounded-full transition"

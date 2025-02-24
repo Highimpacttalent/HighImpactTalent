@@ -39,7 +39,7 @@ function CompanyLoginForm() {
         const userData = { token: res?.token, ...res?.user };
         dispatch(Login(userData));
         localStorage.setItem("userInfo", JSON.stringify(userData));
-        navigate("/");
+        navigate("/upload-job");
       }
     } catch (error) {
       console.log(error);
