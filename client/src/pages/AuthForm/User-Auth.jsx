@@ -73,6 +73,11 @@ const UserSignUp = () => {
     e.preventDefault();
     setLoading(true);
 
+    if (form.password.length < 5) {
+      alert("Password must be at least 5 characters long.");
+      setLoading(false);
+      return;
+  }
     if (form.password !== form.confirmPassword) {
       alert("Passwords do not match");
       setLoading(false);
