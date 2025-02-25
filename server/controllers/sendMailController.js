@@ -91,3 +91,45 @@ export const sendRecruiterQueryEmail = async (req, res, next) => {
   }
 };
 
+export const sendContactQuery = async (req, res, next) => {
+  const { name, email, message } = req.body;
+
+  if (!name || !email || !message) {
+    return next("Name, Email, and Message are required");
+  }
+
+  try {
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: "developerhighimpact@gmail.com", // Use environment variables for security
+        pass: "lpyu zhks kpne qrsc", // Use app password
+      },
+    });
+
+    const mailOptions = {
+      from: "developerhighimpact@gmail.com",
+      to: "developerhighimpact@gmail.com",
+      subject: "Contact Us Query Raised",
+      text: ` 
+        A new contact query has been submitted.
+
+        **User Details**:
+        Name: ${name}
+        Email: ${email}
+
+        **Message**:
+        ${message}
+
+        Please respond accordingly.
+      `,
+    };
+
+    await transporter.sendMail(mailOptions);
+    res.status(200).json({ success: true, message: "Email sent successfully!" });
+  } catch (error) {
+    console.error("Error sending email:", error);
+    res.status(500).json({ success: false, message: "Failed to send email", details: error.message });
+  }
+};
+
