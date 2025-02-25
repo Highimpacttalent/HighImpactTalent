@@ -32,7 +32,7 @@ function CompanyLoginForm() {
         data: newData,
       });
 
-      if (res?.status != 200) {
+      if (res?.success != true) {
         setErrMsg(res?.message);
       } else {
         setErrMsg("");

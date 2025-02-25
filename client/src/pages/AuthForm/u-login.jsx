@@ -31,8 +31,9 @@ function UserLoginForm() {
         method: "POST",
         data: newData,
       });
+      console.log(res)
 
-      if (res?.status != 200) {
+      if (res?.success != true) {
         setErrMsg(res?.message);
         return;     
       } else {
