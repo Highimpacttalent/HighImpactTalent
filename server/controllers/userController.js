@@ -321,6 +321,7 @@ export const toggleJobLike = async (req, res) => {
         success: true,
         message: "Job removed from liked jobs",
         likedJobs: user.likedJobs,
+        user
       });
     } else {
       // Add jobId as ObjectId
@@ -330,6 +331,7 @@ export const toggleJobLike = async (req, res) => {
         success: true,
         message: "Job added to liked jobs",
         likedJobs: user.likedJobs,
+        user
       });
     }
   } catch (error) {
