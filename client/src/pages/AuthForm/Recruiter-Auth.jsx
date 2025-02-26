@@ -29,6 +29,8 @@ const RecruiterSignup = () => {
   const [form, setForm] = useState({
     email: "",
     companyName: "",
+    recruiterName: "",
+    mobileNumber: "",
     role: "company",
     password: "",
     confirmPassword: "",
@@ -36,6 +38,7 @@ const RecruiterSignup = () => {
   const dispatch = useDispatch();
   const [emailError, setEmailError] = useState("");
   const [passwordError, setPasswordError] = useState("");
+  const [mobileError, setMobileError] = useState("");
   const [passwordStrength, setPasswordStrength] = useState("");
   const [modalMessage, setModalMessage] = useState("");
   const [successModalOpen, setSuccessModalOpen] = useState(false);
@@ -43,6 +46,7 @@ const RecruiterSignup = () => {
   const navigate = useNavigate();
   
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const phoneRegex = /^[0-9]{10}$/;  // Basic validation for 10-digit phone number
 
   const checkPasswordStrength = (password) => {
     const lengthCriteria = password.length >= 8;
@@ -80,6 +84,13 @@ const RecruiterSignup = () => {
         setEmailError("");
       }
     }
+    if (name === "mobileNumber") {
+      if (!phoneRegex.test(value)) {
+        setMobileError("Please enter a valid 10-digit mobile number.");
+      } else {
+        setMobileError("");
+      }
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -87,9 +98,17 @@ const RecruiterSignup = () => {
     if (form.password.length < 5) {
       alert("Password must be at least 5 characters long.");
       return;
-  }
+    }
     if (form.password !== form.confirmPassword) {
       alert("Passwords do not match");
+      return;
+    }
+    if (!phoneRegex.test(form.mobileNumber)) {
+      alert("Please enter a valid 10-digit mobile number.");
+      return;
+    }
+    if (!form.recruiterName) {
+      alert("Recruiter name is required.");
       return;
     }
 
@@ -99,6 +118,8 @@ const RecruiterSignup = () => {
     const sendMailPayload = {
       email: form.email,
       companyName: form.companyName,
+      recruiterName: form.recruiterName,
+      mobileNumber: form.mobileNumber,
       password: form.password,
       date: dayjs().format("YYYY-MM-DD"),
       time: dayjs().format("HH:mm"),
@@ -123,7 +144,15 @@ const RecruiterSignup = () => {
 
       setModalMessage("Registering User...");
       
-      const newData = { companyName: form.companyName,email: form.email, password: form.password, copmanyType: form.role };
+      const newData = { 
+        companyName: form.companyName,
+        recruiterName: form.recruiterName,
+        mobileNumber: form.mobileNumber,
+        email: form.email, 
+        password: form.password, 
+        copmanyType: form.role 
+      };
+      
       const registerData = await apiRequest({
                 url: "companies/register",
                 method: "POST",
@@ -159,6 +188,19 @@ const RecruiterSignup = () => {
         <Box component="form" onSubmit={handleSubmit}>
           <TextField fullWidth type="email" label="Email Address" name="email" value={form.email} onChange={handleChange} margin="normal" required error={!!emailError} helperText={emailError} />
           <TextField fullWidth label="Company Name" name="companyName" value={form.companyName} onChange={handleChange} margin="normal" required />
+          <TextField fullWidth label="Recruiter Name" name="recruiterName" value={form.recruiterName} onChange={handleChange} margin="normal" required />
+          <TextField 
+            fullWidth 
+            label="Mobile Number" 
+            name="mobileNumber" 
+            value={form.mobileNumber} 
+            onChange={handleChange} 
+            margin="normal" 
+            required 
+            error={!!mobileError} 
+            helperText={mobileError}
+            inputProps={{ maxLength: 10 }}
+          />
           <FormControl component="fieldset" sx={{ my: 2 }}>
             <FormLabel component="legend">Select an Option:</FormLabel>
             <RadioGroup row name="role" value={form.role} onChange={handleChange}>
@@ -180,42 +222,41 @@ const RecruiterSignup = () => {
         </Box>
       </Paper>
       {/* Loading Modal */}
-<Dialog open={loading}>
-  <DialogTitle sx={{ textAlign: "center", fontWeight: "bold", color: "#1976D2" }}>
-    Please Wait
-  </DialogTitle>
-  <DialogContent sx={{ textAlign: "center", p: 3 }}>
-    <CircularProgress sx={{ color: "#1976D2", mb: 2 }} />
-    <Typography variant="body1" sx={{ color: "#555" }}>
-      We are creating your account. This may take a few seconds...
-    </Typography>
-  </DialogContent>
-</Dialog>
+      <Dialog open={loading}>
+        <DialogTitle sx={{ textAlign: "center", fontWeight: "bold", color: "#1976D2" }}>
+          Please Wait
+        </DialogTitle>
+        <DialogContent sx={{ textAlign: "center", p: 3 }}>
+          <CircularProgress sx={{ color: "#1976D2", mb: 2 }} />
+          <Typography variant="body1" sx={{ color: "#555" }}>
+            We are creating your account. This may take a few seconds...
+          </Typography>
+        </DialogContent>
+      </Dialog>
 
-{/* Success Modal */}
-<Dialog open={successModalOpen} onClose={() => setSuccessModalOpen(false)}>
-  <DialogTitle sx={{ textAlign: "center", fontWeight: "bold", color: "#4CAF50" }}>
-    🎉 Registration Successful!
-  </DialogTitle>
-  <DialogContent sx={{ textAlign: "center", p: 3 }}>
-    <CheckCircleIcon sx={{ fontSize: 80, color: "#4CAF50", mb: 2 }} />
-    <Typography variant="h6" sx={{ fontWeight: "bold", color: "#333" }}>
-      Your account has been created!
-    </Typography>
-    <Typography variant="body1" sx={{ mt: 1, color: "#555" }}>
-      Our team will contact you shortly for job postings. Stay tuned!
-    </Typography>
-  </DialogContent>
-  <DialogActions sx={{ justifyContent: "center", pb: 2 }}>
-    <Button 
-      onClick={() => setSuccessModalOpen(false)} 
-      sx={{ backgroundColor: "#4CAF50", color: "white", px: 4, py: 1.2, "&:hover": { backgroundColor: "#388E3C" } }}
-    >
-      OK
-    </Button>
-  </DialogActions>
-</Dialog>
-
+      {/* Success Modal */}
+      <Dialog open={successModalOpen} onClose={() => setSuccessModalOpen(false)}>
+        <DialogTitle sx={{ textAlign: "center", fontWeight: "bold", color: "#4CAF50" }}>
+          🎉 Registration Successful!
+        </DialogTitle>
+        <DialogContent sx={{ textAlign: "center", p: 3 }}>
+          <CheckCircleIcon sx={{ fontSize: 80, color: "#4CAF50", mb: 2 }} />
+          <Typography variant="h6" sx={{ fontWeight: "bold", color: "#333" }}>
+            Your account has been created!
+          </Typography>
+          <Typography variant="body1" sx={{ mt: 1, color: "#555" }}>
+            Our team will contact you shortly for job postings. Stay tuned!
+          </Typography>
+        </DialogContent>
+        <DialogActions sx={{ justifyContent: "center", pb: 2 }}>
+          <Button 
+            onClick={() => setSuccessModalOpen(false)} 
+            sx={{ backgroundColor: "#4CAF50", color: "white", px: 4, py: 1.2, "&:hover": { backgroundColor: "#388E3C" } }}
+          >
+            OK
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

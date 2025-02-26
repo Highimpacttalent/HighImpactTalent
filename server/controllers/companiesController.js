@@ -2,13 +2,18 @@ import mongoose from "mongoose";
 import Companies from "../models/companiesModel.js";
 import { response } from "express";
 import bcrypt from "bcryptjs";
+
 // company register
 export const register = async (req, res, next) => {
-  const {  companyName, email, copmanyType, password } =
-    req.body;
+  const { companyName, recruiterName, email, copmanyType, password, mobileNumber } = req.body;
+  
   //validate fields
   if (!companyName) {
     next("Company Name is required!");
+    return;
+  }
+  if (!recruiterName) {
+    next("Recruiter Name is required!");
     return;
   }
   if (!email) {
@@ -19,6 +24,11 @@ export const register = async (req, res, next) => {
     next("Password is required and must be greater than 6 characters");
     return;
   }
+  if (!mobileNumber) {
+    next("Mobile Number is required!");
+    return;
+  }
+  
   const name = companyName;
   try {
     const accountExist = await Companies.findOne({ email });
@@ -30,9 +40,11 @@ export const register = async (req, res, next) => {
     // create a new account
     const company = await Companies.create({
       name,
+      recruiterName,
       email,
       password,
       copmanyType,
+      mobileNumber,
     });
 
     // user token
@@ -44,7 +56,9 @@ export const register = async (req, res, next) => {
       user: {
         _id: company._id,
         name: company.name,
+        recruiterName: company.recruiterName,
         email: company.email,
+        mobileNumber: company.mobileNumber,
         companyType: company.copmanyType,
         accountType: company.accountType,
       },
@@ -98,7 +112,7 @@ export const signIn = async (req, res, next) => {
 
 // update company details
 export const updateCompanyProfile = async (req, res, next) => {
-  const { name, contact, location, profileUrl, about } = req.body;
+  const { name, recruiterName, contact, location, profileUrl, about, mobileNumber } = req.body;
 
   try {
     const id = req.body.user.userId;
@@ -108,10 +122,12 @@ export const updateCompanyProfile = async (req, res, next) => {
 
     const updateCompany = {
       name,
+      recruiterName,
       contact,
       location,
       profileUrl,
       about,
+      mobileNumber,
       _id: id,
     };
 
@@ -125,7 +141,7 @@ export const updateCompanyProfile = async (req, res, next) => {
 
     res.status(200).json({
       success: true,
-      message: "Company Profile Updated SUccessfully",
+      message: "Company Profile Updated Successfully",
       company,
       token,
     });

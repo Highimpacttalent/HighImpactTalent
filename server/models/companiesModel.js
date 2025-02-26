@@ -8,6 +8,14 @@ const companySchema = new Schema({
     type: String,
     required: [true, "Company Name is required"],
   },
+  recruiterName: {
+    type: String,
+    required: [true, "Recruiter Name is required"],
+  },
+  mobileNumber: {
+    type: String,
+    required: [true, "Mobile Number is required"],
+  },
   email: {
     type: String,
     required: [true, "Email is required"],
@@ -19,12 +27,12 @@ const companySchema = new Schema({
     required: [true, "Password is required"],
     // select: true,
   },
-  copmanyType:{
-    type:String,
-    required:true,
-    default:"copmany"
+  copmanyType: {
+    type: String,
+    required: true,
+    default: "copmany",
   },
-  accountType:{type:String,default:"recruiter"},
+  accountType: { type: String, default: "recruiter" },
   contact: { type: String },
   location: { type: String },
   about: { type: String },
