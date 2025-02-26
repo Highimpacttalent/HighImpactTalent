@@ -289,8 +289,7 @@ export const deleteUser = async (req, res, next) => {
 
 export const toggleJobLike = async (req, res) => {
   try {
-    const userId = req.body.user.userId; // Assuming you're using authentication middleware
-    const { jobId } = req.body;
+    const { jobId,userId } = req.body;
 
     // Find the user by ID
     const user = await Users.findById(userId);
