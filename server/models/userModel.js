@@ -51,8 +51,8 @@ const userSchema = new mongoose.Schema(
     currentLocation: { type: String, default: "india" },
     openToRelocate: {
       type: String,
-      enum: ["YES", "NO"],
-      default: "YES",
+      enum: ["yes", "no"],
+      default: "yes",
     },
     joinConsulting: {
       type: String,
@@ -67,10 +67,12 @@ const userSchema = new mongoose.Schema(
     dateOfBirth:{
       type:String,
     },
-    appliedJobs: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Application",
-    },
+    appliedJobs: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Application",
+      }
+    ],    
     blogs: [
       {
         type: mongoose.Schema.Types.ObjectId,

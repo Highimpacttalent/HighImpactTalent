@@ -289,44 +289,56 @@ export const deleteUser = async (req, res, next) => {
 
 export const toggleJobLike = async (req, res) => {
   try {
-    const { jobId,userId } = req.body;
+    const userId = req.body?.user?.userId;
+    const { jobId } = req.body;
+
+    console.log("Received userId:", userId);
+    console.log("Received jobId:", jobId);
+
+    if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({ success: false, message: "Invalid userId" });
+    }
+
+    if (!jobId || !mongoose.Types.ObjectId.isValid(jobId)) {
+      return res.status(400).json({ success: false, message: "Invalid jobId" });
+    }
 
     // Find the user by ID
     const user = await Users.findById(userId);
 
     if (!user) {
-      return res
-        .status(404)
-        .json({ success: false, message: "User not found" });
+      return res.status(404).json({ success: false, message: "User not found" });
     }
 
-    // Check if the job is already liked
-    const jobIndex = user.likedJobs.indexOf(jobId);
+    // Ensure jobId is properly compared
+    const jobIndex = user.likedJobs.findIndex((job) => job.toString() === jobId);
 
     if (jobIndex > -1) {
-      // Job is already liked, so remove it
+      // Remove from liked jobs
       user.likedJobs.splice(jobIndex, 1);
       await user.save();
       return res.status(200).json({
         success: true,
         message: "Job removed from liked jobs",
-        user,
+        likedJobs: user.likedJobs,
       });
     } else {
-      // Job is not liked, so add it
-      user.likedJobs.push(jobId);
+      // Add jobId as ObjectId
+      user.likedJobs.push(new mongoose.Types.ObjectId(jobId));
       await user.save();
       return res.status(200).json({
         success: true,
         message: "Job added to liked jobs",
-        user,
+        likedJobs: user.likedJobs,
       });
     }
   } catch (error) {
-    console.error(error);
-    return res.status(500).json({ success: false, message: "Server error" });
+    console.error("Error in toggleJobLike:", error);
+    return res.status(500).json({ success: false, message: "Server error", error: error.message });
   }
 };
+
+
 
 export const updateProfileUrl = async (req, res, next) => {
   try {
