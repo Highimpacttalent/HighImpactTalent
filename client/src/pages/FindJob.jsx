@@ -181,7 +181,7 @@ const [openFilterModal, setOpenFilterModal] = useState(false);
   {/* Main Content */}
   <div className="max-w-6xl mx-auto mt-6 px-5">
     {/* Filters & Sorting */}
-    <div className="flex flex-wrap justify-between items-center gap-4">
+    <div className="flex flex-wrap items-center gap-4">
       {/* Sorting Dropdown */}
       <ListBox sort={sort} setSort={setSort} />
 
@@ -229,7 +229,7 @@ const [openFilterModal, setOpenFilterModal] = useState(false);
           showLikedJobs ? "bg-blue-700 text-white" : "bg-white text-gray-700 border border-gray-300"
         } hover:bg-blue-600 hover:text-white`}
       >
-        {showLikedJobs ? "All Jobs" : "Liked Jobs"}
+        {showLikedJobs ? "All Jobs" : "Saved Jobs"}
       </button>
     </div>
 

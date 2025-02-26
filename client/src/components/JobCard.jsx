@@ -4,7 +4,7 @@ import axios from "axios";
 import moment from "moment";
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardActions, Typography, Button, IconButton, Divider, Chip, Box } from "@mui/material";
-import { LocationOn, Work, FavoriteBorder, Favorite, Business } from "@mui/icons-material";
+import { LocationOn, Work, Business,Bookmark, BookmarkBorder } from "@mui/icons-material";
 import { UpdateUser } from "../redux/userSlice";
 
 const JobCard = ({ job }) => {
@@ -59,7 +59,7 @@ const JobCard = ({ job }) => {
             </Typography>
           </Box>
           <IconButton onClick={(e) => handleLikeClick(e, job._id)}>
-            {like ? <Favorite color="error" /> : <FavoriteBorder color="action" />}
+            {like ? <Bookmark color="primary" /> : <BookmarkBorder color="action" />}
           </IconButton>
         </Box>
 

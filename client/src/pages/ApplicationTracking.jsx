@@ -14,7 +14,9 @@ const ApplicationTracking = () => {
     const fetchApplications = async () => {
       try {
         const res = await axios.get(`https://highimpacttalent.onrender.com/api-v1/application/get-allapplication/${user._id}`);
+        console.log(res.data.data)
         setApplications(res.data.data);
+        console.log(applications)
       } catch (error) {
         setError("Failed to fetch applications. Please try again later.");
       } finally {
