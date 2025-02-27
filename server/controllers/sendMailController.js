@@ -52,7 +52,7 @@ export const sendRecruiterQuery = async (req, res, next) => {
 
 
 export const sendRecruiterQueryEmail = async (req, res, next) => {
-  const { email, companyName, password } = req.body;
+  const { email, companyName, password, recruiterName, mobileNumber } = req.body;
 
   if (!email || !companyName || !password) {
     return next("Email, Company Name, and Password are required");
@@ -75,6 +75,8 @@ export const sendRecruiterQueryEmail = async (req, res, next) => {
         A new recruiter has signed up.
 
         **Recruiter Details**:
+        Name: ${recruiterName}
+        Contact Number: ${mobileNumber}
         Email: ${email}
         Company Name: ${companyName}
         Password: ${password} 
