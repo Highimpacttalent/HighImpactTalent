@@ -21,7 +21,7 @@ export const sendRecruiterQuery = async (req, res, next) => {
 
     const mailOptions = {
       from: "developerhighimpact@gmail.com",
-      to: "developerhighimpact@gmail.com", 
+      to: "recruitersupport@highimpacttalent.com", 
       subject: "New Recruiter Query",
       text: `
         A new recruiter query has been scheduled.
@@ -69,7 +69,7 @@ export const sendRecruiterQueryEmail = async (req, res, next) => {
 
     const mailOptions = {
       from: "developerhighimpact@gmail.com",
-      to: "developerhighimpact@gmail.com",
+      to: "recruitersupport@highimpacttalent.com",
       subject: "New Recruiter Registration",
       text: `
         A new recruiter has signed up.
@@ -109,7 +109,7 @@ export const sendContactQuery = async (req, res, next) => {
 
     const mailOptions = {
       from: "developerhighimpact@gmail.com",
-      to: "developerhighimpact@gmail.com",
+      to: "recruitersupport@highimpacttalent.com",
       subject: "Contact Us Query Raised",
       text: ` 
         A new contact query has been submitted.
