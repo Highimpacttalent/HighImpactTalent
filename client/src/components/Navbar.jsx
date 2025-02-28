@@ -4,7 +4,7 @@ import { BiChevronDown } from "react-icons/bi";
 import { CgProfile } from "react-icons/cg";
 import { HiMenuAlt3 } from "react-icons/hi";
 import { AiOutlineClose, AiOutlineLogout } from "react-icons/ai";
-import { MdAssignment } from "react-icons/md";
+import { MdAssignment, MdLockReset } from "react-icons/md";
 import { Link } from "react-router-dom";
 import CustomButton from "./CustomButton";
 import { useSelector, useDispatch } from "react-redux";
@@ -76,6 +76,25 @@ function MenuList({ user, onClick }) {
               )}
             </Menu.Item>
             )}
+            
+            <Menu.Item>
+              {({ active }) => (
+                <Link
+                to="/password"
+                className={`${
+                  active ? "bg-[#1176DB] text-white" : "text-gray-700"
+                } group flex items-center px-4 py-2 text-sm`}
+              >
+                 <MdLockReset
+                className={`${
+                  active ? "text-white" : "text-gray-600"
+                } mr-2 h-5 w-5`}
+                aria-hidden="true"
+              />
+                Change Password
+              </Link>
+              )}
+            </Menu.Item>
             {/* Application Status (Only for seekers) */}
             {user?.accountType === "seeker" && (
               <Menu.Item>

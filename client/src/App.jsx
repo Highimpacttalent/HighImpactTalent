@@ -10,6 +10,7 @@ import ApplicationTracking from "./pages/ApplicationTracking";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import ApplicationStatus from "./pages/ApplicationStatus";
 import UploadResume from "./pages/UploadResume";
+import PasswordChange from "./pages/Password";
 import Landing from "./pages/Landing";
 import ScreeningQuestions from "./pages/ScreeningQuestions";
 import UserInfoForm from "./pages/UserInfoForm";
@@ -21,6 +22,7 @@ import BlogPage from "./pages/BlogPage";
 import ViewJobs from "./pages/ViewJobs";
 import SingleBlog from "./pages/SingleBlog";
 import JobApplications from "./pages/ViewApplicants";
+// import ResumeUpload from "./pages/UserDetailsUpload/userInfo";
 import RecruiterSchedule from "./pages/RecruiterSchedule";
 import UpdateUserForm from "./pages/UpdateUserDetails";
 import RecruiterSignup from "./pages/AuthForm/Recruiter-Auth";
@@ -67,6 +69,8 @@ function App() {
           <Route path="/job-detail/:id/screening-questions" element={<ScreeningQuestions/>}></Route>
           <Route path={'/applicationstatus'} element={<ApplicationStatus/>}></Route>
           <Route path={'/recruiterSchedule'} element={<RecruiterSchedule/>}></Route>
+          {/* <Route path={'/userinformation'} element={<ResumeUpload/>}></Route> */}
+          <Route path={'/password'} element={<PasswordChange/>}></Route>
           
         </Route>
         <Route path="/authform" element={<AuthForm/>}></Route>
