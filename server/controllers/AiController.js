@@ -37,7 +37,10 @@ export const parseResume = async (req, res) => {
             role: "user",
             parts: [
               {
-                text: `Extract structured information from this resume and return JSON with fields: name, email, phone, skills, experience, education.\n\nResume Content:\n${resumeText}`,
+                text: `Extract structured information from this resume and return JSON with fields: name, email, noOfYearsExperience, currentCompany, currentDesignation, linkedinLink, about, salary, location, joinConsulting answer should be either lateral or out of campus, dateOfBirth. If any field is missing, return an empty string.
+
+Resume Content:
+${resumeText}`,
               },
             ],
           },
@@ -57,8 +60,26 @@ export const parseResume = async (req, res) => {
     const cleanJsonText = jsonMatch ? jsonMatch[1].trim() : rawText.trim();
 
     try {
-      const parsedData = JSON.parse(cleanJsonText);
+      let parsedData = JSON.parse(cleanJsonText);
       console.log("Parsed JSON data successfully.");
+
+      // Ensure all required fields exist in the response, defaulting to an empty string
+      const defaultFields = {
+        name: "",
+        email: "",
+        noOfYearsExperience: "",
+        currentCompany: "",
+        currentDesignation: "",
+        linkedinLink: "",
+        about: "",
+        salary: "",
+        location: "",
+        joinConsulting: "",
+        dateOfBirth: "",
+      };
+
+      parsedData = { ...defaultFields, ...parsedData };
+
       res.status(200).json({ success: true, data: parsedData });
     } catch (jsonError) {
       console.error("Failed to parse JSON:", jsonError);

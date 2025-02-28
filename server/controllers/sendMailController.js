@@ -135,3 +135,41 @@ export const sendContactQuery = async (req, res, next) => {
   }
 };
 
+export const sendPasswordResetOTP = async (req, res, next) => {
+  const { email, otp } = req.body;
+
+  if (!email || otp === undefined) {
+    return next("Email and OTP are required");
+  }
+
+  try {
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: "developerhighimpact@gmail.com", 
+        pass: "lpyu zhks kpne qrsc", 
+      },
+    });
+
+    const mailOptions = {
+      from: "developerhighimpact@gmail.com",
+      to: email,
+      subject: "Change Password Request",
+      text: `
+        You have requested to reset your password. 
+        Use the following OTP to verify your request:
+        
+        OTP: ${otp}
+
+        This OTP will expire in 10 minutes. If you did not request this, please ignore this email.
+      `,
+    };
+
+    await transporter.sendMail(mailOptions);
+    res.status(200).json({ success: true, message: "OTP sent successfully!" });
+  } catch (error) {
+    console.error("Error sending OTP email:", error);
+    res.status(500).json({ success: false, message: "Failed to send OTP email", details: error.message });
+  }
+};
+

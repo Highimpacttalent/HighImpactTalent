@@ -18,7 +18,7 @@ router.get("/users",getUsers)
 // UPDATE USER || PUT
 router.put("/update-user", userAuth, updateUser);
 
-router.put("/change-password",userAuth,changePassword)
+router.post("/change-password",changePassword)
 
 router.delete("/delete",userAuth,deleteUser);
 
