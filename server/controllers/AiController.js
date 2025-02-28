@@ -37,7 +37,7 @@ export const parseResume = async (req, res) => {
             role: "user",
             parts: [
               {
-                text: `Extract structured information from this resume and return JSON with fields: name, email, noOfYearsExperience, currentCompany, currentDesignation, linkedinLink, about, salary, location, joinConsulting answer should be either lateral or out of campus, dateOfBirth. If any field is missing, return an empty string.
+                text: `Extract structured information from this resume and return JSON with fields: name, email,contactnumber , noOfYearsExperience, currentCompany, currentDesignation, linkedinLink, about, salary, location, joinConsulting answer should be either lateral or out of campus, dateOfBirth. If any field is missing, return an empty string.
 
 Resume Content:
 ${resumeText}`,
@@ -76,6 +76,7 @@ ${resumeText}`,
         location: "",
         joinConsulting: "",
         dateOfBirth: "",
+        contactnumber:"",
       };
 
       parsedData = { ...defaultFields, ...parsedData };
