@@ -7,13 +7,17 @@ import PhoneInput from "react-phone-number-input";
 import { Loading } from "../components";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import { useLocation } from "react-router-dom"; 
 import Select from "react-select";
 
 const UserInfoForm = () => {
   const { user } = useSelector((state) => state.user);
+  const location = useLocation();
+  const defaultValues = location.state?.formData.data || {};
+  console.log(defaultValues); 
   const [loading, setLoading] = useState(false);
   const [uploadingResume, setUploadingResume] = useState(false);
-  const [value, setValue] = useState("");
+  const [value, setValue] = useState(defaultValues.contactnumber || "");
   const [error, setError] = useState("");
   const widgetApi = useRef();
   const profileWidgetApi = useRef(null);
@@ -27,19 +31,18 @@ const UserInfoForm = () => {
   const [formData, setFormData] = useState({
     job: "",
     company: "",
-    currentCompany: "",
-    currentDesignation: "",
-    linkedinLink: "",
-    experience: "",
-    about: "",
-    salary: "",
-    contactNumber: "",
-    location: "",
+    currentCompany: defaultValues.currentCompany || "",
+    currentDesignation: defaultValues.currentDesignation || "",
+    linkedinLink: defaultValues.linkedinLink || "",
+    experience: defaultValues.noOfYearsExperience ? Math.ceil(defaultValues.noOfYearsExperience)  : "", 
+    about: defaultValues.about || "",
+    salary: defaultValues.salary || "",
+    contactNumber: defaultValues.contactnumber || "",
+    location: defaultValues.location || "",
     relocate: "no",
-    joinConsulting: "",
-    dateOfBirth: "",
+    joinConsulting: defaultValues.joinConsulting || "",
+    dateOfBirth: defaultValues.dateOfBirth || "",
     profilePic: null,
-    resume: null,
   });
 
   // Fetch cities from CSV (or any other source)
@@ -91,7 +94,7 @@ const UserInfoForm = () => {
   ];
 
   const handlePhoneNumberChange = (inputValue) => {
-    if (inputValue && inputValue.length <= 13) {
+    if (inputValue) {
       setValue(inputValue);
     }
   };
@@ -126,12 +129,6 @@ const UserInfoForm = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    // Validate resume URL
-    if (!fileUrl) {
-      alert("Please upload your resume");
-      return;
-    }
 
     if (!profilePic) {
       alert("Profile picture is required.");
@@ -141,7 +138,6 @@ const UserInfoForm = () => {
     // Add resume URL to form data
     const updatedFormData = {
       ...formData,
-      resume: fileUrl,
       experience: Number(formData.experience),
       contactNumber: value,
       profilePic: profilePic
@@ -401,7 +397,7 @@ const UserInfoForm = () => {
               >
                 <option value="">Select experience</option>
                 {Array.from({ length: 15 }, (_, i) => (
-                  <option key={i + 1} value={i + 1}>{`${i + 1}+`}</option>
+                  <option key={i + 1} value={(i + 1).toString()}>{`${i + 1}+`}</option>
                 ))}
               </select>
             </div>
@@ -473,8 +469,7 @@ const UserInfoForm = () => {
                   defaultCountry="IN"
                   value={value}
                   onChange={handlePhoneNumberChange}
-                  inputMode="numeric" // Restrict input to numbers on mobile devices
-                  maxLength={11}
+                  maxLength={15}
                   required
                 />
                 {error && <p style={{ color: "red" }}>{error}</p>}
@@ -490,8 +485,8 @@ const UserInfoForm = () => {
                 className="w-full px-4 py-3 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="">Select consulting type</option>
-                <option value="Lateral">Lateral</option>
-                <option value="Out of campus">Out of campus</option>
+                <option value="lateral">Lateral</option>
+                <option value="out of campus">Out of campus</option>
               </select>
             </div>
 
@@ -544,47 +539,6 @@ const UserInfoForm = () => {
               )}
             </div>
 
-            <div className="mb-6">
-              <h2 className="text-sm font-semibold">Upload Your Resume</h2>
-              <button
-                onClick={openUploadDialog}
-                type="button"
-                className="bg-blue-500 text-white py-2 px-4 rounded-lg mt-2 hover:bg-blue-600"
-              >
-                Upload PDF Resume
-              </button>
-              <Widget
-                publicKey="8eeb05a138df98a3c92f"
-                ref={widgetApi}
-                onChange={handleUpload}
-                style={{ display: "none" }}
-                validators={[
-                  fileInfo => {
-                    const allowedTypes = [
-                      "application/pdf",
-                      "application/msword",
-                      "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-                    ];
-                    if (!allowedTypes.includes(fileInfo.mimeType)) {
-                      return false;
-                    }
-                  }
-                ]}
-                required
-              />
-              {fileUrl && (
-                <div className="mt-4">
-                  <a
-                    href={fileUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-500 hover:text-blue-700"
-                  >
-                    View Your Resume
-                  </a>
-                </div>
-              )}
-            </div>
           </div>
         </div>
         <div className="mt-6">

@@ -78,7 +78,8 @@ const UserSignUp = () => {
       setLoading(false);
       return;
   }
-    if (form.password !== form.confirmPassword) {
+    if (form.password 
+      !== form.confirmPassword) {
       alert("Passwords do not match");
       setLoading(false);
       return;
@@ -101,7 +102,7 @@ const UserSignUp = () => {
         const userData = { token: res.token, ...res.user };
         dispatch(Login(userData));
         localStorage.setItem("userInfo", JSON.stringify(userData));
-        navigate("/user-additional-details");
+        navigate("/userinformation");
       } else {
         alert(res.message || "Error while registering");
       }

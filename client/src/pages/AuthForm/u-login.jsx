@@ -116,6 +116,17 @@ function UserLoginForm() {
                 },
               }}
             />
+
+            {/* Forgot Password Link */}
+            <Typography textAlign="right" mt={1}>
+              <Link
+                to="/password"
+                style={{ color: "#1976d2", textDecoration: "none", fontWeight: "bold" }}
+              >
+                Forgot Password?
+              </Link>
+            </Typography>
+
             <Button
               fullWidth
               type="submit"
