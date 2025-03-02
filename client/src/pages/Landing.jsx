@@ -1,6 +1,7 @@
-import React,{useState,useEffect} from "react";
+import React, { useState, useEffect } from "react";
 import { FaSearch, FaBriefcase, FaUsers } from "react-icons/fa";
 import { Dialog, Transition } from "@headlessui/react";
+import { Box, Button, Container, Grid, Typography, Paper } from "@mui/material";
 import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import man from "../assets/man.png";
@@ -11,7 +12,8 @@ import toptt from "../assets/top-tier-talent.jpg";
 import industry from "../assets/industri.jpg";
 import personlized from "../assets/personlized.jpg";
 import { WorkOutline, GroupAdd } from "@mui/icons-material";
-
+import { motion } from "framer-motion";
+import landing from "../assets/landing.svg";
 
 const Landing = () => {
   const { user } = useSelector((state) => state.user);
@@ -30,185 +32,218 @@ const Landing = () => {
         <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4">
           <Dialog.Panel className="bg-white p-8 md:p-10 rounded-xl shadow-2xl w-[90%] max-w-lg text-center transform transition-all">
             {/* Header */}
-            <Dialog.Title className="text-3xl font-bold text-blue-600 tracking-wide " >
+            <Dialog.Title className="text-3xl font-bold text-blue-600 tracking-wide ">
               Find Opportunities. Build Success.
             </Dialog.Title>
             <p className="text-gray-600 mt-3 text-base md:text-lg leading-relaxed">
-              Whether you're seeking <bold>top talent</bold> or <bold>exciting career opportunities</bold>, we've got you covered.
+              Whether you're seeking <bold>top talent</bold> or{" "}
+              <bold>exciting career opportunities</bold>, we've got you covered.
             </p>
 
             {/* Selection Boxes */}
-          <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Hire Talent Box */}
-            <div
-              onClick={() => navigate("/r-login")}
-              className="p-8 bg-gradient-to-b from-blue-50 to-blue-100 border border-blue-300 rounded-xl shadow-lg cursor-pointer transition transform hover:-translate-y-1 hover:shadow-2xl flex flex-col items-center text-center"
-            >
-              <GroupAdd className="text-blue-700 text-7xl drop-shadow-lg" />
-              <h3 className="mt-4 text-xl font-semibold text-gray-800">Hire Talent</h3>
-              <p className="text-sm text-gray-600 mt-2">Find skilled professionals to power your business.</p>
+            <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Hire Talent Box */}
+              <div
+                onClick={() => navigate("/r-login")}
+                className="p-8 bg-gradient-to-b from-blue-50 to-blue-100 border border-blue-300 rounded-xl shadow-lg cursor-pointer transition transform hover:-translate-y-1 hover:shadow-2xl flex flex-col items-center text-center"
+              >
+                <GroupAdd className="text-blue-700 text-7xl drop-shadow-lg" />
+                <h3 className="mt-4 text-xl font-semibold text-gray-800">
+                  Hire Talent
+                </h3>
+                <p className="text-sm text-gray-600 mt-2">
+                  Find skilled professionals to power your business.
+                </p>
+              </div>
+
+              {/* Search Job Box */}
+              <div
+                onClick={() => navigate("/u-login")}
+                className="p-8 bg-gradient-to-b from-green-50 to-green-100 border border-green-300 rounded-xl shadow-lg cursor-pointer transition transform hover:-translate-y-1 hover:shadow-2xl flex flex-col items-center text-center"
+              >
+                <WorkOutline className="text-green-700 text-7xl drop-shadow-lg" />
+                <h3 className="mt-4 text-xl font-semibold text-gray-800">
+                  Search Job
+                </h3>
+                <p className="text-sm text-gray-600 mt-2">
+                  Explore new career paths and exciting opportunities.
+                </p>
+              </div>
             </div>
-
-          {/* Search Job Box */}
-          <div
-            onClick={() => navigate("/u-login")}
-            className="p-8 bg-gradient-to-b from-green-50 to-green-100 border border-green-300 rounded-xl shadow-lg cursor-pointer transition transform hover:-translate-y-1 hover:shadow-2xl flex flex-col items-center text-center"
-          >
-            <WorkOutline className="text-green-700 text-7xl drop-shadow-lg" />
-            <h3 className="mt-4 text-xl font-semibold text-gray-800">Search Job</h3>
-            <p className="text-sm text-gray-600 mt-2">Explore new career paths and exciting opportunities.</p>
-          </div>
-        </div>
-
           </Dialog.Panel>
         </div>
       </Dialog>
     </Transition>
   );
-  
-  
 
   return (
-    <div className="overflow-x-hidden bg-[#234e94]">
+    <div className="overflow-x-hidden">
       {LoginModal}
-      <div className="hero h-screen max-[900px]:h-fit">
-        <div className="h-full w-full bg-white flex flex-col md:flex-row justify-between items-center p-8 md:p-12">
-          <div className="flex flex-col gap-4 md:w-1/2 animate-fadeIn">
-            <h1 className="text-zinc-800  flex flex-col">
-              <span className="text-2xl font-semibold  md:text-3xl lg:text-5xl">
-                Transform Your Future
-              </span>
-              <span className="text-2xl font-semibold md:text-3xl lg:text-5xl">
-                with High Impact Talent
-              </span>
-            </h1>
-            <p className="text-md md:text-xl text-gray-700 max-w-md">
-              Bridging the Gap Between Top-Tier Strategic Professionals and
-              Leading Organizations.
-            </p>
-            <div className="flex gap-3 mt-4 flex-col sm:flex-row">
-              <Link
-                to="/authform"
-                className="bg-blue-600 text-white text-sm md:text-base py-3 px-6 rounded-lg shadow hover:bg-blue-700"
+      <Box
+        sx={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}
+      >
+        <Box
+          sx={{
+            p: { xs: 3, md: 10 },
+            display: "flex",
+            flexDirection: { xs: "column", md: "row" },
+            alignItems: "center",
+            justifyContent: "space-between",
+            bgcolor: "white",
+          }}
+        >
+          <Box sx={{ flex: 1, textAlign: { xs: "center", md: "left" },
+            }}>
+            <Typography
+              variant="h3"
+              fontWeight={600}
+              gutterBottom
+              sx={{
+                fontFamily: "Inter, sans-serif",
+                fontSize: { xs: "1.8rem", sm: "2.2rem", md: "3rem" }, // Smaller font on mobile
+              }}
+            >
+              A job portal designed for{" "}
+              <span
+                style={{
+                  color: "blue",
+                  fontFamily: "Inter, sans-serif",
+                  fontWeight: "600",
+                }}
               >
-                Find Your Next Opportunity
-              </Link>
-              <Link
-                to="/authform"
-                className="bg-blue-600 text-white text-sm md:text-base py-3 px-6 rounded-lg shadow hover:bg-blue-700"
+                Impact
+              </span>
+              . Find the right fit, hire or get hired today
+            </Typography>
+
+            <Typography
+              variant="body1"
+              color="text.secondary"
+              sx={{
+                fontFamily: "Poppins",
+                fontSize: { xs: "0.875rem", sm: "1rem" }, // Reduce font size for mobile
+              }}
+            >
+              Top talent and high-impact opportunities move fast. Be part of the
+              elite network that gets there first.
+            </Typography>
+
+            <Box
+              sx={{
+                mt: 3,
+                display: "flex",
+                flexDirection: { xs: "column", sm: "row" },
+                gap: 2,
+                justifyContent: { xs: "center", md: "flex-start" },
+                height: 50,
+              }}
+            >
+              <Button
+                variant="contained"
+                component={Link}
+                to="/u-login"
+                sx={{
+                  bgcolor: "#3C7EFC",
+                  borderRadius: 8,
+                  fontFamily: "Poppins",
+                }}
               >
-                Find Candidates For Your Team
-              </Link>
-            </div>
-          </div>
-          <div className="md:w-1/2 flex justify-center items-center mt-8 md:mt-0">
-            <div className="w-[300px] sm:w-[400px] p-4 rounded-lg ">
-              <img
-                src={man}
-                alt="Professional"
-                className="w-full h-auto rounded-md"
-              />
-            </div>
-          </div>
-        </div>
-      </div>
-      <div>
-        <div className="flex items-center justify-center bg-white py-5 px-5 max-[600px]:flex-col overflow-x-hidden">
-          <div className="w-1/4 max-[600px]:w-3/4 bg-white rounded-full shadow-lg p-4">
+                Find Your Opportunity
+              </Button>
+              <Button
+                variant="contained"
+                component={Link}
+                to="/r-login"
+                sx={{
+                  bgcolor: "#3C7EFC",
+                  borderRadius: 8,
+                  fontFamily: "Poppins",
+                }}
+              >
+                Hire Top Talents
+              </Button>
+            </Box>
+          </Box>
+          <Box
+            sx={{
+              flex: 1,
+              display: "flex",
+              justifyContent: "center",
+              mt: { xs: 4, md: 0 },
+            }}
+          >
             <img
-              src={tlogo}
-              alt="Company Logo"
-              className="w-full h-auto rounded-full"
+              src={landing}
+              alt="Professional"
+              style={{ width: "100%", maxWidth: "400px", borderRadius: "8px" }}
             />
-          </div>
-          <div className="w-3/4 max-[600px]:w-full mt-6 max-[600px]:mt-4">
-            <p className="text-lg md:text-xl px-[3vw] py-8 text-center text-darkBlue leading-relaxed">
-              Welcome to{" "}
-              <span className="text-blue-600 font-semibold">
-                High Impact Talent
-              </span>
-              , your premier destination for connecting exceptional talent with
-              high-impact roles. Whether you're a job seeker aiming to elevate
-              your career or an employer searching for strategic professionals
-              to drive your business forward, we are here to make it happen.
-              <br />
-              <br />
-              Founded by seasoned experts from{" "}
-              <span className="text-blue-600 font-semibold">
-                Bain ,{" "}BCG
-              </span>{" "}
-              and the{" "}
-              <span className="text-blue-600 font-semibold">
-                Mahindra Group
-              </span>
-              , we specialize in strategic recruitment that aligns with your
-              goals.
-            </p>
-          </div>
-        </div>
+          </Box>
+        </Box>
 
-        <div className="h-fit py-10 px-4 flex items-center justify-center bg-gray-50">
-          <div className="flex flex-col items-center w-full gap-10 text-lg">
-            <div className="border border-blue-600 w-full max-w-[800px] p-8 flex flex-col md:flex-row items-center gap-6 bg-white rounded-lg shadow-lg">
-              <div className="max-w-[200px] md:max-w-[300px] w-full">
-                <img
-                  src={toptt}
-                  alt="Top-Tier Talent"
-                  className="w-full h-auto rounded-md"
-                />
-              </div>
-              <div className="text-darkBlue flex flex-col text-center md:text-left">
-                <strong className="text-xl font-semibold text-blue-600">
-                  Top-Tier Talent:
-                </strong>
-                <p className="mt-2">
-                  Access a curated pool of professionals with expertise in
-                  digital transformation, sustainability, data-driven
-                  decision-making, and more.
-                </p>
-              </div>
-            </div>
-
-            <div className="border border-blue-600 w-full max-w-[800px] p-8 flex flex-col md:flex-row items-center gap-6 bg-white rounded-lg shadow-lg">
-              <div className="text-darkBlue flex flex-col text-center md:text-left">
-                <strong className="text-xl font-semibold text-blue-600">
-                  Industry Insights:
-                </strong>
-                <p className="mt-2">
-                  Stay ahead with the latest hiring trends and strategies for
-                  2024 and beyond.
-                </p>
-              </div>
-              <div className="max-w-[200px] md:max-w-[300px] w-full">
-                <img
-                  src={industry}
-                  alt="Industry Insights"
-                  className="w-full h-auto rounded-md"
-                />
-              </div>
-            </div>
-
-            <div className="border border-blue-600 w-full max-w-[800px] p-8 flex flex-col md:flex-row items-center gap-6 bg-white rounded-lg shadow-lg">
-              <div className="max-w-[200px] md:max-w-[300px] w-full">
-                <img
-                  src={personlized}
-                  alt="Personalized Matching"
-                  className="w-full h-auto rounded-md"
-                />
-              </div>
-              <div className="text-darkBlue flex flex-col text-center md:text-left">
-                <strong className="text-xl font-semibold text-blue-600">
-                  Personalized Matching:
-                </strong>
-                <p className="mt-2">
-                  Our advanced algorithms and expert team ensure the best fit
-                  for both candidates and employers.
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+        <Box sx={{ py: 5, bgcolor: "white" }}>
+          <Container>
+            {[
+              {
+                img: toptt,
+                title: "Top-Tier Talent",
+                desc: "Access a curated pool of professionals with expertise in digital transformation, sustainability, data-driven decision-making, and more.",
+              },
+              {
+                img: industry,
+                title: "Industry Insights",
+                desc: "Stay ahead with the latest hiring trends and strategies for 2024 and beyond.",
+              },
+              {
+                img: personlized,
+                title: "Personalized Matching",
+                desc: "Our advanced algorithms and expert team ensure the best fit for both candidates and employers.",
+              },
+            ].map((item, index) => (
+              <motion.div
+            key={index}
+            initial={{ opacity: 0, x: index % 2 === 0 ? -100 : 100 }} // Left for even index, Right for odd
+            whileInView={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.6, ease: "easeOut" }}
+            viewport={{ once: true, amount: 0.3 }} // Trigger only once when 30% is in view
+          >
+            <Paper
+              sx={{
+                p: 3,
+                my: 2,
+                display: "flex",
+                alignItems: "center",
+                gap: 3,
+                flexDirection: { xs: "column", md: "row" },
+              }}
+            >
+              <img
+                src={item.img}
+                alt={item.title}
+                style={{
+                  width: "100%",
+                  maxWidth: "200px",
+                  borderRadius: "8px",
+                }}
+              />
+              <Box>
+                <Typography
+                  variant="h6"
+                  color="primary"
+                  fontWeight={600}
+                  sx={{ fontFamily: "Poppins" }}
+                >
+                  {item.title}
+                </Typography>
+                <Typography variant="body1" sx={{ fontFamily: "Poppins" }}>
+                  {item.desc}
+                </Typography>
+              </Box>
+            </Paper>
+          </motion.div>
+        ))}
+          </Container>
+        </Box>
+      </Box>
     </div>
   );
 };

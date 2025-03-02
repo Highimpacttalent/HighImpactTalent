@@ -1,268 +1,230 @@
-import React, { Fragment, useEffect, useState } from "react";
-import { Menu, Transition } from "@headlessui/react";
-import { BiChevronDown } from "react-icons/bi";
-import { CgProfile } from "react-icons/cg";
-import { HiMenuAlt3 } from "react-icons/hi";
-import { AiOutlineClose, AiOutlineLogout } from "react-icons/ai";
-import { MdAssignment, MdLockReset } from "react-icons/md";
+import React, { useState } from "react";
+import {
+  AppBar,
+  Toolbar,
+  IconButton,
+  Menu,
+  MenuItem,
+  Typography,
+  Button,
+  Drawer,
+  List,
+  ListItem,
+  ListItemText,
+  Avatar,
+  Box,
+} from "@mui/material";
+import {
+  Menu as MenuIcon,
+  Close as CloseIcon,
+  Logout,
+  AccountCircle,
+  LockReset,
+  Assignment,
+} from "@mui/icons-material";
 import { Link } from "react-router-dom";
-import CustomButton from "./CustomButton";
 import { useSelector, useDispatch } from "react-redux";
-import { Logout } from "../redux/userSlice";
+import { Logout as LogoutAction } from "../redux/userSlice";
 import logo from "../assets/tlogo.png";
 
-function MenuList({ user, onClick }) {
+const Navbar = () => {
+  const { user } = useSelector((state) => state.user);
   const dispatch = useDispatch();
+  const [menuAnchor, setMenuAnchor] = useState(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+
+  const handleMenuOpen = (event) => {
+    setMenuAnchor(event.currentTarget);
+  };
+
+  const handleMenuClose = () => {
+    setMenuAnchor(null);
+  };
 
   const handleLogout = () => {
-    dispatch(Logout());
+    dispatch(LogoutAction());
     window.location.replace("/");
   };
 
   return (
-    <Menu as="div" className="inline-block text-left">
-      <div>
-        <Menu.Button className="flex items-center gap-2 bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-full">
-          <div className="p-1 border border-black/20 rounded-full">
-            <img
-              src={
-                user?.profileUrl ||
-                "https://upload.wikimedia.org/wikipedia/commons/9/99/Sample_User_Icon.png?20200919003010"
-              }
-              alt="user profile"
-              className="w-4 h-4 rounded-full object-cover"
-            />
-          </div>
-          <div className="text-left">
-            <p className="text-sm font-semibold">
-              {user?.firstName ?? user?.name}
-            </p>
-          </div>
-          <BiChevronDown className="h-6 w-6 text-gray-600" aria-hidden="true" />
-        </Menu.Button>
-      </div>
-
-      <Transition
-        as={Fragment}
-        enter="transition ease-out duration-100"
-        enterFrom="transform opacity-0 scale-95"
-        enterTo="transform opacity-100 scale-100"
-        leave="transition ease-in duration-75"
-        leaveFrom="transform opacity-100 scale-100"
-        leaveTo="transform opacity-0 scale-95"
-      >
-        <Menu.Items className="absolute z-50 left-4 sm:right-8 sm:left-auto mt-2 w-56 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
-          <div className="py-1">
-          {user?.accountType === "seeker" && (
-            <Menu.Item>
-              {({ active }) => (
-                <Link
-                  to={`${
-                    user?.accountType ? `/user-profile` : "company-profile"
-                  }`}
-                  className={`${
-                    active ? "bg-[#1176DB] text-white" : "text-gray-700"
-                  } group flex items-center px-4 py-2 text-sm`}
-                  onClick={onClick}
-                >
-                  <CgProfile
-                    className={`${
-                      active ? "text-white" : "text-gray-600"
-                    } mr-2 h-5 w-5`}
-                    aria-hidden="true"
-                  />
-                  {user?.accountType ? "User Profile" : "Company Profile"}
-                </Link>
-              )}
-            </Menu.Item>
-            )}
-            
-            <Menu.Item>
-              {({ active }) => (
-                <Link
-                to="/password"
-                className={`${
-                  active ? "bg-[#1176DB] text-white" : "text-gray-700"
-                } group flex items-center px-4 py-2 text-sm`}
-              >
-                 <MdLockReset
-                className={`${
-                  active ? "text-white" : "text-gray-600"
-                } mr-2 h-5 w-5`}
-                aria-hidden="true"
-              />
-                Change Password
-              </Link>
-              )}
-            </Menu.Item>
-            {/* Application Status (Only for seekers) */}
-            {user?.accountType === "seeker" && (
-              <Menu.Item>
-                {({ active }) => (
-                  <Link
-                    to="/application-tracking"
-                    className={`${
-                      active ? "bg-[#1176DB] text-white" : "text-gray-700"
-                    } group flex items-center px-4 py-2 text-sm`}
-                  >
-                     <MdAssignment
-                    className={`${
-                      active ? "text-white" : "text-gray-600"
-                    } mr-2 h-5 w-5`}
-                    aria-hidden="true"
-                  />
-                    Application Status
-                  </Link>
-                )}
-              </Menu.Item>
-            )}
-            <Menu.Item>
-              {({ active }) => (
-                <button
-                  onClick={handleLogout}
-                  className={`${
-                    active ? "bg-red-500 text-white" : "text-gray-700"
-                  } group flex items-center px-4 py-2 text-sm w-full`}
-                >
-                  <AiOutlineLogout
-                    className={`${
-                      active ? "text-white" : "text-gray-600"
-                    } mr-2 h-5 w-5`}
-                    aria-hidden="true"
-                  />
-                  Log Out
-                </button>
-              )}
-            </Menu.Item>
-          </div>
-        </Menu.Items>
-      </Transition>
-    </Menu>
-  );
-}
-
-const Navbar = () => {
-  const { user } = useSelector((state) => state.user);
-  const [isOpen, setIsOpen] = useState(false);
-
-  const handleCloseNavbar = () => {
-    setIsOpen((prev) => !prev);
-  };
-
-  return (
-    <header className="bg-white shadow-md sticky top-0 z-50 py-1">
-      <nav className="container mx-auto flex items-center justify-between p-1 lg:px-10">
-        <Link to="/" className="flex items-center gap-2">
-          <img src={logo} alt="Logo" className="w-8 h-8 rounded-full" />
-          <span className="text-md font-semibold text-blue-500">
+    <AppBar
+      position="sticky"
+      sx={{ backgroundColor: "white", color: "black", boxShadow: 1 }}
+    >
+      <Toolbar sx={{ display: "flex", justifyContent: "space-between" }}>
+        {/* Logo */}
+        <Link
+          to="/"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            textDecoration: "none",
+            color: "inherit",
+          }}
+        >
+          <Avatar src={logo} sx={{ width: 40, height: 40, mr: 1 }} />
+          <Typography
+            variant="h6"
+            sx={{
+              color: "#1176DB",
+              fontWeight: "bold",
+              fontSize: { xs: "1rem", sm: "1.25rem", md: "1.5rem" },
+            }}
+          >
             High Impact Talent
-          </span>
+          </Typography>
         </Link>
 
-        <ul className="hidden lg:flex gap-8 text-base text-gray-700">
-          {user?.accountType === "seeker" ? (
-            <Link to="/find-jobs" onClick={handleCloseNavbar}>
-              Find Job
-            </Link>
-          ) : (
-            <Link to="/view-jobs">Job Posts</Link>
-          )}
+        {/* Desktop Menu */}
+        <Box sx={{ display: { xs: "none", md: "flex" }, gap: 3 }}>
+          <Button
+            component={Link}
+            to={user?.accountType === "seeker" ? "/find-jobs" : "/view-jobs"}
+            color="inherit"
+            sx={{fontFamily: 'Poppins'}}
+          >
+            {user?.accountType === "seeker" ? "Find Job" : "Job Posts"}
+          </Button>
           {user?.accountType === "seeker" && (
-            <li className="hover:text-[#1176DB] transition">
-              <Link to="/companies">Companies</Link>
-            </li>
+            <Button component={Link} to="/companies" color="inherit"
+            sx={{fontFamily: 'Poppins'}}>
+              Companies
+            </Button>
           )}
           {user?.token && user?.accountType !== "seeker" && (
-            <li className="hover:text-[#1176DB] transition">
-              <Link to="/upload-job">Upload Job</Link>
-            </li>
+            <Button component={Link} to="/upload-job" color="inherit"
+            sx={{fontFamily: 'Poppins'}}>
+              Upload Job
+            </Button>
           )}
-          <li className="hover:text-[#1176DB] transition">
-            <Link to="/about-us">About</Link>
-          </li>
-          <li className="hover:text-[#1176DB] transition">
-            <Link to="/contact-us">Contact Us</Link>
-          </li>
-          <li className="hover:text-[#1176DB] transition">
-            <Link to="/blog">Blog</Link>
-          </li>
-        </ul>
+          <Button component={Link} to="/about-us" color="inherit"
+            sx={{fontFamily: 'Poppins'}}>
+            About
+          </Button>
+          <Button component={Link} to="/contact-us" color="inherit"
+            sx={{fontFamily: 'Poppins'}}>
+            Contact Us
+          </Button>
+          <Button component={Link} to="/blog" color="inherit"
+            sx={{fontFamily: 'Poppins'}}>
+            Blog
+          </Button>
+        </Box>
 
-        <div className="hidden lg:flex items-center gap-4">
-          {!user?.token ? (
-            <Link to="/">
-              <CustomButton
-                title="Sign In"
-                containerStyles="text-[#14a800] border border-[#14a800] py-1.5 px-5 hover:bg-[#14a800] hover:text-white rounded-full transition"
+        {/* User Profile Menu */}
+        {user?.token ? (
+          <>
+            <IconButton onClick={handleMenuOpen}>
+              <Avatar
+                src={
+                  user?.profileUrl ||
+                  "https://upload.wikimedia.org/wikipedia/commons/9/99/Sample_User_Icon.png"
+                }
               />
-            </Link>
-          ) : (
-            <MenuList user={user} />
-          )}
-        </div>
+            </IconButton>
+            <Menu
+              anchorEl={menuAnchor}
+              open={Boolean(menuAnchor)}
+              onClose={handleMenuClose}
+            >
+              {user?.accountType === "seeker" && (
+                <MenuItem
+                  component={Link}
+                  to="/user-profile"
+                  onClick={handleMenuClose}
+                >
+                  <AccountCircle sx={{ mr: 1 }} /> User Profile
+                </MenuItem>
+              )}
+              <MenuItem
+                component={Link}
+                to="/password"
+                onClick={handleMenuClose}
+              >
+                <LockReset sx={{ mr: 1 }} /> Change Password
+              </MenuItem>
+              {user?.accountType === "seeker" && (
+                <MenuItem
+                  component={Link}
+                  to="/application-tracking"
+                  onClick={handleMenuClose}
+                >
+                  <Assignment sx={{ mr: 1 }} /> Application Status
+                </MenuItem>
+              )}
+              <MenuItem onClick={handleLogout} sx={{ color: "red" }}>
+                <Logout sx={{ mr: 1 }} /> Log Out
+              </MenuItem>
+            </Menu>
+          </>
+        ) : (
+          <Button
+            component={Link}
+            to="/"
+            variant="outlined"
+            sx={{ color: "#14a800", borderColor: "#14a800" }}
+          >
+            Sign In
+          </Button>
+        )}
 
-        <button
-          className="lg:hidden text-gray-700 focus:outline-none"
-          onClick={handleCloseNavbar}
+        {/* Mobile Menu Button */}
+        <IconButton
+          sx={{ display: { md: "none" } }}
+          onClick={() => setDrawerOpen(true)}
         >
-          {isOpen ? <AiOutlineClose size={26} /> : <HiMenuAlt3 size={26} />}
-        </button>
-      </nav>
+          <MenuIcon />
+        </IconButton>
+      </Toolbar>
 
-      {/* MOBILE MENU */}
-      <Transition
-        show={isOpen}
-        enter="transition duration-200 ease-out"
-        enterFrom="transform opacity-0 scale-95"
-        enterTo="transform opacity-100 scale-100"
-        leave="transition duration-100 ease-in"
-        leaveFrom="transform opacity-100 scale-100"
-        leaveTo="transform opacity-0 scale-95"
+      {/* Mobile Drawer */}
+      <Drawer
+        anchor="right"
+        open={drawerOpen}
+        onClose={() => setDrawerOpen(false)}
       >
-        <div className="lg:hidden bg-white shadow-md">
-          <div className="container mx-auto flex flex-col p-5 gap-3">
-            {user?.accountType === "seeker" ? (
-              <Link to="/find-jobs" onClick={handleCloseNavbar}>
-                Find Job
-              </Link>
-            ) : (
-              <Link to="/view-jobs">Job Posts</Link>
-            )}
+        <Box sx={{ width: 250, p: 2 }}>
+          <IconButton
+            onClick={() => setDrawerOpen(false)}
+            sx={{ display: "flex", justifyContent: "flex-end" }}
+          >
+            <CloseIcon />
+          </IconButton>
+          <List>
+            <ListItem
+              button
+              component={Link}
+              to={user?.accountType === "seeker" ? "/find-jobs" : "/view-jobs"}
+            >
+              <ListItemText
+                primary={
+                  user?.accountType === "seeker" ? "Find Job" : "Job Posts"
+                }
+              />
+            </ListItem>
             {user?.accountType === "seeker" && (
-              <Link to="/companies" onClick={handleCloseNavbar}>
-                Companies
-              </Link>
+              <ListItem button component={Link} to="/companies">
+                <ListItemText primary="Companies" />
+              </ListItem>
             )}
             {user?.token && user?.accountType !== "seeker" && (
-              <Link to="/upload-job" onClick={handleCloseNavbar}>
-                Upload Job
-              </Link>
+              <ListItem button component={Link} to="/upload-job">
+                <ListItemText primary="Upload Job" />
+              </ListItem>
             )}
-            <Link to="/about-us" onClick={handleCloseNavbar}>
-              About
-            </Link>
-            <Link to="/contact-us" onClick={handleCloseNavbar}>
-              Contact Us
-            </Link>
-            <Link to="/blog" onClick={handleCloseNavbar}>
-              Blog
-            </Link>
-            <div className="mt-5">
-              {!user?.token ? (
-                <Link to="/" onClick={handleCloseNavbar}>
-                  <CustomButton
-                    title="Sign In"
-                    containerStyles="text-[#14a800] border border-[#14a800] py-1.5 px-5 w-full text-center hover:bg-[#14a800] hover:text-white rounded-full transition"
-                  />
-                </Link>
-              ) : (
-                <MenuList user={user} onClick={handleCloseNavbar} />
-              )}
-            </div>
-          </div>
-        </div>
-      </Transition>
-    </header>
+            <ListItem button component={Link} to="/about-us">
+              <ListItemText primary="About" />
+            </ListItem>
+            <ListItem button component={Link} to="/contact-us">
+              <ListItemText primary="Contact Us" />
+            </ListItem>
+            <ListItem button component={Link} to="/blog">
+              <ListItemText primary="Blog" />
+            </ListItem>
+          </List>
+        </Box>
+      </Drawer>
+    </AppBar>
   );
 };
 
