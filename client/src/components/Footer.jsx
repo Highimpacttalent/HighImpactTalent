@@ -26,7 +26,7 @@ const Footer = () => {
           </Box>
 
           {/* Social Media Icons */}
-          <Box sx={{ display: "flex", gap: 1 }}>
+          <Box sx={{ display: { xs: "none", md: "flex" }, gap: 1 }}>
             <IconButton sx={{ transition: "0.3s", "&:hover": { transform: "scale(1.2)" } }} onClick={() => window.open("https://www.linkedin.com/company/highimpacttalent/posts/?feedView=all")}>
               <LinkedInIcon fontSize="medium" />
             </IconButton>
