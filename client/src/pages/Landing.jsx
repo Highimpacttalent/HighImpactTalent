@@ -80,7 +80,7 @@ const Landing = () => {
     <div className="overflow-x-hidden">
       {LoginModal}
       <Box
-        sx={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}
+        sx={{  display: "flex", flexDirection: "column" }}
       >
         <Box
           sx={{
@@ -178,70 +178,6 @@ const Landing = () => {
               style={{ width: "100%", maxWidth: "400px", borderRadius: "8px" }}
             />
           </Box>
-        </Box>
-
-        <Box sx={{ py: 5, bgcolor: "white" }}>
-          <Container>
-            {[
-              {
-                img: toptt,
-                title: "Top-Tier Talent",
-                desc: "Access a curated pool of professionals with expertise in digital transformation, sustainability, data-driven decision-making, and more.",
-              },
-              {
-                img: industry,
-                title: "Industry Insights",
-                desc: "Stay ahead with the latest hiring trends and strategies for 2024 and beyond.",
-              },
-              {
-                img: personlized,
-                title: "Personalized Matching",
-                desc: "Our advanced algorithms and expert team ensure the best fit for both candidates and employers.",
-              },
-            ].map((item, index) => (
-              <motion.div
-            key={index}
-            initial={{ opacity: 0, x: index % 2 === 0 ? -100 : 100 }} // Left for even index, Right for odd
-            whileInView={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6, ease: "easeOut" }}
-            viewport={{ once: true, amount: 0.3 }} // Trigger only once when 30% is in view
-          >
-            <Paper
-              sx={{
-                p: 3,
-                my: 2,
-                display: "flex",
-                alignItems: "center",
-                gap: 3,
-                flexDirection: { xs: "column", md: "row" },
-              }}
-            >
-              <img
-                src={item.img}
-                alt={item.title}
-                style={{
-                  width: "100%",
-                  maxWidth: "200px",
-                  borderRadius: "8px",
-                }}
-              />
-              <Box>
-                <Typography
-                  variant="h6"
-                  color="primary"
-                  fontWeight={600}
-                  sx={{ fontFamily: "Poppins" }}
-                >
-                  {item.title}
-                </Typography>
-                <Typography variant="body1" sx={{ fontFamily: "Poppins" }}>
-                  {item.desc}
-                </Typography>
-              </Box>
-            </Paper>
-          </motion.div>
-        ))}
-          </Container>
         </Box>
       </Box>
     </div>
