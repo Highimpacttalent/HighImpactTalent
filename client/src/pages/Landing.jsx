@@ -99,7 +99,7 @@ const Landing = () => {
               fontWeight={600}
               gutterBottom
               sx={{
-                fontFamily: "Inter, sans-serif",
+                fontFamily: "Satoshi, sans-serif",
                 fontSize: { xs: "1.8rem", sm: "2.2rem", md: "3rem" }, // Smaller font on mobile
               }}
             >
