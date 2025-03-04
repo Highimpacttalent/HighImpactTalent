@@ -78,13 +78,13 @@ const Landing = () => {
 
   return (
     <div className="overflow-x-hidden">
-      {LoginModal}
+      {/* {LoginModal} */}
       <Box
         sx={{  display: "flex", flexDirection: "column" }}
       >
         <Box
           sx={{
-            p: { xs: 3, md: 10 },
+            p: { xs: 3, md: 20 },
             display: "flex",
             flexDirection: { xs: "column", md: "row" },
             alignItems: "center",
