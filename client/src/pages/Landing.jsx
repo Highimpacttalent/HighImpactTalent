@@ -84,7 +84,10 @@ const Landing = () => {
       >
         <Box
           sx={{
-            p: { xs: 3, md: 20 },
+            px: { xs: 3, md: 15 }, 
+            pb: { xs: 3, md: 15 },
+            pt: { xs: 5 }, 
+            minHeight: { md: "100vh" }, 
             display: "flex",
             flexDirection: { xs: "column", md: "row" },
             alignItems: "center",
@@ -113,7 +116,7 @@ const Landing = () => {
               >
                 Impact
               </span>
-              . Find the right fit, hire or get hired today
+              . Find the right fit, hire or get hired before your competition
             </Typography>
 
             <Typography
@@ -124,7 +127,18 @@ const Landing = () => {
                 fontSize: { xs: "0.875rem", sm: "1rem" }, // Reduce font size for mobile
               }}
             >
-              Top talent and high-impact opportunities move fast. Be part of the
+              Top talent and high-impact opportunities move fast.
+            </Typography>
+
+            <Typography
+              variant="body1"
+              color="text.secondary"
+              sx={{
+                fontFamily: "Poppins",
+                fontSize: { xs: "0.875rem", sm: "1rem" }, // Reduce font size for mobile
+              }}
+            >
+              Be part of the
               elite network that gets there first.
             </Typography>
 
@@ -160,7 +174,7 @@ const Landing = () => {
                   fontFamily: "Poppins",
                 }}
               >
-                Hire Top Talents
+                Hire Top Talent
               </Button>
             </Box>
           </Box>
