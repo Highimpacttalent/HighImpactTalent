@@ -7,6 +7,7 @@ import { AiOutlineSearch, AiOutlineCloseCircle } from "react-icons/ai";
 import Header from "../components/Header.jsx";
 import { experience } from "../utils/data";
 import { CustomButton, JobCard, ListBox } from "../components";
+import { Grid, } from "@mui/material";
 
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import FilterListIcon from "@mui/icons-material/FilterList";
@@ -233,16 +234,23 @@ const [openFilterModal, setOpenFilterModal] = useState(false);
       </button>
     </div>
 
-    {/* Job Listings */}
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5 mt-6">
-      {filteredJobs && filteredJobs.length > 0 ? (
-        filteredJobs.map((job, index) => <JobCard job={job} key={index} />)
-      ) : (
-        <p className="text-gray-500 col-span-full text-center text-lg">
-          No jobs found. Try a different search.
-        </p>
-      )}
-    </div>
+    <Box display="flex" flexDirection="column" alignItems="center" mt={6} gap={2}>
+  {filteredJobs && filteredJobs.length > 0 ? (
+    <Grid container justifyContent="center" spacing={3}>
+      {filteredJobs.map((job, index) => (
+        <Grid item key={index} xs={12} sm={10} md={9}>
+          <Box>
+          <JobCard job={job} />
+          </Box>
+        </Grid>
+      ))}
+    </Grid>
+  ) : (
+    <Typography variant="h6" color="textSecondary" align="center">
+      No jobs found. Try a different search.
+    </Typography>
+  )}
+</Box>
 
     {/* Load More Button */}
     {numPage > page && !isFetching && (
