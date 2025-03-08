@@ -1,4 +1,4 @@
-import React, { useState,useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { apiRequest } from "../utils";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
@@ -17,7 +17,7 @@ const JobUploadPage = () => {
     jobTitle: "",
     experience: "",
     salary: "",
-    salaryCategory:"",
+    salaryCategory: "",
     salaryConfidential: false,
     jobLocation: "",
     jobDescription: "",
@@ -25,52 +25,61 @@ const JobUploadPage = () => {
     requirements: [""],
     qualifications: [""],
     screeningQuestions: [{ question: "", mandatory: false }],
+    workType: "",
   });
 
   useEffect(() => {
-      const fetchCities = async () => {
-        try {
-          const response = await fetch("/cities.csv");
-          const text = await response.text();
-          const rows = text.split("\n");
-          const cityList = rows.slice(1).map((row) => row.trim()).filter(Boolean).sort();
-  
-          setCities([...new Set(cityList)]);
-        } catch (error) {
-          console.error("Error loading cities:", error);
-          setCities([]);
-        }
-      };
-  
-      fetchCities();
-    }, []);
-  
-    const handleCityChange = (selectedOption) => {
-      if (selectedOption?.value === "Other") {
-        setIsOtherSelected(true);
-        setSelectedCity(null);
-        // Clear the jobLocation when switching to Other
-        setFormData(prev => ({...prev, jobLocation: ""}));
-      } else {
-        setIsOtherSelected(false);
-        setSelectedCity(selectedOption);
-        // Set the jobLocation when a city is selected
-        setFormData(prev => ({...prev, jobLocation: selectedOption?.value || ""}));
+    const fetchCities = async () => {
+      try {
+        const response = await fetch("/cities.csv");
+        const text = await response.text();
+        const rows = text.split("\n");
+        const cityList = rows.slice(1).map((row) => row.trim()).filter(Boolean).sort();
+
+        setCities([...new Set(cityList)]);
+      } catch (error) {
+        console.error("Error loading cities:", error);
+        setCities([]);
       }
     };
-    
-    const handleCustomCityChange = (e) => {
-      setCustomCity(e.target.value);
-      // Update formData with the custom city
-      setFormData(prev => ({...prev, jobLocation: e.target.value}));
-    };
-    // Prepare city options with "Other" at the bottom
-    const filteredCities = [
-      ...cities
-        .filter((city) => city.toLowerCase().includes(inputValue.toLowerCase()))
-        .map((city) => ({ value: city, label: city })),
-      { value: "Other", label: "Other" }, // Always at the bottom
-    ];
+
+    fetchCities();
+  }, []);
+
+  // Handle city selection
+  const handleCityChange = (selectedOption) => {
+    if (selectedOption?.value === "Other") {
+      setIsOtherSelected(true);
+      setSelectedCity(null);
+      // Clear jobLocation when switching to "Other"
+      setFormData({ ...formData, jobLocation: "" });
+    } else {
+      setIsOtherSelected(false);
+      setSelectedCity(selectedOption);
+      // Update jobLocation in formData when a city is selected
+      if (selectedOption) {
+        setFormData({ ...formData, jobLocation: selectedOption.value });
+      } else {
+        setFormData({ ...formData, jobLocation: "" });
+      }
+    }
+  };
+
+  // Handle custom city input
+  const handleCustomCityChange = (e) => {
+    const cityValue = e.target.value;
+    setCustomCity(cityValue);
+    // Update jobLocation in formData with custom city value
+    setFormData({ ...formData, jobLocation: cityValue });
+  };
+
+  // Prepare city options with "Other" at the bottom
+  const filteredCities = [
+    ...cities
+      .filter((city) => city.toLowerCase().includes(inputValue.toLowerCase()))
+      .map((city) => ({ value: city, label: city })),
+    { value: "Other", label: "Other" }, // Always at the bottom
+  ];
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -122,71 +131,79 @@ const JobUploadPage = () => {
   const customStyles = {
     control: (provided, state) => ({
       ...provided,
-      padding: "0.2rem", 
-      fontSize: "0.7rem", 
-      borderRadius: "0.5rem", 
-      borderColor: state.isFocused ? "#3b82f6" : "#d1d5db", 
-      boxShadow: state.isFocused ? "0 0 0 2px #3b82f6" : "none", 
+      padding: "0.5rem",
+      fontSize: "0.875rem",
+      borderRadius: "0.5rem",
+      borderColor: state.isFocused ? "#3b82f6" : "#d1d5db",
+      boxShadow: state.isFocused ? "0 0 0 2px #3b82f6" : "none",
       "&:hover": {
-        borderColor: "#d1d5db", 
+        borderColor: "#d1d5db",
       },
     }),
     menu: (provided) => ({
       ...provided,
-      borderRadius: "0.5rem", 
-      boxShadow: "0 2px 10px rgba(0, 0, 0, 0.1)", 
-      border: "1px solid #d1d5db", 
+      borderRadius: "0.5rem",
+      boxShadow: "0 2px 10px rgba(0, 0, 0, 0.1)",
+      border: "1px solid #d1d5db",
     }),
     option: (provided, state) => ({
       ...provided,
-      backgroundColor: state.isSelected ? "#3b82f6" : "white", 
-      color: state.isSelected ? "white" : "black", 
+      backgroundColor: state.isSelected ? "#3b82f6" : "white",
+      color: state.isSelected ? "white" : "black",
       "&:hover": {
-        backgroundColor: "white", 
-        color: "black", 
+        backgroundColor: "white",
+        color: "black",
       },
     }),
     placeholder: (provided) => ({
       ...provided,
-      color: "black", 
+      color: "black",
     }),
     singleValue: (provided) => ({
       ...provided,
-      color: "black", 
+      color: "black",
     }),
   };
 
-
   const handleSubmit = async (e) => {
     e.preventDefault();
-    formData.experience = Number(formData.experience);
-    formData.salary=formData.salary
-    console.log(formData);
-    // Handle form submission logic here
+    
+    // Ensure all required fields are filled
+    if (!formData.jobLocation) {
+      alert("Please select or enter a job location");
+      return;
+    }
+    
+    // Convert string values to numbers
+    const submissionData = {
+      ...formData,
+      experience: Number(formData.experience),
+      salary: Number(formData.salary),
+    };
+    
+    console.log(submissionData);
     setIsLoading(true);
-    // setErrMsg(null);
+    
     try {
       const res = await apiRequest({
         url: "/jobs/upload-job",
         token: user?.token,
-        data: formData,
+        data: submissionData,
         method: "POST",
       });
-      if (res.status == "failed") {
-        console.log("failed");
-        // setErrMsg({ ...res });
+      
+      if (res.status === "failed") {
+        console.log("failed", res);
+        alert(res.message || "Failed to create job. Please try again.");
       } else {
-        // setErrMsg("success");
         console.log("success", res);
-        // setTimeout(() => {
-        //   window.location.reload();
-        // }, 2000);
+        alert("Job Created Successfully. For Uploading more jobs visit Upload Jobs section.");
+        navigate("/view-jobs");
       }
-      setIsLoading(false);
-      alert("Job Created Successfully. For Uploading more jobs visit Upload Jobs section.")
-      navigate("/view-jobs");
     } catch (error) {
       console.log(error);
+      alert("An error occurred. Please try again.");
+    } finally {
       setIsLoading(false);
     }
   };
@@ -197,58 +214,59 @@ const JobUploadPage = () => {
       className="max-w-4xl mx-auto p-6 bg-white shadow-md rounded"
     >
       <div className="mb-4">
-        <label className="block text-gray-700 text-sm  mb-2">Job Title</label>
+        <label className="block text-gray-700 text-sm mb-2">Job Title</label>
         <input
           type="text"
           name="jobTitle"
           value={formData.jobTitle}
           onChange={handleChange}
-          className=" border rounded text-xs w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+          className="border rounded text-xs w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
           required
         />
       </div>
 
       <div className="mb-4">
-        <label className="block text-gray-700 text-sm  mb-2">
+        <label className="block text-gray-700 text-sm mb-2">
           Years of Experience
         </label>
         <select
           name="experience"
           value={formData.experience}
           onChange={handleChange}
-          className=" border rounded text-xs w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+          className="border rounded text-xs w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
           required
         >
           <option value="">Select experience</option>
           {Array.from({ length: 15 }, (_, i) => (
-            <option key={i + 1} value={i + 1}>{i + 1}+</option>
+            <option key={i + 1} value={i + 1}>{`${i + 1}+`}</option>
           ))}
         </select>
-      </div>  
+      </div>
 
       <div className="mb-4">
-        <label className="block text-gray-700 text-sm  mb-2">
-          Annual Salary
+        <label className="block text-gray-700 text-sm mb-2">
+          Annual Salary (INR Lakh)
         </label>
         <input
-          type="text"
+          type="number"
           name="salary"
           value={formData.salary}
           onChange={handleChange}
-          className=" border rounded text-xs w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+          className="border rounded text-xs w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
           required
         />
         <div className="mb-4 mt-4">
-        <label className="block text-gray-700 text-sm  mb-2">Application Link</label>
-        <input
-          type="text"
-          name="applicationLink"
-          value={formData.applicationLink}
-          onChange={handleChange}
-          className=" border rounded text-xs w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-        />
+          <label className="block text-gray-700 text-sm mb-2">Application Link</label>
+          <input
+            type="text"
+            name="applicationLink"
+            value={formData.applicationLink}
+            onChange={handleChange}
+            className="border rounded text-xs w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+          />
+        </div>
       </div>
-      </div>
+
       <div className="mb-4">
         <label className="block text-gray-700 text-sm mb-2">
           Select Salary Category
@@ -260,78 +278,80 @@ const JobUploadPage = () => {
           className="border rounded text-xs w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
           required
         >
-          <option value="">Select salary</option> {/* Placeholder option */}
+          <option value="">Select salary</option>
           <option value="On Experience">On Experience</option>
           <option value="Competitive">Competitive</option>
           <option value="Fixed">Fixed</option>
           <option value="Negotiable">Negotiable</option>
           <option value="Confidential">Confidential</option>
-          {/* <option value="5">5 Lakh</option>
-          <option value="10">10 Lakh</option>
-          <option value="15">15 Lakh</option>
-          <option value="20">20 Lakh</option>
-          <option value="25">25 Lakh</option> */}
-          {/* Add more options as needed */}
         </select>
-        {/* <div className="flex items-center mt-2">
-          <input
-            type="checkbox"
-            name="salaryConfidential"
-            checked={formData.salaryConfidential}
-            onChange={handleChange}
-            className="mr-2 leading-tight"
-          />
-          <label className="text-gray-700 text-sm">
-            Keep Salary Confidential
-          </label>
-        </div> */}
       </div>
+
+      {/* Work Type Dropdown */}
       <div className="mb-4">
-        <label className="block text-gray-700 text-sm  mb-2">
+        <label className="block text-gray-700 text-sm mb-2">Work Type</label>
+        <select
+          name="workType"
+          value={formData.workType}
+          onChange={handleChange}
+          className="border rounded text-xs w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+          required
+        >
+          <option value="">Select work type</option>
+          <option value="Full-Time">Full-Time</option>
+          <option value="Part-Time">Part-Time</option>
+          <option value="Contract">Contract</option>
+          <option value="Temporary">Temporary</option>
+        </select>
+      </div>
+
+      <div className="mb-4">
+        <label className="block text-gray-700 text-sm mb-2">
           Job Location
         </label>
         <Select
-        options={filteredCities}
-        value={selectedCity}
-        styles={customStyles}
-        onChange={handleCityChange}
-        onInputChange={(value) => setInputValue(value)}
-        inputValue={inputValue}
-        placeholder="Search or select a city..."
-        isClearable
-        isSearchable
-        noOptionsMessage={() => (inputValue ? "No matching cities found" : "Start typing to search")}
-      />
+          options={filteredCities}
+          value={selectedCity}
+          styles={customStyles}
+          onChange={handleCityChange}
+          onInputChange={(value) => setInputValue(value)}
+          inputValue={inputValue}
+          placeholder="Search or select a city..."
+          isClearable
+          isSearchable
+          noOptionsMessage={() => (inputValue ? "No matching cities found" : "Start typing to search")}
+        />
 
-      {isOtherSelected && (
-        <div className="mt-2 flex gap-2">
-          <input
-            type="text"
-            className="px-4 py-2 border rounded-lg w-full"
-            placeholder="Enter your city"
-            value={customCity}
-            onChange={handleCustomCityChange}
-          />
-        </div>
-      )}
+        {isOtherSelected && (
+          <div className="mt-2 flex gap-2">
+            <input
+              type="text"
+              className="px-4 py-2 border rounded-lg w-full"
+              placeholder="Enter your city"
+              value={customCity}
+              onChange={handleCustomCityChange}
+              required={isOtherSelected}
+            />
+          </div>
+        )}
       </div>
 
       <div className="mb-4">
-        <label className="block text-gray-700 text-sm  mb-2">
+        <label className="block text-gray-700 text-sm mb-2">
           Job Description
         </label>
         <textarea
           name="jobDescription"
           value={formData.jobDescription}
           onChange={handleChange}
-          className=" border rounded text-xs w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+          className="border rounded text-xs w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
           rows="4"
           required
         ></textarea>
       </div>
 
       <div className="mb-4">
-        <label className="block text-gray-700 text-sm  mb-2">
+        <label className="block text-gray-700 text-sm mb-2">
           Job Requirements
         </label>
         {formData.requirements.map((req, index) => (
@@ -341,21 +361,21 @@ const JobUploadPage = () => {
               name="requirements"
               value={req}
               onChange={(e) => handleArrayChange(index, e)}
-              className=" border rounded text-xs w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+              className="border rounded text-xs w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
             />
           </div>
         ))}
         <button
           type="button"
           onClick={addRequirement}
-          className="bg-blue-500 hover:bg-blue-700 text-white  py-2 px-4 rounded mt-2"
+          className="bg-blue-500 hover:bg-blue-700 text-white py-2 px-4 rounded mt-2"
         >
           Add Requirement
         </button>
       </div>
 
       <div className="mb-4">
-        <label className="block text-gray-700 text-sm  mb-2">
+        <label className="block text-gray-700 text-sm mb-2">
           Qualifications
         </label>
         {formData.qualifications.map((qual, index) => (
@@ -365,21 +385,21 @@ const JobUploadPage = () => {
               name="qualifications"
               value={qual}
               onChange={(e) => handleArrayChange(index, e)}
-              className=" border rounded text-xs w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+              className="border rounded text-xs w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
             />
           </div>
         ))}
         <button
           type="button"
           onClick={addQualification}
-          className="bg-blue-500 hover:bg-blue-700 text-white  py-2 px-4 rounded mt-2"
+          className="bg-blue-500 hover:bg-blue-700 text-white py-2 px-4 rounded mt-2"
         >
           Add Qualification
         </button>
       </div>
 
       <div className="mb-4">
-        <label className="block text-gray-700 text-sm  mb-2">
+        <label className="block text-gray-700 text-sm mb-2">
           Screening Questions
         </label>
         {formData.screeningQuestions.map((question, index) => (
@@ -389,7 +409,7 @@ const JobUploadPage = () => {
               name="question"
               value={question.question}
               onChange={(e) => handleScreeningQuestionChange(index, e)}
-              className=" border rounded text-xs w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+              className="border rounded text-xs w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
               placeholder="Question"
             />
             <div className="flex items-center mt-2">
@@ -400,14 +420,14 @@ const JobUploadPage = () => {
                 onChange={(e) => handleScreeningQuestionChange(index, e)}
                 className="mr-2 leading-tight"
               />
-              <label className="text-gray-700 text-sm ">Mandatory</label>
+              <label className="text-gray-700 text-sm">Mandatory</label>
             </div>
           </div>
         ))}
         <button
           type="button"
           onClick={addScreeningQuestion}
-          className="bg-blue-500 hover:bg-blue-700 text-white  py-2 px-4 rounded mt-2"
+          className="bg-blue-500 hover:bg-blue-700 text-white py-2 px-4 rounded mt-2"
         >
           Add Screening Question
         </button>
@@ -415,9 +435,9 @@ const JobUploadPage = () => {
 
       <button
         type="submit"
-        className="bg-blue-500 hover:bg-blue-700 text-white  py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+        className="bg-blue-500 hover:bg-blue-700 text-white py-2 px-4 rounded focus:outline-none focus:shadow-outline"
       >
-        {isLoading ? "Submiting...." : "Submit"}
+        {isLoading ? "Submitting...." : "Submit"}
       </button>
     </form>
   );
