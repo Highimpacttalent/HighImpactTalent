@@ -13,6 +13,7 @@ export const createJob = async (req, res, next) => {
       salary,
       salaryCategory,
       salaryConfidential,
+      workType,
       experience,
       jobDescription,
       requirements,
@@ -21,7 +22,7 @@ export const createJob = async (req, res, next) => {
       applicationLink,
     } = req.body;
     // Validate required fields
-    if (!jobTitle||!jobLocation||!jobDescription) {
+    if (!jobTitle || !jobLocation || !jobDescription || !workType) {
       return res
         .status(400)
         .json({ message: "Please Provide All Required Fields" });
@@ -41,6 +42,7 @@ export const createJob = async (req, res, next) => {
       salary: salaryConfidential ? null : salary,
       salaryConfidential,
       salaryCategory,
+      workType,
       experience,
       jobDescription,
       requirements,
@@ -80,6 +82,7 @@ export const updateJob = async (req, res, next) => {
     const {
       jobTitle,
       jobType,
+      workType,
       location,
       salary,
       experience,
@@ -101,7 +104,8 @@ export const updateJob = async (req, res, next) => {
       !desc ||
       !requirements ||
       !maxApplicants ||
-      !duration
+      !duration ||
+      !workType
     ) {
       next("Please Provide All Required Fields");
       return;
@@ -114,6 +118,7 @@ export const updateJob = async (req, res, next) => {
     const jobPost = {
       jobTitle,
       jobType,
+      workType,
       location,
       salary,
       experience,
@@ -151,7 +156,7 @@ export const updateJob = async (req, res, next) => {
 //get all jobs or use query parameter to filter job
 export const getJobPosts = async (req, res, next) => {
   try {
-    const { search, sort, location, exp } = req.query;
+    const { search, sort, location, exp, workType } = req.query;
     const experience = exp?.split("-"); //2-6
 
     let queryObject = {};
@@ -159,14 +164,10 @@ export const getJobPosts = async (req, res, next) => {
     if (location) {
       queryObject.location = { $regex: location, $options: "i" };
     }
-    // console.log(jType,types)
-    // if (jType) {
-    //   queryObject.jobType = { $in: types }
-    // }
-    // console.log(queryObject.jobType)
-
-    //    [2. 6]
-    // console.log('exp',exp,experience,typeof(experience))
+    
+    if (workType) {
+      queryObject.workType = workType;
+    }
 
     if (exp) {
       queryObject.experience = {
@@ -180,6 +181,7 @@ export const getJobPosts = async (req, res, next) => {
         $or: [
           { jobTitle: { $regex: search, $options: "i" } },
           { jobType: { $regex: search, $options: "i" } },
+          { workType: { $regex: search, $options: "i" } },
         ],
       };
       queryObject = { ...queryObject, ...searchQuery };
@@ -250,7 +252,10 @@ export const getJobById = async (req, res, next) => {
 
     //GET SIMILAR JOB POST
     const searchQuery = {
-      $or: [{ jobTitle: { $regex: job?.jobTitle, $options: "i" } }],
+      $or: [
+        { jobTitle: { $regex: job?.jobTitle, $options: "i" } },
+        { workType: job?.workType }
+      ],
     };
 
     let queryResult = Jobs.find(searchQuery)
