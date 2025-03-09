@@ -205,7 +205,7 @@ export const resumepool = async (req, res) => {
       const resume = await ResumePool.create({
         name: parsedData.name,
         email: parsedData.email,
-        cvUrl: req.url,
+        cvUrl: req.body.cvurl || "",
         location: parsedData.location,
         experience: parsedData.noOfYearsExperience,
         skills: parsedData.skills,
