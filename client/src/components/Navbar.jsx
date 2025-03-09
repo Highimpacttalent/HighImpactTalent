@@ -47,37 +47,74 @@ const Navbar = () => {
   };
 
   return (
-    <AppBar position="sticky" sx={{ backgroundColor: "white", color: "black", boxShadow: "none" }}>
+    <AppBar
+      position="sticky"
+      sx={{ backgroundColor: "white", color: "black", boxShadow: "none" }}
+    >
       <Toolbar sx={{ display: "flex", justifyContent: "space-between" }}>
         {/* Mobile Menu Button */}
-        <IconButton sx={{ display: { md: "none" } }} onClick={() => setDrawerOpen(true)}>
+        <IconButton
+          sx={{ display: { md: "none" } }}
+          onClick={() => setDrawerOpen(true)}
+        >
           <MenuIcon />
         </IconButton>
 
         {/* Logo */}
         <Box sx={{ display: "flex", alignItems: "center", flexGrow: 1, ml: 4 }}>
-          <Link to="/" style={{ display: "flex", alignItems: "center", textDecoration: "none", color: "inherit" }}>
+          <Link
+            to="/"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              textDecoration: "none",
+              color: "inherit",
+            }}
+          >
             <Avatar src={logo} sx={{ width: 40, height: 40, mr: 1 }} />
-            <Typography variant="h6" sx={{ color: "#1176DB", fontWeight: "bold", whiteSpace: "nowrap" }}>
+            <Typography
+              variant="h6"
+              sx={{
+                color: "#1176DB",
+                fontWeight: "bold",
+                whiteSpace: "nowrap",
+              }}
+            >
               High Impact Talent
             </Typography>
           </Link>
         </Box>
 
         {/* Desktop Navigation */}
-        {user?.token ? <LoggedInMenu user={user} handleMenuOpen={handleMenuOpen} /> : <LoggedOutMenu />}
+        {user?.token ? (
+          <LoggedInMenu user={user} handleMenuOpen={handleMenuOpen} />
+        ) : (
+          <LoggedOutMenu />
+        )}
 
         {/* Profile Menu */}
         {user?.token && (
-          <Menu anchorEl={menuAnchor} open={Boolean(menuAnchor)} onClose={handleMenuClose}>
-            <MenuItem component={Link} to="/user-profile" onClick={handleMenuClose}>
+          <Menu
+            anchorEl={menuAnchor}
+            open={Boolean(menuAnchor)}
+            onClose={handleMenuClose}
+          >
+            <MenuItem
+              component={Link}
+              to="/user-profile"
+              onClick={handleMenuClose}
+            >
               <AccountCircle sx={{ mr: 1 }} /> User Profile
             </MenuItem>
             <MenuItem component={Link} to="/password" onClick={handleMenuClose}>
               <LockReset sx={{ mr: 1 }} /> Change Password
             </MenuItem>
             {user?.accountType === "seeker" && (
-              <MenuItem component={Link} to="/application-tracking" onClick={handleMenuClose}>
+              <MenuItem
+                component={Link}
+                to="/application-tracking"
+                onClick={handleMenuClose}
+              >
                 <Assignment sx={{ mr: 1 }} /> Application Status
               </MenuItem>
             )}
@@ -107,7 +144,10 @@ const Navbar = () => {
         >
           <Box sx={{ display: "flex", alignItems: "center" }}>
             <Avatar src={logo} sx={{ width: 40, height: 40, mr: 1 }} />
-            <Typography variant="h6" sx={{ color: "#1176DB", fontWeight: "bold" }}>
+            <Typography
+              variant="h6"
+              sx={{ color: "#1176DB", fontWeight: "bold" }}
+            >
               High Impact Talent
             </Typography>
           </Box>
@@ -118,7 +158,11 @@ const Navbar = () => {
 
         {/* Drawer Content */}
         {user?.token ? (
-          <LoggedInDrawer user={user} handleLogout={handleLogout} setDrawerOpen={setDrawerOpen} />
+          <LoggedInDrawer
+            user={user}
+            handleLogout={handleLogout}
+            setDrawerOpen={setDrawerOpen}
+          />
         ) : (
           <LoggedOutDrawer setDrawerOpen={setDrawerOpen} />
         )}
@@ -129,25 +173,68 @@ const Navbar = () => {
 
 const LoggedInMenu = ({ user, handleMenuOpen }) => (
   <Box sx={{ display: { xs: "none", md: "flex" }, gap: 3, ml: "auto", mr: 2 }}>
-    <Button component={Link} to={user?.accountType === "seeker" ? "/find-jobs" : "/view-jobs"} color="inherit">
+    <Button
+      component={Link}
+      to={user?.accountType === "seeker" ? "/find-jobs" : "/view-jobs"}
+      color="inherit"
+    >
       {user?.accountType === "seeker" ? "Find Job" : "Job Posts"}
     </Button>
-    {user?.accountType === "seeker" && <Button component={Link} to="/companies" color="inherit">Companies</Button>}
-    <Button component={Link} to="/about-us" color="inherit">About</Button>
-    <Button component={Link} to="/contact-us" color="inherit">Contact Us</Button>
-    <Button component={Link} to="/blog" color="inherit">Blog</Button>
+    {user?.accountType !== "seeker" && (
+      <Button
+        color="inherit"
+        component={Link}
+        to="/upload-a-job"
+      >
+        Upload Job
+      </Button>
+    )}
+    {user?.accountType === "seeker" && (
+      <Button component={Link} to="/companies" color="inherit">
+        Companies
+      </Button>
+    )}
+    <Button component={Link} to="/about-us" color="inherit">
+      About
+    </Button>
+    <Button component={Link} to="/contact-us" color="inherit">
+      Contact Us
+    </Button>
+    <Button component={Link} to="/blog" color="inherit">
+      Blog
+    </Button>
     <IconButton onClick={handleMenuOpen}>
-      <Avatar src={user?.profileUrl || "https://upload.wikimedia.org/wikipedia/commons/9/99/Sample_User_Icon.png"} />
+      <Avatar
+        src={
+          user?.profileUrl ||
+          "https://upload.wikimedia.org/wikipedia/commons/9/99/Sample_User_Icon.png"
+        }
+      />
     </IconButton>
   </Box>
 );
 
 const LoggedOutMenu = () => (
-  <Box sx={{ display: { xs: "none", md: "flex" }, ml: "auto", alignItems: "center", gap: 3 }}>
-    <Button component={Link} to="/find-jobs" color="inherit">Jobs</Button>
-    <Button component={Link} to="/hiring" color="inherit">Hiring</Button>
-    <Button component={Link} to="/about-us" color="inherit">About</Button>
-    <Button component={Link} to="/contact-us" color="inherit">Contact Us</Button>
+  <Box
+    sx={{
+      display: { xs: "none", md: "flex" },
+      ml: "auto",
+      alignItems: "center",
+      gap: 3,
+    }}
+  >
+    <Button component={Link} to="/find-jobs" color="inherit">
+      Jobs
+    </Button>
+    <Button component={Link} to="/hiring" color="inherit">
+      Hiring
+    </Button>
+    <Button component={Link} to="/about-us" color="inherit">
+      About
+    </Button>
+    <Button component={Link} to="/contact-us" color="inherit">
+      Contact Us
+    </Button>
     <Button
       variant="contained"
       component={Link}
@@ -165,16 +252,36 @@ const LoggedOutMenu = () => (
 
 const LoggedOutDrawer = ({ setDrawerOpen }) => (
   <List>
-    <ListItem button component={Link} to="/find-jobs" onClick={() => setDrawerOpen(false)}>
+    <ListItem
+      button
+      component={Link}
+      to="/find-jobs"
+      onClick={() => setDrawerOpen(false)}
+    >
       <ListItemText primary="Jobs" />
     </ListItem>
-    <ListItem button component={Link} to="/hiring" onClick={() => setDrawerOpen(false)}>
+    <ListItem
+      button
+      component={Link}
+      to="/hiring"
+      onClick={() => setDrawerOpen(false)}
+    >
       <ListItemText primary="Hiring" />
     </ListItem>
-    <ListItem button component={Link} to="/about-us" onClick={() => setDrawerOpen(false)}>
+    <ListItem
+      button
+      component={Link}
+      to="/about-us"
+      onClick={() => setDrawerOpen(false)}
+    >
       <ListItemText primary="About" />
     </ListItem>
-    <ListItem button component={Link} to="/contact-us" onClick={() => setDrawerOpen(false)}>
+    <ListItem
+      button
+      component={Link}
+      to="/contact-us"
+      onClick={() => setDrawerOpen(false)}
+    >
       <ListItemText primary="Contact Us" />
     </ListItem>
   </List>
@@ -182,35 +289,93 @@ const LoggedOutDrawer = ({ setDrawerOpen }) => (
 
 const LoggedInDrawer = ({ user, handleLogout, setDrawerOpen }) => (
   <List>
-    <ListItem button component={Link} to={user?.accountType === "seeker" ? "/find-jobs" : "/view-jobs"} onClick={() => setDrawerOpen(false)}>
-      <ListItemText primary={user?.accountType === "seeker" ? "Find Job" : "Job Posts"} />
+    <ListItem
+      button
+      component={Link}
+      to={user?.accountType === "seeker" ? "/find-jobs" : "/view-jobs"}
+      onClick={() => setDrawerOpen(false)}
+    >
+      <ListItemText
+        primary={user?.accountType === "seeker" ? "Find Job" : "Job Posts"}
+      />
     </ListItem>
+    {user?.accountType !== "seeker" && (
+      <ListItem
+        button
+        component={Link}
+        to="/upload-a-job"
+        onClick={() => setDrawerOpen(false)}
+      >
+        <ListItemText primary="Upload Job" />
+      </ListItem>
+    )}
     {user?.accountType === "seeker" && (
-      <ListItem button component={Link} to="/companies" onClick={() => setDrawerOpen(false)}>
+      <ListItem
+        button
+        component={Link}
+        to="/companies"
+        onClick={() => setDrawerOpen(false)}
+      >
         <ListItemText primary="Companies" />
       </ListItem>
     )}
-    <ListItem button component={Link} to="/about-us" onClick={() => setDrawerOpen(false)}>
+    <ListItem
+      button
+      component={Link}
+      to="/about-us"
+      onClick={() => setDrawerOpen(false)}
+    >
       <ListItemText primary="About" />
     </ListItem>
-    <ListItem button component={Link} to="/contact-us" onClick={() => setDrawerOpen(false)}>
+    <ListItem
+      button
+      component={Link}
+      to="/contact-us"
+      onClick={() => setDrawerOpen(false)}
+    >
       <ListItemText primary="Contact Us" />
     </ListItem>
-    <ListItem button component={Link} to="/blog" onClick={() => setDrawerOpen(false)}>
+    <ListItem
+      button
+      component={Link}
+      to="/blog"
+      onClick={() => setDrawerOpen(false)}
+    >
       <ListItemText primary="Blog" />
     </ListItem>
-    <ListItem button component={Link} to="/user-profile" onClick={() => setDrawerOpen(false)}>
+    {user?.accountType == "seeker" && (<ListItem
+      button
+      component={Link}
+      to="/user-profile"
+      onClick={() => setDrawerOpen(false)}
+    >
       <ListItemText primary="User Profile" />
-    </ListItem>
-    <ListItem button component={Link} to="/password" onClick={() => setDrawerOpen(false)}>
+    </ListItem>)}
+    <ListItem
+      button
+      component={Link}
+      to="/password"
+      onClick={() => setDrawerOpen(false)}
+    >
       <ListItemText primary="Change Password" />
     </ListItem>
     {user?.accountType === "seeker" && (
-      <ListItem button component={Link} to="/application-tracking" onClick={() => setDrawerOpen(false)}>
+      <ListItem
+        button
+        component={Link}
+        to="/application-tracking"
+        onClick={() => setDrawerOpen(false)}
+      >
         <ListItemText primary="Application Status" />
       </ListItem>
     )}
-    <ListItem button onClick={() => { handleLogout(); setDrawerOpen(false); }}>
+    <ListItem
+      button
+      onClick={() => {
+        handleLogout();
+        setDrawerOpen(false);
+      }}
+    >
       <ListItemText primary="Log Out" sx={{ color: "red" }} />
     </ListItem>
   </List>
