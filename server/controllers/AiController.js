@@ -151,6 +151,14 @@ export const resumepool = async (req, res) => {
               {
                 text: `Extract structured information from this resume and return JSON with fields: 
                   name, email, noOfYearsExperience, location, and a list of companies worked at. 
+                  Additionally, provide a "rating" (out of 5) based on resume quality, skills, and experience.
+                  
+                  Criteria for rating:
+                  - 5.0: Highly experienced (10+ years), strong skillset, worked at top companies.
+                  - 4.0-4.9: Mid-senior level (5-9 years), good skillset, well-written resume.
+                  - 3.0-3.9: Moderate experience (3-5 years), lacks strong companies or formatting.
+                  - 2.0-2.9: Entry-level (1-2 years), missing important details.
+                  - 1.0-1.9: Very basic or poorly formatted resume.
 
                   Resume Content:
                   ${resumeText}`,
@@ -189,6 +197,7 @@ export const resumepool = async (req, res) => {
         location: "",
         companiesWorkedAt: [], // List of past companies
         skills: detectedSkills.length > 0 ? detectedSkills : ["Not Mentioned"], // Extracted skills
+        rating: 3,
       };
 
       parsedData = { ...defaultFields, ...parsedData };
@@ -201,6 +210,7 @@ export const resumepool = async (req, res) => {
         experience: parsedData.noOfYearsExperience,
         skills: parsedData.skills,
         companies: parsedData.companiesWorkedAt,
+        rating: parsedData.rating,
       });
 
       res.status(200).json({ success: true, data: parsedData });

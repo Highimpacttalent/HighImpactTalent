@@ -24,6 +24,10 @@ const resumepoolschema = new mongoose.Schema(
       type: [String],
       default: [],
     },
+    rating: {
+      type: Number,
+      default: 3.5,
+    },
   },
   { timestamps: true }
 );
