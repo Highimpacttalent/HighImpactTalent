@@ -29,6 +29,7 @@ import RecruiterSignup from "./pages/AuthForm/Recruiter-Auth";
 import UserSignUp from "./pages/AuthForm/User-Auth";
 import CompanyLoginForm from "./pages/AuthForm/r-login";
 import RecruiterRedirectPage from "./pages/EndSignUp";
+import ResumeSearch from "./pages/ResumeSearch";
 
 function Layout() {
   const { user } = useSelector((state) => state.user);
@@ -67,6 +68,7 @@ function App() {
           <Route path={"/job-detail/:id"} element={<JobDetails />} />
           <Route path="/job-detail/:id/screening-questions" element={<ScreeningQuestions/>}></Route>
           <Route path={'/applicationstatus'} element={<ApplicationStatus/>}></Route>
+          <Route path={'/resumesearch'} element={<ResumeSearch/>}></Route>
           <Route path={'/recruiterSchedule'} element={<RecruiterSchedule/>}></Route>
           <Route path={'/userinformation'} element={<ResumeUpload/>}></Route>
           <Route path={'/password'} element={<PasswordChange/>}></Route>

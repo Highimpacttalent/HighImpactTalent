@@ -189,6 +189,15 @@ const LoggedInMenu = ({ user, handleMenuOpen }) => (
         Upload Job
       </Button>
     )}
+    {user?.accountType !== "seeker" && (
+      <Button
+        color="inherit"
+        component={Link}
+        to="/resumesearch"
+      >
+        Resume Search
+      </Button>
+    )}
     {user?.accountType === "seeker" && (
       <Button component={Link} to="/companies" color="inherit">
         Companies
@@ -204,7 +213,7 @@ const LoggedInMenu = ({ user, handleMenuOpen }) => (
       Blog
     </Button>
     <IconButton onClick={handleMenuOpen}>
-      <Avatar
+      <Avatar 
         src={
           user?.profileUrl ||
           "https://upload.wikimedia.org/wikipedia/commons/9/99/Sample_User_Icon.png"
