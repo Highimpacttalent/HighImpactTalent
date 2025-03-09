@@ -1,5 +1,6 @@
 import pdfParse from "pdf-parse/lib/pdf-parse.js";
 import axios from "axios";
+import { skillsList } from "./mock.js";
 import ResumePool from "../models/ResumePool.js";
 
 const GEMINI_API_KEY = "AIzaSyChz49v4j96SIOqL3_kAbWi6RJgTyuzIfI";
@@ -10,7 +11,9 @@ export const parseResume = async (req, res) => {
 
     if (!req.file) {
       console.log("No file uploaded.");
-      return res.status(400).json({ success: false, message: "No file uploaded" });
+      return res
+        .status(400)
+        .json({ success: false, message: "No file uploaded" });
     }
 
     console.log("File uploaded successfully, starting PDF parsing...");
@@ -24,7 +27,9 @@ export const parseResume = async (req, res) => {
 
     if (!resumeText) {
       console.log("Extracted text is empty.");
-      return res.status(400).json({ success: false, message: "Empty resume text" });
+      return res
+        .status(400)
+        .json({ success: false, message: "Empty resume text" });
     }
 
     console.log("Sending text to Gemini API...");
@@ -53,7 +58,8 @@ ${resumeText}`,
     console.log("Received response from Gemini API.");
 
     // Extract response text
-    const rawText = geminiResponse.data?.candidates?.[0]?.content?.parts?.[0]?.text || "";
+    const rawText =
+      geminiResponse.data?.candidates?.[0]?.content?.parts?.[0]?.text || "";
     console.log("Raw extracted text:", rawText);
 
     // Remove Markdown (```json ... ```) and extract pure JSON
@@ -77,7 +83,7 @@ ${resumeText}`,
         location: "",
         joinConsulting: "",
         dateOfBirth: "",
-        contactnumber:"",
+        contactnumber: "",
       };
 
       parsedData = { ...defaultFields, ...parsedData };
@@ -85,10 +91,19 @@ ${resumeText}`,
       res.status(200).json({ success: true, data: parsedData });
     } catch (jsonError) {
       console.error("Failed to parse JSON:", jsonError);
-      res.status(500).json({ success: false, message: "Failed to parse response from Gemini API.", rawText });
+      res
+        .status(500)
+        .json({
+          success: false,
+          message: "Failed to parse response from Gemini API.",
+          rawText,
+        });
     }
   } catch (error) {
-    console.error("Error processing resume:", error.response?.data || error.message);
+    console.error(
+      "Error processing resume:",
+      error.response?.data || error.message
+    );
     res.status(500).json({
       success: false,
       message: error.response?.data || "Failed to parse resume",
@@ -96,26 +111,7 @@ ${resumeText}`,
   }
 };
 
-
 // Define the list of relevant skills
-const skillsList = [
-  "problem solving", "critical thinking", "business analysis", "data analysis",
-  "decision making", "strategic thinking", "business strategy", "market research",
-  "competitive analysis", "risk management", "presentation skills", "client management",
-  "project management", "benchmarking", "gap analysis", "leadership", "communication",
-  "public speaking", "negotiation", "persuasion", "team collaboration",
-  "financial modeling", "data visualization", "statistics", "quantitative analysis",
-  "qualitative analysis", "microsoft excel", "sql", "power bi", "tableau",
-  "python", "sap", "erp systems", "cloud computing", "powerpoint",
-  "microsoft project", "jira", "asana", "trello", "crm systems", "scrum",
-  "lean six sigma", "change management", "agile methodology", "digital transformation",
-  "supply chain management", "customer experience strategy", "brand positioning",
-  "pricing strategy", "mergers and acquisitions", "corporate restructuring",
-  "emotional intelligence", "adaptability", "time management", "persuasion skills",
-  "networking", "contract negotiation", "compliance management", "due diligence",
-  "marketing automation", "customer journey mapping", "blockchain", "iot",
-  "artificial intelligence", "machine learning", "sustainability consulting"
-];
 
 export const resumepool = async (req, res) => {
   try {
@@ -123,7 +119,9 @@ export const resumepool = async (req, res) => {
 
     if (!req.file) {
       console.log("No file uploaded.");
-      return res.status(400).json({ success: false, message: "No file uploaded" });
+      return res
+        .status(400)
+        .json({ success: false, message: "No file uploaded" });
     }
 
     console.log("File uploaded successfully, starting PDF parsing...");
@@ -135,7 +133,9 @@ export const resumepool = async (req, res) => {
 
     if (!resumeText) {
       console.log("Extracted text is empty.");
-      return res.status(400).json({ success: false, message: "Empty resume text" });
+      return res
+        .status(400)
+        .json({ success: false, message: "Empty resume text" });
     }
 
     console.log("Sending text to Gemini API...");
@@ -164,7 +164,8 @@ export const resumepool = async (req, res) => {
 
     console.log("Received response from Gemini API.");
 
-    const rawText = geminiResponse.data?.candidates?.[0]?.content?.parts?.[0]?.text || "";
+    const rawText =
+      geminiResponse.data?.candidates?.[0]?.content?.parts?.[0]?.text || "";
     console.log("Raw extracted text:", rawText);
 
     // Remove Markdown (```json ... ```) and extract pure JSON
@@ -176,7 +177,7 @@ export const resumepool = async (req, res) => {
       console.log("Parsed JSON data successfully.");
 
       // Extract skills that match the predefined list
-      const detectedSkills = skillsList.filter(skill =>
+      const detectedSkills = skillsList.filter((skill) =>
         new RegExp(`\\b${skill}\\b`, "i").test(resumeText)
       );
 
@@ -186,8 +187,8 @@ export const resumepool = async (req, res) => {
         email: "",
         noOfYearsExperience: "",
         location: "",
-        companiesWorkedAt: [],  // List of past companies
-        skills: detectedSkills.length > 0 ? detectedSkills : ["Not Mentioned"],  // Extracted skills
+        companiesWorkedAt: [], // List of past companies
+        skills: detectedSkills.length > 0 ? detectedSkills : ["Not Mentioned"], // Extracted skills
       };
 
       parsedData = { ...defaultFields, ...parsedData };
@@ -205,10 +206,19 @@ export const resumepool = async (req, res) => {
       res.status(200).json({ success: true, data: parsedData });
     } catch (jsonError) {
       console.error("Failed to parse JSON:", jsonError);
-      res.status(500).json({ success: false, message: "Failed to parse response from Gemini API.", rawText });
+      res
+        .status(500)
+        .json({
+          success: false,
+          message: "Failed to parse response from Gemini API.",
+          rawText,
+        });
     }
   } catch (error) {
-    console.error("Error processing resume:", error.response?.data || error.message);
+    console.error(
+      "Error processing resume:",
+      error.response?.data || error.message
+    );
     res.status(500).json({
       success: false,
       message: error.response?.data || "Failed to parse resume",
