@@ -4,7 +4,6 @@ import Companies from './Companies'
 import CompaniesProfile from './CompanyProfile'
 import FindJob from './FindJob'
 import JobDetails from './JobDetails'
-import UploadJobs from './UploadJobs'
 import UserProfile from './UserProfile'
 
 
@@ -16,6 +15,5 @@ export {
     CompaniesProfile,
     FindJob,
     JobDetails,
-    UploadJobs,
     UserProfile
 }

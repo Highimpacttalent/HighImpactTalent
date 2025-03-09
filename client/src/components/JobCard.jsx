@@ -27,6 +27,7 @@ import {
   Bookmark,
   BookmarkBorder,
   CurrencyRupee,
+  HomeWork,
 } from "@mui/icons-material";
 import { UpdateUser } from "../redux/userSlice";
 import { AttachMoney } from "@mui/icons-material";
@@ -112,8 +113,12 @@ const JobCard = ({ job }) => {
           <Typography variant="body2" color="text.secondary" display="flex" alignItems="center">
             <Work color="primary" sx={{ mr: 1 }} /> {job?.experience}+ years experience
           </Typography>
-          <Typography variant="body2" color="text.secondary">
-            Salary: {job.salaryConfidential ? "Confidential" : `${job.salary.toLocaleString()} (${job.salaryCategory})`}
+          <Typography variant="body2" color="text.secondary" display="flex" alignItems="center">
+            <CurrencyRupee color="primary" sx={{ mr: 1 }} /> 
+            {job.salaryConfidential ? "Confidential" : `${job.salary.toLocaleString()} (${job.salaryCategory})`}
+          </Typography>
+          <Typography variant="body2" color="text.secondary" display="flex" alignItems="center">
+           <HomeWork workType={job?.workType} /> 
           </Typography>
         </Box>
       </CardContent>
@@ -186,7 +191,7 @@ const JobCard = ({ job }) => {
 
         {/* Job Details */}
         <Box sx={{ mb: 2 }}>
-          <Stack direction="row" spacing={1} flexWrap="wrap">
+          <Stack direction="row" spacing={1} flexWrap="wrap" sx={{ mb: 1 }}>
             <Chip
               icon={<LocationOnOutlined />}
               label={job?.jobLocation}
@@ -204,6 +209,11 @@ const JobCard = ({ job }) => {
                   ? "Confidential"
                   : `${job.salary.toLocaleString()} (${job.salaryCategory})`
               }
+              variant="contained"
+            />
+            <Chip
+              icon={<HomeWork />}
+              label={job?.workType}
               variant="contained"
             />
           </Stack>

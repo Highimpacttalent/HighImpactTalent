@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Outlet, Navigate, Route, Routes, useLocation } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
-import { About, Auth, Companies, CompaniesProfile, FindJob, JobDetails, UploadJobs, UserProfile} from "./pages/index";
+import { About, Auth, Companies, CompaniesProfile, FindJob, JobDetails, UserProfile} from "./pages/index";
 import { useSelector } from "react-redux";
 import Dashboard from "./pages/DashBoard";
 import Contact from "./pages/Contact";
@@ -64,7 +64,6 @@ function App() {
           <Route path={"/company-profile"} element={<CompaniesProfile />} />
           <Route path={"/company-profile/:id"} element={<CompaniesProfile />} />
           <Route path={"/company-profile/job-detail/:id"} element={<CompaniesProfile />} />
-          <Route path={"/upload-job"} element={<JobUploadPage />} />
           <Route path={"/job-detail/:id"} element={<JobDetails />} />
           <Route path="/job-detail/:id/screening-questions" element={<ScreeningQuestions/>}></Route>
           <Route path={'/applicationstatus'} element={<ApplicationStatus/>}></Route>
