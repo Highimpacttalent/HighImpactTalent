@@ -91,7 +91,7 @@ const JobCard = ({ job }) => {
         </Box>
 
         {/* Job Title */}
-        <Typography variant="h6" fontWeight={700} gutterBottom>
+        <Typography variant="h6" fontWeight={700} gutterBottom sx={{ color: "#404258" }} color="#404258">
           {job?.jobTitle}
         </Typography>
 
@@ -145,10 +145,10 @@ const JobCard = ({ job }) => {
       sx={{
         display: "flex",
         flexDirection: "column",
-        boxShadow: 3,
+        borderColor:"#75758",
+        boxShadow: "0px 0px 4px 0px #00000040",
         borderRadius: 2,
-        transition: "0.3s",
-        "&:hover": { boxShadow: 6 },
+        p:0.5
       }}
     >
       <CardContent
@@ -162,13 +162,31 @@ const JobCard = ({ job }) => {
             alignItems: "center",
           }}
         >
-          <Typography variant="h6" fontWeight={700} gutterBottom>
+          <Typography variant="h6" fontWeight={700} gutterBottom sx={{ color: "#404258" }}>
             {job?.jobTitle}
           </Typography>
 
-          <Typography variant="caption" color="text.secondary">
+          <Box sx={{display:"flex",alignItems:"center"}}>
+
+          <IconButton
+          onClick={(e) => handleLikeClick(e, job._id)}
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            color: like ? "primary.main" : "text.secondary", // Changes color dynamically
+          }}
+        >
+          {like ? (
+            <Bookmark color="primary" />
+          ) : (
+            <BookmarkBorder color="action" />
+          )}
+        </IconButton>
+
+          <Typography variant="caption" color="#808195" fontSize={14}>
             Posted {moment(job?.createdAt).fromNow()}
           </Typography>
+          </Box>
         </Box>
         <Box
           display="flex"
@@ -182,8 +200,8 @@ const JobCard = ({ job }) => {
             gap={1}
             sx={{ mb: 1, mt: 0.5 }}
           >
-            <Business color="primary" />
-            <Typography variant="subtitle1" fontWeight={600}>
+            <Business color="primary" sx={{ color: "#404258" }} />
+            <Typography variant="subtitle1" fontWeight={600} sx={{ color: "#404258" }}>
               {job?.company?.name}
             </Typography>
           </Box>
@@ -193,28 +211,26 @@ const JobCard = ({ job }) => {
         <Box sx={{ mb: 2 }}>
           <Stack direction="row" spacing={1} flexWrap="wrap" sx={{ mb: 1 }}>
             <Chip
-              icon={<LocationOnOutlined />}
+              icon={<LocationOnOutlined sx={{color:"#474E68"}}/>}
               label={job?.jobLocation}
-              variant="contained"
+              variant="contained" 
+              sx={{color:"#474E68",fontWeight:"400"}}
             />
             <Chip
-              icon={<WorkOutlineOutlined />}
+              icon={<WorkOutlineOutlined sx={{color:"#474E68"}}/>}
               label={`${job?.experience}+ years experience`}
               variant="contained"
+              sx={{color:"#474E68",fontWeight:"400"}}
             />
             <Chip
-              icon={<CurrencyRupee />}
+              icon={<CurrencyRupee sx={{color:"#474E68"}}/>}
               label={
                 job.salaryConfidential
                   ? "Confidential"
                   : `${job.salary.toLocaleString()} (${job.salaryCategory})`
               }
               variant="contained"
-            />
-            <Chip
-              icon={<HomeWork />}
-              label={job?.workType}
-              variant="contained"
+              sx={{color:"#474E68",fontWeight:"400"}}
             />
           </Stack>
         </Box>
@@ -222,7 +238,7 @@ const JobCard = ({ job }) => {
         {/* Job Description */}
         <Typography
           variant="body2"
-          color="text.secondary"
+          color="#474E68"
           sx={{
             flexGrow: 1,
             overflow: "hidden",
@@ -243,35 +259,20 @@ const JobCard = ({ job }) => {
         sx={{
           mt: "auto",
           display: "flex",
-          justifyContent: "flex-end", // Aligns buttons to the right
+          justifyContent: "flex-start", // Aligns buttons to the right
           gap: 1,
         }}
       >
-        <IconButton
-          onClick={(e) => handleLikeClick(e, job._id)}
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            gap: 0.5, // Adjusts spacing between icon and text
-            color: like ? "primary.main" : "text.secondary", // Changes color dynamically
-          }}
-        >
-          {like ? (
-            <Bookmark color="primary" />
-          ) : (
-            <BookmarkBorder color="action" />
-          )}
-          <span style={{ fontSize: "0.875rem", fontWeight: 500 }}>Save</span>
-        </IconButton>
 
         {/* View Button */}
         <Button
           variant="contained"
           color="primary"
-          component={Link}
+          component={Link}  
+          sx={{borderRadius:40,fontFamily:"Poppins"}}
           to={`/job-detail/${job?._id}`}
         >
-          View
+          Continue Applying
         </Button>
       </CardActions>
     </Card>
