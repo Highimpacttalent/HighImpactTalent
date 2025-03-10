@@ -31,7 +31,7 @@ import InfoIcon from "@mui/icons-material/Info";
 import { apiRequest } from "../../utils";
 import { useSelector } from "react-redux";
 
-const FindJobs = () => {
+const desktopView = () => {
   const { user } = useSelector((state) => state.user);
 
   const [sort, setSort] = useState("Newest");
@@ -346,4 +346,4 @@ const [openFilterModal, setOpenFilterModal] = useState(false);
   );
 };
 
-export default FindJobs;
+export default desktopView;
