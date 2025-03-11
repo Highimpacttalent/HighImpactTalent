@@ -45,7 +45,7 @@ const ResumeUpload = () => {
             }
           );
 
-          if (!response.data) {
+          if (!response.data) { 
             throw new Error("No response from server");
           }
         } catch (error) {
@@ -79,6 +79,7 @@ const ResumeUpload = () => {
       // Prepare FormData
       const formData = new FormData();
       formData.append("resume", file);
+      formData.append("cvurl", fileUrl)
 
       // Send the PDF file to the API
       const uploadResponse = await axios.post(
