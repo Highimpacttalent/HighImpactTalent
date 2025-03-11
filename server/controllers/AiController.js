@@ -43,11 +43,20 @@ export const parseResume = async (req, res) => {
             role: "user",
             parts: [
               {
-                text: `Extract structured information from this resume and return JSON with fields: name, email,contactnumber , noOfYearsExperience, currentCompany, currentDesignation, linkedinLink, about, salary, location, joinConsulting answer should be either lateral or out of campus, dateOfBirth. If any field is missing, return an empty string.
+                text: `Extract structured information from this resume and return JSON with fields:
+                name, email, contactnumber, noOfYearsExperience, currentCompany, currentDesignation, linkedinLink, about, salary, location, joinConsulting (either 'lateral' or 'out of campus'), dateOfBirth. If any field is missing, return an empty string.
+
+                Additionally, provide a separate JSON object with a "rating" (out of 5) based on resume quality, skills, and experience.
+
+                Criteria for rating:
+                - 5.0: Highly experienced (10+ years), strong skillset, worked at top companies.
+                - 4.0-4.9: Mid-senior level (5-9 years), good skillset, well-written resume.
+                - 3.0-3.9: Moderate experience (3-5 years), lacks strong companies or formatting.
+                - 2.0-2.9: Entry-level (1-2 years), missing important details.
+                - 1.0-1.9: Very basic or poorly formatted resume.
 
 Resume Content:
-${resumeText}`,
-              },
+${resumeText}` },
             ],
           },
         ],
@@ -62,43 +71,65 @@ ${resumeText}`,
       geminiResponse.data?.candidates?.[0]?.content?.parts?.[0]?.text || "";
     console.log("Raw extracted text:", rawText);
 
-    // Remove Markdown (```json ... ```) and extract pure JSON
-    const jsonMatch = rawText.match(/```json\n([\s\S]*?)\n```/);
-    const cleanJsonText = jsonMatch ? jsonMatch[1].trim() : rawText.trim();
-
-    try {
-      let parsedData = JSON.parse(cleanJsonText);
-      console.log("Parsed JSON data successfully.");
-
-      // Ensure all required fields exist in the response, defaulting to an empty string
-      const defaultFields = {
-        name: "",
-        email: "",
-        noOfYearsExperience: "",
-        currentCompany: "",
-        currentDesignation: "",
-        linkedinLink: "",
-        about: "",
-        salary: "",
-        location: "",
-        joinConsulting: "",
-        dateOfBirth: "",
-        contactnumber: "",
-      };
-
-      parsedData = { ...defaultFields, ...parsedData };
-
-      res.status(200).json({ success: true, data: parsedData });
-    } catch (jsonError) {
-      console.error("Failed to parse JSON:", jsonError);
-      res
-        .status(500)
-        .json({
-          success: false,
-          message: "Failed to parse response from Gemini API.",
-          rawText,
-        });
+    // Extract multiple JSON blocks
+    const jsonMatches = rawText.match(/```json\n([\s\S]*?)\n```/g);
+    if (!jsonMatches) {
+      return res.status(500).json({ success: false, message: "Invalid API response format" });
     }
+
+    // Parse and merge JSON objects
+    let parsedData = {};
+    jsonMatches.forEach((jsonBlock) => {
+      try {
+        const jsonString = jsonBlock.replace(/```json\n|\n```/g, "").trim();
+        const parsedObject = JSON.parse(jsonString);
+        parsedData = { ...parsedData, ...parsedObject };
+      } catch (error) {
+        console.error("Error parsing JSON:", error);
+      }
+    });
+
+    console.log("Parsed JSON data successfully:", parsedData);
+
+    // Extract skills based on predefined list
+    const detectedSkills = skillsList.filter((skill) =>
+      new RegExp(`\\b${skill}\\b`, "i").test(resumeText)
+    );
+
+    // Ensure all required fields exist, with defaults
+    const defaultFields = {
+      name: "",
+      email: "",
+      contactnumber: "",
+      noOfYearsExperience: "",
+      currentCompany: "",
+      currentDesignation: "",
+      linkedinLink: "",
+      about: "",
+      salary: "",
+      location: "",
+      joinConsulting: "",
+      dateOfBirth: "",
+      skills: detectedSkills.length > 0 ? detectedSkills : ["Not Mentioned"],
+      rating: parsedData.rating || 0, // Ensure rating is present
+      companiesWorkedAt: parsedData.companiesWorkedAt || [],
+    };
+
+    parsedData = { ...defaultFields, ...parsedData };
+
+    // Store in MongoDB
+    const resume = await ResumePool.create({
+      name: parsedData.name,
+      email: parsedData.email,
+      cvUrl: req.body.cvurl,
+      location: parsedData.location,
+      experience: parsedData.noOfYearsExperience,
+      skills: parsedData.skills,
+      companies: parsedData.companiesWorkedAt, // Ensure it is an array
+      rating: parsedData.rating, // Store rating properly
+    });
+
+    res.status(200).json({ success: true, data: parsedData });
   } catch (error) {
     console.error(
       "Error processing resume:",
