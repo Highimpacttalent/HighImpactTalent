@@ -280,10 +280,9 @@ const JobCard = ({ job,flag = false,enable = false }) => {
         </Button>) : user?.token == null ? (
               <Button
               variant="contained"
-              color="primary"
-              component={Link}  
+              color="primary"  
               sx={{borderRadius:40,fontFamily:"Poppins"}}
-                onClick={() => navigate("/user-auth")}
+              onClick={() => navigate("/u-login")}
               >
                 Login/Register To Apply
               </Button>
@@ -291,7 +290,6 @@ const JobCard = ({ job,flag = false,enable = false }) => {
               <Button
               variant="contained"
               color="primary"
-              component={Link}  
               sx={{borderRadius:40,fontFamily:"Poppins"}}
                 onClick={() => {
                   if (job?.applicationLink && job?.applicationLink.trim() !== "") {
