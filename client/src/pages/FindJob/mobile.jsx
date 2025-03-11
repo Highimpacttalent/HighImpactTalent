@@ -6,8 +6,11 @@ import { Grid, } from "@mui/material";
 
 import {
   Box,
+  Paper,InputBase,
   Typography,
+  IconButton
 } from "@mui/material";
+import { MdLocationOn } from "react-icons/md";
 import {
   Accordion,
   AccordionSummary,
@@ -151,6 +154,22 @@ const [openFilterModal, setOpenFilterModal] = useState(false);
     fetchJobs();
   }, [sort, filterJobTypes, selectedCheckbox, filterExp, page]);
 
+  const handleLocationChange = (e) => {
+    const keyword = e.target.value;
+    setJobLocation(keyword);
+    if (keyword === "") {
+      setFilteredJobs(data);
+    } else {
+      const lowerCaseKeyword = keyword.toLowerCase();
+      const filtered = data.filter(
+        (job) =>
+          job.jobLocation.toLowerCase().includes(lowerCaseKeyword) ||
+          job.jobLocation.toLowerCase().includes(lowerCaseKeyword)
+      );
+      setFilteredJobs(filtered);
+    }
+  };
+
   return (
     <div className="bg-gray-50 min-h-screen border-red-200" style={{padding:isMobile?10:40}}>
       <Box sx={{display:"flex",flexDirection: "column",gap:2}}>
@@ -159,18 +178,65 @@ const [openFilterModal, setOpenFilterModal] = useState(false);
 
 <Box>
   {/* Search Bar */}
-  <div className="max-w-4xl mx-auto mt-3 px-5">
-    <div className="flex items-center bg-white rounded-full shadow-lg px-4 py-3">
-      <AiOutlineSearch className="text-gray-500 text-2xl" />
-      <input
-        type="text"
+  <Box sx={{ mx: "auto", mt: 3, px: 2, display: "flex", justifyContent: "center" }}>
+  <Box
+    sx={{
+      display: "flex",
+      flexDirection: "column", // Stack inputs vertically
+      alignItems: "center",
+      p: 2,
+      width: "100%",
+      mx: "auto",
+      gap: 2, // Adds spacing between inputs
+    }}
+  >
+    {/* Job Title Input */}
+    <Box sx={{ display: "flex", alignItems: "center", width: "100%", p: 1, borderRadius: "12px", boxShadow: 1, bgcolor: "#F5F5F5" }}>
+      <IconButton sx={{ color: "gray" }}>
+        <AiOutlineSearch fontSize="24px" />
+      </IconButton>
+      <InputBase
+        sx={{ flex: 1, fontSize: "1rem", ml: 1 }}
+        placeholder="Job title or keywords"
         value={searchKeyword}
         onChange={handleInputChange}
-        placeholder="Enter job title..."
-        className="w-full p-2 text-lg outline-none bg-transparent"
       />
-    </div>
-  </div>
+    </Box>
+
+    {/* Location Input */}
+    <Box sx={{ display: "flex", alignItems: "center", width: "100%", p: 1, borderRadius: "12px", boxShadow: 1, bgcolor: "#F5F5F5" }}>
+      <IconButton sx={{ color: "gray" }}>
+        <MdLocationOn fontSize="24px" />
+      </IconButton>
+      <InputBase
+        sx={{ flex: 1, fontSize: "1rem", ml: 1 }}
+        placeholder="Location (City, State, or Zip)"
+        value={jobLocation}
+        onChange={handleLocationChange}
+      />
+    </Box>
+
+    {/* Search Button */}
+    <Button
+      variant="contained"
+      sx={{
+        borderRadius: "25px",
+        backgroundColor: "#1A73E8",
+        color: "white",
+        px: 4,
+        py: 1.5,
+        textTransform: "none",
+        fontSize: "1rem",
+        fontWeight: "bold",
+        width: "100%",
+        "&:hover": { backgroundColor: "#1669D8" },
+      }}
+    >
+      Search Jobs
+    </Button>
+  </Box>
+</Box>
+
 
   {/* Main Content */}
   <div className="max-w-6xl mx-auto mt-6 px-5">

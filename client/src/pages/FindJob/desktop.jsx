@@ -36,7 +36,8 @@ const desktopView = () => {
 
   const [sort, setSort] = useState("Newest");
   const [page, setPage] = useState(1);
-  const [tab,setTab] = useState (0);
+  const [tab,setTab] = useState(0);
+  const [minitab, setminitab] = useState(0);
   const [numPage, setNumPage] = useState(1);
   const [recordCount, setRecordCount] = useState(0);
   const [data, setData] = useState([]);
@@ -241,17 +242,10 @@ const [openFilterModal, setOpenFilterModal] = useState(false);
         </Paper>
       </Box>
 
-      <Box sx={{width:"25%",mt:4}}>
-     <Tabs value={tab} onChange={(e, newValue) => setTab(newValue)} centered sx={{ "& .MuiTab-root": { fontFamily: "Poppins, sans-serif",fontWeight:"600" } }} >
-        <Tab label="Jobs for You" value={0}/>
-        <Tab label="My Jobs" value={1}/>
-      </Tabs>
-      </Box>
-
 
       {/* Main Content */}
-      {tab === 0 && (<Box sx={{
-         maxWidth: "xl", mx: "auto", mt: 2.5, px: 2, display: "flex", gap: 3 }}>
+      <Box sx={{
+         maxWidth: "xl", mx: "auto", mt: 6, px: 2, display: "flex", gap: 3 }}>
   {/* Left Section - Filters & Sorting */}
   <Box sx={{ width: "25%" ,p: 2, }}>
     {/* Sorting Dropdown */}
@@ -337,8 +331,7 @@ const [openFilterModal, setOpenFilterModal] = useState(false);
       </Box>
     )}
   </Box>
-</Box>)}
-      
+</Box>
     </Box>
   </Box>
 </Box>
