@@ -64,23 +64,23 @@ const ResumeUpload = () => {
       alert("Please upload a resume first.");
       return;
     }
-
+  
     try {
       setSubmitting(true);
       setOpenModal(true);
-
+  
       // Fetch the PDF file as a Blob
       const response = await fetch(fileUrl);
       const blob = await response.blob();
-
+  
       // Create a File object from the Blob
       const file = new File([blob], "resume.pdf", { type: "application/pdf" });
-
+  
       // Prepare FormData
       const formData = new FormData();
       formData.append("resume", file);
-      formData.append("cvurl", fileUrl)
-
+      formData.append("cvurl", fileUrl);
+  
       // Send the PDF file to the API
       const uploadResponse = await axios.post(
         "https://highimpacttalent.onrender.com/api-v1/ai/resume-parser",
@@ -92,11 +92,16 @@ const ResumeUpload = () => {
           },
         }
       );
-
+  
       const parsedData = uploadResponse.data;
+      const skills = parsedData.data?.skills || []; 
+  
       setOpenModal(false);
-      navigate("/user-additional-details", { state: { formData: parsedData } });
+      console.log("Parsed Data:", parsedData);
+      console.log("Skills Extracted:", skills);
+      navigate("/user-additional-details", { state: { skills } });
 
+  
     } catch (error) {
       console.error("Resume submission error:", error);
       alert("Failed to submit resume. Please try again.");
@@ -104,6 +109,7 @@ const ResumeUpload = () => {
       setSubmitting(false);
     }
   };
+  
 
   return (
     <Box

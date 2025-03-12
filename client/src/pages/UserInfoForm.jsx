@@ -9,12 +9,12 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { useLocation } from "react-router-dom"; 
 import Select from "react-select";
+import { skillsList } from "../assets/mock";
 
 const UserInfoForm = () => {
   const { user } = useSelector((state) => state.user);
   const location = useLocation();
-  const defaultValues = location.state?.formData.data || {};
-  console.log(defaultValues); 
+  const defaultValues = location.state?.formData?.data || {};
   const [loading, setLoading] = useState(false);
   const [uploadingResume, setUploadingResume] = useState(false);
   const [value, setValue] = useState(defaultValues.contactnumber || "");
@@ -28,6 +28,9 @@ const UserInfoForm = () => {
   const [inputValue, setInputValue] = useState("");
   const [isOtherSelected, setIsOtherSelected] = useState(false);
   const [customCity, setCustomCity] = useState("");
+  const [filters, setFilters] = useState({
+    skills: location.state?.skills || []
+  });
   const [formData, setFormData] = useState({
     job: "",
     company: "",
@@ -43,6 +46,7 @@ const UserInfoForm = () => {
     joinConsulting: defaultValues.joinConsulting || "",
     dateOfBirth: defaultValues.dateOfBirth || "",
     profilePic: null,
+    skills: filters.skills,
   });
 
   // Fetch cities from CSV (or any other source)
@@ -77,6 +81,23 @@ const UserInfoForm = () => {
       // Set the jobLocation when a city is selected
       setFormData(prev => ({...prev, location: selectedOption?.value || ""}));
     }
+  };
+
+  const handleSkillsChange = (selectedOptions) => {
+    // Extract the values from the selected options
+    const selectedSkills = selectedOptions.map(option => option.value);
+    
+    // Update the filters state
+    setFilters(prevFilters => ({
+      ...prevFilters,
+      skills: selectedSkills,
+    }));
+  
+    // Update the formData state if needed
+    setFormData(prevState => ({
+      ...prevState,
+      skills: selectedSkills,
+    }));
   };
   
   const handleCustomCityChange = (e) => {
@@ -140,7 +161,8 @@ const UserInfoForm = () => {
       ...formData,
       experience: Number(formData.experience),
       contactNumber: value,
-      profilePic: profilePic
+      profilePic: profilePic,
+      skills: filters.skills,
     };
 
     setLoading(true);
@@ -446,6 +468,17 @@ const UserInfoForm = () => {
                 className="w-full px-4 py-3 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 h-28"
                 required
               ></textarea>
+            </div>
+            <div className="mb-6">
+            <label className="block text-gray-700 text-sm font-semibold mb-2">Skills</label>
+            <Select
+              isMulti
+              options={skillsList.map(skill => ({ value: skill, label: skill }))}
+              value={filters.skills.map(skill => ({ value: skill, label: skill }))}
+              onChange={handleSkillsChange}
+              styles={customStyles}
+              placeholder="Select or type skills..."
+            />
             </div>
 
             <div className="mb-6">

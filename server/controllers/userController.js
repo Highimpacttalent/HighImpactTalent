@@ -33,8 +33,9 @@ export const uploadResume = async (req, res) => {
 };
 // update user details
 export const updateUser = async (req, res, next) => {
-  console.log("updateUser function called"); // Log statement to verify function call
+  console.log("updateUser function called");
   console.log("Request body:", req.body);
+
   const {
     job,
     company,
@@ -51,12 +52,10 @@ export const updateUser = async (req, res, next) => {
     relocate,
     joinConsulting,
     dateOfBirth,
+    skills, // ✅ Accept skills from frontend
   } = req.body;
 
   try {
-    // if (!about || !experience) {
-    //   next("Please provide all required fields");
-    // }
     const id = req.body.user.userId;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -79,23 +78,28 @@ export const updateUser = async (req, res, next) => {
       dateOfBirth,
       about,
       experience,
+      skills: Array.isArray(skills) ? skills : [], // ✅ Ensure skills is an array
     };
 
     const user = await Users.findByIdAndUpdate(id, updateUser, { new: true });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
 
     const token = user.createJWT();
 
     user.password = undefined;
 
     res.status(200).json({
-      sucess: true,
+      success: true,
       message: "User updated successfully",
       user,
       token,
     });
   } catch (error) {
-    console.log(error);
-    res.status(404).json({ message: error.message });
+    console.log("Update error:", error);
+    res.status(500).json({ message: "Internal Server Error" });
   }
 };
 
