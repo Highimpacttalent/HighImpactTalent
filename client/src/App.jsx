@@ -12,6 +12,7 @@ import ApplicationStatus from "./pages/ApplicationStatus";
 import UploadResume from "./pages/UploadResume";
 import PasswordChange from "./pages/Password";
 import Landing from "./pages/Landing";
+import FloatingChatAssistant from "./components/Chat/FloatingChat";
 import ScreeningQuestions from "./pages/ScreeningQuestions";
 import UserInfoForm from "./pages/UserInfoForm";
 import JobUploadPage from "./pages/JobUploadPage";
@@ -96,6 +97,7 @@ function App() {
 
 
       </Routes>
+      {user && <FloatingChatAssistant />} 
       {user && <Footer />}
     </main>
   );
