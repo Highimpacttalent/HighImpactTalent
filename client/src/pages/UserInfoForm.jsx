@@ -451,14 +451,7 @@ const UserInfoForm = () => {
         </div>
       )}
     </div>
-
-
-          </div>
-
-          {/* Right Column */}
-          <div>
-
-          <div className="mb-6">
+    <div className="mb-6">
               <label className="block text-gray-700 text-sm font-semibold mb-2">About/Summary</label>
               <textarea
                 name="about"
@@ -468,7 +461,11 @@ const UserInfoForm = () => {
                 className="w-full px-4 py-3 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 h-28"
                 required
               ></textarea>
-            </div>
+      </div>
+          </div>
+
+          {/* Right Column */}
+          <div>
             <div className="mb-6">
             <label className="block text-gray-700 text-sm font-semibold mb-2">Skills</label>
             <Select
