@@ -86,10 +86,10 @@ const ResumeSearch = () => {
           <FormControl fullWidth>
             <InputLabel>Experience</InputLabel>
             <Select name="exp" value={filters.exp} onChange={handleFilterChange}>
-              <MenuItem value="1">1+</MenuItem>
-              <MenuItem value="3">3+</MenuItem>
-              <MenuItem value="5">5+</MenuItem>
-              <MenuItem value="10">10+</MenuItem>
+              <MenuItem value="1">1-2</MenuItem>
+              <MenuItem value="3">3-5</MenuItem>
+              <MenuItem value="5">6-10</MenuItem>
+              <MenuItem value="10">10 and above</MenuItem>
             </Select>
           </FormControl>
         </Grid>
