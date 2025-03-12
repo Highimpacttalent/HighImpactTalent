@@ -52,7 +52,7 @@ export const updateUser = async (req, res, next) => {
     relocate,
     joinConsulting,
     dateOfBirth,
-    skills, // ✅ Accept skills from frontend
+    skills,
   } = req.body;
 
   try {
@@ -78,7 +78,7 @@ export const updateUser = async (req, res, next) => {
       dateOfBirth,
       about,
       experience,
-      skills: Array.isArray(skills) ? skills : [], // ✅ Ensure skills is an array
+      skills: Array.isArray(skills) ? skills : [],
     };
 
     const user = await Users.findByIdAndUpdate(id, updateUser, { new: true });

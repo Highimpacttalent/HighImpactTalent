@@ -3,6 +3,7 @@ import { apiRequest } from "../utils";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import Select from "react-select";
+import { skillsList } from "../assets/mock";
 
 const JobUploadPage = () => {
   const { user } = useSelector((state) => state.user);
@@ -13,6 +14,9 @@ const JobUploadPage = () => {
   const [inputValue, setInputValue] = useState("");
   const [isOtherSelected, setIsOtherSelected] = useState(false);
   const [customCity, setCustomCity] = useState("");
+  const [filters, setFilters] = useState({
+      skills: []
+    });
   const [formData, setFormData] = useState({
     jobTitle: "",
     experience: "",
@@ -26,6 +30,7 @@ const JobUploadPage = () => {
     qualifications: [""],
     screeningQuestions: [{ question: "", mandatory: false }],
     workType: "",
+    skills: filters.skills,
   });
 
   useEffect(() => {
@@ -45,6 +50,23 @@ const JobUploadPage = () => {
 
     fetchCities();
   }, []);
+
+  const handleSkillsChange = (selectedOptions) => {
+    // Extract the values from the selected options
+    const selectedSkills = selectedOptions.map(option => option.value);
+    
+    // Update the filters state
+    setFilters(prevFilters => ({
+      ...prevFilters,
+      skills: selectedSkills,
+    }));
+  
+    // Update the formData state if needed
+    setFormData(prevState => ({
+      ...prevState,
+      skills: selectedSkills,
+    }));
+  };
 
   // Handle city selection
   const handleCityChange = (selectedOption) => {
@@ -179,6 +201,7 @@ const JobUploadPage = () => {
       ...formData,
       experience: Number(formData.experience),
       salary: Number(formData.salary),
+      skills: filters.skills,
     };
     
     console.log(submissionData);
@@ -335,6 +358,18 @@ const JobUploadPage = () => {
           </div>
         )}
       </div>
+
+      <div className="mb-4">
+      <label className="block text-gray-700 text-sm mb-2">Skills</label>
+            <Select
+              isMulti
+              options={skillsList.map(skill => ({ value: skill, label: skill }))}
+              value={filters.skills.map(skill => ({ value: skill, label: skill }))}
+              onChange={handleSkillsChange}
+              styles={customStyles}
+              placeholder="Select or type skills..."
+            />
+            </div>
 
       <div className="mb-4">
         <label className="block text-gray-700 text-sm mb-2">
