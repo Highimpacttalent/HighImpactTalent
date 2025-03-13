@@ -94,7 +94,7 @@ export const sendRecruiterQueryEmail = async (req, res, next) => {
 };
 
 export const sendContactQuery = async (req, res, next) => {
-  const { name, email, message } = req.body;
+  const { name, email, message, subject } = req.body;
 
   if (!name || !email || !message) {
     return next("Name, Email, and Message are required");
@@ -112,7 +112,7 @@ export const sendContactQuery = async (req, res, next) => {
     const mailOptions = {
       from: "developerhighimpact@gmail.com",
       to: "recruitersupport@highimpacttalent.com",
-      subject: "Contact Us Query Raised",
+      subject: subject || "Contact Us Query Raised",
       text: ` 
         A new contact query has been submitted.
 
