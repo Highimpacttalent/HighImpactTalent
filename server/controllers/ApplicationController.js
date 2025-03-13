@@ -149,3 +149,35 @@ export const  getallApplicationOfApplicant = async(req,res)=>{
     })
   }
 }
+
+export const getApplicationsWithJobs = async (req, res) => {
+  try {
+    const { applicationIds } = req.body;
+
+    if (!applicationIds || !Array.isArray(applicationIds) || applicationIds.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide a valid array of application IDs.",
+      });
+    }
+
+    const applications = await Application.find({ _id: { $in: applicationIds } })
+      .populate("job")  // Populating job details
+      .populate("company");
+
+    if (!applications || applications.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "No applications found for the provided IDs.",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      applications,
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+

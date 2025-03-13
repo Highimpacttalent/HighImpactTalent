@@ -281,6 +281,46 @@ export const getJobById = async (req, res, next) => {
   }
 };
 
+//Show liked Jobs 
+export const getJobsByIds = async (req, res) => {
+  try {
+    const { jobIds } = req.body; 
+
+    if (!jobIds || !Array.isArray(jobIds) || jobIds.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "You have not saved any Job",
+      });
+    }
+
+    // Find jobs where _id is in the provided jobIds array
+    const jobs = await Jobs.find({ _id: { $in: jobIds } }).populate({
+      path: "company",
+      select: "-password",
+    });
+
+    if (jobs.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "You have not saved any Job",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: jobs,
+    });
+  } catch (error) {
+    console.error("Error fetching jobs by IDs:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+      error: error.message,
+    });
+  }
+};
+
+
 //delete a job
 export const deleteJobPost = async (req, res, next) => {
   try {

@@ -4,6 +4,7 @@ import {
   createJob,
   deleteJobPost,
   getJobById,
+  getJobsByIds,
   getJobPosts,
   updateJob,
 } from "../controllers/jobController.js";
@@ -21,6 +22,9 @@ router.get("/find-jobs", getJobPosts);
 
 // GET JOB DETAIL BY ID
 router.get("/get-job-detail/:id", getJobById);
+
+//Get Multiple Jobs
+router.post("/get-jobs",getJobsByIds)
 
 // DELETE JOB POST
 router.delete("/delete-job/:id", userAuth, deleteJobPost);

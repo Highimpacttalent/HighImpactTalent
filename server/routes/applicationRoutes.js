@@ -1,5 +1,5 @@
 import express from "express";
-import {createApplication, getApplication,updateApplicationStatus,getApplicationsOfAjob,getallApplicationOfApplicant} from "../controllers/ApplicationController.js";
+import {createApplication, getApplication,updateApplicationStatus,getApplicationsOfAjob,getallApplicationOfApplicant, getApplicationsWithJobs} from "../controllers/ApplicationController.js";
 import userAuth from "../middlewares/authMiddleware.js";
 
 const router = express.Router();
@@ -13,5 +13,7 @@ router.get("/get-allapplication/:applicantid",getallApplicationOfApplicant)
 router.get("/get-applications/:jobid",getApplicationsOfAjob)
 
 router.put("/status/:id",userAuth,updateApplicationStatus)
+
+router.post("/get-jobs",getApplicationsWithJobs)
 
 export default router;
