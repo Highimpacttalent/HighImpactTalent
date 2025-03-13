@@ -340,9 +340,9 @@ const JobUploadPage = () => {
           required
         >
           <option value="">Select Work Mode</option>
-          <option value="Full-Time">Work From Office</option>
-          <option value="Part-Time">Remote</option>
-          <option value="Contract">Hybrid</option>
+          <option value="Work From Office">Work From Office</option>
+          <option value="Remote">Remote</option>
+          <option value="Hybrid">Hybrid</option>
         </select>
       </div>
 
