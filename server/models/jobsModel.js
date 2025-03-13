@@ -19,6 +19,11 @@ const jobSchema = new mongoose.Schema(
       enum: ["Full-Time", "Part-Time", "Contract", "Temporary"],
       required: [true, "Work Type is required"]
     },
+    workMode: {
+      type: String,
+      enum: ["Remote", "Hybrid", "Work From Office"],
+      required: [true, "Work Mode is required"]
+    },
     jobDescription: {
       type: String,
       required: true,
