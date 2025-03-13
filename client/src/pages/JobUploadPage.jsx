@@ -30,6 +30,7 @@ const JobUploadPage = () => {
     qualifications: [""],
     screeningQuestions: [{ question: "", mandatory: false }],
     workType: "",
+    workMode: "",
     skills: filters.skills,
   });
 
@@ -325,6 +326,23 @@ const JobUploadPage = () => {
           <option value="Part-Time">Part-Time</option>
           <option value="Contract">Contract</option>
           <option value="Temporary">Temporary</option>
+        </select>
+      </div>
+
+      {/* Work Mode Dropdown */}
+      <div className="mb-4">
+        <label className="block text-gray-700 text-sm mb-2">Work Mode</label>
+        <select
+          name="workMode"
+          value={formData.workMode}
+          onChange={handleChange}
+          className="border rounded text-xs w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+          required
+        >
+          <option value="">Select Work Mode</option>
+          <option value="Full-Time">Work From Office</option>
+          <option value="Part-Time">Remote</option>
+          <option value="Contract">Hybrid</option>
         </select>
       </div>
 
