@@ -60,6 +60,10 @@ const userSchema = new mongoose.Schema(
       default: "Post Graduation",
     },
     about: { type: String },
+    skills: {
+      type: [String],
+      default: [],
+    },
     experience: {
       type: Number,
       default: 1,

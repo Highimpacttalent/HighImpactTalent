@@ -20,6 +20,7 @@ export const createJob = async (req, res, next) => {
       qualifications,
       screeningQuestions,
       applicationLink,
+      skills,
     } = req.body;
     // Validate required fields
     if (!jobTitle || !jobLocation || !jobDescription || !workType) {
@@ -50,6 +51,7 @@ export const createJob = async (req, res, next) => {
       screeningQuestions,
       company: id,
       ...(applicationLink && { applicationLink }),
+      skills: Array.isArray(skills) ? skills : [],
     };
 
     // Create new job and save to database
