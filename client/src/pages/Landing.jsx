@@ -14,11 +14,13 @@ import personlized from "../assets/personlized.jpg";
 import { WorkOutline, GroupAdd } from "@mui/icons-material";
 import { motion } from "framer-motion";
 import landing from "../assets/landing.svg";
+import landing2 from "../assets/landing2.svg";
 
 const Landing = () => {
   const { user } = useSelector((state) => state.user);
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
 
   useEffect(() => {
     if (!user || Object.keys(user).length === 0) {
@@ -179,19 +181,26 @@ const Landing = () => {
             </Box>
           </Box>
           <Box
-            sx={{
-              flex: 1,
-              display: "flex",
-              justifyContent: "center",
-              mt: { xs: 4, md: 0 },
-            }}
-          >
-            <img
-              src={landing}
-              alt="Professional"
-              style={{ width: "100%", maxWidth: "400px", borderRadius: "8px" }}
-            />
-          </Box>
+      sx={{
+        flex: 1,
+        display: "flex",
+        justifyContent: "center",
+        mt: { xs: 4, md: 0 },
+      }}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      <img
+        src={isHovered ? landing2 : landing}
+        alt="Professional"
+        style={{
+          width: "100%",
+          maxWidth: "400px",
+          borderRadius: "8px",
+          transition: "opacity 0.3s ease-in-out",
+        }}
+      />
+    </Box>
         </Box>
       </Box>
     </div>
