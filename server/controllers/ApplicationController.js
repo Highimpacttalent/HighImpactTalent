@@ -7,7 +7,14 @@ import Users from "../models/userModel.js";
 export const createApplication = async (req, res) => {
   try {
     const { job, company, applicant, status } = req.body;
-    console.log(job, company, applicant, status)
+    const jobex = await Jobs.findById(job);
+    const userex = await Users.findById(applicant);
+    if (Number(jobex.experience) > Number(userex.experience)) {
+      return res.status(400).json({
+        success: false,
+        message: 'You are not eligible for this job.',
+      });
+    }
     const isAlreadyApplied = await Application.findOne({applicant,job})
     if(isAlreadyApplied){
       return res.status(400).json({
