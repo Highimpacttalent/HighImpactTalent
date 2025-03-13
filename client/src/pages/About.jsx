@@ -3,6 +3,7 @@ import { Container, Typography, Paper, Box, IconButton ,Stack} from '@mui/materi
 import { FaMapMarkerAlt, FaEnvelope, FaUsers, FaRegLightbulb } from 'react-icons/fa';
 import about1 from "../assets/about1.svg"
 import about2 from "../assets/about2.svg"
+import Profile from "../assets/ProfileImg.jpg"
 
 const About = () => {
   return (
@@ -70,7 +71,7 @@ const About = () => {
    <Box sx={{width:"50%",p:2}}>
     <Stack  sx={{justifyContent:"center",alignItems:"center"}} gap={0.5}>
     <Box sx={{width:"40%",alignItems:"center",display:"flex",justifyContent:"center"}}>
-    <img src="https://media.licdn.com/dms/image/v2/D4D35AQFq-Z64-z7Tzg/profile-framedphoto-shrink_800_800/B4DZUdWmdbHkAg-/0/1739954219107?e=1742371200&v=beta&t=EWO1SBWdSLBuThfWVf2MyTpbyvrJBs3m30qSweDr2M8" alt="img here" style={{borderRadius:14}}/>
+    <img src={Profile} alt="img here" style={{borderRadius:14}}/>
    </Box>
     <Typography sx={{color:"#404258",fontSize:16,fontWeight:"600",fontFamily:"Poppins"}}>Koustubh Haridas</Typography>
     <Typography sx={{color:"#474E68",fontSize:12,fontWeight:"600",fontFamily:"Poppins"}}>Co-Founder & CEO</Typography>
