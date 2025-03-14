@@ -8,6 +8,8 @@ import Dashboard from "./pages/DashBoard";
 import Contact from "./pages/Contact";
 import ApplicationTracking from "./pages/ApplicationTracking";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
+import TermsAndConditions from "./components/terms";
+import RefundPolicy from "./components/Refund";
 import ApplicationStatus from "./pages/ApplicationStatus";
 import UploadResume from "./pages/UploadResume";
 import PasswordChange from "./pages/Password";
@@ -90,6 +92,8 @@ function App() {
         <Route path='/contact-us' element={<Contact/>} />
         <Route path="/admin-dashboard" element={<Dashboard />} />
         <Route path="/upload-resume" element={<UploadResume />} />
+        <Route path="/t&c" element={<TermsAndConditions />} />
+        <Route path="/refund" element={<RefundPolicy />} />
         <Route path="/blog" element={<BlogPage/>}></Route>
         <Route path="/blog/:blogId" element={<SingleBlog/>}></Route>
         <Route path="/application-tracking" element={<ApplicationTracking />} />

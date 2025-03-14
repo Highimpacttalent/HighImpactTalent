@@ -74,14 +74,21 @@ const Footer = () => {
             Legal
           </Typography>
           <Typography variant="body2" sx={{ mb: 0.5 }}>
-            <Link to="/" style={{ textDecoration: "none", color: "#404258", transition: "0.3s" }}
+            <Link to="/t&c" style={{ textDecoration: "none", color: "#404258", transition: "0.3s" }}
               onMouseOver={(e) => (e.currentTarget.style.color = "#1176DB")} 
               onMouseOut={(e) => (e.currentTarget.style.color = "#404258")}>
               Terms and Conditions
             </Link>
           </Typography>
           <Typography variant="body2" sx={{ mb: 0.5 }}>
-            <Link to="/" style={{ textDecoration: "none", color: "#404258", transition: "0.3s" }}
+            <Link to="/refund" style={{ textDecoration: "none", color: "#404258", transition: "0.3s" }}
+              onMouseOver={(e) => (e.currentTarget.style.color = "#1176DB")} 
+              onMouseOut={(e) => (e.currentTarget.style.color = "#404258")}>
+              Refund Policy
+            </Link>
+          </Typography>
+          <Typography variant="body2" sx={{ mb: 0.5 }}>
+            <Link to="/privacy-policy" style={{ textDecoration: "none", color: "#404258", transition: "0.3s" }}
               onMouseOver={(e) => (e.currentTarget.style.color = "#1176DB")} 
               onMouseOut={(e) => (e.currentTarget.style.color = "#404258")}>
               Privacy Policy
