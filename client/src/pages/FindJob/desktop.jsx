@@ -272,7 +272,7 @@ const DesktopView = () => {
               sx={{ mb: 2,boxShadow:"none" }}
             >
               <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                <Typography variant="h6" color="#404258" fontFamily="Urbanist">Experience</Typography>
+                <Typography variant="h6" color="#404258" fontFamily="Satoshi, sans-serif">Experience</Typography>
               </AccordionSummary>
               <AccordionDetails>
                 <FormControl fullWidth size="small">
@@ -301,7 +301,7 @@ const DesktopView = () => {
               sx={{ mb: 2,boxShadow:"none" }}
             >
               <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                <Typography variant="h6" color="#404258" fontFamily="Urbanist">Work Mode</Typography>
+                <Typography variant="h6" color="#404258" fontFamily="Satoshi, sans-serif">Work Mode</Typography>
               </AccordionSummary>
               <AccordionDetails>
                 {workModeOptions.map((mode) => (
@@ -332,7 +332,7 @@ const DesktopView = () => {
               sx={{ mb: 2,boxShadow:"none" }}
             >
               <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                <Typography variant="h6" color="#404258" fontFamily="Urbanist">Work Type</Typography>
+                <Typography variant="h6" color="#404258" fontFamily="Satoshi, sans-serif">Work Type</Typography>
               </AccordionSummary>
               <AccordionDetails>
                 {workTypeOptions.map((type) => (
@@ -363,7 +363,7 @@ const DesktopView = () => {
               sx={{ mb: 2 ,boxShadow:"none"}}
             >
               <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                <Typography variant="h6" color="#404258" fontFamily="Urbanist">Location</Typography>
+                <Typography variant="h6" color="#404258" fontFamily="Satoshi, sans-serif">Location</Typography>
               </AccordionSummary>
               <AccordionDetails>
                 <FormControl fullWidth size="small">
@@ -392,7 +392,7 @@ const DesktopView = () => {
               sx={{ mb: 2 ,boxShadow:"none"}}
             >
               <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                <Typography variant="h6" color="#404258" fontFamily="Urbanist">Salary Range</Typography>
+                <Typography variant="h6" color="#404258" fontFamily="Satoshi, sans-serif">Salary Range</Typography>
               </AccordionSummary>
               <AccordionDetails>
                 {salaryRangeOptions.map((range) => (
@@ -422,7 +422,7 @@ const DesktopView = () => {
               sx={{ mb: 2,boxShadow:"none" }}
             >
               <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                <Typography variant="h6" color="#404258" fontFamily="Urbanist">Date Posted</Typography>
+                <Typography variant="h6" color="#404258" fontFamily="Satoshi, sans-serif">Date Posted</Typography>
               </AccordionSummary>
               <AccordionDetails>
                 <FormControl fullWidth size="small">
