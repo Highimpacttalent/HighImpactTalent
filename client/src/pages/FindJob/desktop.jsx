@@ -71,7 +71,7 @@ const DesktopView = () => {
 
   const workModeOptions = ["Remote", "Hybrid", "Work From Office"];
   const workTypeOptions = ["Full-Time", "Part-Time", "Contract", "Temporary"];
-  const salaryRangeOptions = ["0-50000", "50000-100000", "100000-150000", "150000-200000"];
+  const salaryRangeOptions = ["0-10", "11-20", "21-30", "31-40"];
   const datePostedOptions = ["Last 24 hours", "Last one week", "Last one month"];
 
   const location = useLocation();
@@ -402,7 +402,7 @@ const DesktopView = () => {
                         onChange={() => setSalaryRange(salaryRange === range ? "" : range)}
                       />
                     }
-                    label={`$${range.split('-')[0]} - $${range.split('-')[1]}`}
+                    label={`${range.split('-')[0]} - ${range.split('-')[1]} lakhs`}
                   />
                 ))}
               </AccordionDetails>
