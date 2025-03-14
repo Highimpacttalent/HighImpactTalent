@@ -177,17 +177,6 @@ const DesktopView = () => {
     setExperienceFilter(event.target.value);
   };
 
-  // Filter liked jobs
-  const filterLikedJobs = () => {
-    if (showLikedJobs) {
-      setFilteredJobs(data);
-    } else {
-      const likedJobIds = new Set(user.likedJobs);
-      const likedJobsData = data.filter((job) => likedJobIds.has(job._id));
-      setFilteredJobs(likedJobsData);
-    }
-  };
-
   // Fetch jobs when filters change
   useEffect(() => {
     fetchJobs();
@@ -199,10 +188,9 @@ const DesktopView = () => {
   };
 
   return (
-    <Box sx={{ bgcolor: "grey.50", minHeight: "100vh", p: 5 }}>
-      <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-        {/* Search Bar */}
-        <Box sx={{ mx: "auto", mt: 3, px: 2 }}>
+    <Box sx={{ bgcolor: "white", minHeight: "100vh", p: 5 }}>
+      {/* Search Bar */}
+      <Box sx={{ mx: "auto", mt: 3, px: 2 }}>
           <Paper
             sx={{
               display: "flex",
@@ -260,10 +248,10 @@ const DesktopView = () => {
           <Box sx={{ width: "25%", p: 2 }}>
             {/* Sorting Dropdown */}
             <Box sx={{ mb: 3 }}>
-              <Typography variant="h6" color="textSecondary" gutterBottom>
-                Sort By
+              <Typography variant="h6" color="#404258" gutterBottom sx={{fontFamily:"Poppins",fontWeight:"600"}}>
+                All Filters
               </Typography>
-              <FormControl fullWidth variant="outlined" size="small">
+              {/* <FormControl fullWidth variant="outlined" size="small">
                 <Select
                   value={sort}
                   onChange={(e) => setSort(e.target.value)}
@@ -274,17 +262,17 @@ const DesktopView = () => {
                   <MenuItem value="A-Z">A-Z</MenuItem>
                   <MenuItem value="Z-A">Z-A</MenuItem>
                 </Select>
-              </FormControl>
+              </FormControl> */}
             </Box>
 
             {/* Experience Filter */}
             <Accordion 
               expanded={expandedAccordions.experience} 
               onChange={handleAccordionChange('experience')}
-              sx={{ mb: 2 }}
+              sx={{ mb: 2,boxShadow:"none" }}
             >
               <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                <Typography variant="h6" color="textSecondary">Experience</Typography>
+                <Typography variant="h6" color="#404258" fontFamily="Urbanist">Experience</Typography>
               </AccordionSummary>
               <AccordionDetails>
                 <FormControl fullWidth size="small">
@@ -293,10 +281,11 @@ const DesktopView = () => {
                     onChange={handleExperienceChange}
                     displayEmpty
                     inputProps={{ 'aria-label': 'Experience filter' }}
+                    sx={{color:"#404258" ,fontFamily:"Poppins"}}
                   >
-                    <MenuItem value="">All Experience Levels</MenuItem>
+                    <MenuItem value="" sx={{color:"#404258" ,fontFamily:"Poppins"}}>All Experience Levels</MenuItem>
                     {experienceOptions.map((option) => (
-                      <MenuItem key={option.value} value={option.value}>
+                      <MenuItem key={option.value} value={option.value} sx={{color:"#404258" ,fontFamily:"Poppins"}}>
                         {option.label}
                       </MenuItem>
                     ))}
@@ -309,10 +298,10 @@ const DesktopView = () => {
             <Accordion 
               expanded={expandedAccordions.workMode} 
               onChange={handleAccordionChange('workMode')}
-              sx={{ mb: 2 }}
+              sx={{ mb: 2,boxShadow:"none" }}
             >
               <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                <Typography variant="h6" color="textSecondary">Work Mode</Typography>
+                <Typography variant="h6" color="#404258" fontFamily="Urbanist">Work Mode</Typography>
               </AccordionSummary>
               <AccordionDetails>
                 {workModeOptions.map((mode) => (
@@ -322,9 +311,15 @@ const DesktopView = () => {
                       <Checkbox
                         checked={workMode === mode}
                         onChange={() => setWorkMode(workMode === mode ? "" : mode)}
+                        color="#404258"
                       />
                     }
                     label={mode}
+                    componentsProps={{
+                      typography: {
+                        sx: { color: "#404258", fontFamily: "Poppins" },
+                      },
+                    }}
                   />
                 ))}
               </AccordionDetails>
@@ -334,10 +329,10 @@ const DesktopView = () => {
             <Accordion 
               expanded={expandedAccordions.workType} 
               onChange={handleAccordionChange('workType')}
-              sx={{ mb: 2 }}
+              sx={{ mb: 2,boxShadow:"none" }}
             >
               <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                <Typography variant="h6" color="textSecondary">Work Type</Typography>
+                <Typography variant="h6" color="#404258" fontFamily="Urbanist">Work Type</Typography>
               </AccordionSummary>
               <AccordionDetails>
                 {workTypeOptions.map((type) => (
@@ -347,9 +342,15 @@ const DesktopView = () => {
                       <Checkbox
                         checked={workType === type}
                         onChange={() => setWorkType(workType === type ? "" : type)}
+                        sx={{color:"#404258"}}
                       />
                     }
                     label={type}
+                    componentsProps={{
+                      typography: {
+                        sx: { color: "#404258", fontFamily: "Poppins" },
+                      },
+                    }}
                   />
                 ))}
               </AccordionDetails>
@@ -359,10 +360,10 @@ const DesktopView = () => {
             <Accordion 
               expanded={expandedAccordions.location} 
               onChange={handleAccordionChange('location')}
-              sx={{ mb: 2 }}
+              sx={{ mb: 2 ,boxShadow:"none"}}
             >
               <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                <Typography variant="h6" color="textSecondary">Location</Typography>
+                <Typography variant="h6" color="#404258" fontFamily="Urbanist">Location</Typography>
               </AccordionSummary>
               <AccordionDetails>
                 <FormControl fullWidth size="small">
@@ -371,10 +372,11 @@ const DesktopView = () => {
                     onChange={(e) => setJobLocation(e.target.value)}
                     displayEmpty
                     inputProps={{ 'aria-label': 'Location filter' }}
+                    sx={{color:"#404258" ,fontFamily:"Poppins"}}
                   >
-                    <MenuItem value="">All Locations</MenuItem>
+                    <MenuItem value="" sx={{color:"#404258" ,fontFamily:"Poppins"}}>All Locations</MenuItem>
                     {topCities.map((city) => (
-                      <MenuItem key={city} value={city}>
+                      <MenuItem key={city} value={city} sx={{color:"#404258" ,fontFamily:"Poppins"}}>
                         {city}
                       </MenuItem>
                     ))}
@@ -387,10 +389,10 @@ const DesktopView = () => {
             <Accordion 
               expanded={expandedAccordions.salary} 
               onChange={handleAccordionChange('salary')}
-              sx={{ mb: 2 }}
+              sx={{ mb: 2 ,boxShadow:"none"}}
             >
               <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                <Typography variant="h6" color="textSecondary">Salary Range</Typography>
+                <Typography variant="h6" color="#404258" fontFamily="Urbanist">Salary Range</Typography>
               </AccordionSummary>
               <AccordionDetails>
                 {salaryRangeOptions.map((range) => (
@@ -403,6 +405,11 @@ const DesktopView = () => {
                       />
                     }
                     label={`${range.split('-')[0]} - ${range.split('-')[1]} lakhs`}
+                    componentsProps={{
+                      typography: {
+                        sx: { color: "#404258", fontFamily: "Poppins" },
+                      },
+                    }}
                   />
                 ))}
               </AccordionDetails>
@@ -412,10 +419,10 @@ const DesktopView = () => {
             <Accordion 
               expanded={expandedAccordions.datePosted} 
               onChange={handleAccordionChange('datePosted')}
-              sx={{ mb: 2 }}
+              sx={{ mb: 2,boxShadow:"none" }}
             >
               <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                <Typography variant="h6" color="textSecondary">Date Posted</Typography>
+                <Typography variant="h6" color="#404258" fontFamily="Urbanist">Date Posted</Typography>
               </AccordionSummary>
               <AccordionDetails>
                 <FormControl fullWidth size="small">
@@ -423,7 +430,7 @@ const DesktopView = () => {
                     value={datePosted}
                     onChange={(e) => setDatePosted(e.target.value)}
                     displayEmpty
-                    inputProps={{ 'aria-label': 'Date posted filter' }}
+                    sx={{color: "#404258", fontFamily: "Poppins" }}
                   >
                     <MenuItem value="">Any Time</MenuItem>
                     {datePostedOptions.map((option) => (
@@ -435,20 +442,6 @@ const DesktopView = () => {
                 </FormControl>
               </AccordionDetails>
             </Accordion>
-
-            {/* Liked Jobs Toggle */}
-            <Button
-              variant={showLikedJobs ? "contained" : "outlined"}
-              color="primary"
-              fullWidth
-              sx={{ mt: 2 }}
-              onClick={() => {
-                setShowLikedJobs((prevState) => !prevState);
-                filterLikedJobs();
-              }}
-            >
-              {showLikedJobs ? "All Jobs" : "Saved Jobs"}
-            </Button>
           </Box>
 
           {/* Right Section - Job Cards */}
@@ -479,7 +472,6 @@ const DesktopView = () => {
             )}
           </Box>
         </Box>
-      </Box>
     </Box>
   );
 };
