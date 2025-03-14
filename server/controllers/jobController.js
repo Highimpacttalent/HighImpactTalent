@@ -195,7 +195,7 @@ export const getJobPosts = async (req, res, next) => {
       };
     }
 
-    if (datePosted) {
+    if (datePosted && datePosted !== "Any Time") {
       const date = new Date();
       if (datePosted === "Last 24 hours") {
         date.setDate(date.getDate() - 1);
@@ -205,7 +205,7 @@ export const getJobPosts = async (req, res, next) => {
         date.setMonth(date.getMonth() - 1);
       }
       queryObject.poastingDate = { $gte: date };
-    }
+    }    
 
     if (search) {
       const searchQuery = {
