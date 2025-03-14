@@ -163,17 +163,21 @@ export const updateJob = async (req, res, next) => {
 //get all jobs or use query parameter to filter job
 export const getJobPosts = async (req, res, next) => {
   try {
-    const { search, sort, location, exp, workType } = req.query;
+    const { search, sort, location, exp, workType, workMode, salary, datePosted } = req.query;
     const experience = exp?.split("-"); //2-6
 
     let queryObject = {};
 
     if (location) {
-      queryObject.location = { $regex: location, $options: "i" };
+      queryObject.jobLocation = { $regex: location, $options: "i" };
     }
     
     if (workType) {
       queryObject.workType = workType;
+    }
+
+    if (workMode) {
+      queryObject.workMode = workMode;
     }
 
     if (exp) {
@@ -183,11 +187,31 @@ export const getJobPosts = async (req, res, next) => {
       };
     }
 
+    if (salary) {
+      const salaryRange = salary.split("-");
+      queryObject.salary = {
+        $gte: Number(salaryRange[0]),
+        $lte: Number(salaryRange[1]),
+      };
+    }
+
+    if (datePosted) {
+      const date = new Date();
+      if (datePosted === "Last 24 hours") {
+        date.setDate(date.getDate() - 1);
+      } else if (datePosted === "Last one week") {
+        date.setDate(date.getDate() - 7);
+      } else if (datePosted === "Last one month") {
+        date.setMonth(date.getMonth() - 1);
+      }
+      queryObject.poastingDate = { $gte: date };
+    }
+
     if (search) {
       const searchQuery = {
         $or: [
           { jobTitle: { $regex: search, $options: "i" } },
-          { jobType: { $regex: search, $options: "i" } },
+          { workMode: { $regex: search, $options: "i" } },
           { workType: { $regex: search, $options: "i" } },
         ],
       };
@@ -238,6 +262,7 @@ export const getJobPosts = async (req, res, next) => {
     res.status(404).json({ message: error.message });
   }
 };
+
 
 // get a job by id with  similar jobs
 export const getJobById = async (req, res, next) => {
