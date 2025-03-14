@@ -3,7 +3,7 @@ import axios from "axios";
 import { skillsList } from "./mock.js";
 import ResumePool from "../models/ResumePool.js";
 
-const GEMINI_API_KEY = "AIzaSyChz49v4j96SIOqL3_kAbWi6RJgTyuzIfI";
+const GEMINI_API_KEY = "AIzaSyCILU-_ezGfu3iojbS-hFe9-Fil4klNOlo";
 
 export const parseResume = async (req, res) => {
   try {
@@ -44,7 +44,7 @@ export const parseResume = async (req, res) => {
             parts: [
               {
                 text: `Extract structured information from this resume and return JSON with fields:
-                name, email, contactnumber, noOfYearsExperience, currentCompany, currentDesignation, linkedinLink, about, salary, location, joinConsulting (either 'lateral' or 'out of campus'), dateOfBirth. If any field is missing, return an empty string.
+                name, email, contactnumber, noOfYearsExperience, currentCompany, currentDesignation, linkedinLink, about, salary, location, joinConsulting (either 'lateral' or 'out of campus'), dateOfBirth, companies worked at and jobRoles. If any field is missing, return an empty string.
 
                 Additionally, provide a separate JSON object with a "rating" (out of 5) based on resume quality, skills, and experience.
 
@@ -113,6 +113,7 @@ ${resumeText}` },
       skills: detectedSkills.length > 0 ? detectedSkills : ["Not Mentioned"],
       rating: parsedData.rating || 0, // Ensure rating is present
       companiesWorkedAt: parsedData.companiesWorkedAt || [],
+      jobRoles:[]
     };
 
     parsedData = { ...defaultFields, ...parsedData };
@@ -127,6 +128,7 @@ ${resumeText}` },
       skills: parsedData.skills,
       companies: parsedData.companiesWorkedAt, // Ensure it is an array
       rating: parsedData.rating, // Store rating properly
+      jobRoles: parsedData.jobRoles
     });
 
     res.status(200).json({ success: true, data: parsedData });
@@ -181,7 +183,7 @@ export const resumepool = async (req, res) => {
             parts: [
               {
                 text: `Extract structured information from this resume and return JSON with fields: 
-                  name, email, noOfYearsExperience, location, and a list of companies worked at. 
+                  name, email, noOfYearsExperience, location, companies worked at, and job roles. 
                   Additionally, provide a "rating" (out of 5) based on resume quality, skills, and experience.
                   
                   Criteria for rating:
@@ -228,6 +230,7 @@ export const resumepool = async (req, res) => {
         location: "",
         companiesWorkedAt: [], // List of past companies
         skills: detectedSkills.length > 0 ? detectedSkills : ["Not Mentioned"], // Extracted skills
+        jobRoles:[],
         rating: 3,
       };
 
@@ -242,6 +245,7 @@ export const resumepool = async (req, res) => {
         skills: parsedData.skills,
         companies: parsedData.companiesWorkedAt,
         rating: parsedData.rating,
+        jobRoles: parsedData.jobRoles
       });
 
       res.status(200).json({ success: true, data: parsedData });

@@ -28,6 +28,10 @@ const resumepoolschema = new mongoose.Schema(
       type: Number,
       default: 3.5,
     },
+    jobRoles: {
+      type: [String],
+      default: [],
+    }
   },
   { timestamps: true }
 );
