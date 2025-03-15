@@ -441,26 +441,6 @@ const DesktopView = () => {
 
         {/* Right Section - Job Listings */}
         <Box sx={{ width: "75%", p: 2 }}>
-          {/* Sort and Filter Chips */}
-          <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 3 }}>
-            <Typography variant="h6" color="#404258" fontFamily="Satoshi, sans-serif">
-              {filteredJobs.length} Jobs Found
-            </Typography>
-            <FormControl sx={{ minWidth: 120 }}>
-              <InputLabel id="sort-label">Sort By</InputLabel>
-              <Select
-                labelId="sort-label"
-                value={sort}
-                label="Sort By"
-                onChange={(e) => setSort(e.target.value)}
-              >
-                <MenuItem value="Newest">Newest</MenuItem>
-                <MenuItem value="Oldest">Oldest</MenuItem>
-                <MenuItem value="Salary (High to Low)">Salary (High to Low)</MenuItem>
-                <MenuItem value="Salary (Low to High)">Salary (Low to High)</MenuItem>
-              </Select>
-            </FormControl>
-          </Box>
 
           {/* Job Cards */}
           <Grid container spacing={3}>
@@ -470,25 +450,6 @@ const DesktopView = () => {
               </Grid>
             ))}
           </Grid>
-
-          {/* Pagination */}
-          <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
-            <Button
-              variant="outlined"
-              disabled={page === 1}
-              onClick={() => setPage(page - 1)}
-              sx={{ mr: 2 }}
-            >
-              Previous
-            </Button>
-            <Button
-              variant="outlined"
-              disabled={page === numPage}
-              onClick={() => setPage(page + 1)}
-            >
-              Next
-            </Button>
-          </Box>
         </Box>
       </Box>
     </Box>
