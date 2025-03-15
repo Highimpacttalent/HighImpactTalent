@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { AiOutlineSearch, AiOutlineCloseCircle } from "react-icons/ai";
 import { CustomButton, JobCard, ListBox } from "../../components";
+import FilterListIcon from '@mui/icons-material/FilterList'
 import { Grid, } from "@mui/material";
 
 import {
@@ -16,11 +17,16 @@ import {
   AccordionSummary,
   AccordionDetails,
   FormControlLabel,
+  FormControl,
+  Select,
+  MenuItem,
   Checkbox,
+  Drawer,
   Button,
   Modal
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import SwapVertIcon from '@mui/icons-material/SwapVert';
 import InfoIcon from "@mui/icons-material/Info";
 import { apiRequest } from "../../utils";
 import { useSelector } from "react-redux";
@@ -37,39 +43,129 @@ const mobileView = () => {
   const [jobLocation, setJobLocation] = useState("");
   const [filterJobTypes, setFilterJobTypes] = useState([]);
   const [filterExp, setFilterExp] = useState("");
-  const [expVal, setExpVal] = useState([]);
   const [isFetching, setIsFetching] = useState(false);
   const [selectedCheckbox, setSelectedCheckbox] = useState(0);
   const explist = ["0-100", "1-2", "2-6", "6-100"];
   const location = useLocation();
   const navigate = useNavigate();
-  const [showLikedJobs, setShowLikedJobs] = useState(false);
-  const [likedJobs, setLikedJobs] = useState([]);
+  const [experienceFilter, setExperienceFilter] = useState("");
+  const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
+  const [sortDrawerOpen, setSortDrawerOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+  const [workMode, setWorkMode] = useState("");
+    const [workType, setWorkType] = useState("");
+    const [salaryRange, setSalaryRange] = useState("");
+    const [datePosted, setDatePosted] = useState("");
+    const [locations, setLocations] = useState([]);
+    const [expandedAccordions, setExpandedAccordions] = useState({
+      experience: true,
+      workMode: true,
+      workType: true,
+      location: true,
+      salary: true,
+      datePosted: true
+    });
+
+  const toggleFilterDrawer = (open) => setFilterDrawerOpen(open);
+  const toggleSortDrawer = (open) => setSortDrawerOpen(open);
 
 useEffect(() => {
   const handleResize = () => setIsMobile(window.innerWidth <= 768);
   window.addEventListener("resize", handleResize);
   return () => window.removeEventListener("resize", handleResize);
 }, []);
-const [openFilterModal, setOpenFilterModal] = useState(false);
+
+const experienceOptions = [
+  { value: "0-2", label: "0-2 years" },
+  { value: "3-5", label: "3-5 years" },
+  { value: "6-8", label: "6-8 years" },
+  { value: "9-11", label: "9-11 years" },
+  { value: "11+", label: "Over 11 years" },
+];
+const workModeOptions = ["Remote", "Hybrid", "Work From Office"];
+  const workTypeOptions = ["Full-Time", "Part-Time", "Contract", "Temporary"];
+  const salaryRangeOptions = ["0-10", "11-20", "21-30", "31-40"];
+  const datePostedOptions = [
+    "Last 24 hours",
+    "Last one week",
+    "Last one month",
+  ];
+
+  const topCities = [
+    "Bangalore",
+    "Mumbai",
+    "Hyderabad",
+    "Ahmedabad",
+    "Pune",
+    "Delhi",
+    "Gurgaon",
+    "Chennai",
+    "Noida",
+    "Kochi",
+    "Kolkata",
+    "others",
+  ];
 
 
-  const updateURL = ({ query, cmpLoc, exp, sort, pageNum, location }) => {
-    const params = new URLSearchParams();
+ // Update URL with filters
+ const updateURL = ({
+  query,
+  cmpLoc,
+  exp,
+  sort,
+  pageNum,
+  workMode,
+  workType,
+  salary,
+  datePosted,
+}) => {
+  const params = new URLSearchParams();
 
-    if (query) params.append("query", query);
-    if (cmpLoc) params.append("location", cmpLoc);
-    if (exp) params.append("exp", exp);
-    if (sort) params.append("sort", sort);
-    if (pageNum) params.append("page", pageNum);
+  if (query) params.append("query", query);
+  if (cmpLoc) params.append("location", cmpLoc);
+  if (exp) params.append("exp", exp);
+  if (sort) params.append("sort", sort);
+  if (pageNum) params.append("page", pageNum);
+  if (workMode) params.append("workMode", workMode);
+  if (workType) params.append("workType", workType);
+  if (salary) params.append("salary", salary);
+  if (datePosted) params.append("datePosted", datePosted);
 
-    return `${location.pathname}?${params.toString()}`;
-  };
+  return `${location.pathname}?${params.toString()}`;
+};
+
   const [searchKeyword, setSearchKeyword] = useState("");
   const [filteredJobs, setFilteredJobs] = useState();
 
-  // Handle change in search input
+  const fetchJobs = async () => {
+    setIsFetching(true);
+    const newURL = updateURL({
+      query: searchQuery,
+      cmpLoc: jobLocation,
+      exp: experienceFilter,
+      sort: sort,
+      pageNum: page,
+      workMode: workMode,
+      workType: workType,
+      salary: salaryRange,
+      datePosted: datePosted,
+    });
+    try {
+      const res = await apiRequest({
+        url: "/jobs" + newURL,
+        method: "GET",
+      });
+      setData(res?.data);
+      setFilteredJobs(res?.data);
+      setNumPage(res?.numOfPage);
+    } catch (error) {
+      console.error("Error fetching jobs:", error);
+    } finally {
+      setIsFetching(false);
+    }
+  };
+
+  // Handle search input change
   const handleInputChange = (e) => {
     const keyword = e.target.value;
     setSearchKeyword(keyword);
@@ -85,74 +181,26 @@ const [openFilterModal, setOpenFilterModal] = useState(false);
       setFilteredJobs(filtered);
     }
   };
-  const fetchJobs = async () => {
-    setIsFetching(true);
-    const newURL = updateURL({
-      query: searchQuery,
-      cmpLoc: jobLocation,
-      exp: explist[selectedCheckbox],
-      sort: sort,
-      pageNum: page,
-      location: location,
-    });
-    try {
-      const res = await apiRequest({
-        url: "/jobs" + newURL,
-        method: "GET",
-      });
-      setData(res?.data);
-      console.log(res?.data);
-      setFilteredJobs(res?.data);
-      setNumPage(res?.numOfPage);
-      setRecordCount(res?.total);
-    } catch (error) {
-      console.error("Error fetching jobs:", error);
-    } finally {
-      setIsFetching(false);
-    }
-  };
-  const [showFilters, setShowFilters] = useState(false);
-  
-  const handleCheckboxChange = (index) => {
-    setSelectedCheckbox(index === selectedCheckbox ? 0 : index);
-    setShowFilters(false);
-  };
-  const filterLikedJobs = () => {
-    if (showLikedJobs) {
-      setFilteredJobs(data);
-    } else {
-      // Show all jobs
-      const likedJobIds = new Set(user.likedJobs);
-      console.log(likedJobIds);
-      // Filter jobs to include only those that are in the liked jobs
-      const likedJobsData = data.filter((job) => likedJobIds.has(job._id));
-      setFilteredJobs(likedJobsData);
-      console.log(likedJobsData);
-    }
-  };
 
 
-  const handleChange = (category, option) => {
-    setSelectedFilters((prev) => {
-      const updatedCategory = prev[category] ? [...prev[category]] : [];
-      if (updatedCategory.includes(option)) {
-        return {
-          ...prev,
-          [category]: updatedCategory.filter((item) => item !== option),
-        };
-      } else {
-        return {
-          ...prev,
-          [category]: [...updatedCategory, option],
-        };
-      }
+  // Handle accordion expansion
+  const handleAccordionChange = (panel) => (event, isExpanded) => {
+    setExpandedAccordions({
+      ...expandedAccordions,
+      [panel]: isExpanded
     });
   };
-  
 
+// Handle experience filter change
+  const handleExperienceChange = (event) => {
+    setExperienceFilter(event.target.value);
+  };
+
+  // Fetch jobs when filters change
   useEffect(() => {
     fetchJobs();
-  }, [sort, filterJobTypes, selectedCheckbox, filterExp, page]);
+  }, [sort, experienceFilter, page, workMode, workType, salaryRange, datePosted]);
+
 
   const handleLocationChange = (e) => {
     const keyword = e.target.value;
@@ -168,6 +216,11 @@ const [openFilterModal, setOpenFilterModal] = useState(false);
       );
       setFilteredJobs(filtered);
     }
+  };
+
+  // Handle search button click
+  const handleSearchClick = () => {
+    fetchJobs();
   };
 
   return (
@@ -187,7 +240,7 @@ const [openFilterModal, setOpenFilterModal] = useState(false);
       p: 2,
       width: "100%",
       mx: "auto",
-      gap: 2, // Adds spacing between inputs
+      gap: 2, 
     }}
   >
     {/* Job Title Input */}
@@ -231,69 +284,273 @@ const [openFilterModal, setOpenFilterModal] = useState(false);
         width: "100%",
         "&:hover": { backgroundColor: "#1669D8" },
       }}
+      onClick={handleSearchClick}
     >
       Search Jobs
     </Button>
   </Box>
 </Box>
+    <Box sx={{display:"flex",alignItems:"center",justifyContent:"center",height:"6vh",mt:1}}>
+      <Box display="flex" sx={{height:"100%",justifyContent:"space-between",width:"80%"}}>
+          <Button sx={{color:"#404258",fontFamily:"Poppins",fontWeight:"500"}} onClick={() => toggleFilterDrawer(true)}>
+            <FilterListIcon sx={{mr:0.25}}/>
+            <Typography sx={{fontFamily:"Poppins",fontWeight:"500"}}>Filters</Typography>
+          </Button>
+        </Box>
+        </Box>
 
+         {/* Filter Drawer */}
+         <Drawer anchor="left" open={filterDrawerOpen} onClose={() => toggleFilterDrawer(false)}>
+      <Box sx={{ width: 300,p:2 }}>
+        <Typography variant="h6" sx={{ mb: 1,mt:1,color:"#404258",
+              fontFamily:"Satoshi, sans-serif" }}>
+          All Filters
+        </Typography>
+
+        {/* Experience Filter */}
+        <Accordion
+          expanded={expandedAccordions.experience}
+          onChange={handleAccordionChange("experience")}
+          sx={{ mb: 2, boxShadow: "none" }}
+        >
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <Typography
+              variant="h6"
+              color="#404258"
+              fontFamily="Satoshi, sans-serif"
+            >
+              Experience
+            </Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            <FormControl fullWidth size="small">
+              <Select
+                value={experienceFilter}
+                onChange={handleExperienceChange}
+                displayEmpty
+                inputProps={{ "aria-label": "Experience filter" }}
+                sx={{ color: "#404258", fontFamily: "Poppins" }}
+              >
+                <MenuItem
+                  value=""
+                  sx={{ color: "#404258", fontFamily: "Poppins" }}
+                >
+                  All Experience Levels
+                </MenuItem>
+                {experienceOptions.map((option) => (
+                  <MenuItem
+                    key={option.value}
+                    value={option.value}
+                    sx={{ color: "#404258", fontFamily: "Poppins" }}
+                  >
+                    {option.label}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </AccordionDetails>
+        </Accordion>
+
+        {/* Work Mode Filter */}
+        <Accordion
+          expanded={expandedAccordions.workMode}
+          onChange={handleAccordionChange("workMode")}
+          sx={{ mb: 2, boxShadow: "none" }}
+        >
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <Typography
+              variant="h6"
+              color="#404258"
+              fontFamily="Satoshi, sans-serif"
+            >
+              Work Mode
+            </Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            {workModeOptions.map((mode) => (
+              <FormControlLabel
+                key={mode}
+                control={
+                  <Checkbox
+                    checked={workMode === mode}
+                    onChange={() => setWorkMode(workMode === mode ? "" : mode)}
+                    color="#404258"
+                  />
+                }
+                label={mode}
+                componentsProps={{
+                  typography: {
+                    sx: { color: "#404258", fontFamily: "Poppins" },
+                  },
+                }}
+              />
+            ))}
+          </AccordionDetails>
+        </Accordion>
+
+        {/* Work Type Filter */}
+        <Accordion
+          expanded={expandedAccordions.workType}
+          onChange={handleAccordionChange("workType")}
+          sx={{ mb: 2, boxShadow: "none" }}
+        >
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <Typography
+              variant="h6"
+              color="#404258"
+              fontFamily="Satoshi, sans-serif"
+            >
+              Work Type
+            </Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            {workTypeOptions.map((type) => (
+              <FormControlLabel
+                key={type}
+                control={
+                  <Checkbox
+                    checked={workType === type}
+                    onChange={() => setWorkType(workType === type ? "" : type)}
+                    sx={{ color: "#404258" }}
+                  />
+                }
+                label={type}
+                componentsProps={{
+                  typography: {
+                    sx: { color: "#404258", fontFamily: "Poppins" },
+                  },
+                }}
+              />
+            ))}
+          </AccordionDetails>
+        </Accordion>
+
+        {/* Location Filter */}
+        <Accordion
+          expanded={expandedAccordions.location}
+          onChange={handleAccordionChange("location")}
+          sx={{ mb: 2, boxShadow: "none" }}
+        >
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <Typography
+              variant="h6"
+              color="#404258"
+              fontFamily="Satoshi, sans-serif"
+            >
+              Location
+            </Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            <FormControl fullWidth size="small">
+              <Select
+                value={jobLocation}
+                onChange={(e) => setJobLocation(e.target.value)}
+                displayEmpty
+                inputProps={{ "aria-label": "Location filter" }}
+                sx={{ color: "#404258", fontFamily: "Poppins" }}
+              >
+                <MenuItem
+                  value=""
+                  sx={{ color: "#404258", fontFamily: "Poppins" }}
+                >
+                  All Locations
+                </MenuItem>
+                {topCities.map((city) => (
+                  <MenuItem
+                    key={city}
+                    value={city}
+                    sx={{ color: "#404258", fontFamily: "Poppins" }}
+                  >
+                    {city}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </AccordionDetails>
+        </Accordion>
+
+        {/* Salary Filter */}
+        <Accordion
+          expanded={expandedAccordions.salary}
+          onChange={handleAccordionChange("salary")}
+          sx={{ mb: 2, boxShadow: "none" }}
+        >
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <Typography
+              variant="h6"
+              color="#404258"
+              fontFamily="Satoshi, sans-serif"
+            >
+              Salary Range
+            </Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            {salaryRangeOptions.map((range) => (
+              <FormControlLabel
+                key={range}
+                control={
+                  <Checkbox
+                    checked={salaryRange === range}
+                    onChange={() =>
+                      setSalaryRange(salaryRange === range ? "" : range)
+                    }
+                  />
+                }
+                label={`${range.split("-")[0]} - ${range.split("-")[1]} lakhs`}
+                componentsProps={{
+                  typography: {
+                    sx: { color: "#404258", fontFamily: "Poppins" },
+                  },
+                }}
+              />
+            ))}
+          </AccordionDetails>
+        </Accordion>
+
+        {/* Date Posted Filter */}
+        <Accordion
+          expanded={expandedAccordions.datePosted}
+          onChange={handleAccordionChange("datePosted")}
+          sx={{ mb: 2, boxShadow: "none" }}
+        >
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <Typography
+              variant="h6"
+              color="#404258"
+              fontFamily="Satoshi, sans-serif"
+            >
+              Date Posted
+            </Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            <FormControl fullWidth size="small">
+              <Select
+                value={datePosted}
+                onChange={(e) => setDatePosted(e.target.value)}
+                displayEmpty
+                sx={{ color: "#404258", fontFamily: "Poppins" }}
+              >
+                <MenuItem value="">Any Time</MenuItem>
+                {datePostedOptions.map((option) => (
+                  <MenuItem key={option} value={option}>
+                    {option}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </AccordionDetails>
+        </Accordion>
+
+        <Button variant="contained" fullWidth sx={{ mt: 2 }} onClick={() => toggleFilterDrawer(false)}>
+          Apply Filters
+        </Button>
+      </Box>
+    </Drawer>
 
   {/* Main Content */}
-  <div className="max-w-6xl mx-auto mt-6 px-5">
-    {/* Filters & Sorting */}
-    <div className="flex flex-wrap items-center gap-4">
-      {/* Sorting Dropdown */}
-      <ListBox sort={sort} setSort={setSort} />
+  <div className="max-w-6xl mx-auto px-5">
 
-      {/* Experience Filter */}
-      <div className="relative">
-        <button
-          onClick={() => setShowFilters(!showFilters)}
-          className="p-2 px-5 bg-blue-600 text-white rounded-full shadow-md hover:bg-blue-700 transition"
-        >
-          Experience
-        </button>
-
-        {/* Filter Dropdown */}
-        {showFilters && (
-          <div className="absolute top-12 left-0 w-64 bg-white shadow-lg rounded-lg z-10 p-4">
-            <h3 className="text-lg font-semibold text-gray-700 mb-3">
-              Experience Level
-            </h3>
-            {["All", "1-2 years", "2-6 years", "Over 6 years"].map((label, index) => (
-              <div
-                key={index}
-                onClick={() => handleCheckboxChange(index)}
-                className={`flex items-center gap-2 p-2 rounded-md cursor-pointer transition ${selectedCheckbox === index ? "bg-blue-100 border-l-4 border-blue-500" : "hover:bg-gray-100"}`}
-              >
-                <input
-                  type="checkbox"
-                  checked={selectedCheckbox === index}
-                  onChange={() => {}}
-                  className="hidden"
-                />
-                {label}
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Liked Jobs Toggle */}
-      <button
-        onClick={() => {
-          setShowLikedJobs((prevState) => !prevState);
-          filterLikedJobs();
-        }}
-        className={`p-2 px-5 rounded-full shadow-md transition ${
-          showLikedJobs ? "bg-blue-700 text-white" : "bg-white text-gray-700 border border-gray-300"
-        } hover:bg-blue-600 hover:text-white`}
-      >
-        {showLikedJobs ? "All Jobs" : "Saved Jobs"}
-      </button>
-    </div>
-
-    <Box display="flex" flexDirection="column" alignItems="center" mt={6} gap={2}>
+    <Box display="flex" flexDirection="column" alignItems="center" mt={2} gap={2}>
   {filteredJobs && filteredJobs.length > 0 ? (
     <Grid container justifyContent="center" spacing={3}>
       {filteredJobs.map((job, index) => (
