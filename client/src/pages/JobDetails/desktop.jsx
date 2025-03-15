@@ -68,7 +68,7 @@ const JobDetail = () => {
              About the Job
             </Typography>
             <Box sx={{borderRadius:2.5,p:2.5,mt:2,boxShadow:"0px 0px 4px 0px #00000040"}}>
-            <Typography sx={{fontWeight:"700",color:"#404258",mb:2,fontFamily:"Poppins"}}>Position Overview:</Typography>
+            <Typography sx={{fontWeight:"700",color:"#404258",mb:2,fontFamily:"Poppins"}}>Job Description:</Typography>
             <Typography sx={{color:"#474E68",fontFamily:"sans-serif"}}>{job?.jobDescription}</Typography>
 
             {job?.requirements?.length > 0 && (
