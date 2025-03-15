@@ -311,7 +311,7 @@ const JobCard = ({ job,flag = false,enable = false }) => {
                   }
                 }}
               >
-                Continue Applying
+                Apply Now
               </Button>
             ) : null}
       </CardActions>
