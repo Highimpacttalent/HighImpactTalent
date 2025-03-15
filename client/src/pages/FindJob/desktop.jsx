@@ -59,7 +59,7 @@ const DesktopView = () => {
   const topCities = [
     "Bangalore", "Mumbai", "Hyderabad", "Ahmedabad", "Pune",
     "Delhi", "Gurgaon", "Chennai", "Noida", "Kochi",
-    "Kolkata", "others"
+    "Kolkata", "Others"
   ];
 
   const experienceOptions = [
@@ -159,6 +159,7 @@ const DesktopView = () => {
 
   
   const handleSearchClick = () => {
+    setSearchQuery(searchKeyword);
     setPage(1); 
     fetchJobs();
   };
