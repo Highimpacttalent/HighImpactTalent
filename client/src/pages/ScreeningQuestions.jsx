@@ -37,7 +37,7 @@ const ScreeningQuestions = () => {
   });
 
   const { user } = useSelector((state) => state.user);
-  const hasUploadedResume = user?.cvUrl !== null;
+  const hasUploadedResume = user?.cvUrl || false;
 
   const [formData, setFormData] = useState({
     answers: state?.questions ? Array(state.questions.length).fill("") : [],
