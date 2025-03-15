@@ -168,13 +168,19 @@ export const getJobPosts = async (req, res, next) => {
 
     let queryObject = {};
 
-    // Handle both location parameters
-    if (location || searchLocation) {
-      const locationValue = location || searchLocation;
-      queryObject.jobLocation = { $regex: locationValue, $options: "i" };
-    }
+if (location || searchLocation) {
+  const locationValue = location || searchLocation;
+  
+  
+  if (locationValue.includes(',')) {
+    const locations = locationValue.split(',');
+    queryObject.jobLocation = { $in: locations.map(loc => new RegExp(loc, 'i')) };
+  } else {
+    queryObject.jobLocation = { $regex: locationValue, $options: "i" };
+  }
+}
     
-    // Handle work type - check if it's comma-separated for multiple values
+    
     if (workType) {
       const workTypes = workType.split(',');
       if (workTypes.length > 1) {
@@ -184,7 +190,7 @@ export const getJobPosts = async (req, res, next) => {
       }
     }
 
-    // Handle work mode - check if it's comma-separated for multiple values
+    
     if (workMode) {
       const workModes = workMode.split(',');
       if (workModes.length > 1) {
