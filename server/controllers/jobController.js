@@ -163,21 +163,41 @@ export const updateJob = async (req, res, next) => {
 //get all jobs or use query parameter to filter job
 export const getJobPosts = async (req, res, next) => {
   try {
-    const { search, sort, location, exp, workType, workMode, salary, datePosted } = req.query;
+    const { search, query, sort, location, searchLocation, exp, workType, workMode, salary, datePosted } = req.query;
     const experience = exp?.split("-"); //2-6
 
     let queryObject = {};
 
-    if (location) {
-      queryObject.jobLocation = { $regex: location, $options: "i" };
-    }
+if (location || searchLocation) {
+  const locationValue = location || searchLocation;
+  
+  
+  if (locationValue.includes(',')) {
+    const locations = locationValue.split(',');
+    queryObject.jobLocation = { $in: locations.map(loc => new RegExp(loc, 'i')) };
+  } else {
+    queryObject.jobLocation = { $regex: locationValue, $options: "i" };
+  }
+}
+    
     
     if (workType) {
-      queryObject.workType = workType;
+      const workTypes = workType.split(',');
+      if (workTypes.length > 1) {
+        queryObject.workType = { $in: workTypes };
+      } else {
+        queryObject.workType = workType;
+      }
     }
 
+    
     if (workMode) {
-      queryObject.workMode = workMode;
+      const workModes = workMode.split(',');
+      if (workModes.length > 1) {
+        queryObject.workMode = { $in: workModes };
+      } else {
+        queryObject.workMode = workMode;
+      }
     }
 
     if (exp) {
@@ -207,12 +227,14 @@ export const getJobPosts = async (req, res, next) => {
       queryObject.poastingDate = { $gte: date };
     }    
 
-    if (search) {
+    // Handle both search parameters (search and query)
+    const searchTerm = search || query;
+    if (searchTerm) {
       const searchQuery = {
         $or: [
-          { jobTitle: { $regex: search, $options: "i" } },
-          { workMode: { $regex: search, $options: "i" } },
-          { workType: { $regex: search, $options: "i" } },
+          { jobTitle: { $regex: searchTerm, $options: "i" } },
+          { location: { $regex: searchTerm, $options: "i" } },
+          { jobDescription: { $regex: searchTerm, $options: "i" } } 
         ],
       };
       queryObject = { ...queryObject, ...searchQuery };
@@ -235,6 +257,13 @@ export const getJobPosts = async (req, res, next) => {
     }
     if (sort === "Z-A") {
       queryResult = queryResult.sort("-jobTitle");
+    }
+    // Add new sorting options for salary
+    if (sort === "Salary (High to Low)") {
+      queryResult = queryResult.sort("-salary");
+    }
+    if (sort === "Salary (Low to High)") {
+      queryResult = queryResult.sort("salary");
     }
 
     // pagination

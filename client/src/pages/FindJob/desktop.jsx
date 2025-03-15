@@ -59,7 +59,7 @@ const DesktopView = () => {
   const topCities = [
     "Bangalore", "Mumbai", "Hyderabad", "Ahmedabad", "Pune",
     "Delhi", "Gurgaon", "Chennai", "Noida", "Kochi",
-    "Kolkata", "others"
+    "Kolkata", "Others"
   ];
 
   const experienceOptions = [
@@ -159,6 +159,7 @@ const DesktopView = () => {
 
   
   const handleSearchClick = () => {
+    setSearchQuery(searchKeyword);
     setPage(1); 
     fetchJobs();
   };
@@ -229,7 +230,10 @@ const DesktopView = () => {
             sx={{ flex: 1, fontSize: "1.1rem", ml: 1 }}
             placeholder="Job title"
             value={searchKeyword}
-            onChange={(e) => setSearchKeyword(e.target.value)}
+            onChange={(e) => {
+              setSearchKeyword(e.target.value);
+              setSearchQuery(e.target.value); // Update searchQuery directly
+            }}
           />
           <Divider orientation="vertical" flexItem sx={{ mx: 1 }} />
           <IconButton sx={{ color: "gray" }}>
