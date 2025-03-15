@@ -58,9 +58,10 @@ const DesktopView = () => {
   }, [user]); // Fetch only once when the component mounts
 
   return (
-    <Box sx={{ bgcolor: "grey.50", minHeight: "100vh", p: isMobile ? 1 : 5 }}>
+    <Box sx={{ bgcolor: "white", minHeight: "100vh", p: isMobile ? 1 : 5 }}>
       <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-        <Box sx={{ maxWidth: "xl", mx: "auto", mt: 6, px: 2, display: "flex", gap: 3 }}>
+        <Typography sx={{textAlign:"center",color:"#404258",fontWeight:"600",fontSize:28,fontFamily:"Satoshi,serrif"}}>Applications</Typography>
+        <Box sx={{ maxWidth: "xl", mx: "auto", mt: 4, px: 2, display: "flex", gap: 3,height:"100%",width:"100%" }}>
           {/* Left Section - Tabs */}
           <Box sx={{ width: "25%", p: 2 }}>
             <Box sx={{ display: "flex", flexDirection: "column", gap: 2, mb: 2 }}>
