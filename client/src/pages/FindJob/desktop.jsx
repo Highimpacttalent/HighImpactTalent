@@ -1,30 +1,28 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
-import { AiOutlineSearch } from "react-icons/ai";
+import { AiOutlineSearch, AiOutlineCheck } from "react-icons/ai"; // Import check icon
 import { MdLocationOn } from "react-icons/md";
-import { 
-  Box, 
-  Typography, 
-  Paper, 
-  Divider, 
-  InputBase, 
-  IconButton, 
-  Button, 
-  Grid, 
-  FormControlLabel, 
-  Checkbox,
+import {
+  Box,
+  Typography,
+  Paper,
+  Divider,
+  InputBase,
+  IconButton,
+  Button,
+  Grid,
   Accordion,
   AccordionSummary,
   AccordionDetails,
   MenuItem,
   Select,
   FormControl,
-  InputLabel
+  InputLabel,
 } from "@mui/material";
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import { apiRequest } from "../../utils";
+import { apiRequest } from "../../utils"; // Ensure this utility is correctly set up for API calls
 import { useSelector } from "react-redux";
-import { JobCard, ListBox } from "../../components";
+import { JobCard } from "../../components";
 
 const DesktopView = () => {
   const { user } = useSelector((state) => state.user);
@@ -34,27 +32,30 @@ const DesktopView = () => {
   const [numPage, setNumPage] = useState(1);
   const [data, setData] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [jobLocation, setJobLocation] = useState("");
+  const [searchLocation, setSearchLocation] = useState("");
   const [isFetching, setIsFetching] = useState(false);
-  const [experienceFilter, setExperienceFilter] = useState("");
-  const [showLikedJobs, setShowLikedJobs] = useState(false);
   const [searchKeyword, setSearchKeyword] = useState("");
   const [filteredJobs, setFilteredJobs] = useState([]);
-  const [workMode, setWorkMode] = useState("");
-  const [workType, setWorkType] = useState("");
-  const [salaryRange, setSalaryRange] = useState("");
-  const [datePosted, setDatePosted] = useState("");
-  const [locations, setLocations] = useState([]);
+
+  
+  const [experienceFilter, setExperienceFilter] = useState([]);
+  const [workModeFilter, setWorkModeFilter] = useState([]);
+  const [workTypeFilter, setWorkTypeFilter] = useState([]);
+  const [locationFilter, setLocationFilter] = useState([]);
+  const [salaryRangeFilter, setSalaryRangeFilter] = useState([]);
+  const [datePostedFilter, setDatePostedFilter] = useState([]);
+
+  
   const [expandedAccordions, setExpandedAccordions] = useState({
-    experience: true,
-    workMode: true,
-    workType: true,
-    location: true,
-    salary: true,
-    datePosted: true
+    experience: false,
+    workMode: false,
+    workType: false,
+    location: false,
+    salary: false,
+    datePosted: false,
   });
 
-  // Top 15 cities for location filter
+  
   const topCities = [
     "Bangalore", "Mumbai", "Hyderabad", "Ahmedabad", "Pune",
     "Delhi", "Gurgaon", "Chennai", "Noida", "Kochi",
@@ -72,11 +73,11 @@ const DesktopView = () => {
   const workModeOptions = ["Remote", "Hybrid", "Work From Office"];
   const workTypeOptions = ["Full-Time", "Part-Time", "Contract", "Temporary"];
   const salaryRangeOptions = ["0-10", "11-20", "21-30", "31-40"];
-  const datePostedOptions = ["Last 24 hours", "Last one week", "Last one month"];
+  const datePostedOptions = ["Last 24 hours", "Last one week", "Last one month", "Any Time"];
 
   const location = useLocation();
 
-  // Handle accordion expansion
+  
   const handleAccordionChange = (panel) => (event, isExpanded) => {
     setExpandedAccordions({
       ...expandedAccordions,
@@ -84,46 +85,57 @@ const DesktopView = () => {
     });
   };
 
-  // Update URL with filters
+  
+  const handleMultipleSelection = (value, state, setState) => {
+    if (state.includes(value)) {
+      setState(state.filter(item => item !== value));
+    } else {
+      setState([...state, value]);
+    }
+  };
+
   const updateURL = ({
     query,
-    cmpLoc,
+    searchLoc,
     exp,
     sort,
     pageNum,
     workMode,
     workType,
+    locations,
     salary,
     datePosted,
   }) => {
     const params = new URLSearchParams();
 
     if (query) params.append("query", query);
-    if (cmpLoc) params.append("location", cmpLoc);
-    if (exp) params.append("exp", exp);
+    if (searchLoc) params.append("searchLocation", searchLoc);
+    if (exp && exp.length > 0) params.append("exp", exp.join(","));
     if (sort) params.append("sort", sort);
     if (pageNum) params.append("page", pageNum);
-    if (workMode) params.append("workMode", workMode);
-    if (workType) params.append("workType", workType);
-    if (salary) params.append("salary", salary);
-    if (datePosted) params.append("datePosted", datePosted);
+    if (workMode && workMode.length > 0) params.append("workMode", workMode.join(","));
+    if (workType && workType.length > 0) params.append("workType", workType.join(","));
+    if (locations && locations.length > 0) params.append("locations", locations.join(","));
+    if (salary && salary.length > 0) params.append("salary", salary.join(","));
+    if (datePosted && datePosted.length > 0) params.append("datePosted", datePosted.join(","));
 
     return `${location.pathname}?${params.toString()}`;
   };
 
-  // Fetch jobs with filters
+  
   const fetchJobs = async () => {
     setIsFetching(true);
     const newURL = updateURL({
       query: searchQuery,
-      cmpLoc: jobLocation,
+      searchLoc: searchLocation,
       exp: experienceFilter,
       sort: sort,
       pageNum: page,
-      workMode: workMode,
-      workType: workType,
-      salary: salaryRange,
-      datePosted: datePosted,
+      workMode: workModeFilter,
+      workType: workTypeFilter,
+      locations: locationFilter,
+      salary: salaryRangeFilter,
+      datePosted: datePostedFilter,
     });
     try {
       const res = await apiRequest({
@@ -140,338 +152,345 @@ const DesktopView = () => {
     }
   };
 
-  // Handle search input change
-  const handleInputChange = (e) => {
-    const keyword = e.target.value;
-    setSearchKeyword(keyword);
-    if (keyword === "") {
-      setFilteredJobs(data);
-    } else {
-      const lowerCaseKeyword = keyword.toLowerCase();
-      const filtered = data.filter(
-        (job) =>
-          job.jobTitle.toLowerCase().includes(lowerCaseKeyword) ||
-          job.jobDescription.toLowerCase().includes(lowerCaseKeyword)
-      );
-      setFilteredJobs(filtered);
-    }
-  };
-
-  // Handle location input change
-  const handleLocationChange = (e) => {
-    const keyword = e.target.value;
-    setJobLocation(keyword);
-    if (keyword === "") {
-      setFilteredJobs(data);
-    } else {
-      const lowerCaseKeyword = keyword.toLowerCase();
-      const filtered = data.filter((job) =>
-        job.jobLocation.toLowerCase().includes(lowerCaseKeyword)
-      );
-      setFilteredJobs(filtered);
-    }
-  };
-
-  // Handle experience filter change
-  const handleExperienceChange = (event) => {
-    setExperienceFilter(event.target.value);
-  };
-
-  // Fetch jobs when filters change
+  
   useEffect(() => {
     fetchJobs();
-  }, [sort, experienceFilter, page, workMode, workType, salaryRange, datePosted]);
+  }, [page, sort, searchQuery, searchLocation, experienceFilter, workModeFilter, workTypeFilter, salaryRangeFilter, datePostedFilter]);
 
-  // Handle search button click
+  
   const handleSearchClick = () => {
+    setPage(1); 
     fetchJobs();
+  };
+
+  
+  const handleResetFilters = () => {
+    setExperienceFilter([]);
+    setWorkModeFilter([]);
+    setWorkTypeFilter([]);
+    setLocationFilter([]);
+    setSalaryRangeFilter([]);
+    setDatePostedFilter([]);
+    setPage(1);
+  };
+
+ 
+  const getActiveFilterCount = () => {
+    return experienceFilter.length +
+      workModeFilter.length +
+      workTypeFilter.length +
+      locationFilter.length +
+      salaryRangeFilter.length +
+      datePostedFilter.length;
+  };
+
+  
+  const FilterOption = ({ label, value, state, setState }) => {
+    const isSelected = state.includes(value);
+    return (
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          cursor: "pointer",
+          p: 1,
+          borderRadius: "4px",
+        }}
+        onClick={() => handleMultipleSelection(value, state, setState)}
+      >
+        {isSelected && <AiOutlineCheck color="#1A73E8" style={{ marginRight: "8px" }} />}
+        <Typography variant="body1" color="#404258" fontFamily="Poppins">
+          {label}
+        </Typography>
+      </Box>
+    );
   };
 
   return (
     <Box sx={{ bgcolor: "white", minHeight: "100vh", p: 5 }}>
       {/* Search Bar */}
       <Box sx={{ mx: "auto", mt: 3, px: 2 }}>
-          <Paper
+        <Paper
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            p: 1,
+            borderRadius: "50px",
+            boxShadow: 3,
+            width: "100%",
+            maxWidth: 1000,
+            mx: "auto",
+          }}
+        >
+          <IconButton sx={{ color: "gray" }}>
+            <AiOutlineSearch fontSize="24px" />
+          </IconButton>
+          <InputBase
+            sx={{ flex: 1, fontSize: "1.1rem", ml: 1 }}
+            placeholder="Job title"
+            value={searchKeyword}
+            onChange={(e) => setSearchKeyword(e.target.value)}
+          />
+          <Divider orientation="vertical" flexItem sx={{ mx: 1 }} />
+          <IconButton sx={{ color: "gray" }}>
+            <MdLocationOn fontSize="24px" />
+          </IconButton>
+          <InputBase
+            sx={{ flex: 1, fontSize: "1.1rem", ml: 1 }}
+            placeholder="Location"
+            value={searchLocation}
+            onChange={(e) => setSearchLocation(e.target.value)}
+          />
+          <Button
+            variant="contained"
             sx={{
-              display: "flex",
-              alignItems: "center",
-              p: 1,
               borderRadius: "50px",
-              boxShadow: 3,
-              width: "100%",
-              maxWidth: 1000,
-              mx: "auto",
+              backgroundColor: "#1A73E8",
+              color: "white",
+              px: 3,
+              ml: 1,
+              textTransform: "none",
+              fontSize: "1rem",
+              fontWeight: "bold",
+              "&:hover": { backgroundColor: "#1669D8" },
             }}
+            onClick={handleSearchClick}
           >
-            <IconButton sx={{ color: "gray" }}>
-              <AiOutlineSearch fontSize="24px" />
-            </IconButton>
-            <InputBase
-              sx={{ flex: 1, fontSize: "1.1rem", ml: 1 }}
-              placeholder="Job title"
-              value={searchKeyword}
-              onChange={handleInputChange}
-            />
-            <Divider orientation="vertical" flexItem sx={{ mx: 1 }} />
-            <IconButton sx={{ color: "gray" }}>
-              <MdLocationOn fontSize="24px" />
-            </IconButton>
-            <InputBase
-              sx={{ flex: 1, fontSize: "1.1rem", ml: 1 }}
-              placeholder="Location"
-              value={jobLocation}
-              onChange={handleLocationChange}
-            />
-            <Button
-              variant="contained"
-              sx={{
-                borderRadius: "50px",
-                backgroundColor: "#1A73E8",
-                color: "white",
-                px: 3,
-                ml: 1,
-                textTransform: "none",
-                fontSize: "1rem",
-                fontWeight: "bold",
-                "&:hover": { backgroundColor: "#1669D8" },
-              }}
-              onClick={handleSearchClick}
-            >
-              Search
-            </Button>
-          </Paper>
-        </Box>
+            Search
+          </Button>
+        </Paper>
+      </Box>
 
-        {/* Main Content */}
-        <Box sx={{ maxWidth: "xl", mx: "auto", mt: 6, px: 2, display: "flex", gap: 3 }}>
-          {/* Left Section - Filters */}
-          <Box sx={{ width: "25%", p: 2 }}>
-            {/* Sorting Dropdown */}
-            <Box sx={{ mb: 3 }}>
-              <Typography variant="h6" color="#404258" gutterBottom sx={{fontFamily:"Poppins",fontWeight:"600"}}>
-                All Filters
-              </Typography>
-              {/* <FormControl fullWidth variant="outlined" size="small">
-                <Select
-                  value={sort}
-                  onChange={(e) => setSort(e.target.value)}
-                  displayEmpty
-                >
-                  <MenuItem value="Newest">Newest</MenuItem>
-                  <MenuItem value="Oldest">Oldest</MenuItem>
-                  <MenuItem value="A-Z">A-Z</MenuItem>
-                  <MenuItem value="Z-A">Z-A</MenuItem>
-                </Select>
-              </FormControl> */}
-            </Box>
-
-            {/* Experience Filter */}
-            <Accordion 
-              expanded={expandedAccordions.experience} 
-              onChange={handleAccordionChange('experience')}
-              sx={{ mb: 2,boxShadow:"none" }}
-            >
-              <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                <Typography variant="h6" color="#404258" fontFamily="Satoshi, sans-serif">Experience</Typography>
-              </AccordionSummary>
-              <AccordionDetails>
-                <FormControl fullWidth size="small">
-                  <Select
-                    value={experienceFilter}
-                    onChange={handleExperienceChange}
-                    displayEmpty
-                    inputProps={{ 'aria-label': 'Experience filter' }}
-                    sx={{color:"#404258" ,fontFamily:"Poppins"}}
-                  >
-                    <MenuItem value="" sx={{color:"#404258" ,fontFamily:"Poppins"}}>All Experience Levels</MenuItem>
-                    {experienceOptions.map((option) => (
-                      <MenuItem key={option.value} value={option.value} sx={{color:"#404258" ,fontFamily:"Poppins"}}>
-                        {option.label}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </AccordionDetails>
-            </Accordion>
-
-            {/* Work Mode Filter */}
-            <Accordion 
-              expanded={expandedAccordions.workMode} 
-              onChange={handleAccordionChange('workMode')}
-              sx={{ mb: 2,boxShadow:"none" }}
-            >
-              <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                <Typography variant="h6" color="#404258" fontFamily="Satoshi, sans-serif">Work Mode</Typography>
-              </AccordionSummary>
-              <AccordionDetails>
-                {workModeOptions.map((mode) => (
-                  <FormControlLabel
-                    key={mode}
-                    control={
-                      <Checkbox
-                        checked={workMode === mode}
-                        onChange={() => setWorkMode(workMode === mode ? "" : mode)}
-                        color="#404258"
-                      />
-                    }
-                    label={mode}
-                    componentsProps={{
-                      typography: {
-                        sx: { color: "#404258", fontFamily: "Poppins" },
-                      },
-                    }}
-                  />
-                ))}
-              </AccordionDetails>
-            </Accordion>
-
-            {/* Work Type Filter */}
-            <Accordion 
-              expanded={expandedAccordions.workType} 
-              onChange={handleAccordionChange('workType')}
-              sx={{ mb: 2,boxShadow:"none" }}
-            >
-              <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                <Typography variant="h6" color="#404258" fontFamily="Satoshi, sans-serif">Work Type</Typography>
-              </AccordionSummary>
-              <AccordionDetails>
-                {workTypeOptions.map((type) => (
-                  <FormControlLabel
-                    key={type}
-                    control={
-                      <Checkbox
-                        checked={workType === type}
-                        onChange={() => setWorkType(workType === type ? "" : type)}
-                        sx={{color:"#404258"}}
-                      />
-                    }
-                    label={type}
-                    componentsProps={{
-                      typography: {
-                        sx: { color: "#404258", fontFamily: "Poppins" },
-                      },
-                    }}
-                  />
-                ))}
-              </AccordionDetails>
-            </Accordion>
-
-            {/* Location Filter */}
-            <Accordion 
-              expanded={expandedAccordions.location} 
-              onChange={handleAccordionChange('location')}
-              sx={{ mb: 2 ,boxShadow:"none"}}
-            >
-              <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                <Typography variant="h6" color="#404258" fontFamily="Satoshi, sans-serif">Location</Typography>
-              </AccordionSummary>
-              <AccordionDetails>
-                <FormControl fullWidth size="small">
-                  <Select
-                    value={jobLocation}
-                    onChange={(e) => setJobLocation(e.target.value)}
-                    displayEmpty
-                    inputProps={{ 'aria-label': 'Location filter' }}
-                    sx={{color:"#404258" ,fontFamily:"Poppins"}}
-                  >
-                    <MenuItem value="" sx={{color:"#404258" ,fontFamily:"Poppins"}}>All Locations</MenuItem>
-                    {topCities.map((city) => (
-                      <MenuItem key={city} value={city} sx={{color:"#404258" ,fontFamily:"Poppins"}}>
-                        {city}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </AccordionDetails>
-            </Accordion>
-
-            {/* Salary Filter */}
-            <Accordion 
-              expanded={expandedAccordions.salary} 
-              onChange={handleAccordionChange('salary')}
-              sx={{ mb: 2 ,boxShadow:"none"}}
-            >
-              <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                <Typography variant="h6" color="#404258" fontFamily="Satoshi, sans-serif">Salary Range</Typography>
-              </AccordionSummary>
-              <AccordionDetails>
-                {salaryRangeOptions.map((range) => (
-                  <FormControlLabel
-                    key={range}
-                    control={
-                      <Checkbox
-                        checked={salaryRange === range}
-                        onChange={() => setSalaryRange(salaryRange === range ? "" : range)}
-                      />
-                    }
-                    label={`${range.split('-')[0]} - ${range.split('-')[1]} lakhs`}
-                    componentsProps={{
-                      typography: {
-                        sx: { color: "#404258", fontFamily: "Poppins" },
-                      },
-                    }}
-                  />
-                ))}
-              </AccordionDetails>
-            </Accordion>
-
-            {/* Date Posted Filter */}
-            <Accordion 
-              expanded={expandedAccordions.datePosted} 
-              onChange={handleAccordionChange('datePosted')}
-              sx={{ mb: 2,boxShadow:"none" }}
-            >
-              <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                <Typography variant="h6" color="#404258" fontFamily="Satoshi, sans-serif">Date Posted</Typography>
-              </AccordionSummary>
-              <AccordionDetails>
-                <FormControl fullWidth size="small">
-                  <Select
-                    value={datePosted}
-                    onChange={(e) => setDatePosted(e.target.value)}
-                    displayEmpty
-                    sx={{color: "#404258", fontFamily: "Poppins" }}
-                  >
-                    <MenuItem value="">Any Time</MenuItem>
-                    {datePostedOptions.map((option) => (
-                      <MenuItem key={option} value={option}>
-                        {option}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </AccordionDetails>
-            </Accordion>
+      {/* Main Content */}
+      <Box sx={{ maxWidth: "xl", mx: "auto", mt: 6, px: 2, display: "flex", gap: 3 }}>
+        {/* Left Section - Filters */}
+        <Box sx={{ width: "25%", p: 2 }}>
+          {/* Filter Header */}
+          <Box sx={{ mb: 3, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <Typography variant="h6" color="#404258" gutterBottom sx={{ fontFamily: "Poppins", fontWeight: "600" }}>
+              All Filters {getActiveFilterCount() > 0 && `(${getActiveFilterCount()})`}
+            </Typography>
+            {getActiveFilterCount() > 0 && (
+              <Button
+                variant="text"
+                color="primary"
+                onClick={handleResetFilters}
+                sx={{ textTransform: "none" }}
+              >
+                Reset
+              </Button>
+            )}
           </Box>
 
-          {/* Right Section - Job Cards */}
-          <Box sx={{ flex: 0.95, p: 2 }}>
-            {filteredJobs && filteredJobs.length > 0 ? (
-              <Grid container spacing={3} gap={2}>
-                {filteredJobs.map((job, index) => (
-                  <JobCard key={index} job={job} />
-                ))}
-              </Grid>
-            ) : (
-              <Typography variant="h6" color="textSecondary" align="center" sx={{ mt: 4 }}>
-                No jobs found. Try a different search.
+          {/* Experience Filter */}
+          <Accordion
+            expanded={expandedAccordions.experience}
+            onChange={handleAccordionChange('experience')}
+            sx={{ mb: 2, boxShadow: "none" }}
+          >
+            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+              <Typography variant="h6" color="#404258" fontFamily="Satoshi, sans-serif">
+                Experience {experienceFilter.length > 0 && `(${experienceFilter.length})`}
               </Typography>
-            )}
-
-            {/* Load More Button */}
-            {numPage > page && !isFetching && (
-              <Box sx={{ display: "flex", justifyContent: "center", pt: 5 }}>
-                <Button
-                  variant="outlined"
-                  color="primary"
-                  onClick={() => setPage((prevPage) => prevPage + 1)}
-                >
-                  Load More
-                </Button>
+            </AccordionSummary>
+            <AccordionDetails>
+              <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+                {experienceOptions.map((option) => (
+                  <FilterOption
+                    key={option.value}
+                    label={option.label}
+                    value={option.value}
+                    state={experienceFilter}
+                    setState={setExperienceFilter}
+                  />
+                ))}
               </Box>
-            )}
+            </AccordionDetails>
+          </Accordion>
+
+          {/* Work Mode Filter */}
+          <Accordion
+            expanded={expandedAccordions.workMode}
+            onChange={handleAccordionChange('workMode')}
+            sx={{ mb: 2, boxShadow: "none" }}
+          >
+            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+              <Typography variant="h6" color="#404258" fontFamily="Satoshi, sans-serif">
+                Work Mode {workModeFilter.length > 0 && `(${workModeFilter.length})`}
+              </Typography>
+            </AccordionSummary>
+            <AccordionDetails>
+              <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+                {workModeOptions.map((mode) => (
+                  <FilterOption
+                    key={mode}
+                    label={mode}
+                    value={mode}
+                    state={workModeFilter}
+                    setState={setWorkModeFilter}
+                  />
+                ))}
+              </Box>
+            </AccordionDetails>
+          </Accordion>
+
+          {/* Work Type Filter */}
+          <Accordion
+            expanded={expandedAccordions.workType}
+            onChange={handleAccordionChange('workType')}
+            sx={{ mb: 2, boxShadow: "none" }}
+          >
+            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+              <Typography variant="h6" color="#404258" fontFamily="Satoshi, sans-serif">
+                Work Type {workTypeFilter.length > 0 && `(${workTypeFilter.length})`}
+              </Typography>
+            </AccordionSummary>
+            <AccordionDetails>
+              <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+                {workTypeOptions.map((type) => (
+                  <FilterOption
+                    key={type}
+                    label={type}
+                    value={type}
+                    state={workTypeFilter}
+                    setState={setWorkTypeFilter}
+                  />
+                ))}
+              </Box>
+            </AccordionDetails>
+          </Accordion>
+
+          {/* Location Filter */}
+          <Accordion
+            expanded={expandedAccordions.location}
+            onChange={handleAccordionChange('location')}
+            sx={{ mb: 2, boxShadow: "none" }}
+          >
+            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+              <Typography variant="h6" color="#404258" fontFamily="Satoshi, sans-serif">
+                Location {locationFilter.length > 0 && `(${locationFilter.length})`}
+              </Typography>
+            </AccordionSummary>
+            <AccordionDetails>
+              <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+                {topCities.map((city) => (
+                  <FilterOption
+                    key={city}
+                    label={city}
+                    value={city}
+                    state={locationFilter}
+                    setState={setLocationFilter}
+                  />
+                ))}
+              </Box>
+            </AccordionDetails>
+          </Accordion>
+
+          {/* Salary Filter */}
+          <Accordion
+            expanded={expandedAccordions.salary}
+            onChange={handleAccordionChange('salary')}
+            sx={{ mb: 2, boxShadow: "none" }}
+          >
+            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+              <Typography variant="h6" color="#404258" fontFamily="Satoshi, sans-serif">
+                Salary Range {salaryRangeFilter.length > 0 && `(${salaryRangeFilter.length})`}
+              </Typography>
+            </AccordionSummary>
+            <AccordionDetails>
+              <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+                {salaryRangeOptions.map((range) => (
+                  <FilterOption
+                    key={range}
+                    label={`${range} Lakhs`}
+                    value={range}
+                    state={salaryRangeFilter}
+                    setState={setSalaryRangeFilter}
+                  />
+                ))}
+              </Box>
+            </AccordionDetails>
+          </Accordion>
+
+          {/* Date Posted Filter */}
+          <Accordion
+            expanded={expandedAccordions.datePosted}
+            onChange={handleAccordionChange('datePosted')}
+            sx={{ mb: 2, boxShadow: "none" }}
+          >
+            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+              <Typography variant="h6" color="#404258" fontFamily="Satoshi, sans-serif">
+                Date Posted {datePostedFilter.length > 0 && `(${datePostedFilter.length})`}
+              </Typography>
+            </AccordionSummary>
+            <AccordionDetails>
+              <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+                {datePostedOptions.map((date) => (
+                  <FilterOption
+                    key={date}
+                    label={date}
+                    value={date}
+                    state={datePostedFilter}
+                    setState={setDatePostedFilter}
+                  />
+                ))}
+              </Box>
+            </AccordionDetails>
+          </Accordion>
+        </Box>
+
+        {/* Right Section - Job Listings */}
+        <Box sx={{ width: "75%", p: 2 }}>
+          {/* Sort and Filter Chips */}
+          <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 3 }}>
+            <Typography variant="h6" color="#404258" fontFamily="Satoshi, sans-serif">
+              {filteredJobs.length} Jobs Found
+            </Typography>
+            <FormControl sx={{ minWidth: 120 }}>
+              <InputLabel id="sort-label">Sort By</InputLabel>
+              <Select
+                labelId="sort-label"
+                value={sort}
+                label="Sort By"
+                onChange={(e) => setSort(e.target.value)}
+              >
+                <MenuItem value="Newest">Newest</MenuItem>
+                <MenuItem value="Oldest">Oldest</MenuItem>
+                <MenuItem value="Salary (High to Low)">Salary (High to Low)</MenuItem>
+                <MenuItem value="Salary (Low to High)">Salary (Low to High)</MenuItem>
+              </Select>
+            </FormControl>
+          </Box>
+
+          {/* Job Cards */}
+          <Grid container spacing={3}>
+            {filteredJobs.map((job) => (
+              <Grid item xs={12} key={job._id}>
+                <JobCard job={job} user={user} />
+              </Grid>
+            ))}
+          </Grid>
+
+          {/* Pagination */}
+          <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
+            <Button
+              variant="outlined"
+              disabled={page === 1}
+              onClick={() => setPage(page - 1)}
+              sx={{ mr: 2 }}
+            >
+              Previous
+            </Button>
+            <Button
+              variant="outlined"
+              disabled={page === numPage}
+              onClick={() => setPage(page + 1)}
+            >
+              Next
+            </Button>
           </Box>
         </Box>
+      </Box>
     </Box>
   );
 };
