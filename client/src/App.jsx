@@ -22,6 +22,7 @@ import AuthForm from "./pages/AuthForm/AuthForm";
 import UserLoginForm from "./pages/AuthForm/u-login";
 import Loginform from "./pages/AuthForm/Loginform";
 import BlogPage from "./pages/BlogPage";
+import BlogPage2 from "./pages/Blog/desktop"
 import ViewJobs from "./pages/ViewJobs";
 import SingleBlog from "./pages/SingleBlog";
 import JobApplications from "./pages/ViewApplicants";
@@ -94,7 +95,7 @@ function App() {
         <Route path="/upload-resume" element={<UploadResume />} />
         <Route path="/t&c" element={<TermsAndConditions />} />
         <Route path="/refund" element={<RefundPolicy />} />
-        <Route path="/blog" element={<BlogPage/>}></Route>
+        <Route path="/blog" element={<BlogPage2/>}></Route>
         <Route path="/blog/:blogId" element={<SingleBlog/>}></Route>
         <Route path="/application-tracking" element={<ApplicationTracking />} />
         <Route path="/privacy-policy" element={<PrivacyPolicy />} />
