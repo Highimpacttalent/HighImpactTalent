@@ -231,7 +231,7 @@ const workModeOptions = ["Remote", "Hybrid", "Work From Office"];
 
 <Box>
   {/* Search Bar */}
-  <Box sx={{ mx: "auto", mt: 3, px: 2, display: "flex", justifyContent: "center" }}>
+  <Box sx={{ mx: "auto", mt: 3, display: "flex", justifyContent: "center" }}>
   <Box
     sx={{
       display: "flex",
@@ -290,8 +290,8 @@ const workModeOptions = ["Remote", "Hybrid", "Work From Office"];
     </Button>
   </Box>
 </Box>
-    <Box sx={{display:"flex",alignItems:"center",justifyContent:"center",height:"6vh",mt:1}}>
-      <Box display="flex" sx={{height:"100%",justifyContent:"space-between",width:"80%"}}>
+    <Box sx={{display:"flex",alignItems:"center",height:"6vh",mt:1,justifyContent:"flex-end"}}>
+      <Box display="flex" sx={{height:"100%",justifyContent:"space-between",width:"95%"}}>
           <Button sx={{color:"#404258",fontFamily:"Poppins",fontWeight:"500"}} onClick={() => toggleFilterDrawer(true)}>
             <FilterListIcon sx={{mr:0.25}}/>
             <Typography sx={{fontFamily:"Poppins",fontWeight:"500"}}>Filters</Typography>
