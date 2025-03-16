@@ -115,7 +115,7 @@ const DesktopView = () => {
     if (pageNum) params.append("page", pageNum);
     if (workMode && workMode.length > 0) params.append("workMode", workMode.join(","));
     if (workType && workType.length > 0) params.append("workType", workType.join(","));
-    if (locations && locations.length > 0) params.append("locations", locations.join(","));
+    if (locations && locations.length > 0) params.append("location", locations.join(","));
     if (salary && salary.length > 0) params.append("salary", salary.join(","));
     if (datePosted && datePosted.length > 0) params.append("datePosted", datePosted.join(","));
 
@@ -125,6 +125,10 @@ const DesktopView = () => {
   
   const fetchJobs = async () => {
     setIsFetching(true);
+    let locationsForAPI = [...locationFilter];
+    if (locationsForAPI.includes("Others")) {
+    locationsForAPI = locationsForAPI.filter(loc => loc !== "Others");
+    }
     const newURL = updateURL({
       query: searchQuery,
       searchLoc: searchLocation,
@@ -133,7 +137,7 @@ const DesktopView = () => {
       pageNum: page,
       workMode: workModeFilter,
       workType: workTypeFilter,
-      locations: locationFilter,
+      locations: locationsForAPI,
       salary: salaryRangeFilter,
       datePosted: datePostedFilter,
     });
@@ -142,8 +146,23 @@ const DesktopView = () => {
         url: "/jobs" + newURL,
         method: "GET",
       });
-      setData(res?.data);
-      setFilteredJobs(res?.data);
+      
+      // Handle "Others" filter here if selected
+      let processedData = res?.data;
+      
+      if (locationFilter.includes("Others")) {
+        // Filter to include only jobs whose locations are NOT in the topCities list (excluding "Others")
+        const regularCities = topCities.filter(city => city !== "Others");
+        processedData = processedData.filter(job => {
+          // If the job location doesn't match any of the regular cities, include it
+          return !regularCities.some(city => 
+            job.jobLocation.toLowerCase().includes(city.toLowerCase())
+          );
+        });
+      }
+      
+      setData(processedData);
+      setFilteredJobs(processedData);
       setNumPage(res?.numOfPage);
     } catch (error) {
       console.error("Error fetching jobs:", error);
@@ -151,11 +170,10 @@ const DesktopView = () => {
       setIsFetching(false);
     }
   };
-
   
   useEffect(() => {
     fetchJobs();
-  }, [page, sort, searchQuery, searchLocation, experienceFilter, workModeFilter, workTypeFilter, salaryRangeFilter, datePostedFilter]);
+  }, [page, sort, searchQuery, searchLocation, experienceFilter,locationFilter, workModeFilter, workTypeFilter, salaryRangeFilter, datePostedFilter]);
 
   
   const handleSearchClick = () => {
