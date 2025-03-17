@@ -22,6 +22,7 @@ import AuthForm from "./pages/AuthForm/AuthForm";
 import UserLoginForm from "./pages/AuthForm/u-login";
 import Loginform from "./pages/AuthForm/Loginform";
 import BlogPage from "./pages/BlogPage";
+import ResumeSearch from "./pages/ResumeSearch/view";
 import BlogPage2 from "./pages/Blog/desktop"
 import ViewJobs from "./pages/ViewJobs";
 import SingleBlog from "./pages/SingleBlog";
@@ -33,7 +34,7 @@ import RecruiterSignup from "./pages/AuthForm/Recruiter-Auth";
 import UserSignUp from "./pages/AuthForm/User-Auth";
 import CompanyLoginForm from "./pages/AuthForm/r-login";
 import RecruiterRedirectPage from "./pages/EndSignUp";
-import ResumeSearch from "./pages/ResumeSearch";
+// import ResumeSearch from "./pages/ResumeSearch";
 
 function Layout() {
   const { user } = useSelector((state) => state.user);
