@@ -1,9 +1,11 @@
-import express from 'express'
+import express, { response } from 'express'
 import dotenv from 'dotenv'
 import cors from 'cors'
 import morgan from 'morgan'
+import axios from 'axios'
 import bodyParser from 'body-parser'
 import xss from 'xss-clean'
+import { setInterval } from 'timers/promises'
 import mongoose from 'mongoose'
 import mongoSanitize from 'express-mongo-sanitize'
 import dbConnection from './dbConfig/dbConnection.js'
@@ -40,6 +42,20 @@ app.get('/', (req, res) => {
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 })
+
+const interval = 30000;
+const url = 'https://www.highimpacttalent.com/find-jobs'
+
+function reloadWebsite(){
+    axios.get(url).then((response)=>{
+        console.log("website reloaded");
+    })
+    .catch((error)=>{
+        console.error('error',error)
+    })
+}
+
+setInterval(reloadWebsite,interval)
 
 
 
