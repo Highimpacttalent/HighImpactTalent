@@ -6,7 +6,7 @@ export const getResumes = async (req, res, next) => {
 
     let queryObject = {};
 
-    // Filter by location (only if location is not an empty string)
+    // Filter by location (only if location is provided)
     if (location?.trim()) {
       queryObject.location = { $regex: location, $options: "i" };
     }
@@ -16,14 +16,24 @@ export const getResumes = async (req, res, next) => {
       queryObject.experience = { $gt: Number(exp) };
     }
 
-    // Filter by skills (must include all provided skills)
+    // Filter by multiple skills (AND condition)
     if (skills?.length) {
-      queryObject.skills = { $all: skills };
+      queryObject.skills = { $all: skills }; 
     }
 
-    // Filter by past companies (only if pastCompanies is not empty)
-    if (pastCompanies?.trim()) {
-      queryObject.companies = { $in: [pastCompanies] }; 
+    // Filter by multiple past companies (OR condition)
+    if (pastCompanies && pastCompanies.length > 0) {
+      queryObject.companies = { $in: pastCompanies }; 
+    }
+
+    // Filter by job roles (only if jobRoles is not an empty string)
+    if (jobRoles?.trim()) {
+      queryObject.jobRoles = {
+        $elemMatch: {
+          $regex: jobRoles,
+          $options: "i",
+        },
+      };
     }
 
     // Search by name, email, or past companies
@@ -35,20 +45,7 @@ export const getResumes = async (req, res, next) => {
       ];
     }
 
-    // Filter by job roles (substring match for each role in the array)
-    if (jobRoles?.trim()) {
-      queryObject.jobRoles = {
-        $elemMatch: {
-          $regex: jobRoles,
-          $options: "i",
-        },
-      };
-    } else if(jobRoles?.length){
-      // Exclude records with empty jobRoles array
-      queryObject.jobRoles = { $exists: true, $not: { $size: 0 } };
-    }
-
-    // Always sort resumes by rating (highest first)
+    // Sort resumes by rating
     const resumes = await ResumePool.find(queryObject).sort("-rating");
 
     res.status(200).json({
