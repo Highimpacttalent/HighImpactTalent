@@ -37,7 +37,7 @@ const ResumeSearch = () => {
   const fetchResumes = async (filters = {}) => {
     setLoading(true);
     const response = await fetch(
-      "http://localhost:8800/api-v1/resume/getResume",
+      "https://highimpacttalent.onrender.com/api-v1/resume/getResume",
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },

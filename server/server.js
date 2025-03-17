@@ -44,7 +44,7 @@ app.listen(PORT, () => {
 })
 
 const interval = 30000;
-const url = 'https://www.highimpacttalent.com/find-jobs'
+const url = 'https://highimpacttalent.onrender.com/api-v1/jobs/find-jobs?sort=Newest&page=1'
 
 function reloadWebsite(){
     axios.get(url).then((response)=>{
