@@ -72,7 +72,7 @@ const DesktopView = () => {
 
   const workModeOptions = ["Remote", "Hybrid", "Work From Office"];
   const workTypeOptions = ["Full-Time", "Part-Time", "Contract", "Temporary"];
-  const salaryRangeOptions = ["0-10", "11-20", "21-30", "31-40"];
+  const salaryRangeOptions = ["30-40", "40-50", "50-60", "60-70","70-80","80-90"];
   const datePostedOptions = ["Last 24 hours", "Last one week", "Last one month", "Any Time"];
 
   const location = useLocation();
