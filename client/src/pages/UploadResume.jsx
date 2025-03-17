@@ -45,7 +45,7 @@ const ResumeUpload = () => {
         Upload PDF Resume
       </button>
       <Widget
-        publicKey="886857a9a1571edf40e9"
+        publicKey="8eeb05a138df98a3c92f"
         ref={widgetApi}
         onChange={handleUpload}
         style={{ display: "none" }} // Hide the default widget
