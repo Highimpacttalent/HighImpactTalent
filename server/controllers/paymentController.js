@@ -2,7 +2,7 @@ import Payment from "../models/paymentModel.js";
 import { v4 as uuidv4 } from "uuid";
 
 // Fixed payment amount
-const STANDARD_AMOUNT = 500;
+const STANDARD_AMOUNT = 499;
 
 // Initialize payment (for testing)
 export const initializePayment = async (req, res) => {
