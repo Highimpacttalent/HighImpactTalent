@@ -43,19 +43,6 @@ app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 })
 
-const interval = 30000;
-const url = 'https://highimpacttalent.onrender.com/api-v1/jobs/find-jobs?sort=Newest&page=1'
-
-function reloadWebsite(){
-    axios.get(url).then((response)=>{
-        console.log("website reloaded");
-    })
-    .catch((error)=>{
-        console.error('error',error)
-    })
-}
-
-setInterval(reloadWebsite,interval)
 
 
 
