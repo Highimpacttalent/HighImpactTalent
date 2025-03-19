@@ -35,7 +35,7 @@ const ResumeUpload = () => {
         setFileUrl(file.cdnUrl);
         try {
           const response = await axios.post(
-            "https://highimpacttalent.onrender.com/api-v1/user/upload-resume",
+            "http://localhost:8800/api-v1/user/upload-resume",
             { url: file.cdnUrl },
             {
               headers: {
@@ -99,7 +99,7 @@ const ResumeUpload = () => {
       setOpenModal(false);
       console.log("Parsed Data:", parsedData);
       console.log("Skills Extracted:", skills);
-      navigate("/user-additional-details", { state: { skills } });
+      navigate("/user-additional-details", { state: { parsedData } });
 
   
     } catch (error) {

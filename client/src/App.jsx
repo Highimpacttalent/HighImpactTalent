@@ -6,6 +6,7 @@ import { About, Auth, Companies, CompaniesProfile, JobDetails, UserProfile, Find
 import { useSelector } from "react-redux";
 import Dashboard from "./pages/DashBoard";
 import Contact from "./pages/Contact";
+import ViewResumeProfile from "./pages/ResumeSearch/ViewResume/view";
 import ApplicationTracking from "./pages/ApplicationTracking";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsAndConditions from "./components/terms";
@@ -73,8 +74,9 @@ function App() {
           <Route path={"/job-detail/:id"} element={<JobDetails />} />
           <Route path="/job-detail/:id/screening-questions" element={<ScreeningQuestions/>}></Route>
           <Route path={'/applicationstatus'} element={<ApplicationStatus/>}></Route>
-          <Route path={'/resumesearch'} element={<ResumeSearch/>}></Route>
           <Route path={'/recruiterSchedule'} element={<RecruiterSchedule/>}></Route>
+          <Route path={'/resumesearch'} element={<ResumeSearch/>}></Route>
+          <Route path="/resumesearch/viewresume/:resumeId" element={<ViewResumeProfile />} />
           <Route path={'/userinformation'} element={<ResumeUpload/>}></Route>
           <Route path={'/password'} element={<PasswordChange/>}></Route>
           

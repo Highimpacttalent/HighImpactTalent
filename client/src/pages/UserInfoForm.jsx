@@ -14,10 +14,10 @@ import { skillsList } from "../assets/mock";
 const UserInfoForm = () => {
   const { user } = useSelector((state) => state.user);
   const location = useLocation();
-  const defaultValues = location.state?.formData?.data || {};
+  const defaultValues = location.state?.parsedData?.data || {};
   const [loading, setLoading] = useState(false);
   const [uploadingResume, setUploadingResume] = useState(false);
-  const [value, setValue] = useState(defaultValues.contactnumber || "");
+  const [value, setValue] = useState(defaultValues?.PersonalInformation?.contactNumber || "");
   const [error, setError] = useState("");
   const widgetApi = useRef();
   const profileWidgetApi = useRef(null);
@@ -29,22 +29,22 @@ const UserInfoForm = () => {
   const [isOtherSelected, setIsOtherSelected] = useState(false);
   const [customCity, setCustomCity] = useState("");
   const [filters, setFilters] = useState({
-    skills: location.state?.skills || []
+    skills: defaultValues.skills || []
   });
   const [formData, setFormData] = useState({
     job: "",
     company: "",
-    currentCompany: defaultValues.currentCompany || "",
-    currentDesignation: defaultValues.currentDesignation || "",
-    linkedinLink: defaultValues.linkedinLink || "",
-    experience: defaultValues.noOfYearsExperience ? Math.ceil(defaultValues.noOfYearsExperience)  : "", 
-    about: defaultValues.about || "",
-    salary: defaultValues.salary || "",
-    contactNumber: defaultValues.contactnumber || "",
-    location: defaultValues.location || "",
+    currentCompany: defaultValues?.ProfessionalDetails?.currentCompany || "",
+    currentDesignation: defaultValues?.ProfessionalDetails?.currentDesignation || "",
+    linkedinLink: defaultValues?.PersonalInformation?.linkedinLink || "",
+    experience: defaultValues?.ProfessionalDetails?.noOfYearsExperience ? Math.ceil(defaultValues?.ProfessionalDetails?.noOfYearsExperience)  : "", 
+    about: defaultValues?.ProfessionalDetails?.about || "",
+    salary: "",
+    contactNumber: defaultValues?.PersonalInformation?.contactNumber || "",
+    location: defaultValues?.PersonalInformation?.location || "",
     relocate: "no",
-    joinConsulting: defaultValues.joinConsulting || "",
-    dateOfBirth: defaultValues.dateOfBirth || "",
+    joinConsulting: "",
+    dateOfBirth: defaultValues?.PersonalInformation?.dateOfBirth || "",
     profilePic: null,
     skills: filters.skills,
   });

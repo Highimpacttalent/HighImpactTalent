@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import {
-  Container,
   TextField,
   MenuItem,
   Select,
@@ -18,22 +17,33 @@ import {
   Pagination,
   LinearProgress,
   Autocomplete,
+  Checkbox,
+  FormControlLabel,
 } from "@mui/material";
 import { skillsList } from "../../assets/mock";
-import EmailIcon from '@mui/icons-material/Email';
-import LocationOnIcon from '@mui/icons-material/LocationOn';
-import WorkIcon from '@mui/icons-material/Work';
-
+import EmailIcon from "@mui/icons-material/Email";
+import { useNavigate } from "react-router-dom";
+import LocationOnIcon from "@mui/icons-material/LocationOn";
+import WorkIcon from "@mui/icons-material/Work";
 
 const ResumeSearch = () => {
   const [resumes, setResumes] = useState([]);
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
   const [filters, setFilters] = useState({
     location: "",
     exp: "",
     skills: [],
-    pastCompanies: [],
+    companiesWorkedAt: [],
     jobRoles: "",
+    currentCompany: "",
+    isConsultant: false,
+    instituteName: "",
+    yearOfPassout: "",
+    workExpCompany: "",
+    minWorkExp: "",
+    topCompany: false,
+    topInstitutes: false,
   });
 
   useEffect(() => {
@@ -56,16 +66,15 @@ const ResumeSearch = () => {
   };
 
   const handleFilterChange = (event) => {
-    const { name, value } = event.target;
-    setFilters((prevFilters) => ({ ...prevFilters, [name]: value }));
-  };
-
-  const removeCompany = (companyToRemove) => {
+    const { name, value, type, checked } = event.target;
     setFilters((prevFilters) => ({
       ...prevFilters,
-      pastCompanies: prevFilters.pastCompanies.filter(
-        (company) => company !== companyToRemove
-      ),
+      [name]:
+        type === "checkbox"
+          ? checked
+          : name === "yearOfPassout"
+          ? Number(value) || ""
+          : value,
     }));
   };
 
@@ -74,15 +83,24 @@ const ResumeSearch = () => {
   };
 
   const handleCompanyChange = (event) => {
+    const newCompany = event.target.value.trim().toUpperCase();
     if (event.key === "Enter" && event.target.value.trim() !== "") {
       setFilters((prevFilters) => ({
         ...prevFilters,
-        pastCompanies: [...prevFilters.pastCompanies, event.target.value.trim()],
+        companiesWorkedAt: [...prevFilters.companiesWorkedAt, newCompany],
       }));
       event.target.value = "";
     }
   };
 
+  const removeCompany = (companyToRemove) => {
+    setFilters((prevFilters) => ({
+      ...prevFilters,
+      companiesWorkedAt: prevFilters.companiesWorkedAt.filter(
+        (company) => company !== companyToRemove
+      ),
+    }));
+  };
 
   const handleSubmit = () => {
     fetchResumes(filters);
@@ -91,11 +109,8 @@ const ResumeSearch = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const recordsPerPage = 4;
 
-  // Calculate start and end index for slicing
   const startIndex = (currentPage - 1) * recordsPerPage;
   const endIndex = startIndex + recordsPerPage;
-
-  // Sliced data for current page
   const currentResumes = resumes.slice(startIndex, endIndex);
 
   const handlePageChange = (event, page) => {
@@ -104,51 +119,87 @@ const ResumeSearch = () => {
 
   return (
     <Box
-    style={{
-      background: "#fff",
-      fontFamily: "Poppins, sans-serif",
-      padding: "20px",
-      borderRadius: "8px",
-      display: "flex",
-      gap: "20px",
-    }}
-  >
+      style={{
+        background: "#fff",
+        fontFamily: "Poppins, sans-serif",
+        padding: "20px",
+        borderRadius: "8px",
+        display: "flex",
+        gap: "20px",
+      }}
+    >
+      <Box
+        sx={{
+          background: "#f9f9f9",
+          padding: "20px",
+          borderRadius: "8px",
+          width: "30%",
+        }}
+      >
+        <Typography
+          variant="h6"
+          gutterBottom
+          sx={{ fontWeight: "600", fontFamily: "Satoshi", fontSize: 24 }}
+        >
+          Filters
+        </Typography>
+        <Grid container spacing={2}>
+          <Grid item xs={12}>
+            <TextField
+              label="Location"
+              name="location"
+              fullWidth
+              value={filters.location}
+              onChange={handleFilterChange}
+            />
+          </Grid>
+          <Grid item xs={12}>
+            <TextField
+              label="Experience (Years)"
+              name="exp"
+              type="number"
+              fullWidth
+              value={filters.exp}
+              onChange={handleFilterChange}
+              inputProps={{ min: 0 }} // Prevent negative values
+            />
+          </Grid>
+          <Grid item xs={12}>
+            <Autocomplete
+              multiple
+              options={skillsList}
+              value={filters.skills}
+              onChange={handleSkillsChange}
+              filterSelectedOptions
+              disableCloseOnSelect
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Skills"
+                  placeholder="Type a skill"
+                />
+              )}
+              renderTags={(value, getTagProps) =>
+                value.map((option, index) => (
+                  <Chip
+                    {...getTagProps({ index })}
+                    key={option}
+                    label={option}
+                  />
+                ))
+              }
+            />
+          </Grid>
 
-     {/* Filters Section (Right) */}
-     <Box sx={{ flex: 1, background: "#f9f9f9", padding: "20px", borderRadius: "8px" }}>
-      <Typography variant="h6" gutterBottom sx={{ fontWeight: "600",fontFamily:"Satoshi",fontSize:24 }}>
-        Filters
-      </Typography>
-      <Grid container spacing={2}>
-        <Grid item xs={12}>
-          <TextField
-            label="Location"
-            name="location"
-            fullWidth
-            value={filters.location}
-            onChange={handleFilterChange}
-          />
-        </Grid>
-        <Grid item xs={12}>
-          <FormControl fullWidth>
-            <InputLabel>Experience</InputLabel>
-            <Select name="exp" value={filters.exp} onChange={handleFilterChange}>
-              <MenuItem value="1">1+ Years</MenuItem>
-              <MenuItem value="3">3+ Years</MenuItem>
-              <MenuItem value="5">5+ Years</MenuItem>
-              <MenuItem value="10">10+ Years</MenuItem>
-            </Select>
-          </FormControl>
-        </Grid>
-        <Grid item xs={12}>
+          <Grid item xs={12}>
             <TextField
               label="Add Company"
               fullWidth
               onKeyDown={handleCompanyChange}
               placeholder="Press Enter to add"
             />
-            <Stack direction="row" >
-              {filters.pastCompanies.map((company, index) => (
+            <Stack direction="row">
+              {filters.companiesWorkedAt.map((company, index) => (
                 <Chip
                   key={index}
                   label={company}
@@ -157,101 +208,203 @@ const ResumeSearch = () => {
               ))}
             </Stack>
           </Grid>
-        <Grid item xs={12}>
-          <Autocomplete
-            multiple
-            options={skillsList}
-            value={filters.skills}
-            onChange={handleSkillsChange}
-            filterSelectedOptions
-            disableCloseOnSelect
-            renderInput={(params) => <TextField {...params} label="Skills" placeholder="Type a skill" />}
-            renderTags={(value, getTagProps) =>
-              value.map((option, index) => (
-                <Chip {...getTagProps({ index })} key={option} label={option} />
-              ))
-            }
-          />
+          <Grid item xs={12}>
+            <TextField
+              label="Job Role"
+              name="jobRoles"
+              fullWidth
+              value={filters.jobRoles}
+              onChange={handleFilterChange}
+            />
+          </Grid>
+          <Grid item xs={12}>
+            <TextField
+              label="Current Company"
+              name="currentCompany"
+              fullWidth
+              value={filters.currentCompany}
+              onChange={handleFilterChange}
+            />
+          </Grid>
+          <Grid item xs={12}>
+            <TextField
+              label="Institute Name"
+              name="instituteName"
+              fullWidth
+              value={filters.instituteName}
+              onChange={handleFilterChange}
+            />
+          </Grid>
+          <Grid item xs={12}>
+            <TextField
+              label="Year of Passout"
+              name="yearOfPassout"
+              fullWidth
+              value={filters.yearOfPassout}
+              onChange={handleFilterChange}
+            />
+          </Grid>
+          <Grid item xs={12}>
+            <TextField
+              label="Work Experience Company"
+              name="workExpCompany"
+              fullWidth
+              value={filters.workExpCompany}
+              onChange={handleFilterChange}
+            />
+          </Grid>
+          <Grid item xs={12}>
+            <TextField
+              label="Minimum Work Experience"
+              name="minWorkExp"
+              fullWidth
+              value={filters.minWorkExp}
+              onChange={handleFilterChange}
+            />
+          </Grid>
+          <Grid item xs={12}>
+            <FormControlLabel
+              control={
+                <Checkbox
+                  name="isConsultant"
+                  checked={filters.isConsultant}
+                  onChange={handleFilterChange}
+                />
+              }
+              label="Consultant"
+            />
+          </Grid>
+          <Grid item xs={12}>
+            <FormControlLabel
+              control={
+                <Checkbox
+                  name="topCompany"
+                  checked={filters.topCompany}
+                  onChange={handleFilterChange}
+                />
+              }
+              label="Top Company"
+            />
+          </Grid>
+          <Grid item xs={12}>
+            <FormControlLabel
+              control={
+                <Checkbox
+                  name="topInstitutes"
+                  checked={filters.topInstitutes}
+                  onChange={handleFilterChange}
+                />
+              }
+              label="Top Institutes"
+            />
+          </Grid>
+          <Grid item xs={12} style={{ textAlign: "center" }}>
+            <Button variant="contained" color="primary" onClick={handleSubmit}>
+              Apply Filters
+            </Button>
+          </Grid>
         </Grid>
-        <Grid item xs={12}>
-          <TextField
-            label="Job Role"
-            name="jobRoles"
-            fullWidth
-            value={filters.jobRoles}
-            onChange={handleFilterChange}
-          />
-        </Grid>
-        <Grid item xs={12} style={{ textAlign: "center" }}>
-          <Button variant="contained" color="primary" onClick={handleSubmit}>
-            Apply Filters
-          </Button>
-        </Grid>
-      </Grid>
-    </Box>
-    
-    {/* Resume Cards Section (Left) */}
-    <Box sx={{ flex: 2 }}>
-      <Typography
-        variant="h4"
-        gutterBottom
-        style={{ fontWeight: "600", textAlign: "center" }}
-      >
-        Resume Search
-      </Typography>
-
-      {loading && <LinearProgress color="primary" style={{ marginBottom: "10px" }} />}
-
-      <Box container spacing={3} marginTop={2}>
-        {currentResumes.map((resume) => (
-          <Box sx={{display:"flex",border:2,flexDirection:"column",mb:2,borderColor:"grey.50",borderRadius:4}}>
-          <Card sx={{ boxShadow: "0px 4px 8px rgba(0, 0, 0, 0.1)", borderRadius: "12px", padding: "10px", backgroundColor: "#fff" }}>
-            <CardContent sx={{ display: "flex", flexDirection: "row", gap: 2, alignItems: "center" }}>
-              <Avatar sx={{ bgcolor: "#1976D2", color: "#fff" }}>
-                {resume.name.charAt(0).toUpperCase()}
-              </Avatar>
-              <Box sx={{ flexGrow: 1 }}>
-                <Typography variant="h6" sx={{ fontWeight: "bold", color: "#333", fontSize: "16px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                  {resume.name}
-                </Typography>
-                <Typography variant="body2" sx={{ color: "gray", display: "flex", alignItems: "center", gap: 1 }}>
-                  <EmailIcon sx={{ fontSize: 16 }} /> {resume.email}
-                </Typography>
-                <Typography variant="body2" sx={{ color: "gray", display: "flex", alignItems: "center", gap: 1 }}>
-                  <LocationOnIcon sx={{ fontSize: 16 }} /> {resume.location}
-                </Typography>
-                <Typography variant="body2" sx={{ color: "gray", display: "flex", alignItems: "center", gap: 1 }}>
-                   <WorkIcon sx={{ fontSize: 16 }} /> {resume.experience} years experience 
-                </Typography>
-                <Typography variant="body2" sx={{ fontSize: "12px", color: "#555", marginTop: "5px" }}>
-                  🔹 Skills: {resume.skills.slice(0, 5).join(", ")}...
-                </Typography>
-              </Box>
-            </CardContent>
-            <Box sx={{ display: "flex", justifyContent: "flex-end", marginTop: "8px" }}>
-              <Button size="small" variant="contained" color="primary"  onClick={() => window.open(resume.cvUrl)}>
-                View Resume
-              </Button>
-            </Box>
-          </Card>
-        </Box>
-        ))}
       </Box>
-       {/* Pagination Component */}
-       <Pagination
-        count={Math.ceil(resumes.length / recordsPerPage)} 
-        page={currentPage}
-        onChange={handlePageChange}
-        color="primary"
-        sx={{ marginTop: "20px", display: "flex", justifyContent: "center" }}
-      />
+      <Box sx={{ width: "80%" }}>
+        <Typography
+          variant="h4"
+          gutterBottom
+          style={{ fontWeight: "600", textAlign: "center" }}
+        >
+          Resume Search
+        </Typography>
+        {loading && (
+          <LinearProgress color="primary" style={{ marginBottom: "10px" }} />
+        )}
+        <Box container spacing={3} marginTop={2}>
+          {currentResumes.map((resume) => (
+            <Box
+              sx={{
+                display: "flex",
+                border: 2,
+                flexDirection: "column",
+                mb: 2,
+                borderColor: "grey.50",
+                borderRadius: 4,
+              }}
+            >
+              <Card
+                sx={{
+                  boxShadow: "0px 4px 8px rgba(0, 0, 0, 0.1)",
+                  borderRadius: "12px",
+                  padding: "10px",
+                  backgroundColor: "#fff",
+                }}
+              >
+                <CardContent>
+                  <Stack direction="row" spacing={2} alignItems="center">
+                    <Avatar sx={{ bgcolor: "#3f51b5" }}>
+                      {resume.personalInformation.name.charAt(0)}
+                    </Avatar>
+                    <Box>
+                      <Typography variant="h6">
+                        {resume.personalInformation.name}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        <EmailIcon fontSize="small" sx={{ mr: 1 }} />
+                        {resume.personalInformation.email}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        <LocationOnIcon fontSize="small" sx={{ mr: 1 }} />
+                        {resume.personalInformation.location}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        <WorkIcon fontSize="small" sx={{ mr: 1 }} />
+                        {resume.professionalDetails.currentDesignation} at{" "}
+                        {resume.professionalDetails.currentCompany}
+                      </Typography>
+                    </Box>
+                  </Stack>
+                  <Typography variant="body2" sx={{ mt: 2 }}>
+                    {resume.professionalDetails.about}
+                  </Typography>
+                  <Stack
+                    direction="row"
+                    spacing={1}
+                    sx={{ mt: 2, display: "flex", flexWrap: "wrap", rowGap: 1 }}
+                  >
+                    {resume.skills.map((skill, index) => (
+                      <Chip key={index} label={skill} variant="outlined" />
+                    ))}
+                  </Stack>
+                </CardContent>
+                <Box
+                  sx={{
+                    display: "flex",
+                    justifyContent: "flex-end",
+                    marginTop: "8px",
+                  }}
+                >
+                  <Button
+                    size="small"
+                    variant="contained"
+                    color="primary"
+                    onClick={() =>
+                      navigate(`/resumesearch/viewresume/${resume._id}`)
+                    }
+                  >
+                    View Profile
+                  </Button>
+                </Box>
+              </Card>
+            </Box>
+          ))}
+        </Box>
+        <Pagination
+          count={Math.ceil(resumes.length / recordsPerPage)}
+          page={currentPage}
+          onChange={handlePageChange}
+          color="primary"
+          sx={{ marginTop: "20px", display: "flex", justifyContent: "center" }}
+        />
+      </Box>
     </Box>
-
-   
-  </Box>
   );
 };
 
 export default ResumeSearch;
-
-     
