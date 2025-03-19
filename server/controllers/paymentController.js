@@ -44,7 +44,7 @@ export const initializePayment = async (req, res) => {
 // Get payment status
 export const getPaymentStatus = async (req, res) => {
     try {
-        const userId = req.user.id;
+        const userId = req.body.user.userId;
         const { transactionId } = req.params;
 
         const query = { userId };
