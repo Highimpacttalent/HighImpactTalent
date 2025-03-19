@@ -1,8 +1,9 @@
 import express from "express";
-import { getResumes } from "../controllers/resumepool.js";
+import { getResumeById, getResumes } from "../controllers/resumepool.js";
 
 const router = express.Router();
 
 router.post("/getResume", getResumes);
+router.post("/getResumeId",getResumeById)
 
 export default router;

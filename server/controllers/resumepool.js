@@ -1,57 +1,133 @@
-import ResumePool from "../models/ResumePool.js";  
+import ResumePool from "../models/ResumePool.js";
+
+const convertToBoolean = (value) => value === "true" || value === true;
+
+const calculateExperience = (dateRange) => {
+  if (!dateRange || !dateRange.includes(" - ")) return 0;
+
+  const [start, end] = dateRange.split(" - ").map((d) => d.trim());
+  
+  const startDate = new Date(`1 ${start}`);
+  const endDate = end.toLowerCase().includes("present") ? new Date() : new Date(`1 ${end}`);
+
+  if (isNaN(startDate) || isNaN(endDate)) return 0;
+
+  const diffYears = (endDate - startDate) / (1000 * 60 * 60 * 24 * 365.25);
+  return Math.max(0, parseFloat(diffYears.toFixed(1)));
+};
 
 export const getResumes = async (req, res, next) => {
   try {
-    const { search, location, exp, skills, pastCompanies, jobRoles } = req.body; 
+    const {
+      location,
+      exp,
+      currentCompany,
+      isConsultant,
+      instituteName,
+      yearOfPassout,
+      workExpCompany,
+      minWorkExp,
+      skills,
+      topCompany,
+      topInstitutes,
+      companiesWorkedAt,
+      jobRoles,
+    } = req.body;
 
     let queryObject = {};
 
-    // Filter by location (only if location is provided)
+    // Convert Boolean values
+    const consultantFlag = convertToBoolean(isConsultant);
+    const topCompanyFlag = convertToBoolean(topCompany);
+    const topInstitutesFlag = convertToBoolean(topInstitutes);
+    console.log("Received yearOfPassout:", yearOfPassout);
+
+    // Apply filters
     if (location?.trim()) {
-      queryObject.location = { $regex: location, $options: "i" };
+      queryObject["personalInformation.location"] = { $regex: location, $options: "i" };
     }
 
-    // Filter by experience (only if exp is a valid number)
     if (exp && !isNaN(exp)) {
-      queryObject.experience = { $gt: Number(exp) };
+      queryObject["professionalDetails.noOfYearsExperience"] = { $gte: Number(exp) };
     }
 
-    // Filter by multiple skills (AND condition)
+    if (currentCompany?.trim()) {
+      queryObject["professionalDetails.currentCompany"] = { $regex: currentCompany, $options: "i" };
+    }
+
+    if (consultantFlag) {
+      queryObject["professionalDetails.hasConsultingBackground"] = true;
+    }
+
     if (skills?.length) {
-      queryObject.skills = { $all: skills }; 
+      queryObject.skills = { $all: skills };
     }
 
-    // Filter by multiple past companies (OR condition)
-    if (pastCompanies && pastCompanies.length > 0) {
-      queryObject.companies = { $in: pastCompanies }; 
-    }
-
-    // Filter by job roles (only if jobRoles is not an empty string)
-    if (jobRoles?.trim()) {
-      queryObject.jobRoles = {
+    if (instituteName?.trim() && yearOfPassout) {
+      queryObject["educationDetails"] = {
         $elemMatch: {
-          $regex: jobRoles,
-          $options: "i",
-        },
+          instituteName: { $regex: instituteName, $options: "i" },
+          yearOfPassout: Number(yearOfPassout)
+        }
       };
     }
+    
 
-    // Search by name, email, or past companies
-    if (search?.trim()) {
-      queryObject.$or = [
-        { name: { $regex: search, $options: "i" } },
-        { email: { $regex: search, $options: "i" } },
-        { companies: { $regex: search, $options: "i" } },
-      ];
+    if (topCompanyFlag) {
+      queryObject.topCompanies = true;
     }
 
-    // Sort resumes by rating
-    const resumes = await ResumePool.find(queryObject).sort("-rating");
+    if (topInstitutesFlag) {
+      queryObject.topInstitutes = true;
+    }
+
+    if (companiesWorkedAt?.length) {
+      queryObject.companiesWorkedAt = { $in: companiesWorkedAt };
+    }
+
+    if (jobRoles?.length) {
+      queryObject.jobRoles = { $in: jobRoles };
+    }
+
+    let resumes = await ResumePool.find(queryObject).sort("-exp");
+
+    if (workExpCompany?.trim() && minWorkExp) {
+      resumes = resumes.filter((resume) =>
+        resume.workExperience.some((exp) => {
+          if (!exp.duration) return false;
+          const calculatedYears = calculateExperience(exp.duration);
+          return exp.companyName.match(new RegExp(workExpCompany, "i")) && calculatedYears >= Number(minWorkExp);
+        })
+      );
+    }
 
     res.status(200).json({
       success: true,
       totalResumes: resumes.length,
       data: resumes,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getResumeById = async (req, res, next) => {
+  try {
+    const { resumeId } = req.body;
+    console.log(resumeId)
+
+    const resume = await ResumePool.findById(resumeId);
+
+    if (!resume) {
+      return res.status(404).json({
+        success: false,
+        message: "Resume not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: resume,
     });
   } catch (error) {
     next(error);

@@ -500,3 +500,39 @@ export const skillsList = [
   "Online Sales",
   "Credit Management",
 ];
+
+export const topCompanieslist = [
+  "McKinsey & Company",
+  "Boston Consulting Group",
+  "Bain & Company",
+  "Deloitte",
+  "Accenture",
+  "Kearney",
+  "EY",
+  "PwC",
+  "KPMG",
+  "TSMG",
+  "Strategy&",
+  "Oliver Wyman",
+  "IBM",
+  "Capgemini E.L.I.T.E.",
+  "ZS Associates",
+  "Roland Berger",
+  "Alvarez & Marsal",
+  "Parthenon Group",
+  "Siemens Management Consulting",
+  "Arthur D. Little"
+]
+
+
+export const topInstituteslist = [
+  "Indian Institute of Management",
+  "Indian Institute of Technology",
+  "Indian School of Business",
+  "Faculty of Management Studies",
+  "Xavier School of Management",
+  "SP Jain Institute of Management and Research",
+  "Management Development Institute, Gurgaon",
+  "Indian Institute of Foreign Trade"
+]
+
