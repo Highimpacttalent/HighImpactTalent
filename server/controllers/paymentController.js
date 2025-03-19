@@ -44,12 +44,24 @@ export const initializePayment = async (req, res) => {
 // Get payment status
 export const getPaymentStatus = async (req, res) => {
     try {
-        const userId = req.body.user.userId;
+        // Get userId from either req.user (if set by auth middleware) or from query params
+        const userId = req.user?.id || req.query.userId;
         const { transactionId } = req.params;
 
-        const query = { userId };
+        // Build the query based on available parameters
+        const query = {};
+        
+        if (userId) {
+            query.userId = userId;
+        }
+        
         if (transactionId) {
             query.transactionId = transactionId;
+        }
+        
+        // If no search criteria, return error
+        if (Object.keys(query).length === 0) {
+            return res.status(400).json({ message: "Either userId or transactionId is required" });
         }
 
         const payment = await Payment.findOne(query).sort({ createdAt: -1 });
