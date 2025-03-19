@@ -7,7 +7,7 @@ const STANDARD_AMOUNT = 499;
 // Initialize payment (for testing)
 export const initializePayment = async (req, res) => {
     try {
-        const userId = req.user.id;
+        const userId = req.body.user.userId;
 
         // Generate a unique transaction ID
         const transactionId = uuidv4();
