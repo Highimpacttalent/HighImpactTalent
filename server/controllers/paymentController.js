@@ -105,8 +105,6 @@ export const getPaymentStatus = async (req, res) => {
     }
 };
 
-import crypto from "crypto";
-
 export const payuWebhook = async (req, res, status) => {
     try {
         console.log("Webhook received with status:", status);
