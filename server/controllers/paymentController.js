@@ -105,12 +105,18 @@ export const getPaymentStatus = async (req, res) => {
     }
 };
 
+import crypto from "crypto";
+
 export const payuWebhook = async (req, res, status) => {
     try {
+        console.log("Webhook received with status:", status);
+        console.log("Request body:", req.body);
+
         const { txnid, hash } = req.body;
 
         // Validate required fields
         if (!txnid || !hash) {
+            console.error("Missing required fields: txnid or hash");
             return res.status(400).json({ message: "Missing required fields" });
         }
 
@@ -118,17 +124,26 @@ export const payuWebhook = async (req, res, status) => {
         const payment = await Payment.findOne({ transactionId: txnid });
 
         if (!payment) {
+            console.error("Payment not found for txnid:", txnid);
             return res.status(404).json({ message: "Payment not found" });
         }
 
+        console.log("Payment found:", payment);
+
         // Verify the hash to ensure the request is from PayU
         const hashString = `${PAYU_MERCHANT_KEY}|${txnid}|${payment.amount}|Subscription Plan|${payment.userId}|||||||||||${PAYU_MERCHANT_SALT}`;
+        console.log("Hash string:", hashString);
+
         const calculatedHash = crypto
             .createHash("sha512")
             .update(hashString)
             .digest("hex");
 
+        console.log("Calculated hash:", calculatedHash);
+        console.log("Received hash:", hash);
+
         if (hash !== calculatedHash) {
+            console.error("Hash mismatch: Request is not from PayU");
             return res.status(400).json({ message: "Invalid hash" });
         }
 
@@ -147,11 +162,15 @@ export const payuWebhook = async (req, res, status) => {
                 payment.status = "DISPUTED";
                 break;
             default:
-                payment.status = "UNKNOWN";
+                payment.status = "PENDING";
                 break;
         }
 
+        console.log("Updating payment status to:", payment.status);
+
         await payment.save();
+
+        console.log("Payment status updated successfully");
 
         res.status(200).json({ message: "Webhook received and payment status updated" });
     } catch (error) {
