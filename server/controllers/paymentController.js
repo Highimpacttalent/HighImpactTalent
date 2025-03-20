@@ -11,6 +11,9 @@ const PAYU_MERCHANT_KEY = process.env.PAYU_MERCHANT_KEY;
 const PAYU_MERCHANT_SALT = process.env.PAYU_MERCHANT_SALT;
 const PAYU_BASE_URL = "https://secure.payu.in"; // PayU production URL
 
+console.log("Merchant Key:", PAYU_MERCHANT_KEY);
+console.log("Merchant Salt:", PAYU_MERCHANT_SALT);
+
 // Fixed payment amount
 const STANDARD_AMOUNT = "499.00"; // Ensure it's a valid float
 
