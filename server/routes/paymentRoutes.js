@@ -12,10 +12,10 @@ const paymentLimiter = rateLimit({
 });
 
 // Initialize payment
-router.post("/initialize-payment",userAuth,paymentLimiter, initializePayment);
+router.post("/initialize-payment",userAuth, initializePayment);
 
 // Get payment status
-router.get("/payment-status/:transactionId?",userAuth,paymentLimiter, getPaymentStatus);
+router.get("/payment-status/:transactionId?",userAuth, getPaymentStatus);
 
 router.post("/payu-webhook/success", (req, res) => payuWebhook(req, res, "success"));
 router.post("/payu-webhook/failed", (req, res) => payuWebhook(req, res, "failed"));
