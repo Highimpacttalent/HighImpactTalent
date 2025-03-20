@@ -9,10 +9,7 @@ dotenv.config();
 // PayU credentials (from environment variables)
 const PAYU_MERCHANT_KEY = process.env.PAYU_MERCHANT_KEY;
 const PAYU_MERCHANT_SALT = process.env.PAYU_MERCHANT_SALT;
-const PAYU_BASE_URL = "https://secure.payu.in"; // PayU production URL
-
-console.log("Merchant Key:", PAYU_MERCHANT_KEY);
-console.log("Merchant Salt:", PAYU_MERCHANT_SALT);
+const PAYU_BASE_URL = process.env.PAYU_BASE_URL;
 
 // Fixed payment amount
 const STANDARD_AMOUNT = "499.00"; // Ensure it's a valid float
@@ -65,9 +62,6 @@ export const initializePayment = async (req, res) => {
             .update(hashString)
             .digest("hex");
 
-        // Debugging: Log the hash string and hash
-        console.log("Hash String:", hashString);
-        console.log("Generated Hash:", paymentData.hash);
 
         // Redirect user to PayU payment page
         res.status(200).json({
