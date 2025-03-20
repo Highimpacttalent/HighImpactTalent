@@ -1,6 +1,6 @@
 // Initialize payment
 import Payment from "../models/paymentModel.js";
-import Companies from "../models/companyModel.js"; 
+import Companies from "../models/companiesModel.js"; 
 import { v4 as uuidv4 } from "uuid";
 import crypto from "crypto";
 import dotenv from "dotenv";
