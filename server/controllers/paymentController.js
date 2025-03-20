@@ -12,7 +12,11 @@ const PAYU_MERCHANT_SALT = process.env.PAYU_MERCHANT_SALT;
 const PAYU_BASE_URL = "https://secure.payu.in"; // PayU production URL
 
 // Fixed payment amount
-const STANDARD_AMOUNT = 499;
+const STANDARD_AMOUNT = "499.00"; // Ensure it's a valid float
+
+if (isNaN(STANDARD_AMOUNT) || STANDARD_AMOUNT <= 0) {
+  return res.status(400).json({ message: "Invalid amount" });
+}
 
 // Initialize payment
 export const initializePayment = async (req, res) => {
