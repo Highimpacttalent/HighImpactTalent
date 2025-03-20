@@ -62,6 +62,10 @@ export const initializePayment = async (req, res) => {
             .update(hashString)
             .digest("hex");
 
+        // Debugging: Log the hash string and hash
+        console.log("Hash String:", hashString);
+        console.log("Generated Hash:", paymentData.hash);
+
         // Redirect user to PayU payment page
         res.status(200).json({
             message: "Payment initialized. Redirect to PayU.",
@@ -73,7 +77,6 @@ export const initializePayment = async (req, res) => {
         res.status(500).json({ message: "Failed to initialize payment" });
     }
 };
-
 
 // Get payment status
 export const getPaymentStatus = async (req, res) => {
