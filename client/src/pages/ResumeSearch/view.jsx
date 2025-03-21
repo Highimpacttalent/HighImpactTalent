@@ -20,6 +20,7 @@ import {
   Checkbox,
   FormControlLabel,
 } from "@mui/material";
+import Chatbot from "./Chatbot/view";
 import { skillsList } from "../../assets/mock";
 import EmailIcon from "@mui/icons-material/Email";
 import { useNavigate } from "react-router-dom";
@@ -106,6 +107,10 @@ const ResumeSearch = () => {
     fetchResumes(filters);
   };
 
+  useEffect(() => {
+    fetchResumes(filters);
+  }, [filters]);
+
   const [currentPage, setCurrentPage] = useState(1);
   const recordsPerPage = 4;
 
@@ -116,6 +121,11 @@ const ResumeSearch = () => {
   const handlePageChange = (event, page) => {
     setCurrentPage(page);
   };
+
+  const applySubmit = () => {
+    handleSubmit();
+  };
+  
 
   return (
     <Box
@@ -306,13 +316,19 @@ const ResumeSearch = () => {
         </Grid>
       </Box>
       <Box sx={{ width: "80%" }}>
+        <Box sx={{display:"flex",justifyContent:"space-between",width:"60%"}}>
+        <Box sx={{alignItems:"flex-start",justifyContent:"flex-start",ml:2}}>
+          <Chatbot setFilters={setFilters} apply={applySubmit} />
+        </Box>
         <Typography
           variant="h4"
           gutterBottom
-          style={{ fontWeight: "600", textAlign: "center" }}
+          style={{ fontWeight: "600", textAlign: "center",ml:15 }}
         >
           Resume Search
         </Typography>
+        </Box>
+
         {loading && (
           <LinearProgress color="primary" style={{ marginBottom: "10px" }} />
         )}
