@@ -34,25 +34,12 @@ router.post("/payu-webhook/dispute", (req, res) => {
     payuWebhook(req, res, "dispute");
 });
 
-router.get("/success", (req, res) => {
-    console.log("Received success redirect with query params:", req.query);
-    // Redirect to your frontend success page with the parameters
-    res.redirect(`https://www.highimpacttalent.com/payment-success?txnid=${req.query.txnid || ''}`);
-});
-
-router.get("/failure", (req, res) => {
-    console.log("Received failure redirect with query params:", req.query);
-    // Redirect to your frontend failure page with the parameters
-    res.redirect(`https://www.highimpacttalent.com/payment-failure?txnid=${req.query.txnid || ''}`);
-});
 
 router.post("/success", (req, res) => {
-    console.log("Received POST success redirect with body:", req.body);
     res.redirect(`https://www.highimpacttalent.com/payment-success?txnid=${req.body.txnid || ''}`);
 });
 
 router.post("/failure", (req, res) => {
-    console.log("Received POST failure redirect with body:", req.body);
     res.redirect(`https://www.highimpacttalent.com/payment-failure?txnid=${req.body.txnid || ''}`);
 });
 
