@@ -50,8 +50,8 @@ export const initializePayment = async (req, res) => {
             firstname: name, // Use recruiterName as firstname
             email,
             phone,
-            surl: "https://www.highimpacttalent.com/payment-success",
-            furl: "https://www.highimpacttalent.com/payment-failure",
+            surl: "https://highimpacttalent.onrender.com/api-v1/payment/success",
+            furl: "https://highimpacttalent.onrender.com/api-v1/payment/failure",
             hash: "", // Hash will be calculated below
         };
 
