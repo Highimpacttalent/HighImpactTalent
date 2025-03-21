@@ -5,7 +5,7 @@ import { paymentMiddleware } from "../middlewares/paymentMiddleware.js";
 
 const router = express.Router();
 
-router.post("/getResume", userAuth,paymentMiddleware,getResumes);
-router.post("/getResumeId",userAuth,paymentMiddleware,getResumeById)
+router.post("/getResume",getResumes);
+router.post("/getResumeId",getResumeById);
 
 export default router;
