@@ -83,8 +83,8 @@ function App() {
           <Route path={'/userinformation'} element={<ResumeUpload/>}></Route>
           <Route path={'/password'} element={<PasswordChange/>}></Route>
           <Route path={'/payment'} element={<PayUPaymentPage/>}></Route>
-          <Route path="/payment/success" element={<PaymentSuccess />} />
-          <Route path="/payment/failure" element={<PaymentFailure />} />
+          <Route path="/payment-success" element={<PaymentSuccess />} />
+          <Route path="/payment-failure" element={<PaymentFailure />} />
           
         </Route>
         <Route path="/authform" element={<AuthForm/>}></Route>

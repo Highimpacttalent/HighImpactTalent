@@ -110,12 +110,12 @@ export const payuWebhook = async (req, res, status) => {
         console.log("Webhook received with status:", status);
         console.log("Request body:", req.body);
 
-        const { txnid, hash } = req.body;
+        const { txnid } = req.body;
 
         // Validate required fields
-        if (!txnid || !hash) {
-            console.error("Missing required fields: txnid or hash");
-            return res.status(400).json({ message: "Missing required fields" });
+        if (!txnid) {
+            console.error("Missing required field: txnid");
+            return res.status(400).json({ message: "Missing transaction ID" });
         }
 
         // Find payment by transactionId
@@ -128,28 +128,15 @@ export const payuWebhook = async (req, res, status) => {
 
         console.log("Payment found:", payment);
 
-        // Verify the hash to ensure the request is from PayU
-        const hashString = `${PAYU_MERCHANT_KEY}|${txnid}|${payment.amount}|Subscription Plan|${payment.userId}|||||||||||${PAYU_MERCHANT_SALT}`;
-        console.log("Hash string:", hashString);
-
-        const calculatedHash = crypto
-            .createHash("sha512")
-            .update(hashString)
-            .digest("hex");
-
-        console.log("Calculated hash:", calculatedHash);
-        console.log("Received hash:", hash);
-
-        if (hash !== calculatedHash) {
-            console.error("Hash mismatch: Request is not from PayU");
-            return res.status(400).json({ message: "Invalid hash" });
-        }
-
         // Update payment status based on the event type
-        switch (status) {
+        // Use the status from PayU if available, otherwise use the provided status parameter
+        const finalStatus = (req.body.status && req.body.status.toLowerCase()) || status;
+        
+        switch (finalStatus) {
             case "success":
                 payment.status = "SUCCESS";
                 break;
+            case "failure":
             case "failed":
                 payment.status = "FAILED";
                 break;
@@ -170,9 +157,9 @@ export const payuWebhook = async (req, res, status) => {
 
         console.log("Payment status updated successfully");
 
-        res.status(200).json({ message: "Webhook received and payment status updated" });
+        return res.status(200).json({ message: "Webhook received and payment status updated" });
     } catch (error) {
         console.error("Webhook error:", error);
-        res.status(500).json({ message: "Webhook processing failed" });
+        return res.status(500).json({ message: "Webhook processing failed", error: error.message });
     }
 };
