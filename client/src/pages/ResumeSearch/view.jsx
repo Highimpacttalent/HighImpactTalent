@@ -121,10 +121,6 @@ const ResumeSearch = () => {
   const handlePageChange = (event, page) => {
     setCurrentPage(page);
   };
-
-  const applySubmit = () => {
-    handleSubmit();
-  };
   
 
   return (
@@ -318,7 +314,7 @@ const ResumeSearch = () => {
       <Box sx={{ width: "80%" }}>
         <Box sx={{display:"flex",justifyContent:"space-between",width:"60%"}}>
         <Box sx={{alignItems:"flex-start",justifyContent:"flex-start",ml:2}}>
-          <Chatbot setFilters={setFilters} apply={applySubmit} />
+          <Chatbot setFilters={setFilters} />
         </Box>
         <Typography
           variant="h4"

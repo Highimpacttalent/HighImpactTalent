@@ -22,7 +22,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import { skillsList } from "../../../assets/mock";
 
-const Chatbot = ({ setFilters,apply }) => {
+const Chatbot = ({ setFilters }) => {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState([
     { text: "Welcome! Let’s find the perfect candidate for your role. What position are you hiring for?", sender: "bot" },
