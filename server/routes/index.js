@@ -9,6 +9,7 @@ import blogRoute from './blogRoutes.js'
 import sendMailRoute from "./sendMailRoutes.js";
 import aiRoutes from "./aiRoutes.js";
 import resumepool from "./resumepool.js"
+import paymentRoute from "./paymentRoutes.js"
 const router = express.Router();
 
 const path = "/api-v1/";
@@ -22,5 +23,6 @@ router.use(`${path}blog`,blogRoute)
 router.use(`${path}sendmail`, sendMailRoute);
 router.use(`${path}ai`, aiRoutes);
 router.use(`${path}resume`, resumepool);
+router.use(`${path}payment`, paymentRoute);
 
 export default router;

@@ -35,6 +35,9 @@ import RecruiterSignup from "./pages/AuthForm/Recruiter-Auth";
 import UserSignUp from "./pages/AuthForm/User-Auth";
 import CompanyLoginForm from "./pages/AuthForm/r-login";
 import RecruiterRedirectPage from "./pages/EndSignUp";
+import PayUPaymentPage from "./pages/Payments/PaymentPage";
+import PaymentSuccess from "./pages/Payments/PaymentSuccess";
+import PaymentFailure from "./pages/Payments/PaymentFailure";
 // import ResumeSearch from "./pages/ResumeSearch";
 
 function Layout() {
@@ -79,6 +82,9 @@ function App() {
           <Route path="/resumesearch/viewresume/:resumeId" element={<ViewResumeProfile />} />
           <Route path={'/userinformation'} element={<ResumeUpload/>}></Route>
           <Route path={'/password'} element={<PasswordChange/>}></Route>
+          <Route path={'/payment'} element={<PayUPaymentPage/>}></Route>
+          <Route path="/payment/success" element={<PaymentSuccess />} />
+          <Route path="/payment/failure" element={<PaymentFailure />} />
           
         </Route>
         <Route path="/authform" element={<AuthForm/>}></Route>
