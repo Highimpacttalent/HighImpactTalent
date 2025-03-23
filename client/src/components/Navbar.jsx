@@ -63,7 +63,7 @@ const Navbar = () => {
         {/* Logo */}
         <Box sx={{ display: "flex", alignItems: "center", flexGrow: 1, ml: 4 }}>
           <Link
-            to="/"
+            to={user.token ? "/home" : "/"}
             style={{
               display: "flex",
               alignItems: "center",

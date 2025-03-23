@@ -1,24 +1,35 @@
 import React, { useState, useEffect } from "react";
-import { Dialog, Transition } from "@headlessui/react";
-import { Box, Tabs, Tab, Typography, Paper } from "@mui/material";
+import { Box, Tabs, Tab, Typography, Paper ,Grid} from "@mui/material";
 import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
-import { Fragment } from "react";
-import { WorkOutline, GroupAdd } from "@mui/icons-material";
+import { apiRequest } from "../../utils";
+import TopJobCard from "./TopJobCard/view";
+import { JobCard } from "../../components";
 
 const Landing2 = () => {
   const { user } = useSelector((state) => state.user);
   const navigate = useNavigate();
-  const [isOpen, setIsOpen] = useState(false);
-  const [isHovered, setIsHovered] = useState(false);
+  const [topJobs, setTopJobs] = useState([]);
+  const [recJobs, setRecJobs] = useState([]);
 
   useEffect(() => {
-    if (!user || Object.keys(user).length === 0) {
-      setIsOpen(true);
-    }
-  }, [user]);
+    const fetchTopJobs = async () => {
+      const res = await apiRequest({url:"/jobs/jobs-by-salary", mathod: "GET"});
+      setTopJobs(res.data);
+      console.log(topJobs);
+    };
+    fetchTopJobs();
 
+    const fetchRecJobs = async () => {
+      const res = await apiRequest({url:"/jobs/jobs-recommend", method: "POST", data: {skills: user?.skills || []}});
+      setRecJobs(res.data);
+      console.log(topJobs);
+    };
+    fetchRecJobs();
+  }
+  , []);
+  
   return (
     <Box display="flex" flexDirection="column" bgcolor="white">
       <Box
@@ -59,7 +70,7 @@ const Landing2 = () => {
           ml:4
         }}
       >
-        <Box >
+        <Box>
           <Tabs
             value={0}
             indicatorColor="primary" // Keeps text as it is (no uppercase transformation)
@@ -74,6 +85,55 @@ const Landing2 = () => {
             }}/>
           </Tabs>
         </Box>
+        <Box display="flex" flexDirection="column" alignItems="center" mt={2} gap={2}>
+  {topJobs && topJobs.length > 0 ? (
+    <Grid container spacing={3} sx={{mt:2,mb:10}}>
+      {topJobs.map((job, index) => (
+        <Grid item key={index}>
+          <Box>
+          <TopJobCard job={job}/>
+          </Box>
+        </Grid>
+      ))}
+    </Grid>
+  ) : (
+    <Typography variant="h6" color="textSecondary" align="center">
+      No jobs found. Try a different search.
+    </Typography>
+  )}
+</Box>
+        <Box>
+          <Tabs
+            value={0}
+            indicatorColor="primary" // Keeps text as it is (no uppercase transformation)
+            textColor= "#474E68"
+          >
+            <Tab label="Recommended Jobs for You" sx={{
+              fontFamily: "Satoshi",
+              fontSize: "18px",
+              fontWeight: "700",
+              textTransform: "none",
+              textColor:"#474E68"
+            }}/>
+          </Tabs>
+        </Box>
+        <Box display="flex" flexDirection="column" alignItems="center" mt={2} gap={2}>
+  {recJobs && recJobs.length > 0 ? (
+    <Grid container spacing={3} sx={{mt:2,mb:10}}>
+      {recJobs.map((job, index) => (
+        <Grid item key={index}>
+          <Box sx={{width:"60%"}}>
+          <JobCard job={job}/>
+          </Box>
+        </Grid>
+      ))}
+    </Grid>
+  ) : (
+    <Typography variant="h6" color="textSecondary" align="center">
+      No jobs found. Try a different search.
+    </Typography>
+  )}
+</Box>
       </Box>
     </Box>
   );

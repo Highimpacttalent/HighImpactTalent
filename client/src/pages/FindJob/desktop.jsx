@@ -11,6 +11,8 @@ import {
   IconButton,
   Button,
   Grid,
+  Tabs,
+  Tab,
   Accordion,
   AccordionSummary,
   AccordionDetails,
@@ -19,7 +21,7 @@ import {
   FormControl,
   InputLabel,
 } from "@mui/material";
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { apiRequest } from "../../utils"; // Ensure this utility is correctly set up for API calls
 import { useSelector } from "react-redux";
 import { JobCard } from "../../components";
@@ -35,9 +37,9 @@ const DesktopView = () => {
   const [searchLocation, setSearchLocation] = useState("");
   const [isFetching, setIsFetching] = useState(false);
   const [searchKeyword, setSearchKeyword] = useState("");
+  const [selectedTab, setSelectedTab] = useState(0); 
   const [filteredJobs, setFilteredJobs] = useState([]);
 
-  
   const [experienceFilter, setExperienceFilter] = useState([]);
   const [workModeFilter, setWorkModeFilter] = useState([]);
   const [workTypeFilter, setWorkTypeFilter] = useState([]);
@@ -45,7 +47,6 @@ const DesktopView = () => {
   const [salaryRangeFilter, setSalaryRangeFilter] = useState([]);
   const [datePostedFilter, setDatePostedFilter] = useState([]);
 
-  
   const [expandedAccordions, setExpandedAccordions] = useState({
     experience: false,
     workMode: false,
@@ -55,11 +56,19 @@ const DesktopView = () => {
     datePosted: false,
   });
 
-  
   const topCities = [
-    "Bangalore", "Mumbai", "Hyderabad", "Ahmedabad", "Pune",
-    "Delhi", "Gurgaon", "Chennai", "Noida", "Kochi",
-    "Kolkata", "Others"
+    "Bangalore",
+    "Mumbai",
+    "Hyderabad",
+    "Ahmedabad",
+    "Pune",
+    "Delhi",
+    "Gurgaon",
+    "Chennai",
+    "Noida",
+    "Kochi",
+    "Kolkata",
+    "Others",
   ];
 
   const experienceOptions = [
@@ -67,28 +76,38 @@ const DesktopView = () => {
     { value: "3-5", label: "3-5 years" },
     { value: "6-8", label: "6-8 years" },
     { value: "9-11", label: "9-11 years" },
-    { value: "11+", label: "Over 11 years" }
+    { value: "11+", label: "Over 11 years" },
   ];
 
   const workModeOptions = ["Remote", "Hybrid", "Work From Office"];
   const workTypeOptions = ["Full-Time", "Part-Time", "Contract", "Temporary"];
-  const salaryRangeOptions = ["30-40", "40-50", "50-60", "60-70","70-80","80-90"];
-  const datePostedOptions = ["Last 24 hours", "Last one week", "Last one month", "Any Time"];
+  const salaryRangeOptions = [
+    "30-40",
+    "40-50",
+    "50-60",
+    "60-70",
+    "70-80",
+    "80-90",
+  ];
+  const datePostedOptions = [
+    "Last 24 hours",
+    "Last one week",
+    "Last one month",
+    "Any Time",
+  ];
 
   const location = useLocation();
 
-  
   const handleAccordionChange = (panel) => (event, isExpanded) => {
     setExpandedAccordions({
       ...expandedAccordions,
-      [panel]: isExpanded
+      [panel]: isExpanded,
     });
   };
 
-  
   const handleMultipleSelection = (value, state, setState) => {
     if (state.includes(value)) {
-      setState(state.filter(item => item !== value));
+      setState(state.filter((item) => item !== value));
     } else {
       setState([...state, value]);
     }
@@ -105,6 +124,7 @@ const DesktopView = () => {
     locations,
     salary,
     datePosted,
+    isRecommended,
   }) => {
     const params = new URLSearchParams();
 
@@ -113,21 +133,25 @@ const DesktopView = () => {
     if (exp && exp.length > 0) params.append("exp", exp.join(","));
     if (sort) params.append("sort", sort);
     if (pageNum) params.append("page", pageNum);
-    if (workMode && workMode.length > 0) params.append("workMode", workMode.join(","));
-    if (workType && workType.length > 0) params.append("workType", workType.join(","));
-    if (locations && locations.length > 0) params.append("location", locations.join(","));
+    if (workMode && workMode.length > 0)
+      params.append("workMode", workMode.join(","));
+    if (workType && workType.length > 0)
+      params.append("workType", workType.join(","));
+    if (locations && locations.length > 0)
+      params.append("location", locations.join(","));
     if (salary && salary.length > 0) params.append("salary", salary.join(","));
-    if (datePosted && datePosted.length > 0) params.append("datePosted", datePosted.join(","));
+    if (datePosted && datePosted.length > 0)
+      params.append("datePosted", datePosted.join(","));
+    if (selectedTab) params.append("isRecommended", true);
 
     return `${location.pathname}?${params.toString()}`;
   };
 
-  
   const fetchJobs = async () => {
     setIsFetching(true);
     let locationsForAPI = [...locationFilter];
     if (locationsForAPI.includes("Others")) {
-    locationsForAPI = locationsForAPI.filter(loc => loc !== "Others");
+      locationsForAPI = locationsForAPI.filter((loc) => loc !== "Others");
     }
     const newURL = updateURL({
       query: searchQuery,
@@ -144,23 +168,24 @@ const DesktopView = () => {
     try {
       const res = await apiRequest({
         url: "/jobs" + newURL,
-        method: "GET",
+        method: "POST",
+        data: { skills: user?.skills || []}
       });
-      
+
       // Handle "Others" filter here if selected
       let processedData = res?.data;
-      
+
       if (locationFilter.includes("Others")) {
         // Filter to include only jobs whose locations are NOT in the topCities list (excluding "Others")
-        const regularCities = topCities.filter(city => city !== "Others");
-        processedData = processedData.filter(job => {
+        const regularCities = topCities.filter((city) => city !== "Others");
+        processedData = processedData.filter((job) => {
           // If the job location doesn't match any of the regular cities, include it
-          return !regularCities.some(city => 
+          return !regularCities.some((city) =>
             job.jobLocation.toLowerCase().includes(city.toLowerCase())
           );
         });
       }
-      
+
       setData(processedData);
       setFilteredJobs(processedData);
       setNumPage(res?.numOfPage);
@@ -170,19 +195,29 @@ const DesktopView = () => {
       setIsFetching(false);
     }
   };
-  
+
   useEffect(() => {
     fetchJobs();
-  }, [page, sort, searchQuery, searchLocation, experienceFilter,locationFilter, workModeFilter, workTypeFilter, salaryRangeFilter, datePostedFilter]);
+  }, [
+    page,
+    sort,
+    searchQuery,
+    searchLocation,
+    experienceFilter,
+    locationFilter,
+    workModeFilter,
+    workTypeFilter,
+    salaryRangeFilter,
+    datePostedFilter,
+    selectedTab,
+  ]);
 
-  
   const handleSearchClick = () => {
     setSearchQuery(searchKeyword);
-    setPage(1); 
+    setPage(1);
     fetchJobs();
   };
 
-  
   const handleResetFilters = () => {
     setExperienceFilter([]);
     setWorkModeFilter([]);
@@ -193,17 +228,17 @@ const DesktopView = () => {
     setPage(1);
   };
 
- 
   const getActiveFilterCount = () => {
-    return experienceFilter.length +
+    return (
+      experienceFilter.length +
       workModeFilter.length +
       workTypeFilter.length +
       locationFilter.length +
       salaryRangeFilter.length +
-      datePostedFilter.length;
+      datePostedFilter.length
+    );
   };
 
-  
   const FilterOption = ({ label, value, state, setState }) => {
     const isSelected = state.includes(value);
     return (
@@ -217,7 +252,9 @@ const DesktopView = () => {
         }}
         onClick={() => handleMultipleSelection(value, state, setState)}
       >
-        {isSelected && <AiOutlineCheck color="#1A73E8" style={{ marginRight: "8px" }} />}
+        {isSelected && (
+          <AiOutlineCheck color="#1A73E8" style={{ marginRight: "8px" }} />
+        )}
         <Typography variant="body1" color="#404258" fontFamily="Poppins">
           {label}
         </Typography>
@@ -283,14 +320,72 @@ const DesktopView = () => {
         </Paper>
       </Box>
 
+      <Box sx={{
+          maxWidth: "xl",
+          mx: "auto",
+          mt: 6,
+          px: 2,
+          display: "flex",
+          }}>
+        <Tabs
+           value={selectedTab}
+           onChange={(event, newValue) => setSelectedTab(newValue)}
+          indicatorColor="primary"
+          textColor="#474E68"
+        >
+          <Tab
+            label="All Jobs"
+            sx={{
+              fontFamily: "Satoshi",
+              fontSize: "18px",
+              fontWeight: "700",
+              textTransform: "none",
+              textColor: "#474E68",
+            }}
+          />
+          <Tab
+            label="Recommended Jobs"
+            sx={{
+              fontFamily: "Satoshi",
+              fontSize: "18px",
+              fontWeight: "700",
+              textTransform: "none",
+              textColor: "#474E68",
+            }}
+          />
+        </Tabs>
+      </Box>
+
       {/* Main Content */}
-      <Box sx={{ maxWidth: "xl", mx: "auto", mt: 6, px: 2, display: "flex", gap: 3 }}>
+      <Box
+        sx={{
+          maxWidth: "xl",
+          mx: "auto",
+          mt: 4,
+          px: 2,
+          display: "flex",
+          gap: 3,
+        }}
+      >
         {/* Left Section - Filters */}
         <Box sx={{ width: "25%", p: 2 }}>
           {/* Filter Header */}
-          <Box sx={{ mb: 3, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <Typography variant="h6" color="#404258" gutterBottom sx={{ fontFamily: "Poppins", fontWeight: "600" }}>
-              All Filters {getActiveFilterCount() > 0 && `(${getActiveFilterCount()})`}
+          <Box
+            sx={{
+              mb: 3,
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
+          >
+            <Typography
+              variant="h6"
+              color="#404258"
+              gutterBottom
+              sx={{ fontFamily: "Poppins", fontWeight: "600" }}
+            >
+              All Filters{" "}
+              {getActiveFilterCount() > 0 && `(${getActiveFilterCount()})`}
             </Typography>
             {getActiveFilterCount() > 0 && (
               <Button
@@ -307,12 +402,17 @@ const DesktopView = () => {
           {/* Experience Filter */}
           <Accordion
             expanded={expandedAccordions.experience}
-            onChange={handleAccordionChange('experience')}
+            onChange={handleAccordionChange("experience")}
             sx={{ mb: 2, boxShadow: "none" }}
           >
             <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-              <Typography variant="h6" color="#404258" fontFamily="Satoshi, sans-serif">
-                Experience {experienceFilter.length > 0 && `(${experienceFilter.length})`}
+              <Typography
+                variant="h6"
+                color="#404258"
+                fontFamily="Satoshi, sans-serif"
+              >
+                Experience{" "}
+                {experienceFilter.length > 0 && `(${experienceFilter.length})`}
               </Typography>
             </AccordionSummary>
             <AccordionDetails>
@@ -333,12 +433,17 @@ const DesktopView = () => {
           {/* Work Mode Filter */}
           <Accordion
             expanded={expandedAccordions.workMode}
-            onChange={handleAccordionChange('workMode')}
+            onChange={handleAccordionChange("workMode")}
             sx={{ mb: 2, boxShadow: "none" }}
           >
             <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-              <Typography variant="h6" color="#404258" fontFamily="Satoshi, sans-serif">
-                Work Mode {workModeFilter.length > 0 && `(${workModeFilter.length})`}
+              <Typography
+                variant="h6"
+                color="#404258"
+                fontFamily="Satoshi, sans-serif"
+              >
+                Work Mode{" "}
+                {workModeFilter.length > 0 && `(${workModeFilter.length})`}
               </Typography>
             </AccordionSummary>
             <AccordionDetails>
@@ -359,12 +464,17 @@ const DesktopView = () => {
           {/* Work Type Filter */}
           <Accordion
             expanded={expandedAccordions.workType}
-            onChange={handleAccordionChange('workType')}
+            onChange={handleAccordionChange("workType")}
             sx={{ mb: 2, boxShadow: "none" }}
           >
             <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-              <Typography variant="h6" color="#404258" fontFamily="Satoshi, sans-serif">
-                Work Type {workTypeFilter.length > 0 && `(${workTypeFilter.length})`}
+              <Typography
+                variant="h6"
+                color="#404258"
+                fontFamily="Satoshi, sans-serif"
+              >
+                Work Type{" "}
+                {workTypeFilter.length > 0 && `(${workTypeFilter.length})`}
               </Typography>
             </AccordionSummary>
             <AccordionDetails>
@@ -385,12 +495,17 @@ const DesktopView = () => {
           {/* Location Filter */}
           <Accordion
             expanded={expandedAccordions.location}
-            onChange={handleAccordionChange('location')}
+            onChange={handleAccordionChange("location")}
             sx={{ mb: 2, boxShadow: "none" }}
           >
             <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-              <Typography variant="h6" color="#404258" fontFamily="Satoshi, sans-serif">
-                Location {locationFilter.length > 0 && `(${locationFilter.length})`}
+              <Typography
+                variant="h6"
+                color="#404258"
+                fontFamily="Satoshi, sans-serif"
+              >
+                Location{" "}
+                {locationFilter.length > 0 && `(${locationFilter.length})`}
               </Typography>
             </AccordionSummary>
             <AccordionDetails>
@@ -411,12 +526,18 @@ const DesktopView = () => {
           {/* Salary Filter */}
           <Accordion
             expanded={expandedAccordions.salary}
-            onChange={handleAccordionChange('salary')}
+            onChange={handleAccordionChange("salary")}
             sx={{ mb: 2, boxShadow: "none" }}
           >
             <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-              <Typography variant="h6" color="#404258" fontFamily="Satoshi, sans-serif">
-                Salary Range {salaryRangeFilter.length > 0 && `(${salaryRangeFilter.length})`}
+              <Typography
+                variant="h6"
+                color="#404258"
+                fontFamily="Satoshi, sans-serif"
+              >
+                Salary Range{" "}
+                {salaryRangeFilter.length > 0 &&
+                  `(${salaryRangeFilter.length})`}
               </Typography>
             </AccordionSummary>
             <AccordionDetails>
@@ -437,12 +558,17 @@ const DesktopView = () => {
           {/* Date Posted Filter */}
           <Accordion
             expanded={expandedAccordions.datePosted}
-            onChange={handleAccordionChange('datePosted')}
+            onChange={handleAccordionChange("datePosted")}
             sx={{ mb: 2, boxShadow: "none" }}
           >
             <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-              <Typography variant="h6" color="#404258" fontFamily="Satoshi, sans-serif">
-                Date Posted {datePostedFilter.length > 0 && `(${datePostedFilter.length})`}
+              <Typography
+                variant="h6"
+                color="#404258"
+                fontFamily="Satoshi, sans-serif"
+              >
+                Date Posted{" "}
+                {datePostedFilter.length > 0 && `(${datePostedFilter.length})`}
               </Typography>
             </AccordionSummary>
             <AccordionDetails>
@@ -463,7 +589,6 @@ const DesktopView = () => {
 
         {/* Right Section - Job Listings */}
         <Box sx={{ width: "75%", p: 2 }}>
-
           {/* Job Cards */}
           <Grid container spacing={3}>
             {filteredJobs.map((job) => (
