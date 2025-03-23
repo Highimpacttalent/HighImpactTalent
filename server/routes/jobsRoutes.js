@@ -7,7 +7,8 @@ import {
   getJobsByIds,
   getJobPosts,
   updateJob,
-  getJobsBySalaryDesc
+  getJobsBySalaryDesc,
+  getJobsBySkills
 } from "../controllers/jobController.js";
 
 const router = express.Router();
@@ -23,6 +24,9 @@ router.get("/find-jobs", getJobPosts);
 
 //Top Jobs
 router.get("/jobs-by-salary", getJobsBySalaryDesc);
+
+//Recommended Jobs
+router.get("/jobs-recommend", getJobsBySkills);
 
 // GET JOB DETAIL BY ID
 router.get("/get-job-detail/:id", getJobById);

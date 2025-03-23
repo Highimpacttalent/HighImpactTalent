@@ -435,3 +435,55 @@ export const deleteJobPost = async (req, res, next) => {
     res.status(404).json({ message: error.message });
   }
 };
+
+// Get jobs sorted by skill match
+export const getJobsBySkills = async (req, res, next) => {
+  try {
+    const { skills } = req.body;  // skills array from request body
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 20;
+    const skip = (page - 1) * limit;
+
+    // Fetch jobs with skill array
+    const jobs = await Jobs.find({})
+      .skip(skip)
+      .limit(limit)
+      .populate({
+        path: "company",
+        select: "-password",
+      });
+
+    // Helper function to calculate skill match score
+    const calculateMatchScore = (jobSkills, requiredSkills) => {
+      const matchCount = jobSkills.filter(skill => requiredSkills.includes(skill)).length;
+      if (matchCount === requiredSkills.length) {
+        return 3; // All skills match
+      } else if (matchCount > 0) {
+        return 2; // Some skills match
+      }
+      return 1; // No skills match
+    };
+
+    // Sort jobs based on match score
+    const sortedJobs = jobs
+      .map(job => ({
+        ...job.toObject(),
+        matchScore: calculateMatchScore(job.skills, skills),
+      }))
+      .sort((a, b) => b.matchScore - a.matchScore);  // Sort by match score in descending order
+
+    const totalJobs = await Jobs.countDocuments({});
+    const numOfPage = Math.ceil(totalJobs / limit);
+
+    res.status(200).json({
+      success: true,
+      totalJobs,
+      data: sortedJobs,
+      page,
+      numOfPage,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "Server Error", error: error.message });
+  }
+};
