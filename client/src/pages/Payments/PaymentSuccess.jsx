@@ -14,6 +14,7 @@ const PaymentSuccess = () => {
                 <span className="font-semibold">{txnid}</span>.
             </p>
             <a
+
                 href="/resumesearch"
                 className="w-full px-4 py-2 font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-md transition-colors duration-200"
             >
