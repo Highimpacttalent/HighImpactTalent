@@ -163,7 +163,8 @@ export const updateJob = async (req, res, next) => {
 //get all jobs or use query parameter to filter job
 export const getJobPosts = async (req, res, next) => {
   try {
-    const { search, query, sort, location, searchLocation, exp, workType, workMode, salary, datePosted } = req.query;
+    const { search, query, sort, location, searchLocation, exp, workType, workMode, salary, datePosted, isRecommended } = req.query;
+    const { skills } = req.body;
     const experience = exp?.split("-"); //2-6
 
     let queryObject = {};
@@ -264,6 +265,23 @@ if (location || searchLocation) {
     }
     if (sort === "Salary (Low to High)") {
       queryResult = queryResult.sort("salary");
+    }
+
+     // If isRecommended is true, apply skill-based sorting
+     if (isRecommended === "true" && skills && Array.isArray(skills)) {
+      const calculateMatchScore = (jobSkills, requiredSkills) => {
+        const matchCount = jobSkills.filter(skill => requiredSkills.includes(skill)).length;
+        if (matchCount === requiredSkills.length) return 3; // All skills match
+        if (matchCount > 0) return 2; // Some skills match
+        return 1; // No skills match
+      };
+
+      jobs = jobs
+        .map(job => ({
+          ...job.toObject(),
+          matchScore: calculateMatchScore(job.skills, skills),
+        }))
+        .sort((a, b) => b.matchScore - a.matchScore); // Sort by match score in descending order
     }
 
     // pagination
