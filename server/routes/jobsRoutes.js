@@ -20,7 +20,7 @@ router.post("/upload-job", userAuth, createJob);
 router.put("/update-job/:jobId", userAuth, updateJob);
 
 // GET JOB POSTS
-router.get("/find-jobs", getJobPosts);
+router.post("/find-jobs", getJobPosts);
 
 //Top Jobs
 router.get("/jobs-by-salary", getJobsBySalaryDesc);
