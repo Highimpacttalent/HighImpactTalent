@@ -292,6 +292,40 @@ if (location || searchLocation) {
   }
 };
 
+// Get jobs sorted by salary (High to Low)
+export const getJobsBySalaryDesc = async (req, res, next) => {
+  try {
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 20;
+    const skip = (page - 1) * limit;
+
+    // Fetch jobs sorted by salary in descending order
+    const jobs = await Jobs.find({})
+      .sort({ salary: -1 }) // Sorting salary in descending order
+      .skip(skip)
+      .limit(limit)
+      .populate({
+        path: "company",
+        select: "-password",
+      });
+
+    const totalJobs = await Jobs.countDocuments({});
+    const numOfPage = Math.ceil(totalJobs / limit);
+
+    res.status(200).json({
+      success: true,
+      totalJobs,
+      data: jobs,
+      page,
+      numOfPage,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "Server Error", error: error.message });
+  }
+};
+
+
 
 // get a job by id with  similar jobs
 export const getJobById = async (req, res, next) => {
