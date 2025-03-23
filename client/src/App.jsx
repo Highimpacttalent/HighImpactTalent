@@ -10,6 +10,7 @@ import ViewResumeProfile from "./pages/ResumeSearch/ViewResume/view";
 import ApplicationTracking from "./pages/ApplicationTracking";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsAndConditions from "./components/terms";
+import Landing2 from "./pages/Landing2/view";
 import RefundPolicy from "./components/Refund";
 import ApplicationStatus from "./pages/ApplicationStatus";
 import UploadResume from "./pages/UploadResume";
@@ -66,6 +67,7 @@ function App() {
             element={<Navigate to='/find-jobs' replace={true} />}
           /> */}
           <Route path="/" element={<Landing/>}></Route>
+          <Route path="/home" element={<Landing2/>}></Route>
           <Route path='/find-jobs' element={<FindJob />} />
           <Route path='/view-jobs' element={<ViewJobs />} />
           <Route path="/applicant/:jobId" element={<JobApplications />}/>
