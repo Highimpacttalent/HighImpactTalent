@@ -278,7 +278,7 @@ if (location || searchLocation) {
 
     queryResult = queryResult.limit(limit * page);
 
-    const jobs = await queryResult;
+    let jobs = await queryResult;
 
      // If isRecommended is true, apply skill-based sorting
      if (isRecommended === "true" && skills && Array.isArray(skills)) {
