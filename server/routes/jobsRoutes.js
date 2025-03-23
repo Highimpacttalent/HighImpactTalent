@@ -26,7 +26,7 @@ router.get("/find-jobs", getJobPosts);
 router.get("/jobs-by-salary", getJobsBySalaryDesc);
 
 //Recommended Jobs
-router.get("/jobs-recommend", getJobsBySkills);
+router.post("/jobs-recommend", getJobsBySkills);
 
 // GET JOB DETAIL BY ID
 router.get("/get-job-detail/:id", getJobById);
