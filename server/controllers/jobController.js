@@ -267,6 +267,19 @@ if (location || searchLocation) {
       queryResult = queryResult.sort("salary");
     }
 
+    // pagination
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 20;
+    const skip = (page - 1) * limit;
+
+    //records count
+    const totalJobs = await Jobs.countDocuments(queryResult);
+    const numOfPage = Math.ceil(totalJobs / limit);
+
+    queryResult = queryResult.limit(limit * page);
+
+    const jobs = await queryResult;
+
      // If isRecommended is true, apply skill-based sorting
      if (isRecommended === "true" && skills && Array.isArray(skills)) {
       const calculateMatchScore = (jobSkills, requiredSkills) => {
@@ -284,18 +297,6 @@ if (location || searchLocation) {
         .sort((a, b) => b.matchScore - a.matchScore); // Sort by match score in descending order
     }
 
-    // pagination
-    const page = Number(req.query.page) || 1;
-    const limit = Number(req.query.limit) || 20;
-    const skip = (page - 1) * limit;
-
-    //records count
-    const totalJobs = await Jobs.countDocuments(queryResult);
-    const numOfPage = Math.ceil(totalJobs / limit);
-
-    queryResult = queryResult.limit(limit * page);
-
-    const jobs = await queryResult;
 
     res.status(200).json({
       success: true,
