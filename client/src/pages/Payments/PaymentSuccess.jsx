@@ -1,5 +1,8 @@
 import React from "react";
 import { useLocation } from "react-router-dom";
+import {Box,Typography,Button} from "@mui/material"
+import PaymentSuccessImg from "../../assets/Payment/paySucess.svg";
+import { Link } from "react-router-dom";
 
 const PaymentSuccess = () => {
     const location = useLocation();
@@ -7,20 +10,30 @@ const PaymentSuccess = () => {
     const txnid = queryParams.get("txnid");
 
     return (
-        <div className="max-w-md mx-auto mt-12 p-6 bg-white border border-gray-200 rounded-lg shadow-sm text-center">
-            <h1 className="text-2xl font-bold text-green-600 mb-2">Payment Successful!</h1>
-            <p className="text-sm text-gray-600 mb-6">
-                Thank you for your payment. Your transaction ID is:{" "}
-                <span className="font-semibold">{txnid}</span>.
-            </p>
-            <a
-
-                href="/resumesearch"
-                className="w-full px-4 py-2 font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-md transition-colors duration-200"
+        <Box sx={{bgcolor: "white", p: 4, borderRadius: 2, boxShadow: 2, }}>
+            <Box sx={{display:'flex',justifyContent: "center", }}>
+                <img src={PaymentSuccessImg} alt={`Payment Option`}  />
+            </Box>
+            <Box>
+                <Typography sx={{textAlign:'center',fontFamily:"Satoshi",fontWeight:"700",fontSize:'32px',color:'#474E68'}}>Payment Successful!</Typography>
+            </Box>
+            <Box sx={{display:'flex',justifyContent: "center",flexDirection:'column',alignItems:'center', p:2}}>
+                <Box sx={{border: '1px solid rgba(0, 0, 0, 0.25)',p:4,borderRadius:2}}>
+                    <Typography sx={{color:"rgba(64, 66, 88, 1)"}}>Transaction number: {txnid}</Typography>
+                    <Typography sx={{color:"rgba(64, 66, 88, 1)",mt:1}}>Amount Paid: Rs.499</Typography>
+                </Box>
+            </Box>
+            <Box sx={{display:'flex',justifyContent: "center",flexDirection:'column',alignItems:'center', p:2}}>
+            <Link sx={{textDecoration:'none'}} to="/resumesearch">
+                <Button 
+                    variant="contained"
+                    sx={{borderRadius:8,p:4,fontFamily:'Satoshi',fontSize:"16px",fontWeight:'700',py:2,textTransform:'none'}}
             >
-                View Resume Pool
-            </a>
-        </div>
+               View Resume Pool
+               </Button>
+            </Link>
+            </Box>
+        </Box>
     );
 };
 
