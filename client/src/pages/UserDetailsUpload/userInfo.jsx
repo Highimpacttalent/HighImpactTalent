@@ -35,7 +35,7 @@ const ResumeUpload = () => {
         setFileUrl(file.cdnUrl);
         try {
           const response = await axios.post(
-            "http://localhost:8800/api-v1/user/upload-resume",
+            "https://highimpacttalent.onrender.com/api-v1/user/upload-resume",
             { url: file.cdnUrl },
             {
               headers: {
