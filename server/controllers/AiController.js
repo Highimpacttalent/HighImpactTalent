@@ -2,7 +2,7 @@ import pdfParse from "pdf-parse/lib/pdf-parse.js";
 import axios from "axios";
 import { skillsList } from "./mock.js";
 import ResumePool from "../models/ResumePool.js";
-import { topCompanieslist,topInstituteslist } from "./mock.js";
+import { topCompanieslist, topInstituteslist } from "./mock.js";
 
 const GEMINI_API_KEY = "AIzaSyCILU-_ezGfu3iojbS-hFe9-Fil4klNOlo";
 
@@ -82,7 +82,8 @@ export const parseResume = async (req, res) => {
 - Ensure proper parsing for employment **duration and responsibilities**.
 
 **Resume Content:**  
-${resumeText}` },
+${resumeText}`,
+              },
             ],
           },
         ],
@@ -100,7 +101,9 @@ ${resumeText}` },
     // Extract multiple JSON blocks
     const jsonMatches = rawText.match(/```json\n([\s\S]*?)\n```/g);
     if (!jsonMatches) {
-      return res.status(500).json({ success: false, message: "Invalid API response format" });
+      return res
+        .status(500)
+        .json({ success: false, message: "Invalid API response format" });
     }
 
     // Parse and merge JSON objects
@@ -117,12 +120,12 @@ ${resumeText}` },
 
     console.log("Parsed JSON data successfully:", parsedData);
 
-    const isTopCompany = topCompanieslist.some(company =>
+    const isTopCompany = topCompanieslist.some((company) =>
       new RegExp(`\\b${company}\\b`, "i").test(resumeText)
     );
-    
+
     // Check if any top institute is mentioned in the resume
-    const isTopInstitute = topInstituteslist.some(institute =>
+    const isTopInstitute = topInstituteslist.some((institute) =>
       new RegExp(`\\b${institute}\\b`, "i").test(resumeText)
     );
 
@@ -144,23 +147,26 @@ ${resumeText}` },
         dateOfBirth: parsedData.PersonalInformation?.dateOfBirth || "",
         location: parsedData.PersonalInformation?.location || "",
       },
-    
+
       ProfessionalDetails: {
-        noOfYearsExperience: parsedData.ProfessionalDetails?.noOfYearsExperience || "",
+        noOfYearsExperience:
+          parsedData.ProfessionalDetails?.noOfYearsExperience || "",
         currentCompany: parsedData.ProfessionalDetails?.currentCompany || "",
-        currentDesignation: parsedData.ProfessionalDetails?.currentDesignation || "",
+        currentDesignation:
+          parsedData.ProfessionalDetails?.currentDesignation || "",
         salary: parsedData.ProfessionalDetails?.salary || "",
         about: parsedData.ProfessionalDetails?.about || "",
-        hasConsultingBackground: parsedData.ProfessionalDetails?.hasConsultingBackground || false, // Ensuring consulting background field
+        hasConsultingBackground:
+          parsedData.ProfessionalDetails?.hasConsultingBackground || false, // Ensuring consulting background field
       },
-    
+
       EducationDetails: parsedData.EducationDetails || [],
       WorkExperience: parsedData.WorkExperience || [],
-      
+
       OtherDetails: {
         companiesWorkedAt: parsedData.OtherDetails?.companiesWorkedAt || [],
         jobRoles: parsedData.OtherDetails?.jobRoles || [],
-      }
+      },
     };
 
     parsedData = { ...defaultFields, ...parsedData };
@@ -176,12 +182,15 @@ ${resumeText}` },
         location: parsedData.PersonalInformation?.location || "India",
       },
       professionalDetails: {
-        noOfYearsExperience: Number(parsedData.ProfessionalDetails?.noOfYearsExperience) || 1,
+        noOfYearsExperience:
+          Number(parsedData.ProfessionalDetails?.noOfYearsExperience) || 1,
         currentCompany: parsedData.ProfessionalDetails?.currentCompany || "",
-        currentDesignation: parsedData.ProfessionalDetails?.currentDesignation || "",
+        currentDesignation:
+          parsedData.ProfessionalDetails?.currentDesignation || "",
         salary: parsedData.ProfessionalDetails?.salary || "",
         about: parsedData.ProfessionalDetails?.about || "",
-        hasConsultingBackground: parsedData.ProfessionalDetails?.hasConsultingBackground || false,
+        hasConsultingBackground:
+          parsedData.ProfessionalDetails?.hasConsultingBackground || false,
       },
       educationDetails: parsedData.EducationDetails || [],
       workExperience: parsedData.WorkExperience || [],
@@ -292,7 +301,7 @@ export const resumepool = async (req, res) => {
         location: "",
         companiesWorkedAt: [], // List of past companies
         skills: detectedSkills.length > 0 ? detectedSkills : ["Not Mentioned"], // Extracted skills
-        jobRoles:[],
+        jobRoles: [],
         rating: 3,
       };
 
@@ -307,19 +316,17 @@ export const resumepool = async (req, res) => {
         skills: parsedData.skills,
         companies: parsedData.companiesWorkedAt,
         rating: parsedData.rating,
-        jobRoles: parsedData.jobRoles
+        jobRoles: parsedData.jobRoles,
       });
 
       res.status(200).json({ success: true, data: parsedData });
     } catch (jsonError) {
       console.error("Failed to parse JSON:", jsonError);
-      res
-        .status(500)
-        .json({
-          success: false,
-          message: "Failed to parse response from Gemini API.",
-          rawText,
-        });
+      res.status(500).json({
+        success: false,
+        message: "Failed to parse response from Gemini API.",
+        rawText,
+      });
     }
   } catch (error) {
     console.error(
@@ -330,5 +337,92 @@ export const resumepool = async (req, res) => {
       success: false,
       message: error.response?.data || "Failed to parse resume",
     });
+  }
+};
+
+const convertToBoolean = (value) => value === "true" || value === true;
+const calculateExperience = (dateRange) => {
+  if (!dateRange || !dateRange.includes(" - ")) return 0;
+  const [start, end] = dateRange.split(" - ").map((d) => d.trim());
+  const startDate = new Date(`1 ${start}`);
+  const endDate = end.toLowerCase().includes("present")
+    ? new Date()
+    : new Date(`1 ${end}`);
+  if (isNaN(startDate) || isNaN(endDate)) return 0;
+  return Math.max(
+    0,
+    ((endDate - startDate) / (1000 * 60 * 60 * 24 * 365.25)).toFixed(1)
+  );
+};
+
+export const AIana = async (req, res, next) => {
+  try {
+    const { recruiterQuery } = req.body;
+
+    // Define available filters
+    const filterSchema = {
+      location: "string",
+      exp: "number",
+      currentCompany: "string",
+      isConsultant: "boolean",
+      instituteName: "string",
+      yearOfPassout: "number",
+      workExpCompany: "string",
+      minWorkExp: "number",
+      skills: "array",
+      topCompany: "boolean",
+      topInstitutes: "boolean",
+      companiesWorkedAt: "array",
+      jobRoles: "array",
+    };
+
+    // Send text to Gemini API
+    const geminiResponse = await axios.post(
+      `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`,
+      {
+        contents: [
+          {
+            role: "user",
+            parts: [
+              {
+                text: `Analyze the following recruiter query and extract filter values based on this schema: ${JSON.stringify(
+                  filterSchema
+                )}. 
+      Query: "${recruiterQuery}"
+      ### Important Conditions:
+1. If the recruiter explicitly mentions a candidate must have worked at a **specific company for a certain number of years**, store the company name in "workExpCompany" and the duration in "minWorkExp".
+2. If the recruiter **only mentions companies without specifying experience duration**, store them in "companiesWorkedAt" and use "exp" as the general experience requirement.
+3. Ensure that:
+   - Experience ("exp") is a number representing years of experience.
+   - Skills should be an array of relevant technologies.
+   - Location should match one of the existing database locations.
+   - Job roles should match predefined categories.
+   - If the recruiter is looking for top companies or institutes, set the respective boolean flags.
+
+Return the response **strictly as JSON** without any additional text`,
+              },
+            ],
+          },
+        ],
+      },
+      { headers: { "Content-Type": "application/json" } }
+    );
+
+    // Extract response text
+    const rawText =
+      geminiResponse.data?.candidates?.[0]?.content?.parts?.[0]?.text || "";
+
+    // Parse response
+    const jsonMatch = rawText.match(/```json\n([\s\S]*?)\n```/);
+    const cleanJsonText = jsonMatch ? jsonMatch[1].trim() : rawText.trim();
+    const filters = JSON.parse(cleanJsonText);
+    console.log("Parsed JSON data successfully.", filters);
+
+    res.status(200).json({
+      success: true,
+      filters: filters,
+    });
+  } catch (error) {
+    next(error);
   }
 };
