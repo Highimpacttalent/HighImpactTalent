@@ -19,7 +19,8 @@ import {
 } from "@mui/material";
 import SendIcon from "@mui/icons-material/Send";
 import CloseIcon from "@mui/icons-material/Close";
-import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
+import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutline";
+import { Tooltip, Fab } from "@mui/material";
 import { skillsList } from "../../../assets/mock";
 
 const Chatbot = ({ setFilters }) => {
@@ -195,7 +196,9 @@ useEffect(() => {
   return (
     <>
       <IconButton sx={{ background: "linear-gradient(45deg, #841a7b, #ff1493, #00ffff)", color: "white" }} onClick={() => setOpen(true)}>
-        <AutoAwesomeIcon />
+      <Tooltip title="Chat Assistant">
+    <ChatBubbleOutlineIcon />
+  </Tooltip>
       </IconButton>
 
       <Dialog open={open} onClose={() => setOpen(false)} fullWidth maxWidth="sm">

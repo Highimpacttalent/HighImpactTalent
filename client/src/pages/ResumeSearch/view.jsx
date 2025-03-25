@@ -20,6 +20,7 @@ import {
   Checkbox,
   FormControlLabel,
 } from "@mui/material";
+import AIChatbot from "./AiChatbot/view";
 import Chatbot from "./Chatbot/view";
 import { skillsList } from "../../assets/mock";
 import EmailIcon from "@mui/icons-material/Email";
@@ -313,8 +314,11 @@ const ResumeSearch = () => {
       </Box>
       <Box sx={{ width: "80%" }}>
         <Box sx={{display:"flex",justifyContent:"space-between",width:"60%"}}>
-        <Box sx={{alignItems:"flex-start",justifyContent:"flex-start",ml:2}}>
+        <Box sx={{display:'flex',alignItems:"flex-start",justifyContent:"flex-start",ml:2}}>
           <Chatbot setFilters={setFilters} />
+          <Box sx={{ml:2}}>
+          <AIChatbot setFilters={setFilters} />
+          </Box>
         </Box>
         <Typography
           variant="h4"
