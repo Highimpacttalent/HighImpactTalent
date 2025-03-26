@@ -9,13 +9,16 @@ import {
   Button,
   Typography,
   Box,
-  Card,
+  InputAdornment,
+  IconButton,
   CircularProgress,
 } from "@mui/material";
+import { Visibility, VisibilityOff } from "@mui/icons-material";
 
 function UserLoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [errMsg, setErrMsg] = useState("");
   const [loading, setLoading] = useState(false);
   const dispatch = useDispatch();
@@ -31,11 +34,10 @@ function UserLoginForm() {
         method: "POST",
         data: newData,
       });
-      console.log(res)
 
-      if (res?.success != true) {
+      if (res?.success !== true) {
         setErrMsg(res?.message);
-        return;     
+        return;
       } else {
         setErrMsg("");
         const userData = { token: res?.token, ...res?.user };
@@ -52,31 +54,19 @@ function UserLoginForm() {
   };
 
   return (
-    <Container maxWidth="xs">
-      <Box
-        display="flex"
-        justifyContent="center"
-        alignItems="center"
-        minHeight="100vh"
-        sx={{ background: "#f4f6f8" }}
-      >
-        <Card
-          sx={{
-            p: 4,
-            boxShadow: 5,
-            borderRadius: 3,
-            width: "100%",
-            background: "#fff",
-          }}
-        >
+    <Box sx={{ background: "#fff" }}>
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
+        <Box sx={{ width: { xs: "90%", md: "50%" } }}>
           <Typography
             variant="h4"
-            fontWeight="bold"
+            fontWeight="700"
+            fontFamily="Satoshi"
+            fontSize="32px"
             textAlign="center"
             mb={3}
-            color="primary"
+            color="rgba(64, 66, 88, 1)"
           >
-            Welcome Back!
+            Login
           </Typography>
 
           {errMsg && (
@@ -86,42 +76,55 @@ function UserLoginForm() {
           )}
 
           <form onSubmit={handleSubmit}>
+            <Typography fontWeight="700" fontFamily="Satoshi" color="rgba(64, 66, 88, 1)">
+              Email Address
+            </Typography>
             <TextField
               fullWidth
               variant="outlined"
-              label="Email Address"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               margin="normal"
               required
               sx={{
-                "& .MuiOutlinedInput-root": {
-                  borderRadius: 2,
-                },
+                "& .MuiOutlinedInput-root": { borderRadius: 16, mb: 1 },
               }}
             />
+            <Typography fontWeight="700" fontFamily="Satoshi" color="rgba(64, 66, 88, 1)">
+              Password
+            </Typography>
             <TextField
               fullWidth
               variant="outlined"
-              label="Password"
-              type="password"
+              type={showPassword ? "text" : "password"}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               margin="normal"
               required
-              sx={{
-                "& .MuiOutlinedInput-root": {
-                  borderRadius: 2,
-                },
+              sx={{ "& .MuiOutlinedInput-root": { borderRadius: 16 } }}
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton onClick={() => setShowPassword(!showPassword)} edge="end" sx={{}}>
+                      {showPassword ? <Visibility />:<VisibilityOff /> }
+                    </IconButton>
+                  </InputAdornment>
+                ),
               }}
             />
 
             {/* Forgot Password Link */}
-            <Typography textAlign="right" mt={1}>
+            <Typography textAlign="right" mt={2}>
               <Link
                 to="/password"
-                style={{ color: "#1976d2", textDecoration: "none", fontWeight: "bold" }}
+                style={{
+                  color: "rgba(60, 126, 252, 1)",
+                  textDecoration: "none",
+                  fontWeight: "bold",
+                  fontFamily: "Satoshi",
+                  fontSize: "16px",
+                }}
               >
                 Forgot Password?
               </Link>
@@ -135,33 +138,26 @@ function UserLoginForm() {
               sx={{
                 mt: 2,
                 py: 1.5,
-                borderRadius: 2,
+                borderRadius: 16,
                 textTransform: "none",
                 fontSize: "1rem",
                 fontWeight: "bold",
               }}
               disabled={loading}
             >
-              {loading ? <CircularProgress size={24} color="inherit" /> : "Sign In"}
+              {loading ? <CircularProgress size={24} color="inherit" /> : "Login"}
             </Button>
           </form>
 
-          <Typography textAlign="center" mt={2}>
+          <Typography textAlign="center" mt={4} color="rgba(128, 129, 149, 1)">
             Don't have an account?{" "}
-            <Link
-              to="/u-authform"
-              style={{
-                color: "#1976d2",
-                textDecoration: "none",
-                fontWeight: "bold",
-              }}
-            >
+            <Link to="/u-authform" style={{ color: "rgba(60, 126, 252, 1)", textDecoration: "none" }}>
               Create Account
             </Link>
           </Typography>
-        </Card>
+        </Box>
       </Box>
-    </Container>
+    </Box>
   );
 }
 
