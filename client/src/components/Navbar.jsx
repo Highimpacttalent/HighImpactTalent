@@ -198,11 +198,11 @@ const LoggedInMenu = ({ user, handleMenuOpen }) => (
         Resume Search
       </Button>
     )}
-    {user?.accountType === "seeker" && (
+    {/* {user?.accountType === "seeker" && (
       <Button component={Link} to="/companies" color="inherit">
         Companies
       </Button>
-    )}
+    )} */}
     <Button component={Link} to="/about-us" color="inherit">
       About
     </Button>
@@ -318,7 +318,7 @@ const LoggedInDrawer = ({ user, handleLogout, setDrawerOpen }) => (
         <ListItemText primary="Upload Job" />
       </ListItem>
     )}
-    {user?.accountType === "seeker" && (
+    {/* {user?.accountType === "seeker" && (
       <ListItem
         button
         component={Link}
@@ -327,7 +327,7 @@ const LoggedInDrawer = ({ user, handleLogout, setDrawerOpen }) => (
       >
         <ListItemText primary="Companies" />
       </ListItem>
-    )}
+    )} */}
     <ListItem
       button
       component={Link}
