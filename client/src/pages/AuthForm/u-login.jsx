@@ -4,7 +4,6 @@ import { apiRequest } from "../../utils";
 import { useDispatch } from "react-redux";
 import { Login } from "../../redux/userSlice";
 import {
-  Container,
   TextField,
   Button,
   Typography,
@@ -106,7 +105,7 @@ function UserLoginForm() {
               InputProps={{
                 endAdornment: (
                   <InputAdornment position="end">
-                    <IconButton onClick={() => setShowPassword(!showPassword)} edge="end" sx={{}}>
+                    <IconButton onClick={() => setShowPassword(!showPassword)} edge="end" >
                       {showPassword ? <Visibility />:<VisibilityOff /> }
                     </IconButton>
                   </InputAdornment>
