@@ -276,7 +276,7 @@ const JobCard = ({ job,flag = false,enable = false }) => {
           sx={{borderRadius:40,fontFamily:"Poppins"}}
           to={`/job-detail/${job?._id}`}
         >
-          Apply Now
+          View Details
         </Button>) : user?.token == null ? (
               <Button
               variant="contained"

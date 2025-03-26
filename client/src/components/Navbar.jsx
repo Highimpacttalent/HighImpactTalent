@@ -247,7 +247,7 @@ const LoggedOutMenu = () => (
     <Button
       variant="contained"
       component={Link}
-      to="/"
+      to="/u-login"
       sx={{
         bgcolor: "#3C7EFC",
         borderRadius: 8,
