@@ -29,7 +29,7 @@ const ResumeUpload = () => {
   const isSmallScreen = useMediaQuery(theme.breakpoints.down("md"));
 
   const handleUpload = () => {
-    openDialog({}, { publicKey: "8eeb05a138df98a3c92f" }).done((file) => {
+    openDialog({}, { publicKey: "fe3e0052e9f2e9540955" }).done((file) => {
       setLoading(true);
       file.done(async (file) => {
         setFileUrl(file.cdnUrl);
