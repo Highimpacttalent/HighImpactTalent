@@ -1,172 +1,256 @@
-import passport from 'passport';
-import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
-import { Strategy as LinkedInStrategy } from 'passport-linkedin-oauth2';
-import Users from '../models/userModel.js';
-import JWT from 'jsonwebtoken';
+import { OAuth2Client } from 'google-auth-library';
+import jwt from 'jsonwebtoken';
+import axios from 'axios';
+import User from '../models/userModel.js';
 import dotenv from 'dotenv';
-dotenv.config(); 
 
-// Configure Passport Google Strategy
-passport.use(new GoogleStrategy({
-    clientID: process.env.GOOGLE_CLIENT_ID,
-    clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-    callbackURL: process.env.GOOGLE_CALLBACK_URL,
-    passReqToCallback: true
-  },
-  async (req, accessToken, refreshToken, profile, done) => {
+dotenv.config();
+
+// Google OAuth Client
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
+// Google Signup Handler
+export const googleSignup = async (req, res) => {
     try {
-      // Check if user already exists
-      let user = await Users.findOne({ 
-        $or: [
-          { email: profile.emails[0].value },
-          { providerId: profile.id }
-        ]
-      });
+        const { token } = req.body;
+        if (!token) return res.status(400).json({ message: "Token is required" });
 
-      if (!user) {
-        // Create new user
-        user = new Users({
-          firstName: profile.name.givenName,
-          lastName: profile.name.familyName,
-          email: profile.emails[0].value,
-          authProvider: 'google',
-          providerId: profile.id,
-          isEmailVerified: true,
-          profileUrl: profile.photos[0].value
+        // Verify Google ID Token
+        const ticket = await googleClient.verifyIdToken({
+            idToken: token,
+            audience: process.env.GOOGLE_CLIENT_ID,
         });
-        await user.save();
-      } else if (!user.authProvider) {
-        // User exists with email/password but now logging in with Google
-        user.authProvider = 'google';
-        user.providerId = profile.id;
-        user.isEmailVerified = true;
-        if (!user.profileUrl && profile.photos[0]) {
-          user.profileUrl = profile.photos[0].value;
+
+        // Extract user info
+        const payload = ticket.getPayload();
+        if (!payload) return res.status(400).json({ message: "Invalid token" });
+
+        const { 
+            email, 
+            given_name: firstName, 
+            family_name: lastName, 
+            picture: profileUrl
+        } = payload;
+
+        // Check if user exists, else create
+        let user = await User.findOne({ email });
+        if (!user) {
+            user = new User({ 
+                email, 
+                firstName, 
+                lastName, 
+                profileUrl,
+                authProvider: 'google',
+                isEmailVerified: true  
+            });
+            await user.save();
         }
-        await user.save();
-      }
 
-      return done(null, user);
-    } catch (error) {
-      return done(error, null);
-    }
-  }
-));
+        // Generate JWT
+        const jwtToken = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: "7d" });
 
-// Configure Passport LinkedIn Strategy
-passport.use(new LinkedInStrategy({
-    clientID: process.env.LINKEDIN_CLIENT_ID,
-    clientSecret: process.env.LINKEDIN_CLIENT_SECRET,
-    callbackURL: process.env.LINKEDIN_CALLBACK_URL,
-    scope: ['r_emailaddress', 'r_liteprofile'],
-    passReqToCallback: true
-  },
-  async (req, accessToken, refreshToken, profile, done) => {
-    try {
-      // Check if user already exists
-      let user = await Users.findOne({ 
-        $or: [
-          { email: profile.emails[0].value },
-          { providerId: profile.id }
-        ]
-      });
-
-      if (!user) {
-        // Create new user
-        user = new Users({
-          firstName: profile.name.givenName,
-          lastName: profile.name.familyName,
-          email: profile.emails[0].value,
-          authProvider: 'linkedin',
-          providerId: profile.id,
-          isEmailVerified: true,
-          profileUrl: profile.photos[0].value,
-          linkedinLink: profile.profileUrl
+        res.json({ 
+            token: jwtToken, 
+            user: { 
+                id: user._id, 
+                email: user.email, 
+                firstName: user.firstName, 
+                lastName: user.lastName,
+                profileUrl: user.profileUrl
+            } 
         });
-        await user.save();
-      } else if (!user.authProvider) {
-        // User exists with email/password but now logging in with LinkedIn
-        user.authProvider = 'linkedin';
-        user.providerId = profile.id;
-        user.isEmailVerified = true;
-        if (!user.profileUrl && profile.photos[0]) {
-          user.profileUrl = profile.photos[0].value;
-        }
-        if (!user.linkedinLink) {
-          user.linkedinLink = profile.profileUrl;
-        }
-        await user.save();
-      }
-
-      return done(null, user);
     } catch (error) {
-      return done(error, null);
+        console.error("Google authentication error:", error);
+        res.status(500).json({ message: "Authentication failed" });
     }
-  }
-));
-
-// Serialize user
-passport.serializeUser((user, done) => {
-  done(null, user.id);
-});
-
-// Deserialize user
-passport.deserializeUser(async (id, done) => {
-  try {
-    const user = await Users.findById(id);
-    done(null, user);
-  } catch (error) {
-    done(error, null);
-  }
-});
-
-// Google authentication route
-export const googleAuth = passport.authenticate('google', {
-  scope: ['profile', 'email'],
-  session: false
-});
-
-// Google callback route
-export const googleAuthCallback = (req, res, next) => {
-  passport.authenticate('google', { session: false }, (err, user, info) => {
-    if (err) {
-      return res.redirect(`${process.env.CLIENT_URL}/login?error=${encodeURIComponent(err.message)}`);
-    }
-    if (!user) {
-      return res.redirect(`${process.env.CLIENT_URL}/login?error=Authentication failed`);
-    }
-    
-    // Generate JWT token
-    const token = JWT.sign({ userId: user._id }, process.env.JWT_SECRET_KEY, {
-      expiresIn: '1d',
-    });
-    
-    // Redirect with token
-    res.redirect(`${process.env.CLIENT_URL}/oauth-callback?token=${token}&userId=${user._id}`);
-  })(req, res, next);
 };
 
-// LinkedIn authentication route
-export const linkedinAuth = passport.authenticate('linkedin', {
-  session: false
-});
+// Google Signin Handler
+export const googleSignin = async (req, res) => {
+    try {
+        const { token } = req.body;
+        if (!token) return res.status(400).json({ message: "Token is required" });
 
-// LinkedIn callback route
-export const linkedinAuthCallback = (req, res, next) => {
-  passport.authenticate('linkedin', { session: false }, (err, user, info) => {
-    if (err) {
-      return res.redirect(`${process.env.CLIENT_URL}/login?error=${encodeURIComponent(err.message)}`);
+        // Verify Google ID Token
+        const ticket = await googleClient.verifyIdToken({
+            idToken: token,
+            audience: process.env.GOOGLE_CLIENT_ID,
+        });
+
+        // Extract user info
+        const payload = ticket.getPayload();
+        if (!payload) return res.status(400).json({ message: "Invalid token" });
+
+        const { 
+            email, 
+            given_name: firstName, 
+            family_name: lastName, 
+            picture: profileUrl 
+        } = payload;
+
+        // Check if user exists
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res.status(400).json({ message: "User not found. Please sign up first." });
+        }
+
+        // Generate JWT
+        const jwtToken = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: "7d" });
+
+        res.json({ 
+            token: jwtToken, 
+            user: { 
+                id: user._id, 
+                email: user.email, 
+                firstName: user.firstName, 
+                lastName: user.lastName,
+                profileUrl: user.profileUrl
+            } 
+        });
+    } catch (error) {
+        console.error("Google authentication error:", error);
+        res.status(500).json({ message: "Authentication failed" });
     }
-    if (!user) {
-      return res.redirect(`${process.env.CLIENT_URL}/login?error=Authentication failed`);
+};
+
+// LinkedIn Signup Handler
+export const linkedinSignup = async (req, res) => {
+    try {
+        const { code } = req.body;
+        if (!code) return res.status(400).json({ message: "Authorization code is required" });
+
+        // Exchange authorization code for access token
+        const tokenResponse = await axios.post('https://www.linkedin.com/oauth/v2/accessToken', null, {
+            params: {
+                grant_type: 'authorization_code',
+                code,
+                client_id: process.env.LINKEDIN_CLIENT_ID,
+                client_secret: process.env.LINKEDIN_CLIENT_SECRET,
+                redirect_uri: process.env.LINKEDIN_REDIRECT_URI
+            },
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            }
+        });
+
+        const { access_token } = tokenResponse.data;
+
+        // Fetch user profile
+        const profileResponse = await axios.get('https://api.linkedin.com/v2/me', {
+            headers: {
+                'Authorization': `Bearer ${access_token}`,
+                'cache-control': 'no-cache',
+                'X-Restli-Protocol-Version': '2.0.0'
+            }
+        });
+
+        // Fetch user email
+        const emailResponse = await axios.get('https://api.linkedin.com/v2/emailAddress?q=members&projection=(elements*(handle~))', {
+            headers: {
+                'Authorization': `Bearer ${access_token}`,
+                'cache-control': 'no-cache',
+                'X-Restli-Protocol-Version': '2.0.0'
+            }
+        });
+
+        const profile = profileResponse.data;
+        const email = emailResponse.data.elements[0]['handle~'].emailAddress;
+
+        // Check if user exists, else create
+        let user = await User.findOne({ email });
+        if (!user) {
+            user = new User({ 
+                email, 
+                firstName: profile.firstName, 
+                lastName: profile.lastName,
+                authProvider: 'linkedin',
+                providerId: profile.id,
+                isEmailVerified: true
+            });
+            await user.save();
+        }
+
+        // Generate JWT
+        const jwtToken = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: "7d" });
+
+        res.json({ 
+            token: jwtToken, 
+            user: { 
+                id: user._id, 
+                email: user.email, 
+                firstName: user.firstName, 
+                lastName: user.lastName
+            } 
+        });
+    } catch (error) {
+        console.error("LinkedIn authentication error:", error);
+        res.status(500).json({ message: "Authentication failed" });
     }
-    
-    // Generate JWT token
-    const token = JWT.sign({ userId: user._id }, process.env.JWT_SECRET_KEY, {
-      expiresIn: '1d',
-    });
-    
-    // Redirect with token
-    res.redirect(`${process.env.CLIENT_URL}/oauth-callback?token=${token}&userId=${user._id}`);
-  })(req, res, next);
+};
+
+// LinkedIn Signin Handler
+export const linkedinSignin = async (req, res) => {
+    try {
+        const { code } = req.body;
+        if (!code) return res.status(400).json({ message: "Authorization code is required" });
+
+        // Exchange authorization code for access token
+        const tokenResponse = await axios.post('https://www.linkedin.com/oauth/v2/accessToken', null, {
+            params: {
+                grant_type: 'authorization_code',
+                code,
+                client_id: process.env.LINKEDIN_CLIENT_ID,
+                client_secret: process.env.LINKEDIN_CLIENT_SECRET,
+                redirect_uri: process.env.LINKEDIN_REDIRECT_URI
+            },
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            }
+        });
+
+        const { access_token } = tokenResponse.data;
+
+        // Fetch user profile
+        const profileResponse = await axios.get('https://api.linkedin.com/v2/me', {
+            headers: {
+                'Authorization': `Bearer ${access_token}`,
+                'cache-control': 'no-cache',
+                'X-Restli-Protocol-Version': '2.0.0'
+            }
+        });
+
+        // Fetch user email
+        const emailResponse = await axios.get('https://api.linkedin.com/v2/emailAddress?q=members&projection=(elements*(handle~))', {
+            headers: {
+                'Authorization': `Bearer ${access_token}`,
+                'cache-control': 'no-cache',
+                'X-Restli-Protocol-Version': '2.0.0'
+            }
+        });
+
+        const profile = profileResponse.data;
+        const email = emailResponse.data.elements[0]['handle~'].emailAddress;
+
+        // Check if user exists
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res.status(400).json({ message: "User not found. Please sign up first." });
+        }
+
+        // Generate JWT
+        const jwtToken = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: "7d" });
+
+        res.json({ 
+            token: jwtToken, 
+            user: { 
+                id: user._id, 
+                email: user.email, 
+                firstName: user.firstName, 
+                lastName: user.lastName
+            } 
+        });
+    } catch (error) {
+        console.error("LinkedIn authentication error:", error);
+        res.status(500).json({ message: "Authentication failed" });
+    }
 };

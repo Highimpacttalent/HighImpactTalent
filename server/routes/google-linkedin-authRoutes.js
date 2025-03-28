@@ -1,19 +1,19 @@
 import express from 'express';
 import {
-  googleAuth,
-  googleAuthCallback,
-  linkedinAuth,
-  linkedinAuthCallback
+  googleSignup,
+  googleSignin,
+  linkedinSignup,
+  linkedinSignin
 } from '../controllers/google-linkedin-authController.js';
 
 const router = express.Router();
 
-// Google OAuth routes
-router.get('/google', googleAuth);
-router.get('/google/callback', googleAuthCallback);
+// Google Routes
+router.post('/google/signup', googleSignup);
+router.post('/google/signin', googleSignin);
 
-// LinkedIn OAuth routes
-router.get('/linkedin', linkedinAuth);
-router.get('/linkedin/callback', linkedinAuthCallback);
+// LinkedIn Routes
+router.post('/linkedin/signup', linkedinSignup);
+router.post('/linkedin/signin', linkedinSignin);
 
 export default router;
