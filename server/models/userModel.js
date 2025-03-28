@@ -21,7 +21,21 @@ const userSchema = new mongoose.Schema(
     },
     password: {
       type: String,
-      required: [true, "Password is Required!"]
+      required: function() { return !this.authProvider; }
+    },
+    authProvider: {
+      type: String,
+      enum: ['local', 'google', 'linkedin'],
+      default: 'local'
+    },
+    providerId: {
+      type: String,
+      unique: true,
+      sparse: true 
+    },
+    isEmailVerified: {
+      type: Boolean,
+      default: false
     },
     accountType: { type: String, default: "seeker" },
     contactNumber: { type: String },
