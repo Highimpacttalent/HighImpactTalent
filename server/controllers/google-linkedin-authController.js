@@ -7,7 +7,6 @@ dotenv.config();
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
-// Unified Google Auth Handler
 export const googleAuth = async (req, res) => {
   try {
     const { token } = req.body;
@@ -49,7 +48,7 @@ export const googleAuth = async (req, res) => {
     }
 
     // Generate JWT
-    const jwtToken = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { 
+    const jwtToken = jwt.sign({ userId: user._id }, process.env.JWT_SECRET_KEY, { 
       expiresIn: "7d" 
     });
 
