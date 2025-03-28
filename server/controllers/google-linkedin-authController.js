@@ -72,7 +72,12 @@ export const googleAuth = async (req, res) => {
 
 export const linkedinAuth = async (req, res) => {
   try {
-    const { code } = req.body;
+    const { code, state } = req.body;
+    
+    // Verify state matches what you sent
+    if (state !== 'some_random_state_string') {
+      return res.status(401).json({ message: 'Invalid state' });
+    }
     if (!code) return res.status(400).json({ message: "Authorization code is required" });
 
     // 1. Exchange authorization code for access token
