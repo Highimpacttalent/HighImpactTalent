@@ -95,7 +95,7 @@ const JobCard = ({ job,flag = false,enable = false }) => {
         </Box>
 
         {/* Job Details */}
-        <Box sx={{ mb: 2 ,display:"flex",flexWrap:"wrap"}} gap={1}>
+        <Box sx={{ display:"flex",flexWrap:"wrap"}} gap={1}>
           <Box sx={{display:"flex"}} gap={0.5}>
             <Chip
               icon={<LocationOnOutlined sx={{color:"#474E68"}}/>}
@@ -123,12 +123,12 @@ const JobCard = ({ job,flag = false,enable = false }) => {
            </Box>
 
         {/* Job Description */}
-        <Typography 
+        {/* <Typography 
           variant="body2" 
           color="#474E68" 
           sx={{ flexGrow: 1, overflow: "hidden", textOverflow: "ellipsis", height: 40 }}>
           {job.jobDescription !== "- " ? job?.jobDescription : "No description Provided"}
-        </Typography>
+        </Typography> */}
       </CardContent>
 
       {/* Fixed Bottom Section */}
@@ -212,7 +212,7 @@ const JobCard = ({ job,flag = false,enable = false }) => {
         </Box>
 
         {/* Job Details */}
-        <Box sx={{ mb: 2 }}>
+        <Box>
           <Stack direction="row" spacing={1} flexWrap="wrap" sx={{ mb: 1 }}>
             <Chip
               icon={<LocationOnOutlined sx={{color:"#474E68"}}/>}
@@ -240,7 +240,7 @@ const JobCard = ({ job,flag = false,enable = false }) => {
         </Box>
 
         {/* Job Description */}
-        <Typography
+        {/* <Typography
           variant="body2"
           color="#474E68"
           sx={{
@@ -255,7 +255,7 @@ const JobCard = ({ job,flag = false,enable = false }) => {
           {job.jobDescription && job.jobDescription !== "- "
             ? job.jobDescription.split(" ").slice(0, 150).join(" ") + "..."
             : "No description provided"}
-        </Typography>
+        </Typography> */}
       </CardContent>
 
       {/* Fixed Bottom Section */}

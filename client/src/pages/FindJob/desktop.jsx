@@ -16,6 +16,7 @@ import {
   Accordion,
   AccordionSummary,
   AccordionDetails,
+  Pagination,
   MenuItem,
   Select,
   FormControl,
@@ -598,6 +599,35 @@ const DesktopView = () => {
             ))}
           </Grid>
         </Box>
+      </Box>
+       {/* Material UI Pagination */}
+      <Box display="flex" justifyContent="center">
+      <Pagination
+    count={numPage}
+    page={page}
+    onChange={(event, value) => setPage(value)}
+    color="primary"
+    size="large"
+    shape="rounded"
+    sx={{
+      "& .MuiPaginationItem-root": {
+        borderRadius: "50%",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        fontWeight: "bold",
+        color:"#404258",
+        "&:hover": {
+          backgroundColor: "rgba(60, 126, 252, 1)",
+        },
+      },
+      "& .Mui-selected": {
+        backgroundColor: "rgba(60, 126, 252, 1) !important",
+        color: "white !important",
+        boxShadow: "0px 3px 6px rgba(0, 0, 0, 0.2)",
+      },
+    }}
+  />
       </Box>
     </Box>
   );
