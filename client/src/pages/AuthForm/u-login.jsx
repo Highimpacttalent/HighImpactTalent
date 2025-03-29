@@ -307,6 +307,12 @@ function UserLoginForm() {
             >
               {loading ? <CircularProgress size={24} color="inherit" /> : "Login"}
             </Button>
+            <Typography textAlign="center" mt={4} color="rgba(128, 129, 149, 1)">
+            Don't have an account?{" "}
+            <Link to="/u-authform" style={{ color: "rgba(60, 126, 252, 1)", textDecoration: "none" }}>
+              Create Account
+            </Link>
+          </Typography>
           </form>
         </Box>
       </Box>
