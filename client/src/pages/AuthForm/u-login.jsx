@@ -11,8 +11,25 @@ import {
   InputAdornment,
   IconButton,
   CircularProgress,
+  Divider,
+  Grid
 } from "@mui/material";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
+import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
+import GoogleIcon from '@mui/icons-material/Google';
+import LinkedInIcon from '@mui/icons-material/LinkedIn';
+
+const generateRandomState = () => {
+  const array = new Uint32Array(16); // 16 random numbers (32-bit each)
+  window.crypto.getRandomValues(array); // Fill with cryptographically secure random values
+  return Array.from(array, dec => dec.toString(16).padStart(8, '0')).join(''); // Convert to hex string
+};
+
+const LINKEDIN_CONFIG = {
+  CLIENT_ID: '86a6w4yf01ndrx',
+  REDIRECT_URI: `${window.location.origin}/linkedin-callback`,
+  STATE: generateRandomState(), 
+};
 
 function UserLoginForm() {
   const [email, setEmail] = useState("");
@@ -20,6 +37,8 @@ function UserLoginForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [errMsg, setErrMsg] = useState("");
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
+  const [linkedinLoading, setLinkedinLoading] = useState(false);
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
@@ -45,11 +64,83 @@ function UserLoginForm() {
         navigate("/find-jobs");
       }
     } catch (error) {
-      console.log(error);
       setErrMsg("Something went wrong. Please try again.");
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleGoogleSuccess = async (credentialResponse) => {
+    try {
+      setGoogleLoading(true);
+      setErrMsg("");
+      
+      const { credential } = credentialResponse;
+      if (!credential) {
+        throw new Error("No credential received");
+      }
+      
+      const res = await apiRequest({
+        url: "auth/google",
+        method: "POST",
+        data: { token: credential }
+      });
+  
+      if (!res?.token) {
+        throw new Error(res?.message || "Authentication failed - no token received");
+      }
+  
+      const userData = { 
+        token: res.token, 
+        ...res.user,
+        isNewUser: res.user?.isNewUser ?? false
+      };
+      
+      dispatch(Login(userData));
+      localStorage.setItem("userInfo", JSON.stringify(userData));
+      navigate(userData.isNewUser ? "/userinformation" : "/find-jobs");
+      
+    } catch (error) {
+      setErrMsg(error.message || "Google authentication failed");
+    } finally {
+      setGoogleLoading(false);
+    }
+  };
+
+  const handleLinkedInLogin = () => {
+    try {
+      setLinkedinLoading(true);
+      setErrMsg("");
+  
+      // Generate a state parameter and store it
+      const state = generateRandomState();
+      localStorage.setItem('linkedin_oauth_state', state);
+  
+      // Create the authorization URL with proper encoding
+      const params = new URLSearchParams({
+        response_type: 'code',
+        client_id: '86a6w4yf01ndrx',
+        redirect_uri: `${window.location.origin}/linkedin-callback`,
+        scope: 'openid profile email',
+        state: state
+      });
+  
+      // Log the URL to debug
+      const authUrl = `https://www.linkedin.com/oauth/v2/authorization?${params.toString()}`;
+      console.log('LinkedIn Auth URL:', authUrl);
+      
+      // Redirect to LinkedIn
+      window.location.href = authUrl;
+      
+    } catch (error) {
+      console.error('LinkedIn auth error:', error);
+      setErrMsg("Failed to initiate LinkedIn login");
+      setLinkedinLoading(false);
+    }
+  };
+
+  const handleGoogleError = () => {
+    setErrMsg("Google authentication failed");
   };
 
   return (
@@ -74,6 +165,69 @@ function UserLoginForm() {
             </Typography>
           )}
 
+          <Grid container spacing={2} sx={{ mb: 3 }}>
+            <Grid item xs={6}>
+              <GoogleOAuthProvider clientId="390148996153-usdltgirc8gk0mor929tnibamu7a6tad.apps.googleusercontent.com">
+                <GoogleLogin
+                  onSuccess={handleGoogleSuccess}
+                  onError={handleGoogleError}
+                  render={({ onClick }) => (
+                    <Button
+                      fullWidth
+                      variant="outlined"
+                      onClick={onClick}
+                      disabled={googleLoading}
+                      sx={{
+                        py: 1.5,
+                        borderRadius: 16,
+                        textTransform: "none",
+                        fontSize: "1rem",
+                        fontWeight: "bold",
+                        color: 'rgba(64, 66, 88, 1)',
+                        borderColor: 'rgba(64, 66, 88, 0.23)',
+                        '&:hover': {
+                          borderColor: 'rgba(64, 66, 88, 0.5)',
+                        }
+                      }}
+                      startIcon={googleLoading ? <CircularProgress size={20} /> : <GoogleIcon />}
+                    >
+                      Google
+                    </Button>
+                  )}
+                />
+              </GoogleOAuthProvider>
+            </Grid>
+            <Grid item xs={6}>
+              <Button
+                fullWidth
+                variant="outlined"
+                onClick={handleLinkedInLogin}
+                disabled={linkedinLoading}
+                sx={{
+                  py: 1.5,
+                  borderRadius: 16,
+                  textTransform: "none",
+                  fontSize: "1rem",
+                  fontWeight: "bold",
+                  color: 'rgba(64, 66, 88, 1)',
+                  borderColor: 'rgba(64, 66, 88, 0.23)',
+                  '&:hover': {
+                    borderColor: 'rgba(64, 66, 88, 0.5)',
+                  }
+                }}
+                startIcon={linkedinLoading ? <CircularProgress size={20} /> : <LinkedInIcon />}
+              >
+                LinkedIn
+              </Button>
+            </Grid>
+          </Grid>
+
+          <Divider sx={{ my: 3 }}>
+            <Typography variant="body2" color="text.secondary">
+              OR LOGIN WITH EMAIL
+            </Typography>
+          </Divider>
+
           <form onSubmit={handleSubmit}>
             <Typography fontWeight="700" fontFamily="Satoshi" color="rgba(64, 66, 88, 1)">
               Email Address
@@ -86,10 +240,9 @@ function UserLoginForm() {
               onChange={(e) => setEmail(e.target.value)}
               margin="normal"
               required
-              sx={{
-                "& .MuiOutlinedInput-root": { borderRadius: 16, mb: 1 },
-              }}
+              sx={{ "& .MuiOutlinedInput-root": { borderRadius: 16, mb: 1 } }}
             />
+
             <Typography fontWeight="700" fontFamily="Satoshi" color="rgba(64, 66, 88, 1)">
               Password
             </Typography>
@@ -113,47 +266,17 @@ function UserLoginForm() {
               }}
             />
 
-            {/* Forgot Password Link */}
-            <Typography textAlign="right" mt={2}>
-              <Link
-                to="/password"
-                style={{
-                  color: "rgba(60, 126, 252, 1)",
-                  textDecoration: "none",
-                  fontWeight: "bold",
-                  fontFamily: "Satoshi",
-                  fontSize: "16px",
-                }}
-              >
-                Forgot Password?
-              </Link>
-            </Typography>
-
             <Button
               fullWidth
               type="submit"
               variant="contained"
               color="primary"
-              sx={{
-                mt: 2,
-                py: 1.5,
-                borderRadius: 16,
-                textTransform: "none",
-                fontSize: "1rem",
-                fontWeight: "bold",
-              }}
+              sx={{ mt: 2, py: 1.5, borderRadius: 16, textTransform: "none", fontSize: "1rem", fontWeight: "bold" }}
               disabled={loading}
             >
               {loading ? <CircularProgress size={24} color="inherit" /> : "Login"}
             </Button>
           </form>
-
-          <Typography textAlign="center" mt={4} color="rgba(128, 129, 149, 1)">
-            Don't have an account?{" "}
-            <Link to="/u-authform" style={{ color: "rgba(60, 126, 252, 1)", textDecoration: "none" }}>
-              Create Account
-            </Link>
-          </Typography>
         </Box>
       </Box>
     </Box>

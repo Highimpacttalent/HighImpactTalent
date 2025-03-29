@@ -40,6 +40,7 @@ import RecruiterRedirectPage from "./pages/EndSignUp";
 import PayUPaymentPage from "./pages/Payments/PaymentPage";
 import PaymentSuccess from "./pages/Payments/PaymentSuccess";
 import PaymentFailure from "./pages/Payments/PaymentFailure";
+import LinkedInCallback from "./pages/AuthForm/LinkedInCallback";
 // import ResumeSearch from "./pages/ResumeSearch";
 
 function Layout() {
@@ -95,6 +96,7 @@ function App() {
         <Route path="/u-authform" element={<UserSignUp/>}></Route>
         <Route path="/u-login" element={<UserLoginForm/>}></Route>
         <Route path="/r-login" element={<CompanyLoginForm/>}></Route>
+        <Route path="/linkedin-callback" element={<LinkedInCallback />} />
         <Route path="/authlogin" element={<Loginform/>}></Route>
         <Route path="/endlogin" element={<RecruiterRedirectPage/>}></Route>
         <Route path="/user-additional-details" element={<UserInfoForm/>}></Route>
