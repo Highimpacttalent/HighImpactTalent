@@ -74,6 +74,8 @@ export const googleAuth = async (req, res) => {
 export const linkedinAuth = async (req, res) => {
     try {
       const { code, state, storedState } = req.body;
+      
+      // Validate state parameter for CSRF protection
       if (!state || !storedState || state !== storedState) {
         return res.status(401).json({ message: 'Invalid state parameter' });
       }
@@ -81,6 +83,8 @@ export const linkedinAuth = async (req, res) => {
       if (!code) {
         return res.status(400).json({ message: "Authorization code is required" });
       }
+  
+      // 1. Exchange authorization code for access token
       const tokenResponse = await axios.post(
         'https://www.linkedin.com/oauth/v2/accessToken',
         new URLSearchParams({
@@ -98,17 +102,8 @@ export const linkedinAuth = async (req, res) => {
       );
   
       const { access_token } = tokenResponse.data;
-      
-      // Get basic profile information
-      const profileApiResponse = await axios.get('https://api.linkedin.com/v2/me', {
-          headers: {
-            'Authorization': `Bearer ${access_token}`,
-            'cache-control': 'no-cache',
-            'X-Restli-Protocol-Version': '2.0.0'
-          }
-      });
-    
-      // Get user email and other OpenID data
+  
+      // 2. Fetch user info using only the OpenID Connect userinfo endpoint
       const userInfoResponse = await axios.get('https://api.linkedin.com/v2/userinfo', {
         headers: {
           'Authorization': `Bearer ${access_token}`,
@@ -117,11 +112,7 @@ export const linkedinAuth = async (req, res) => {
         }
       });
   
-      // This will give you the vanity name if available, or the ID in a format LinkedIn expects
-      const profileId = profileApiResponse.data.vanityName || profileApiResponse.data.id;
-      const linkedinLink = `https://www.linkedin.com/in/${profileId}`;
-  
-      // Extract profile data from userinfo endpoint
+      // Extract all needed data from userinfo response
       const {
         sub: linkedinId,
         email,
@@ -130,6 +121,9 @@ export const linkedinAuth = async (req, res) => {
         picture: profilePicture,
         email_verified
       } = userInfoResponse.data;
+  
+      // Construct profile URL using the ID (vanityName requires additional permissions)
+      const linkedinLink = `https://www.linkedin.com/in/${linkedinId.replace('urn:li:person:', '')}`;
   
       // 3. Find or create user in database
       let user = await User.findOne({ email });
@@ -183,7 +177,7 @@ export const linkedinAuth = async (req, res) => {
       if (error.response?.status === 403) {
         return res.status(403).json({
           message: "Permission denied by LinkedIn",
-          error: "Ensure your LinkedIn app has the correct permissions (openid, profile, email)"
+          error: "Ensure your LinkedIn app has the correct permissions (openid, profile, email) and that these permissions are approved by LinkedIn"
         });
       }
   
