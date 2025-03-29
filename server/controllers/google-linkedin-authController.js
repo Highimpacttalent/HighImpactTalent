@@ -121,8 +121,8 @@ export const linkedinAuth = async (req, res) => {
         picture: profilePicture,
         email_verified
       } = userInfoResponse.data;
+      console.log(userInfoResponse);
   
-      // Construct profile URL using the ID (vanityName requires additional permissions)
       const linkedinLink = `https://www.linkedin.com/in/${linkedinId.replace('urn:li:person:', '')}`;
   
       // 3. Find or create user in database
