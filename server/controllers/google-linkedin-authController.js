@@ -71,15 +71,22 @@ export const googleAuth = async (req, res) => {
   }
 };
 
+import axios from 'axios';
+import jwt from 'jsonwebtoken';
+import User from '../models/User.js'; // Adjust path as needed
+
 export const linkedinAuth = async (req, res) => {
   try {
     const { code, state, storedState } = req.body;
     
+    // Validate state parameter for CSRF protection
     if (!state || !storedState || state !== storedState) {
-        return res.status(401).json({ message: 'Invalid state parameter' });
-      }
+      return res.status(401).json({ message: 'Invalid state parameter' });
+    }
       
-      if (!code) return res.status(400).json({ message: "Authorization code is required" });
+    if (!code) {
+      return res.status(400).json({ message: "Authorization code is required" });
+    }
 
     // 1. Exchange authorization code for access token
     const tokenResponse = await axios.post(
@@ -100,7 +107,7 @@ export const linkedinAuth = async (req, res) => {
 
     const { access_token } = tokenResponse.data;
 
-    // 2. Fetch basic profile info
+    // 2. Fetch user info using the OpenID Connect userinfo endpoint
     const profileResponse = await axios.get('https://api.linkedin.com/v2/userinfo', {
       headers: {
         'Authorization': `Bearer ${access_token}`,
@@ -109,16 +116,7 @@ export const linkedinAuth = async (req, res) => {
       }
     });
 
-    // 3. Fetch additional profile data to get LinkedIn URL
-    const profileUrlResponse = await axios.get('https://api.linkedin.com/v2/me', {
-      headers: {
-        'Authorization': `Bearer ${access_token}`,
-        'cache-control': 'no-cache',
-        'X-Restli-Protocol-Version': '2.0.0'
-      }
-    });
-
-    // 4. Extract all user data
+    // Extract profile data
     const {
       sub: linkedinId,
       email,
@@ -128,9 +126,10 @@ export const linkedinAuth = async (req, res) => {
       email_verified
     } = profileResponse.data;
 
-    const linkedinProfileUrl = `https://www.linkedin.com/in/${profileUrlResponse.data.vanityName || linkedinId}`;
+    // Construct profile URL - using ID since vanityName requires additional permissions
+    const linkedinProfileUrl = `https://www.linkedin.com/in/${linkedinId}`;
 
-    // 5. Find or create user
+    // 3. Find or create user in database
     let user = await User.findOne({ email });
     const isNewUser = !user;
 
@@ -140,7 +139,7 @@ export const linkedinAuth = async (req, res) => {
         firstName,
         lastName,
         profileUrl: profilePicture,
-        linkedinLink: linkedinProfileUrl,  // Storing LinkedIn URL
+        linkedinLink: linkedinProfileUrl,
         authProvider: 'linkedin',
         providerId: linkedinId,
         isEmailVerified: email_verified || false
@@ -154,12 +153,14 @@ export const linkedinAuth = async (req, res) => {
       }
     }
 
-    // 6. Generate JWT
-    const jwtToken = jwt.sign({ userId: user._id }, process.env.JWT_SECRET_KEY, {
-      expiresIn: "7d"
-    });
+    // 4. Generate JWT token
+    const jwtToken = jwt.sign(
+      { userId: user._id }, 
+      process.env.JWT_SECRET_KEY, 
+      { expiresIn: "7d" }
+    );
 
-    // 7. Return response (consistent with Google auth format)
+    // 5. Return standardized response
     res.json({
       token: jwtToken,
       user: {
@@ -168,13 +169,22 @@ export const linkedinAuth = async (req, res) => {
         firstName: user.firstName,
         lastName: user.lastName,
         profileUrl: user.profileUrl,
-        linkedinUrl: user.linkedinUrl, 
+        linkedinLink: user.linkedinLink,
         isNewUser
       }
     });
 
   } catch (error) {
     console.error("LinkedIn authentication error:", error.response?.data || error.message);
+    
+    // Handle specific LinkedIn API errors
+    if (error.response?.status === 403) {
+      return res.status(403).json({
+        message: "Permission denied by LinkedIn",
+        error: "Ensure your LinkedIn app has the correct permissions (openid, profile, email)"
+      });
+    }
+
     res.status(500).json({ 
       message: "Authentication failed",
       error: error.response?.data || error.message 
