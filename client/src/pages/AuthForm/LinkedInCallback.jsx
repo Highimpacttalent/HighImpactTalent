@@ -10,17 +10,15 @@ export default function LinkedInCallback() {
     const code = searchParams.get('code');
     const error = searchParams.get('error');
     const state = searchParams.get('state');
-    const storedState = localStorage.getItem('linkedin_oauth_state'); // Retrieve stored state
-
-    // Handle errors from LinkedIn
+    const storedState = localStorage.getItem('linkedin_oauth_state');
+    
     if (error) {
-      navigate('/login', { 
+      navigate('/u-login', { 
         state: { error: `LinkedIn login failed: ${error}` } 
       });
       return;
     }
 
-    // Validate required parameters
     if (!code || !state) {
       navigate('/login', { 
         state: { error: 'Authorization failed: Missing code or state' } 
@@ -28,9 +26,8 @@ export default function LinkedInCallback() {
       return;
     }
 
-    // Verify state to prevent CSRF attacks
     if (!state || state !== storedState) {
-      navigate('/login', { 
+      navigate('/u-login', { 
         state: { error: 'Security violation: Invalid state parameter' } 
       });
       return;
@@ -45,19 +42,16 @@ export default function LinkedInCallback() {
         });
 
         if (response?.token) {
-          // Clear the stored state after successful validation
           localStorage.removeItem('linkedin_oauth_state');
-
-          // Store user data and redirect
           localStorage.setItem('userInfo', JSON.stringify(response));
           navigate(response.user?.isNewUser ? '/userinformation' : '/find-jobs');
         } else {
-          navigate('/login', { 
+          navigate('/u-login', { 
             state: { error: response?.message || 'Authentication failed' } 
           });
         }
       } catch (err) {
-        navigate('/login', { 
+        navigate('/u-login', { 
           state: { error: err.message || 'Server error during login' } 
         });
       }

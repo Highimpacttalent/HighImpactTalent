@@ -20,9 +20,9 @@ import GoogleIcon from '@mui/icons-material/Google';
 import LinkedInIcon from '@mui/icons-material/LinkedIn';
 
 const generateRandomState = () => {
-  const array = new Uint32Array(16); // 16 random numbers (32-bit each)
-  window.crypto.getRandomValues(array); // Fill with cryptographically secure random values
-  return Array.from(array, dec => dec.toString(16).padStart(8, '0')).join(''); // Convert to hex string
+  const array = new Uint32Array(16); 
+  window.crypto.getRandomValues(array); 
+  return Array.from(array, dec => dec.toString(16).padStart(8, '0')).join(''); 
 };
 
 const LINKEDIN_CONFIG = {
@@ -165,62 +165,78 @@ function UserLoginForm() {
             </Typography>
           )}
 
-          <Grid container spacing={2} sx={{ mb: 3 }}>
-            <Grid item xs={6}>
-              <GoogleOAuthProvider clientId="390148996153-usdltgirc8gk0mor929tnibamu7a6tad.apps.googleusercontent.com">
-                <GoogleLogin
-                  onSuccess={handleGoogleSuccess}
-                  onError={handleGoogleError}
-                  render={({ onClick }) => (
-                    <Button
-                      fullWidth
-                      variant="outlined"
-                      onClick={onClick}
-                      disabled={googleLoading}
-                      sx={{
-                        py: 1.5,
-                        borderRadius: 16,
-                        textTransform: "none",
-                        fontSize: "1rem",
-                        fontWeight: "bold",
-                        color: 'rgba(64, 66, 88, 1)',
-                        borderColor: 'rgba(64, 66, 88, 0.23)',
-                        '&:hover': {
-                          borderColor: 'rgba(64, 66, 88, 0.5)',
+            <Grid container spacing={2} sx={{ mb: 3 }}>
+              <Grid item xs={6}>
+                <GoogleOAuthProvider clientId="390148996153-usdltgirc8gk0mor929tnibamu7a6tad.apps.googleusercontent.com">
+                  <GoogleLogin
+                    onSuccess={handleGoogleSuccess}
+                    onError={handleGoogleError}
+                    render={({ onClick }) => (
+                      <Button
+                        fullWidth
+                        variant="outlined"
+                        onClick={onClick}
+                        disabled={googleLoading}
+                        sx={{
+                          py: 1.5,
+                          borderRadius: 16,
+                          textTransform: "none",
+                          fontSize: "0.9rem",
+                          fontWeight: "600",
+                          color: 'rgba(64, 66, 88, 1)',
+                          borderColor: 'rgba(64, 66, 88, 0.23)',
+                          backgroundColor: 'rgba(255, 255, 255, 1)',
+                          boxShadow: '0px 1px 3px rgba(0, 0, 0, 0.08)',
+                          height: '48px',
+                          '&:hover': {
+                            backgroundColor: 'rgba(249, 250, 251, 1)',
+                            borderColor: 'rgba(64, 66, 88, 0.35)',
+                          }
+                        }}
+                        startIcon={
+                          googleLoading ? 
+                          <CircularProgress size={20} /> : 
+                          <GoogleIcon sx={{ color: '#4285F4' }} />
                         }
-                      }}
-                      startIcon={googleLoading ? <CircularProgress size={20} /> : <GoogleIcon />}
-                    >
-                      Google
-                    </Button>
-                  )}
-                />
-              </GoogleOAuthProvider>
-            </Grid>
-            <Grid item xs={6}>
-              <Button
-                fullWidth
-                variant="outlined"
-                onClick={handleLinkedInLogin}
-                disabled={linkedinLoading}
-                sx={{
-                  py: 1.5,
-                  borderRadius: 16,
-                  textTransform: "none",
-                  fontSize: "1rem",
-                  fontWeight: "bold",
-                  color: 'rgba(64, 66, 88, 1)',
-                  borderColor: 'rgba(64, 66, 88, 0.23)',
-                  '&:hover': {
-                    borderColor: 'rgba(64, 66, 88, 0.5)',
+                      >
+                        Sign in with Google
+                      </Button>
+                    )}
+                  />
+                </GoogleOAuthProvider>
+              </Grid>
+              <Grid item xs={6}>
+                <Button
+                  fullWidth
+                  variant="outlined"
+                  onClick={handleLinkedInLogin}
+                  disabled={linkedinLoading}
+                  sx={{
+                    py: 1.5,
+                    borderRadius: 16,
+                    textTransform: "none",
+                    fontSize: "0.9rem",
+                    fontWeight: "600",
+                    color: 'rgba(64, 66, 88, 1)',
+                    borderColor: 'rgba(64, 66, 88, 0.23)',
+                    backgroundColor: 'rgba(255, 255, 255, 1)',
+                    boxShadow: '0px 1px 3px rgba(0, 0, 0, 0.08)',
+                    height: '48px',
+                    '&:hover': {
+                      backgroundColor: 'rgba(249, 250, 251, 1)',
+                      borderColor: 'rgba(64, 66, 88, 0.35)',
+                    }
+                  }}
+                  startIcon={
+                    linkedinLoading ? 
+                    <CircularProgress size={20} /> : 
+                    <LinkedInIcon sx={{ color: '#0077B5' }} />
                   }
-                }}
-                startIcon={linkedinLoading ? <CircularProgress size={20} /> : <LinkedInIcon />}
-              >
-                LinkedIn
-              </Button>
+                >
+                  Sign in with LinkedIn
+                </Button>
+              </Grid>
             </Grid>
-          </Grid>
 
           <Divider sx={{ my: 3 }}>
             <Typography variant="body2" color="text.secondary">
@@ -265,6 +281,21 @@ function UserLoginForm() {
                 ),
               }}
             />
+            {/* Forgot Password Link */}
+            <Typography textAlign="right" mt={2}>
+               <Link
+                 to="/password"
+                 style={{
+                   color: "rgba(60, 126, 252, 1)",
+                   textDecoration: "none",
+                   fontWeight: "bold",
+                   fontFamily: "Satoshi",
+                   fontSize: "16px",
+                 }}
+               >
+                 Forgot Password?
+               </Link>
+             </Typography>
 
             <Button
               fullWidth
