@@ -404,3 +404,209 @@ export const changePassword = async (req, res, next) => {
     res.status(500).json({ message: "Internal Server Error", details: error.message });
   }
 };
+
+// Skills Updating Route
+export const updateSkills = async (req, res) => {
+  try {
+    const { skills, user } = req.body;
+
+    // Validate input
+    if (!user?.userId) {
+      return res.status(400).json({
+        success: false,
+        message: "User ID is required!",
+      });
+    }
+    if (!Array.isArray(skills)) {
+      return res.status(400).json({
+        success: false,
+        message: "Skills must be an array!",
+      });
+    }
+
+    // Find user and update skills
+    const updatedUser = await Users.findOneAndUpdate(
+      { _id: user.userId },
+      { skills },
+      { new: true }
+    );
+
+    // Check if user exists
+    if (!updatedUser) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found!",
+      });
+    }
+
+    // Send response
+    res.status(200).json({
+      success: true,
+      message: "Skills updated successfully!",
+      skills: updatedUser.skills, // Return updated skills array
+    });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      success: false,
+      message: "Server error while updating skills!",
+    });
+  }
+};
+
+//Update Personnel Info Card
+export const updateUserDetails = async (req, res) => {
+  try {
+    const { userId, email, currentLocation, contactNumber } = req.body;
+
+    // Validate user ID
+    if (!userId) {
+      return res.status(400).json({
+        success: false,
+        message: "User ID is required!",
+      });
+    }
+
+    // Prepare update object
+    const updateFields = {};
+    if (email) updateFields.email = email;
+    if (currentLocation) updateFields.currentLocation = currentLocation;
+    if (contactNumber) updateFields.contactNumber = contactNumber;
+
+    // Find and update user
+    const updatedUser = await Users.findOneAndUpdate(
+      { _id: userId },
+      updateFields,
+      { new: true } // Return the updated document
+    );
+
+    // Check if user exists
+    if (!updatedUser) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found!",
+      });
+    }
+
+    // Send response
+    res.status(200).json({
+      success: true,
+      message: "User details updated successfully!",
+      user: updatedUser,
+    });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      success: false,
+      message: "Server error while updating user details!",
+    });
+  }
+};
+
+export const updateWorkDetails = async (req, res) => {
+  try {
+    const { userId, openToRelocate, currentCompany, currentDesignation } = req.body;
+
+    // Validate user ID
+    if (!userId) {
+      return res.status(400).json({
+        success: false,
+        message: "User ID is required!",
+      });
+    }
+
+    // Prepare update object
+    const updateFields = {};
+    if (openToRelocate !== undefined) updateFields.openToRelocate = openToRelocate;
+    if (currentCompany) updateFields.currentCompany = currentCompany;
+    if (currentDesignation) updateFields.currentDesignation = currentDesignation;
+
+    // Find and update user
+    const updatedUser = await Users.findOneAndUpdate(
+      { _id: userId },
+      updateFields,
+      { new: true }
+    );
+
+    // Check if user exists
+    if (!updatedUser) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found!",
+      });
+    }
+
+    // Send response
+    res.status(200).json({
+      success: true,
+      message: "Work details updated successfully!",
+      user: updatedUser,
+    });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      success: false,
+      message: "Server error while updating work details!",
+      error: error.message,
+    });
+  }
+};
+
+
+export const updateLinkedIn = async (req, res) => {
+  try {
+    const { userId, linkedIn } = req.body;
+
+    // Validate user ID
+    if (!userId) {
+      return res.status(400).json({
+        success: false,
+        message: "User ID is required!",
+      });
+    }
+
+    // Check if LinkedIn link is provided
+    if (!linkedIn) {
+      return res.status(400).json({
+        success: false,
+        message: "LinkedIn link is required!",
+      });
+    }
+
+    // Find and update user
+    const updatedUser = await Users.findOneAndUpdate(
+      { _id: userId },
+      { linkedIn },
+      { new: true } 
+    );
+
+    // Check if user exists
+    if (!updatedUser) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found!",
+      });
+    }
+
+    // Send response
+    res.status(200).json({
+      success: true,
+      message: "LinkedIn link updated successfully!",
+      user: updatedUser,
+    });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      success: false,
+      message: "Server error while updating LinkedIn link!",
+      error: error.message,
+    });
+  }
+};
+
+
+

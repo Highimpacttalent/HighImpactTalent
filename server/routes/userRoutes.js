@@ -1,6 +1,6 @@
 import express from "express";
 import userAuth from "../middlewares/authMiddleware.js";
-import { getUser, updateUser,register, signIn,deleteUser,uploadResume,getUsers, toggleJobLike, updateProfileUrl, changePassword } from "../controllers/userController.js";
+import { getUser, updateUser,register, signIn,deleteUser,uploadResume,getUsers, toggleJobLike, updateProfileUrl, changePassword, updateSkills, updateUserDetails } from "../controllers/userController.js";
 
 const router = express.Router();
 
@@ -27,5 +27,9 @@ router.post("/upload-resume",userAuth,uploadResume)
 router.post('/togglelike',userAuth,toggleJobLike)
 
 router.post('/updateprofileurl',userAuth,updateProfileUrl)
+
+router.post('/updateSkills', updateSkills)
+
+router.post('/updateUserPersonnel', updateUserDetails)
 // user/updateprofileurl
 export default router;
