@@ -15,6 +15,7 @@ import multer from 'multer'
 import path from 'path';
 import { fileURLToPath } from 'url';
 import Users from './models/userModel.js'
+import passport from 'passport';
 
 dotenv.config()
 
@@ -34,6 +35,7 @@ app.use(express.urlencoded({ extended: true}))
 app.use(morgan('dev'))
 app.use(router)
 app.use(errorMiddleware)
+app.use(passport.initialize());
 
 app.get('/', (req, res) => {
     res.send('Hello World!')
