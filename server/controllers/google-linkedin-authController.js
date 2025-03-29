@@ -71,10 +71,6 @@ export const googleAuth = async (req, res) => {
   }
 };
 
-import axios from 'axios';
-import jwt from 'jsonwebtoken';
-import User from '../models/User.js'; // Adjust path as needed
-
 export const linkedinAuth = async (req, res) => {
   try {
     const { code, state, storedState } = req.body;
