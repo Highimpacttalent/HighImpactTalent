@@ -21,6 +21,7 @@ import ScreeningQuestions from "./pages/ScreeningQuestions";
 import UserInfoForm from "./pages/UserInfoForm";
 import JobUploadPage from "./pages/JobUploadPage";
 import AuthForm from "./pages/AuthForm/AuthForm";
+import ProfileSection from "./pages/Profile/view";
 import UserLoginForm from "./pages/AuthForm/u-login";
 import Loginform from "./pages/AuthForm/Loginform";
 import BlogPage from "./pages/BlogPage";
@@ -72,7 +73,7 @@ function App() {
           <Route path='/view-jobs' element={<ViewJobs />} />
           <Route path="/applicant/:jobId" element={<JobApplications />}/>
           <Route path='/companies' element={<Companies />} />
-          <Route path={"/user-profile"} element={<UserProfile />} />
+          <Route path={"/user-profile"} element={<ProfileSection />} />
           <Route path={"/company-profile"} element={<CompaniesProfile />} />
           <Route path={"/company-profile/:id"} element={<CompaniesProfile />} />
           <Route path={"/company-profile/job-detail/:id"} element={<CompaniesProfile />} />
