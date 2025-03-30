@@ -155,15 +155,8 @@ export const linkedinAuth = async (req, res) => {
       // 5. Return standardized response
       res.json({
         token: jwtToken,
-        user: {
-          id: user._id,
-          email: user.email,
-          firstName: user.firstName,
-          lastName: user.lastName,
-          profileUrl: user.profileUrl,
-          linkedinLink: user.linkedinLink,
-          isNewUser
-        }
+        user,
+        isNewUser
       });
   
     } catch (error) {
