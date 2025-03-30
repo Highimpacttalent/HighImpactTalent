@@ -1,8 +1,11 @@
 import { useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { apiRequest } from '../../utils';
+import { useDispatch } from "react-redux";
+import { Login } from "../../redux/userSlice";
 
 export default function LinkedInCallback() {
+  const dispatch = useDispatch();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
@@ -45,6 +48,7 @@ export default function LinkedInCallback() {
           localStorage.removeItem('linkedin_oauth_state');
           console.log(response)
           const userData = { token: response?.token, ...response?.user };
+          console.log(userData)
           dispatch(Login(userData));
           localStorage.setItem('userInfo', userData);
           navigate(response.isNewUser ? '/userinformation' : '/find-jobs');
