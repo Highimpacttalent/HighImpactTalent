@@ -121,13 +121,14 @@ function UserLoginForm() {
         response_type: 'code',
         client_id: '86a6w4yf01ndrx',
         redirect_uri: `${window.location.origin}/linkedin-callback`,
-        scope: 'openid profile email',
+        scope: 'openid r_liteprofile r_emailaddress',
         state: state
       });
   
       // Log the URL to debug
       const authUrl = `https://www.linkedin.com/oauth/v2/authorization?${params.toString()}`;
       console.log('LinkedIn Auth URL:', authUrl);
+
       
       // Redirect to LinkedIn
       window.location.href = authUrl;
