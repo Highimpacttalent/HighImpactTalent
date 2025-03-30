@@ -68,133 +68,118 @@ export const googleAuth = async (req, res) => {
 };
 
 export const linkedinAuth = async (req, res) => {
-  try {
+    try {
       const { code, state, storedState } = req.body;
-
+      
       // Validate state parameter for CSRF protection
       if (!state || !storedState || state !== storedState) {
-          return res.status(401).json({ message: "Invalid state parameter" });
+        return res.status(401).json({ message: 'Invalid state parameter' });
       }
-
+        
       if (!code) {
-          return res.status(400).json({ message: "Authorization code is required" });
+        return res.status(400).json({ message: "Authorization code is required" });
       }
-
+  
       // 1. Exchange authorization code for access token
       const tokenResponse = await axios.post(
-          "https://www.linkedin.com/oauth/v2/accessToken",
-          new URLSearchParams({
-              grant_type: "authorization_code",
-              code,
-              client_id: process.env.LINKEDIN_CLIENT_ID,
-              client_secret: process.env.LINKEDIN_CLIENT_SECRET,
-              redirect_uri: process.env.LINKEDIN_REDIRECT_URI,
-          }),
-          {
-              headers: {
-                  "Content-Type": "application/x-www-form-urlencoded",
-              },
+        'https://www.linkedin.com/oauth/v2/accessToken',
+        new URLSearchParams({
+          grant_type: 'authorization_code',
+          code,
+          client_id: process.env.LINKEDIN_CLIENT_ID,
+          client_secret: process.env.LINKEDIN_CLIENT_SECRET,
+          redirect_uri: process.env.LINKEDIN_REDIRECT_URI
+        }),
+        {
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
           }
+        }
       );
-
-      console.log(tokenResponse)
-
+  
       const { access_token } = tokenResponse.data;
-
-      // 2. Fetch user info from LinkedIn's /me endpoint
-      const userInfoResponse = await axios.get(
-          "https://api.linkedin.com/v2/me?projection=(id,localizedFirstName,localizedLastName,vanityName,profilePicture(displayImage~:playableStreams))",
-          {
-              headers: {
-                  Authorization: `Bearer ${access_token}`,
-                  "cache-control": "no-cache",
-                  "X-Restli-Protocol-Version": "2.0.0",
-              },
-          }
-      );
-      console.log("userInfoResponse",userInfoResponse);
-
+  
+      // 2. Fetch user info using only the OpenID Connect userinfo endpoint
+      const userInfoResponse = await axios.get('https://api.linkedin.com/v2/userinfo', {
+        headers: {
+          'Authorization': `Bearer ${access_token}`,
+          'cache-control': 'no-cache',
+          'X-Restli-Protocol-Version': '2.0.0'
+        }
+      });
+  
+      // Extract all needed data from userinfo response
       const {
-          id: linkedinId,
-          localizedFirstName: firstName,
-          localizedLastName: lastName,
-          vanityName,
-          profilePicture,
+        sub: linkedinId,
+        email,
+        given_name: firstName,
+        family_name: lastName,
+        picture: profilePicture,
+        email_verified
       } = userInfoResponse.data;
-
-      // Construct the LinkedIn profile URL
-      const linkedinLink = vanityName
-          ? `https://www.linkedin.com/in/${vanityName}`
-          : `https://www.linkedin.com/in/${linkedinId}`;
-
-      // 3. Fetch user email
-      const emailResponse = await axios.get(
-          "https://api.linkedin.com/v2/emailAddress?q=members&projection=(elements*(handle~))",
-          {
-              headers: {
-                  Authorization: `Bearer ${access_token}`,
-                  "cache-control": "no-cache",
-                  "X-Restli-Protocol-Version": "2.0.0",
-              },
-          }
-      );
-      console.log("emailResponse",emailResponse);
-
-      const email = emailResponse.data.elements[0]["handle~"].emailAddress || "";
-
-      // Extract profile picture URL
-      const profilePictureUrl =
-          profilePicture?.["displayImage~"]?.elements?.pop()?.identifiers?.[0]?.identifier || null;
-      console.log(ProfilePictureUrl)
-
-      // 4. Find or create user in database
+      console.log(userInfoResponse);
+  
+      const profileResponse = await axios.get('https://api.linkedin.com/v2/me', {
+        headers: {
+          Authorization: `Bearer ${access_token}`,
+          'X-Restli-Protocol-Version': '2.0.0'
+        }
+      });
+      
+      const linkedinLink = profileResponse.data.publicProfileUrl || null;
+  
+      // 3. Find or create user in database
       let user = await User.findOne({ email });
       const isNewUser = !user;
-
+  
       if (isNewUser) {
-          user = new User({
-              email,
-              firstName,
-              lastName,
-              profileUrl: profilePictureUrl,
-              linkedinLink,
-              authProvider: "linkedin",
-              providerId: linkedinId,
-              isEmailVerified: true, // LinkedIn does not return email_verified, assuming true
-          });
-          await user.save();
+        user = new User({
+          email,
+          firstName,
+          lastName,
+          profileUrl: profilePicture,
+          linkedinLink,
+          authProvider: 'linkedin',
+          providerId: linkedinId,
+          isEmailVerified: email_verified || false
+        });
+        await user.save();
       } else {
-          // Update existing user's LinkedIn URL if not present
-          if (!user.linkedinLink) {
-              user.linkedinLink = linkedinLink;
-              await user.save();
-          }
+        // Update existing user's LinkedIn URL if not present
+        if (!user.linkedinLink) {
+          user.linkedinLink = linkedinLink;
+          await user.save();
+        }
       }
-
-      // 5. Generate JWT token
-      const jwtToken = jwt.sign({ userId: user._id }, process.env.JWT_SECRET_KEY, {
-          expiresIn: "7d",
-      });
-
-      // 6. Return response
+  
+      // 4. Generate JWT token
+      const jwtToken = jwt.sign(
+        { userId: user._id }, 
+        process.env.JWT_SECRET_KEY, 
+        { expiresIn: "7d" }
+      );
+  
+      // 5. Return standardized response
       res.json({
-          token: jwtToken,
-          user,
-          isNewUser,
+        token: jwtToken,
+        user,
+        isNewUser
       });
-  } catch (error) {
+  
+    } catch (error) {
       console.error("LinkedIn authentication error:", error.response?.data || error.message);
-
+      
+      // Handle specific LinkedIn API errors
       if (error.response?.status === 403) {
-          return res.status(403).json({
-              message: "Permission denied by LinkedIn",
-              error: "Ensure your LinkedIn app has the correct permissions (openid, profile, email) and that these permissions are approved by LinkedIn",
-          });
+        return res.status(403).json({
+          message: "Permission denied by LinkedIn",
+          error: "Ensure your LinkedIn app has the correct permissions (openid, profile, email) and that these permissions are approved by LinkedIn"
+        });
       }
-
-      res.status(500).json({
-          message: "Authentication failed",
-          error: error.response?.data || error.message,
+  
+      res.status(500).json({ 
+        message: "Authentication failed",
+        error: error.response?.data || error.message 
       });
-  }
-};
+    }
+  };
