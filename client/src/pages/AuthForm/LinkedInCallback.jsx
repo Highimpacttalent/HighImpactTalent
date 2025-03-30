@@ -47,9 +47,8 @@ export default function LinkedInCallback() {
         if (response?.token) {
           localStorage.removeItem('linkedin_oauth_state');
           const userData = { token: response?.token, ...response?.user };
-          console.log("userData" ,userData)
           dispatch(Login(userData));
-          localStorage.setItem('userInfo', userData);
+          localStorage.setItem('userInfo', JSON.stringify(userData));
           navigate(response.isNewUser ? '/userinformation' : '/find-jobs');
         } else {
           navigate('/u-login', { 
