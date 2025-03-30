@@ -119,8 +119,6 @@ export const linkedinAuth = async (req, res) => {
       } = userInfoResponse.data;
       console.log(userInfoResponse);
   
-      const linkedinLink = `https://www.linkedin.com/in/${linkedinId.replace('urn:li:person:', '')}`;
-  
       // 3. Find or create user in database
       let user = await User.findOne({ email });
       const isNewUser = !user;
@@ -131,18 +129,11 @@ export const linkedinAuth = async (req, res) => {
           firstName,
           lastName,
           profileUrl: profilePicture,
-          linkedinLink,
           authProvider: 'linkedin',
           providerId: linkedinId,
           isEmailVerified: email_verified || false
         });
         await user.save();
-      } else {
-        // Update existing user's LinkedIn URL if not present
-        if (!user.linkedinLink) {
-          user.linkedinLink = linkedinLink;
-          await user.save();
-        }
       }
   
       // 4. Generate JWT token
