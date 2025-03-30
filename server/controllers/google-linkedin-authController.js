@@ -100,26 +100,39 @@ export const linkedinAuth = async (req, res) => {
       const { access_token } = tokenResponse.data;
   
       // 2. Fetch user info using only the OpenID Connect userinfo endpoint
-      const userInfoResponse = await axios.get('https://api.linkedin.com/v2/userinfo', {
+      const userInfoResponse = await axios.get('https://api.linkedin.com/v2/me?projection=(id,localizedFirstName,localizedLastName,vanityName,profilePicture(displayImage~:playableStreams))', {
         headers: {
           'Authorization': `Bearer ${access_token}`,
           'cache-control': 'no-cache',
           'X-Restli-Protocol-Version': '2.0.0'
         }
       });
+      
   
       // Extract all needed data from userinfo response
-      const {
-        sub: linkedinId,
-        email,
-        given_name: firstName,
-        family_name: lastName,
-        picture: profilePicture,
-        email_verified
-      } = userInfoResponse.data;
-      console.log(userInfoResponse);
+      const { id: linkedinId, localizedFirstName: firstName, localizedLastName: lastName, vanityName, profilePicture } = userInfoResponse.data;
   
-      const linkedinLink = `https://www.linkedin.com/in/${linkedinId.replace('urn:li:person:', '')}`;
+      const linkedinLink = vanityName
+  ? `https://www.linkedin.com/in/${vanityName}`
+  : `https://www.linkedin.com/in/${linkedinId}`;
+
+    // 3. Fetch user email (separate request)
+    const emailResponse = await axios.get(
+      'https://api.linkedin.com/v2/emailAddress?q=members&projection=(elements*(handle~))',
+      {
+          headers: {
+              'Authorization': `Bearer ${access_token}`,
+              'cache-control': 'no-cache',
+              'X-Restli-Protocol-Version': '2.0.0'
+          }
+      }
+  );
+
+  const email = emailResponse.data.elements[0]['handle~'].emailAddress||"";
+
+  // Extract profile picture URL (LinkedIn provides different formats)
+  const profilePictureUrl = profilePicture?.['displayImage~']?.elements?.pop()?.identifiers?.[0]?.identifier || null;
+
   
       // 3. Find or create user in database
       let user = await User.findOne({ email });
@@ -130,7 +143,7 @@ export const linkedinAuth = async (req, res) => {
           email,
           firstName,
           lastName,
-          profileUrl: profilePicture,
+          profileUrl: profilePictureUrl,
           linkedinLink,
           authProvider: 'linkedin',
           providerId: linkedinId,
