@@ -58,6 +58,7 @@ export const googleAuth = async (req, res) => {
       message: "Login successfully",
       user,
       token : jwtToken,
+      isNewUser
     });
 
   } catch (error) {
