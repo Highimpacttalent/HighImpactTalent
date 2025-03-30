@@ -43,8 +43,10 @@ export default function LinkedInCallback() {
 
         if (response?.token) {
           localStorage.removeItem('linkedin_oauth_state');
-          localStorage.setItem('userInfo', JSON.stringify(response));
-          navigate(response.user?.isNewUser ? '/userinformation' : '/find-jobs');
+          const userData = { token: res?.token, ...res?.user };
+          dispatch(Login(userData));
+          localStorage.setItem('userInfo', userData);
+          navigate(response.isNewUser ? '/userinformation' : '/find-jobs');
         } else {
           navigate('/u-login', { 
             state: { error: response?.message || 'Authentication failed' } 
