@@ -97,6 +97,8 @@ export const linkedinAuth = async (req, res) => {
           }
       );
 
+      console.log(tokenResponse)
+
       const { access_token } = tokenResponse.data;
 
       // 2. Fetch user info from LinkedIn's /me endpoint
@@ -110,6 +112,7 @@ export const linkedinAuth = async (req, res) => {
               },
           }
       );
+      console.log("userInfoResponse",userInfoResponse);
 
       const {
           id: linkedinId,
@@ -135,12 +138,14 @@ export const linkedinAuth = async (req, res) => {
               },
           }
       );
+      console.log("emailResponse",emailResponse);
 
       const email = emailResponse.data.elements[0]["handle~"].emailAddress || "";
 
       // Extract profile picture URL
       const profilePictureUrl =
           profilePicture?.["displayImage~"]?.elements?.pop()?.identifiers?.[0]?.identifier || null;
+      console.log(ProfilePictureUrl)
 
       // 4. Find or create user in database
       let user = await User.findOne({ email });
