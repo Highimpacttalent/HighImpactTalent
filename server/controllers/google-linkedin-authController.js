@@ -118,7 +118,9 @@ export const linkedinAuth = async (req, res) => {
         email_verified
       } = userInfoResponse.data;
       console.log(userInfoResponse);
-  
+
+      console.log("error start");
+      
       const profileResponse = await axios.get('https://api.linkedin.com/v2/me', {
         headers: {
           Authorization: `Bearer ${access_token}`,
@@ -126,6 +128,7 @@ export const linkedinAuth = async (req, res) => {
         }
       });
       
+      console.log("error end");
       const linkedinLink = profileResponse.data.publicProfileUrl || null;
   
       // 3. Find or create user in database
