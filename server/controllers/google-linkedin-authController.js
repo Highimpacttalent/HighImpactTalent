@@ -53,16 +53,11 @@ export const googleAuth = async (req, res) => {
       expiresIn: "7d" 
     });
 
-    res.json({ 
-      token: jwtToken,
-      user: {
-        id: user._id,
-        email: user.email,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        profileUrl: user.profileUrl,
-        isNewUser
-      }
+    res.status(202).json({
+      success: true,
+      message: "Login successfully",
+      user,
+      token : jwtToken,
     });
 
   } catch (error) {
