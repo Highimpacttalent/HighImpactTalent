@@ -93,7 +93,7 @@ function UserLoginForm() {
       const userData = { 
         token: res.token, 
         ...res.user,
-        isNewUser: res.user?.isNewUser ?? false
+        isNewUser: res.isNewUser ?? false
       };
       
       dispatch(Login(userData));
