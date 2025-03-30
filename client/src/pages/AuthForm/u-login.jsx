@@ -121,7 +121,7 @@ function UserLoginForm() {
         response_type: 'code',
         client_id: '86a6w4yf01ndrx',
         redirect_uri: `${window.location.origin}/linkedin-callback`,
-        scope: 'openid r_liteprofile r_emailaddress',
+        scope: 'openid profile email',
         state: state
       });
   
