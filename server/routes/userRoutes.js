@@ -1,7 +1,7 @@
 import express from "express";
 import userAuth from "../middlewares/authMiddleware.js";
 import { getUser, updateUser,register, signIn,deleteUser,uploadResume,getUsers, toggleJobLike, updateProfileUrl, changePassword, updateSkills, updateUserDetails, updateWorkDetails, updateLinkedIn, uploadMiddleware } from "../controllers/userController.js";
-import uploadAuth from "../middlewares/uploadAuth.js";
+import { uploadAuth } from "../middlewares/uploadAuth.js";
 
 const router = express.Router();
 
