@@ -1,6 +1,6 @@
 import express from "express";
 import userAuth from "../middlewares/authMiddleware.js";
-import { getUser, updateUser,register, signIn,deleteUser,uploadResume,getUsers, toggleJobLike, updateProfileUrl, changePassword, updateSkills, updateUserDetails, updateWorkDetails, updateLinkedIn } from "../controllers/userController.js";
+import { getUser, updateUser,register, signIn,deleteUser,uploadResume,getUsers, toggleJobLike, updateProfileUrl, changePassword, updateSkills, updateUserDetails, updateWorkDetails, updateLinkedIn, uploadMiddleware } from "../controllers/userController.js";
 
 const router = express.Router();
 
@@ -22,7 +22,7 @@ router.post("/change-password",changePassword)
 
 router.delete("/delete",userAuth,deleteUser);
 
-router.post("/upload-resume",userAuth,uploadResume)
+router.post("/upload-resume",userAuth,uploadMiddleware,uploadResume)
 
 router.post('/togglelike',userAuth,toggleJobLike)
 

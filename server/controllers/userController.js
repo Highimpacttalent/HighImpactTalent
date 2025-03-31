@@ -3,34 +3,76 @@ import Users from "../models/userModel.js";
 import { application } from "express";
 import Application from "../models/ApplicationModel.js";
 import bcrypt from "bcryptjs";
+import { uploadFileToS3 } from "../s3Config/s3.js";
+import multer from "multer";
+
+const upload = multer({
+  storage: multer.memoryStorage(), 
+  limits: {
+    fileSize: 5 * 1024 * 1024, 
+  },
+});
+
+// Middleware to handle file upload
+export const uploadMiddleware = upload.single("resume");
 
 // upload resume
 export const uploadResume = async (req, res) => {
   try {
-    const { url } = req.body;
-    // console.log(url)
-    const userResume = await Users.findOneAndUpdate(
-      { _id: req.body.user.userId },
-      { cvUrl: url }
-    );
-    if (!userResume) {
-      return res.status(404).json({
+    if (!req.file) {
+      return res.status(400).json({
         success: false,
-        message: "Problem while uploding resume",
+        message: "No file uploaded",
       });
     }
+
+    const file = req.file;
+    const userId = req.body.user.userId;
+
+    // Validate file type
+    if (file.mimetype !== "application/pdf") {
+      return res.status(400).json({
+        success: false,
+        message: "Only PDF files are allowed",
+      });
+    }
+
+    // Generate unique filename
+    const filename = `resumes/${userId}/${Date.now()}-${file.originalname}`;
+
+    // Upload to S3
+    const s3Response = await uploadFileToS3(file.buffer, filename);
+
+    // Update user's cvUrl in database
+    const updatedUser = await Users.findByIdAndUpdate(
+      userId,
+      { cvUrl: s3Response.Location },
+      { new: true }
+    );
+
+    if (!updatedUser) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
     res.status(200).json({
       success: true,
-      message: "resume updated",
-      user: userResume,
+      message: "Resume uploaded successfully",
+      url: s3Response.Location,
+      user: updatedUser,
     });
   } catch (error) {
-    console.log(error);
-    res.status(404).json({
+    console.error("Error uploading resume:", error);
+    res.status(500).json({
       success: false,
+      message: error.message || "Error uploading resume",
     });
   }
 };
+
+
 // update user details
 export const updateUser = async (req, res, next) => {
   console.log("updateUser function called");
