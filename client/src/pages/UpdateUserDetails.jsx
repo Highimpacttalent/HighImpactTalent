@@ -1,7 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import { apiRequest } from "../utils";
-import { Widget } from "@uploadcare/react-widget";
 import "react-phone-number-input/style.css";
 import PhoneInput from "react-phone-number-input";
 import { useNavigate } from "react-router-dom";
@@ -14,15 +13,17 @@ const UpdateUserForm = () => {
   const [fetchError, setFetchError] = useState(null);
   const [value, setValue] = useState("");
   const [initialDataLoaded, setInitialDataLoaded] = useState(false);
-  const widgetApi = useRef();
-  const profileWidgetApi = useRef(null);
   const [profilePic, setProfilePic] = useState(null);
   const [fileUrl, setFileUrl] = useState("");
-  const [cities, setCities] = useState([]); 
-  const [selectedCity, setSelectedCity] = useState(null); 
-  const [inputValue, setInputValue] = useState(""); 
-  const [isOtherSelected, setIsOtherSelected] = useState(false); 
-  const [customCity, setCustomCity] = useState(""); 
+  const [cities, setCities] = useState([]);
+  const [selectedCity, setSelectedCity] = useState(null);
+  const [inputValue, setInputValue] = useState("");
+  const [isOtherSelected, setIsOtherSelected] = useState(false);
+  const [customCity, setCustomCity] = useState("");
+  const [resumeUploading, setResumeUploading] = useState(false);
+  const [resumeError, setResumeError] = useState(null);
+  const fileInputRef = useRef(null);
+
   const [formData, setFormData] = useState({
     job: "",
     company: "",
@@ -58,8 +59,6 @@ const UpdateUserForm = () => {
           method: "GET",
           token: user.token,
         });
-
-        console.log("API Response:", res);
 
         if (res?.success && res?.user) {
           const userData = res.user;
@@ -115,10 +114,10 @@ const UpdateUserForm = () => {
         const text = await response.text();
         const rows = text.split("\n");
         const cityList = rows
-          .slice(1) 
-          .map((row) => row.trim()) 
-          .filter(Boolean) 
-          .sort(); 
+          .slice(1)
+          .map((row) => row.trim())
+          .filter(Boolean)
+          .sort();
 
         setCities([...new Set(cityList)]);
       } catch (error) {
@@ -130,8 +129,7 @@ const UpdateUserForm = () => {
     fetchCities();
   }, []);
 
-   // Handle city selection
-   const handleCityChange = (selectedOption) => {
+  const handleCityChange = (selectedOption) => {
     if (selectedOption?.value === "Other") {
       setIsOtherSelected(true);
       setSelectedCity(null);
@@ -145,7 +143,6 @@ const UpdateUserForm = () => {
     }
   };
 
-  // Handle custom city input
   const handleCustomCityChange = (e) => {
     setCustomCity(e.target.value);
     setFormData((prevState) => ({
@@ -154,15 +151,13 @@ const UpdateUserForm = () => {
     }));
   };
 
-  // Prepare city options with "Other" at the bottom
   const filteredCities = [
     ...cities
       .filter((city) => city.toLowerCase().includes(inputValue.toLowerCase()))
       .map((city) => ({ value: city, label: city })),
-    { value: "Other", label: "Other" }, // Always at the bottom
+    { value: "Other", label: "Other" },
   ];
 
-  // Custom styles for react-select
   const customStyles = {
     control: (provided, state) => ({
       ...provided,
@@ -214,75 +209,53 @@ const UpdateUserForm = () => {
     }));
   };
 
-  const handleUpload = async (fileInfo) => {
-    if (!fileInfo) return;
+  const handleResumeUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const validTypes = [
+      'application/pdf'
+    ];
+    
+    if (!validTypes.includes(file.type)) {
+      setResumeError('Only PDF files are allowed');
+      return;
+    }
+
+    setResumeUploading(true);
+    setResumeError(null);
 
     try {
-      if (fileInfo.name) {
-        const fileExtension = fileInfo.name.split('.').pop().toLowerCase();
-        const validExtensions = ["pdf", "doc", "docx"];
-        const validMimeTypes = [
-          "application/pdf",
-          "application/msword",
-          "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-        ];
+      const formData = new FormData();
+      formData.append('resume', file);
+      formData.append('filename', `${Date.now()}-${file.name}`);
 
-        if (validExtensions.includes(fileExtension) && validMimeTypes.includes(fileInfo.mimeType)) {
-          setFileUrl(fileInfo.cdnUrl);
-
-          if (!user?.token) {
-            throw new Error("No authentication token found");
-          }
-
-          const data = { url: fileInfo.cdnUrl };
-          await axios.post(
-            "https://highimpacttalent.onrender.com/api-v1/user/upload-resume",
-            data,
-            {
-              headers: {
-                Authorization: `Bearer ${user.token}`,
-                "Content-Type": "application/json",
-              },
-            }
-          );
-        } else {
-          throw new Error("Invalid file type. Only PDF, DOC, and DOCX files are allowed.");
+      const response = await axios.post(
+        'https://highimpacttalent.onrender.com/api-v1/user/upload-resume',
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${user.token}`,
+            'Content-Type': 'multipart/form-data',
+          },
         }
-      }
-    } catch (error) {
-      console.error("Error uploading resume:", error);
-      alert(error.message || "Failed to upload resume. Please try again.");
-      if (widgetApi.current) {
-        widgetApi.current.value(null);
-      }
-    }
-  };
+      );
 
-  const handleUploadCareChange = (file) => {
-    try {
-      if (file?.cdnUrl) {
-        setProfilePic(file.cdnUrl);
+      if (response.data.url) {
+        setFileUrl(response.data.url);
       } else {
-        throw new Error("Invalid file upload response");
+        throw new Error('No URL returned from server');
       }
     } catch (error) {
-      console.error("Error uploading profile picture:", error);
-      alert("Failed to upload profile picture. Please try again.");
+      console.error('Resume upload error:', error);
+      setResumeError(error.response?.data?.message || 'Failed to upload resume');
+    } finally {
+      setResumeUploading(false);
     }
   };
 
-  const openUploadDialog = () => {
-    try {
-      if (!widgetApi.current) {
-        throw new Error("widgetApi is not initialized or is null.");
-      }
-
-      widgetApi.current.openDialog(null, {
-        accept: ".pdf,.doc,.docx", // Allow PDF, DOC, DOCX only
-      });
-    } catch (error) {
-      console.error("Error opening upload dialog:", error);
-    }
+  const openFileDialog = () => {
+    fileInputRef.current.click();
   };
 
   const handleSubmit = async (e) => {
@@ -294,7 +267,6 @@ const UpdateUserForm = () => {
       return;
     }
 
-    // Validate required fields
     const requiredFields = ["currentDesignation"];
     const missingFields = requiredFields.filter(field => !formData[field]);
     if (missingFields.length > 0) {
@@ -302,7 +274,6 @@ const UpdateUserForm = () => {
       return;
     }
 
-    // Create update payload with only changed fields
     const changedFields = {};
     Object.keys(formData).forEach(key => {
       if (formData[key] !== "" && formData[key] !== null) {
@@ -310,7 +281,6 @@ const UpdateUserForm = () => {
       }
     });
 
-    // Add additional fields
     if (value) changedFields.contactNumber = value;
     if (profilePic) changedFields.profilePic = profilePic;
     if (fileUrl) changedFields.resume = fileUrl;
@@ -327,8 +297,6 @@ const UpdateUserForm = () => {
         data: changedFields,
         token: user.token,
       });
-
-      console.log("Update response:", res);
 
       if (res) {
         alert("Profile successfully updated");
@@ -492,32 +460,32 @@ const UpdateUserForm = () => {
             </div>
 
             <div className="mb-6">
-      <label className="block text-gray-700 text-sm font-semibold mb-2">Current Location</label>
-      <Select
-        options={filteredCities}
-        value={selectedCity}
-        styles={customStyles}
-        onChange={handleCityChange}
-        onInputChange={(value) => setInputValue(value)}
-        inputValue={inputValue}
-        placeholder="Search or select a city..."
-        isClearable
-        isSearchable
-        noOptionsMessage={() => (inputValue ? "No matching cities found" : "Start typing to search")}
-      />
+              <label className="block text-gray-700 text-sm font-semibold mb-2">Current Location</label>
+              <Select
+                options={filteredCities}
+                value={selectedCity}
+                styles={customStyles}
+                onChange={handleCityChange}
+                onInputChange={(value) => setInputValue(value)}
+                inputValue={inputValue}
+                placeholder="Search or select a city..."
+                isClearable
+                isSearchable
+                noOptionsMessage={() => (inputValue ? "No matching cities found" : "Start typing to search")}
+              />
 
-      {isOtherSelected && (
-        <div className="mt-2 flex gap-2">
-          <input
-            type="text"
-            className="px-4 py-2 border rounded-lg w-full"
-            placeholder="Enter your city"
-            value={customCity}
-            onChange={handleCustomCityChange}
-          />
-        </div>
-      )}
-    </div>
+              {isOtherSelected && (
+                <div className="mt-2 flex gap-2">
+                  <input
+                    type="text"
+                    className="px-4 py-2 border rounded-lg w-full"
+                    placeholder="Enter your city"
+                    value={customCity}
+                    onChange={handleCustomCityChange}
+                  />
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Right Column */}
@@ -541,7 +509,7 @@ const UpdateUserForm = () => {
                 name="dateOfBirth"
                 value={formData.dateOfBirth}
                 onChange={handleChange}
-                max={new Date().toISOString().split("T")[0]} // Restrict future dates
+                max={new Date().toISOString().split("T")[0]}
                 className="w-full px-4 py-3 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 required
               />
@@ -555,7 +523,7 @@ const UpdateUserForm = () => {
                   defaultCountry="IN"
                   value={value}
                   onChange={handlePhoneNumberChange}
-                  inputMode="numeric" // Restrict input to numbers on mobile devices
+                  inputMode="numeric"
                   maxLength={11}
                   required
                 />
@@ -602,17 +570,21 @@ const UpdateUserForm = () => {
 
             <div className="mb-6">
               <label className="block text-gray-700 text-sm font-semibold mb-2">Upload Profile Picture</label>
-              <button className="bg-blue-500 rounded-lg cursor-pointer" type="button">
-                <Widget
-                  publicKey="8eeb05a138df98a3c92f"
-                  ref={profileWidgetApi}
-                  onChange={handleUploadCareChange}
-                  imagesOnly
-                  clearable
-                  tabs="file"
-                  required
-                />
-              </button>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => {
+                  const file = e.target.files[0];
+                  if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                      setProfilePic(event.target.result);
+                    };
+                    reader.readAsDataURL(file);
+                  }
+                }}
+                className="w-full px-4 py-3 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
               {profilePic && (
                 <div className="mt-4">
                   <p className="text-sm text-gray-600">Preview:</p>
@@ -626,33 +598,29 @@ const UpdateUserForm = () => {
             </div>
 
             <div className="mb-6">
-              <h2 className="text-sm font-semibold">Upload Your Resume</h2>
-              <button
-                onClick={openUploadDialog}
-                type="button"
-                className="bg-blue-500 text-white py-2 px-4 rounded-lg mt-2 hover:bg-blue-600"
-              >
-                Upload PDF Resume
-              </button>
-              <Widget
-                publicKey="8eeb05a138df98a3c92f"
-                ref={widgetApi}
-                onChange={handleUpload}
-                style={{ display: "none" }}
-                validators={[
-                  fileInfo => {
-                    const allowedTypes = [
-                      "application/pdf",
-                      "application/msword",
-                      "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-                    ];
-                    if (!allowedTypes.includes(fileInfo.mimeType)) {
-                      return false;
-                    }
-                  }
-                ]}
-                required
+              <label className="block text-gray-700 text-sm font-semibold mb-2">Upload Your Resume</label>
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleResumeUpload}
+                accept=".pdf,application/pdf"
+                style={{ display: 'none' }}
               />
+              <button
+                onClick={openFileDialog}
+                type="button"
+                disabled={resumeUploading}
+                className={`bg-blue-500 text-white py-2 px-4 rounded-lg mt-2 hover:bg-blue-600 ${
+                  resumeUploading ? 'opacity-50 cursor-not-allowed' : ''
+                }`}
+              >
+                {resumeUploading ? 'Uploading...' : 'Upload Resume'}
+              </button>
+              
+              {resumeError && (
+                <p className="text-red-500 text-sm mt-2">{resumeError}</p>
+              )}
+              
               {fileUrl && (
                 <div className="mt-4">
                   <a
@@ -672,6 +640,7 @@ const UpdateUserForm = () => {
           <button
             type="submit"
             className="bg-blue-500 hover:bg-blue-700 text-white py-3 px-6 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+            disabled={loading}
           >
             {loading ? "Loading..." : "Update Details"}
           </button>
