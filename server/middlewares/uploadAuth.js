@@ -14,7 +14,7 @@ export const uploadAuth = (req, res, next) => {
 
   try {
     const decoded = JWT.verify(token, process.env.JWT_SECRET_KEY);
-    req.uploaderId = decoded.userId; // Store in custom property
+    req.uploaderId = decoded.userId; 
     next();
   } catch (error) {
     return res.status(401).json({

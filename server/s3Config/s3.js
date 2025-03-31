@@ -11,7 +11,7 @@ const s3 = new AWS.S3({
 
 export const uploadFileToS3 = (fileBuffer, key) => {
   const params = {
-    Bucket: process.env.AWS_BUCKET_NAME,
+    Bucket: process.env.S3_BUCKET_NAME,
     Key: key,
     Body: fileBuffer,
     ContentType: "application/pdf" 
