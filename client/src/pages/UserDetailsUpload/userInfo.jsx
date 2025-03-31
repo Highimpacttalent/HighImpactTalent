@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import {
   Box,
   Button,
@@ -11,7 +11,6 @@ import {
 } from "@mui/material";
 import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
 import { useSelector } from "react-redux";
-import { openDialog } from "uploadcare-widget";
 import axios from "axios";
 import { motion } from "framer-motion";
 import Lottie from "lottie-react";
@@ -24,44 +23,62 @@ const ResumeUpload = () => {
   const [loading, setLoading] = useState(false);
   const [openModal, setOpenModal] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState(null);
+  const fileInputRef = useRef(null);
   const navigate = useNavigate();
   const theme = useTheme();
   const isSmallScreen = useMediaQuery(theme.breakpoints.down("md"));
 
-  const handleUpload = () => {
-    openDialog({}, { publicKey: "fe3e0052e9f2e9540955" }).done((file) => {
-      setLoading(true);
-      file.done(async (file) => {
-        setFileUrl(file.cdnUrl);
-        try {
-          const response = await axios.post(
-            "https://highimpacttalent.onrender.com/api-v1/user/upload-resume",
-            { url: file.cdnUrl },
-            {
-              headers: {
-                Authorization: `Bearer ${user?.token}`,
-                "Content-Type": "application/json",
-              },
-            }
-          );
+  const openFileDialog = () => {
+    fileInputRef.current.click();
+  };
 
-          if (!response.data) { 
-            throw new Error("No response from server");
-          }
-        } catch (error) {
-          console.error("Resume upload error:", error);
-          alert("Failed to save resume. Please try again.");
-          setFileUrl("");
-        } finally {
-          setLoading(false);
+  const handleFileChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    if (file.type !== "application/pdf") {
+      setError("Please upload a PDF file");
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const formData = new FormData();
+      formData.append("resume", file);
+      //formData.append("userId", user._id);
+      //formData.append("filename", `${Date.now()}-${file.name}`);
+
+      const response = await axios.post(
+        "https://highimpacttalent.onrender.com/api-v1/user/upload-resume",
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${user?.token}`,
+            "Content-Type": "multipart/form-data",
+          },
         }
-      });
-    });
+      );
+
+      if (!response.data.url) {
+        throw new Error("No URL returned from server");
+      }
+
+      setFileUrl(response.data.url);
+    } catch (error) {
+      console.error("Resume upload error:", error);
+      setError(error.response?.data?.message || "Failed to upload resume. Please try again.");
+      setFileUrl(null);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleSubmit = async () => {
     if (!fileUrl) {
-      alert("Please upload a resume first.");
+      setError("Please upload a resume first.");
       return;
     }
   
@@ -100,16 +117,15 @@ const ResumeUpload = () => {
       console.log("Parsed Data:", parsedData);
       console.log("Skills Extracted:", skills);
       navigate("/user-additional-details", { state: { parsedData } });
-
   
     } catch (error) {
       console.error("Resume submission error:", error);
-      alert("Failed to submit resume. Please try again.");
+      setError(error.response?.data?.message || "Failed to submit resume. Please try again.");
     } finally {
       setSubmitting(false);
+      setOpenModal(false);
     }
   };
-  
 
   return (
     <Box
@@ -125,6 +141,15 @@ const ResumeUpload = () => {
         gap: 4,
       }}
     >
+      {/* Hidden file input */}
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={handleFileChange}
+        accept="application/pdf"
+        style={{ display: "none" }}
+      />
+
       {/* Upload Section */}
       <motion.div
         initial={{ opacity: 0, y: 50 }}
@@ -152,7 +177,7 @@ const ResumeUpload = () => {
 
           <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
             <Box
-              onClick={handleUpload}
+              onClick={openFileDialog}
               sx={{
                 border: "2px dashed #1976d2",
                 p: 4,
@@ -181,12 +206,18 @@ const ResumeUpload = () => {
                 <>
                   <InsertDriveFileIcon color="action" fontSize="large" />
                   <Typography variant="body2" color="textSecondary">
-                    Click here to upload resume
+                    Click here to upload PDF resume
                   </Typography>
                 </>
               )}
             </Box>
           </motion.div>
+
+          {error && (
+            <Typography variant="body2" color="error" sx={{ mt: 2 }}>
+              {error}
+            </Typography>
+          )}
 
           <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
             <Button
@@ -194,9 +225,9 @@ const ResumeUpload = () => {
               color="primary"
               onClick={handleSubmit}
               sx={{ mt: 3, borderRadius: 2, fontWeight: "bold", px: 3 }}
-              disabled={!fileUrl}
+              disabled={!fileUrl || submitting}
             >
-              Submit Resume
+              {submitting ? "Processing..." : "Submit Resume"}
             </Button>
           </motion.div>
         </Paper>
@@ -237,13 +268,14 @@ const ResumeUpload = () => {
                 borderRadius: "10px",
                 boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.1)",
               }}
+              title="Resume Preview"
             ></iframe>
           </Paper>
         </motion.div>
       )}
 
-       {/* Modal for Animation */}
-       <Modal open={openModal} onClose={() => setOpenModal(false)}>
+      {/* Modal for Animation */}
+      <Modal open={openModal} onClose={() => setOpenModal(false)}>
         <Box
           sx={{
             position: "absolute",
@@ -265,7 +297,7 @@ const ResumeUpload = () => {
         >
           <Lottie animationData={hiringAnimation} loop />
           <Typography variant="h6" color="primary" sx={{ mt: 2 }}>
-            Uploading your resume...
+            Processing your resume...
           </Typography>
         </Box>
       </Modal>
