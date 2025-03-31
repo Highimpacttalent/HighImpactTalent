@@ -29,6 +29,7 @@ import BlogPage from "./pages/BlogPage";
 import ResumeSearch from "./pages/ResumeSearch/view";
 import BlogPage2 from "./pages/Blog/desktop"
 import ViewJobs from "./pages/ViewJobs";
+import LandingMain from "./pages/Landing/LandingMain/view";
 import SingleBlog from "./pages/SingleBlog";
 import JobApplications from "./pages/ViewApplicants";
 import ResumeUpload from "./pages/UserDetailsUpload/userInfo";
@@ -69,7 +70,7 @@ function App() {
             path='/'
             element={<Navigate to='/find-jobs' replace={true} />}
           /> */}
-          <Route path="/" element={<Landing/>}></Route>
+          <Route path="/" element={<LandingMain/>}></Route>
           <Route path="/home" element={<Landing2/>}></Route>
           <Route path='/find-jobs' element={<FindJob />} />
           <Route path='/view-jobs' element={<ViewJobs />} />
