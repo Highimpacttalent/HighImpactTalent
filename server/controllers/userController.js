@@ -27,7 +27,7 @@ export const uploadResume = async (req, res) => {
     }
 
     const file = req.file;
-    const userId = req.body.user.userId;
+    const userId = req.body.user?.userId || req.user?.userId || req.user._id;
 
     // Validate file type
     if (file.mimetype !== "application/pdf") {
