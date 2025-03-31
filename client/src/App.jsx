@@ -15,6 +15,7 @@ import RefundPolicy from "./components/Refund";
 import ApplicationStatus from "./pages/ApplicationStatus";
 import UploadResume from "./pages/UploadResume";
 import PasswordChange from "./pages/Password";
+import ScreeningView from "./pages/Screening/view";
 import Landing from "./pages/Landing";
 import FloatingChatAssistant from "./components/Chat/FloatingChat";
 import ScreeningQuestions from "./pages/ScreeningQuestions";
@@ -79,7 +80,7 @@ function App() {
           <Route path={"/company-profile/:id"} element={<CompaniesProfile />} />
           <Route path={"/company-profile/job-detail/:id"} element={<CompaniesProfile />} />
           <Route path={"/job-detail/:id"} element={<JobDetails />} />
-          <Route path="/job-detail/:id/screening-questions" element={<ScreeningQuestions/>}></Route>
+          <Route path="/job-detail/:id/screening-questions" element={<ScreeningView/>}></Route>
           <Route path={'/applicationstatus'} element={<ApplicationStatus/>}></Route>
           <Route path={'/recruiterSchedule'} element={<RecruiterSchedule/>}></Route>
           <Route path={'/resumesearch'} element={<ResumeSearch/>}></Route>
