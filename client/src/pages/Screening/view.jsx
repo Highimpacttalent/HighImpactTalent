@@ -1,7 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
-import { Widget } from "@uploadcare/react-widget";
 import axios from "axios";
 import {
   Typography,
@@ -10,28 +9,31 @@ import {
   Snackbar,
   Alert,
   TextField,
-  Grid,
   Box,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
+  CircularProgress,
 } from "@mui/material";
+import CloudUploadIcon from "@mui/icons-material/CloudUpload";
+import { FiEye } from "react-icons/fi";
 
 const ScreeningView = () => {
   const { state } = useLocation();
   const navigate = useNavigate();
-  const widgetApi = useRef();
+  const fileInputRef = useRef(null);
 
   const [applied, setApplied] = useState(false);
-  const [fileUrl, setFileUrl] = useState("");
+  const [resumeUrl, setResumeUrl] = useState("");
   const [applyButton, setApplyButton] = useState(false);
   const [openDialog, setOpenDialog] = useState(false);
+  const [uploading, setUploading] = useState(false);
 
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: "",
-    severity: "success", // success, error, warning, info
+    severity: "success",
   });
 
   const { user } = useSelector((state) => state.user);
@@ -41,6 +43,14 @@ const ScreeningView = () => {
     answers: state?.questions ? Array(state.questions.length).fill("") : [],
   });
 
+  // Initialize resume URL from user data
+  useEffect(() => {
+    if (user?.cvUrl) {
+      setResumeUrl(user.cvUrl);
+      setApplyButton(true);
+    }
+  }, [user]);
+
   const handleAnswerChange = (index, value) => {
     const newAnswers = [...formData.answers];
     newAnswers[index] = value;
@@ -48,17 +58,17 @@ const ScreeningView = () => {
   };
 
   const applyHandler = async () => {
-    // Check if all screening questions are answered
-  const allQuestionsAnswered = formData.answers.every(answer => answer.trim() !== "");
+    const allQuestionsAnswered = formData.answers.every(answer => answer.trim() !== "");
 
-  if (!allQuestionsAnswered) {
-    setSnackbar({
-      open: true,
-      message: "Please answer all screening questions before submitting.",
-      severity: "error",
-    });
-    return;
-  }
+    if (!allQuestionsAnswered) {
+      setSnackbar({
+        open: true,
+        message: "Please answer all screening questions before submitting.",
+        severity: "error",
+      });
+      return;
+    }
+
     if (!applied) {
       try {
         const res = await axios.post(
@@ -88,22 +98,53 @@ const ScreeningView = () => {
     }
   };
 
-  const handleUpload = async (fileInfo) => {
-    setFileUrl(fileInfo.cdnUrl);
+  const handleFileChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Reset file input
+    e.target.value = null;
+
+    // Validate file type
+    if (file.type !== "application/pdf") {
+      setSnackbar({
+        open: true,
+        message: "Only PDF files are allowed",
+        severity: "error",
+      });
+      return;
+    }
+
+    // Validate file size (2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      setSnackbar({
+        open: true,
+        message: "File size must be less than 2MB",
+        severity: "error",
+      });
+      return;
+    }
+
+    setUploading(true);
 
     try {
+      const formData = new FormData();
+      formData.append("resume", file);
+      formData.append("filename", `${Date.now()}-${file.name}`);
+
       const response = await axios.post(
         "https://highimpacttalent.onrender.com/api-v1/user/upload-resume",
-        { url: fileInfo.cdnUrl },
+        formData,
         {
           headers: {
             Authorization: `Bearer ${user?.token}`,
-            "Content-Type": "application/json",
+            "Content-Type": "multipart/form-data",
           },
         }
       );
 
-      if (response.data.success) {
+      if (response.data?.url) {
+        setResumeUrl(response.data.url);
         setApplyButton(true);
         setSnackbar({
           open: true,
@@ -111,26 +152,31 @@ const ScreeningView = () => {
           severity: "success",
         });
       } else {
-        setSnackbar({
-          open: true,
-          message: "Please login first.",
-          severity: "warning",
-        });
+        throw new Error("No URL returned from server");
       }
     } catch (error) {
       console.error("Error uploading resume:", error);
       setSnackbar({
         open: true,
-        message: "Error uploading resume",
+        message: error.response?.data?.message || "Error uploading resume",
         severity: "error",
       });
+    } finally {
+      setUploading(false);
     }
   };
 
-  const openUploadDialog = () => {
-    widgetApi.current.openDialog(null, {
-      accept: "application/pdf",
-    });
+  const openFileDialog = () => {
+    if (hasUploadedResume) {
+      setOpenDialog(true);
+    } else {
+      fileInputRef.current.click();
+    }
+  };
+
+  const confirmUpload = () => {
+    setOpenDialog(false);
+    fileInputRef.current.click();
   };
 
   // Filter out empty questions
@@ -192,18 +238,26 @@ const ScreeningView = () => {
               Resume
             </Typography>
 
-            {hasUploadedResume ? (
-              <Box
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <Box mt={2} display="flex" gap={2}>
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileChange}
+              accept=".pdf,application/pdf"
+              style={{ display: "none" }}
+            />
+
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <Box mt={2} display="flex" gap={2}>
+                {resumeUrl && (
                   <Button
                     variant="contained"
-                    href={user.cvUrl}
+                    href={resumeUrl}
                     target="_blank"
                     sx={{
                       bgcolor: "#3C7EFC",
@@ -213,80 +267,30 @@ const ScreeningView = () => {
                       borderRadius: 16,
                       textTransform: "none",
                     }}
+                    startIcon={<FiEye />}
                   >
                     View Resume
                   </Button>
-                  <Button
-                    variant="contained"
-                    color="primary"
-                    onClick={openUploadDialog}
-                    sx={{
-                      height: "40px",
-                      width: "150px",
-                      bgcolor: "#3C7EFC",
-                      color: "white",
-                      fontFamily: "Satoshi",
-                      fontWeight: 700,
-                      borderRadius: 16,
-                      textTransform: "none",
-                    }}
-                  >
-                    Upload Resume
-                  </Button>
-                </Box>
-              </Box>
-            ) : (
-                <Box
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
+                )}
                 <Button
-                variant="contained"
-                color="primary"
-                onClick={openUploadDialog}
-                sx={{
-                  height: "40px",
-                  width: "150px",
-                  bgcolor: "#3C7EFC",
-                  color: "white",
-                  fontFamily: "Satoshi",
-                  fontWeight: 700,
-                  borderRadius: 16,
-                  textTransform: "none",
-                }}
-              >
-                Upload Resume
-              </Button>
+                  variant="contained"
+                  onClick={openFileDialog}
+                  disabled={uploading}
+                  sx={{
+                    bgcolor: "#3C7EFC",
+                    color: "white",
+                    fontFamily: "Satoshi",
+                    fontWeight: 700,
+                    borderRadius: 16,
+                    textTransform: "none",
+                  }}
+                  startIcon={uploading ? <CircularProgress size={20} color="inherit" /> : <CloudUploadIcon />}
+                >
+                  {uploading ? "Uploading..." : "Upload Resume"}
+                </Button>
               </Box>
-            )}
+            </Box>
 
-            <Widget
-              publicKey="8eeb05a138df98a3c92f"
-              ref={widgetApi}
-              onChange={handleUpload}
-              style={{ display: "none" }}
-              validators={[
-                (fileInfo) => {
-                  const allowedTypes = [
-                    "application/pdf",
-                    "application/msword",
-                    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                  ];
-                  return allowedTypes.includes(fileInfo.mimeType);
-                },
-              ]}
-            />
-
-            {fileUrl && (
-              <Typography mt={2}>
-                <a href={fileUrl} target="_blank" rel="noopener noreferrer">
-                  View Uploaded Resume
-                </a>
-              </Typography>
-            )}
             <Typography
               sx={{
                 textAlign: "center",
@@ -294,9 +298,10 @@ const ScreeningView = () => {
                 fontFamily: "Poppins",
                 fontSize: "14px",
                 fontWeight: 400,
+                mt: 1,
               }}
             >
-              Supported Formats: doc, docx, rtf, pdf, upto 2 MB
+              Supported Format: PDF (Max 2MB)
             </Typography>
           </Box>
 
@@ -345,25 +350,33 @@ const ScreeningView = () => {
             </Box>
           ) : (
             <Typography
-            sx={{
-              fontFamily: "Satoshi",
-              fontWeight: 500,
-              fontSize: "14px",
-              color: "#404258",
-              mb:4
-            }}
-          >
+              sx={{
+                fontFamily: "Satoshi",
+                fontWeight: 500,
+                fontSize: "14px",
+                color: "#404258",
+                mb:4
+              }}
+            >
               No screening questions provided by the company.
             </Typography>
           )}
 
           {/* Apply Button */}
-          {applyButton || hasUploadedResume ? (
+          {applyButton ? (
             <Button
               fullWidth
               variant="contained"
               onClick={applyHandler}
-              sx={{borderRadius:16,textTransform:"none",fontFamily:"Satoshi",bgcolor:applied ? "success" : "#3C7EFC"}}
+              sx={{
+                borderRadius:16,
+                textTransform:"none",
+                fontFamily:"Satoshi",
+                bgcolor: applied ? "success.main" : "#3C7EFC",
+                "&:hover": {
+                  bgcolor: applied ? "success.dark" : "#3C7EFC",
+                }
+              }}
             >
               {applied ? "View Application Status" : "Submit"}
             </Button>
@@ -372,7 +385,12 @@ const ScreeningView = () => {
               fullWidth
               variant="contained"
               disabled
-              sx={{borderRadius:16,textTransform:"none",fontFamily:"Satoshi",bgcolor:applied ? "success" : "#3C7EFC"}}
+              sx={{
+                borderRadius:16,
+                textTransform:"none",
+                fontFamily:"Satoshi",
+                bgcolor: "#3C7EFC",
+              }}
             >
               Upload Your Resume First
             </Button>
@@ -390,7 +408,7 @@ const ScreeningView = () => {
           </DialogContent>
           <DialogActions>
             <Button onClick={() => setOpenDialog(false)}>Cancel</Button>
-            <Button onClick={openUploadDialog} color="primary">
+            <Button onClick={confirmUpload} color="primary">
               Upload New
             </Button>
           </DialogActions>
