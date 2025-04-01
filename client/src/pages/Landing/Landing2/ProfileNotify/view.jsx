@@ -1,18 +1,21 @@
 import { Box, Typography, LinearProgress,Button } from "@mui/material";
 import { useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
 
 const view = () => {
+    const user = useSelector((state) => state.user);
     const navigate = useNavigate();
     const handleClick = ()=>{
         navigate("/user-profile");
     }
+    console.log("userInfo" ,user)
   // Sample progress value (replace this with actual profile completion percentage)
   const profileCompletion = 70; // Example: Profile is 70% complete
 
   return (
     <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", border: "2px solid #00000040", borderRadius: 4, flexDirection: "column", padding: 2,mb:8 }}>
       <Typography sx={{ color: "#474E68", fontFamily: "Satoshi", fontWeight: "500", fontSize: "20px" }}>
-        Hey [Name], don’t leave recruiters guessing! Complete your profile and stand out.
+        Hey {user.user.firstName || "User"}, don’t leave recruiters guessing! Complete your profile and stand out.
       </Typography>
       <Box sx={{ mt: 2, color: "#24252C", fontFamily: "Poppins", fontSize: "18px", fontWeight: "500" }}>
         <Typography>Your Profile is</Typography>
