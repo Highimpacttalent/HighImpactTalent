@@ -48,8 +48,6 @@ const ResumeUpload = () => {
     try {
       const formData = new FormData();
       formData.append("resume", file);
-      //formData.append("userId", user._id);
-      //formData.append("filename", `${Date.now()}-${file.name}`);
 
       const response = await axios.post(
         "https://highimpacttalent.onrender.com/api-v1/user/upload-resume",

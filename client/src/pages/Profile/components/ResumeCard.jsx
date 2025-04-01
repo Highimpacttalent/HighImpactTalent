@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   Box,
   Typography,
@@ -7,103 +7,159 @@ import {
   CardContent,
   Tabs,
   Tab,
-  IconButton,
   CircularProgress,
 } from "@mui/material";
-import EditIcon from "@mui/icons-material/Edit";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import { FiEye } from "react-icons/fi";
 import { useSelector } from "react-redux";
-import { openDialog } from "uploadcare-widget";
 import axios from "axios";
 
-const ResumeUpload = (userInfo) => {
+const ResumeUpload = ({ userInfo, onResumeUploaded }) => {
   const { user } = useSelector((state) => state.user);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [resumeUrl, setResumeUrl] = useState(userInfo?.cvUrl || null);
+  const fileInputRef = useRef(null);
 
+  // Update local state when userInfo changes
+  useEffect(() => {
+    setResumeUrl(userInfo?.cvUrl || null);
+  }, [userInfo]);
 
   const handleView = () => {
-    if (userInfo) {
-        window.open(userInfo.userInfo.cvUrl, "_blank"); // Opens in a new tab
+    if (resumeUrl) {
+      window.open(resumeUrl, "_blank");
     } else {
-        alert("No CV available.");
+      alert("No CV available.");
     }
-};
+  };
 
-const handleUpload = () => {
-  openDialog({}, { publicKey: "fe3e0052e9f2e9540955" }).done((file) => {
+  const handleFileChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Reset file input
+    e.target.value = null;
+
+    // Validate file type
+    if (file.type !== "application/pdf") {
+      setError("Only PDF files are allowed");
+      return;
+    }
+
+    // Validate file size (2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      setError("File size must be less than 2MB");
+      return;
+    }
+
     setLoading(true);
-    file.done(async (file) => {
-      try {
-        const response = await axios.post(
-          "https://highimpacttalent.onrender.com/api-v1/user/upload-resume",
-          { url: file.cdnUrl },
-          {
-            headers: {
-              Authorization: `Bearer ${user?.token}`,
-              "Content-Type": "application/json",
-            },
-          }
-        );
+    setError(null);
 
-        if (!response.data) { 
-          throw new Error("No response from server");
+    try {
+      const formData = new FormData();
+      formData.append("resume", file);
+      formData.append("filename", `${Date.now()}-${file.name}`);
+
+      const response = await axios.post(
+        "https://highimpacttalent.onrender.com/api-v1/user/upload-resume",
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${user?.token}`,
+            "Content-Type": "multipart/form-data",
+          },
         }
-      } catch (error) {
-        console.error("Resume upload error:", error);
-        alert("Failed to save resume. Please try again.");
-      } finally {
-        setLoading(false);
+      );
+
+      if (!response.data?.url) {
+        throw new Error("No URL returned from server");
       }
-    });
-  });
-};
-console.log("Time Now",userInfo.userInfo)
+
+      // Update local state
+      setResumeUrl(response.data.url);
+      
+      // Notify parent component
+      if (onResumeUploaded) {
+        onResumeUploaded(response.data.url);
+      }
+
+      alert("Resume uploaded successfully!");
+    } catch (error) {
+      console.error("Resume upload error:", error);
+      setError(error.response?.data?.message || "Failed to upload resume");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const openFileDialog = () => {
+    fileInputRef.current.click();
+  };
+
   return (
     <Box sx={{}}>
-        <Box sx={{mb:2,display:"flex",justifyContent:"space-between"}}>
+      <Box sx={{ mb: 2, display: "flex", justifyContent: "space-between" }}>
         <Tabs value={0}>
-        <Tab sx={{
-      "&.MuiTab-root": { color: "#404258",fontWeight: 700,textTransform: "none", }, 
-    }} label="Resume"
-  />
-      </Tabs>
+          <Tab
+            sx={{
+              "&.MuiTab-root": {
+                color: "#404258",
+                fontWeight: 700,
+                textTransform: "none",
+              },
+            }}
+            label="Resume"
+          />
+        </Tabs>
       </Box>
 
-      <Card variant="outlined" sx={{ py: 2, borderRadius: 2,border:"1px solid #00000040" }}>
-        
-          <CardContent>
-            <Box sx={{display:"flex",justifyContent:"center",gap:1}}>
+      <Card variant="outlined" sx={{ py: 2, borderRadius: 2, border: "1px solid #00000040" }}>
+        <CardContent>
+          <Box sx={{ display: "flex", justifyContent: "center", gap: 1 }}>
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileChange}
+              accept=".pdf,application/pdf"
+              style={{ display: "none" }}
+            />
             <Button
-              component="span"
               variant="contained"
               startIcon={!loading && <CloudUploadIcon />}
               sx={{ borderRadius: 16 }}
-              onClick={handleUpload}
+              onClick={openFileDialog}
               disabled={loading}
             >
               {loading ? <CircularProgress size={24} color="inherit" /> : "Upload Resume"}
             </Button>
-              <Button
-                component="span"
-                variant="contained"
-                startIcon={<FiEye />}
-                sx={{borderRadius:16}}
-                onClick={handleView}
-              >
-                View Resume
-              </Button>
-            </Box>
-            <Typography
-              variant="caption"
-              display="block"
-              textAlign="center"
-              mt={1}
-              color="#808195"
+            <Button
+              variant="contained"
+              startIcon={<FiEye />}
+              sx={{ borderRadius: 16 }}
+              onClick={handleView}
+              disabled={!resumeUrl}
             >
-              Supported Formats: doc, docx, rtf, pdf, up to 2 MB
+              View Resume
+            </Button>
+          </Box>
+          
+          {error && (
+            <Typography color="error" variant="caption" display="block" textAlign="center" mt={1}>
+              {error}
             </Typography>
-          </CardContent>
+          )}
+          
+          <Typography
+            variant="caption"
+            display="block"
+            textAlign="center"
+            mt={1}
+            color="#808195"
+          >
+            Supported Format: PDF (Max 2MB)
+          </Typography>
+        </CardContent>
       </Card>
     </Box>
   );
