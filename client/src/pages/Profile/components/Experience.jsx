@@ -1,5 +1,19 @@
 import React, { useState } from "react";
-import { Box, Typography, Card, Grid, IconButton, TextField, Button, Tabs, Tab } from "@mui/material";
+import {
+  Box,
+  Typography,
+  Card,
+  Grid,
+  IconButton,
+  TextField,
+  FormControl,
+  FormControlLabel,
+  RadioGroup,
+  Button,
+  Radio,
+  Tabs,
+  Tab,
+} from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import SaveIcon from "@mui/icons-material/Save";
 import { useDispatch } from "react-redux";
@@ -27,11 +41,14 @@ const Experience = ({ experienceData, userId }) => {
   const handleSaveClick = async () => {
     setIsSaving(true);
     try {
-      const response = await fetch("https://highimpacttalent.onrender.com/api-v1/user/updateWork", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId:experienceData?._id, ...formData }),
-      });
+      const response = await fetch(
+        "https://highimpacttalent.onrender.com/api-v1/user/updateWork",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userId: experienceData?._id, ...formData }),
+        }
+      );
 
       const result = await response.json();
       if (response.ok) {
@@ -89,11 +106,16 @@ const Experience = ({ experienceData, userId }) => {
       </Box>
 
       {/* Experience Card */}
-      <Card variant="outlined" sx={{ p: 3, borderRadius: 2, border: "1px solid #00000040" }}>
+      <Card
+        variant="outlined"
+        sx={{ p: 3, borderRadius: 2, border: "1px solid #00000040" }}
+      >
         <Grid container spacing={2}>
           {/* Current Company */}
           <Grid item xs={6}>
-            <Typography variant="body2" color="textSecondary">Current Company</Typography>
+            <Typography variant="body2" color="textSecondary">
+              Current Company
+            </Typography>
             {isEditing ? (
               <TextField
                 size="small"
@@ -101,10 +123,23 @@ const Experience = ({ experienceData, userId }) => {
                 name="currentCompany"
                 value={formData.currentCompany}
                 onChange={handleChange}
-                sx={{ "& .MuiOutlinedInput-root": { borderRadius: 16, height: "35px" }, width: "95%", mt: 1 }}
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    borderRadius: 16,
+                    height: "35px",
+                  },
+                  width: "95%",
+                  mt: 1,
+                }}
               />
             ) : (
-              <Typography variant="subtitle1" fontWeight="400" fontSize="14px" color="#808195" fontFamily="Poppins">
+              <Typography
+                variant="subtitle1"
+                fontWeight="400"
+                fontSize="14px"
+                color="#808195"
+                fontFamily="Poppins"
+              >
                 {formData.currentCompany || "N/A"}
               </Typography>
             )}
@@ -112,18 +147,33 @@ const Experience = ({ experienceData, userId }) => {
 
           {/* Open to Relocate */}
           <Grid item xs={6}>
-            <Typography variant="body2" color="textSecondary">Open to Relocate</Typography>
+            <Typography variant="body2" color="textSecondary">
+              Open to Relocate
+            </Typography>
             {isEditing ? (
-              <TextField
-                size="small"
-                fullWidth
-                name="openToRelocate"
-                value={formData.openToRelocate}
-                onChange={handleChange}
-                sx={{ "& .MuiOutlinedInput-root": { borderRadius: 16, height: "35px" }, width: "95%", mt: 1 }}
-              />
+              <FormControl component="fieldset" sx={{ mt: 1 }}>
+                <RadioGroup
+                  row
+                  name="openToRelocate"
+                  value={formData.openToRelocate}
+                  onChange={handleChange}
+                >
+                  <FormControlLabel
+                    value="yes"
+                    control={<Radio />}
+                    label="Yes"
+                  />
+                  <FormControlLabel value="no" control={<Radio />} label="No" />
+                </RadioGroup>
+              </FormControl>
             ) : (
-              <Typography variant="subtitle1" fontWeight="400" fontSize="14px" color="#808195" fontFamily="Poppins">
+              <Typography
+                variant="subtitle1"
+                fontWeight="400"
+                fontSize="14px"
+                color="#808195"
+                fontFamily="Poppins"
+              >
                 {formData.openToRelocate || "N/A"}
               </Typography>
             )}
@@ -131,7 +181,9 @@ const Experience = ({ experienceData, userId }) => {
 
           {/* Designation */}
           <Grid item xs={6}>
-            <Typography variant="body2" color="textSecondary">Designation</Typography>
+            <Typography variant="body2" color="textSecondary">
+              Designation
+            </Typography>
             {isEditing ? (
               <TextField
                 size="small"
@@ -139,10 +191,23 @@ const Experience = ({ experienceData, userId }) => {
                 name="currentDesignation"
                 value={formData.currentDesignation}
                 onChange={handleChange}
-                sx={{ "& .MuiOutlinedInput-root": { borderRadius: 16, height: "35px" }, width: "95%", mt: 1 }}
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    borderRadius: 16,
+                    height: "35px",
+                  },
+                  width: "95%",
+                  mt: 1,
+                }}
               />
             ) : (
-              <Typography variant="subtitle1" fontWeight="400" fontSize="14px" color="#808195" fontFamily="Poppins">
+              <Typography
+                variant="subtitle1"
+                fontWeight="400"
+                fontSize="14px"
+                color="#808195"
+                fontFamily="Poppins"
+              >
                 {formData.currentDesignation || "N/A"}
               </Typography>
             )}

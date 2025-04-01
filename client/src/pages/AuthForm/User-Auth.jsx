@@ -4,16 +4,17 @@ import {
   Button,
   Typography,
   Box,
-  Paper,
-  Grid,
-  FormControlLabel,
-  Checkbox,
+  Divider,
   Link,
+  InputAdornment,
+  IconButton,
 } from "@mui/material";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { Login } from "../../redux/userSlice"; // Adjust import path if needed
 import { apiRequest } from "../../utils"; // Ensure you have an API request utility
+import Heroimg from "../../assets/CreateAccount/Heroimg.svg";
+import { Visibility, VisibilityOff } from "@mui/icons-material";
 
 const UserSignUp = () => {
   const dispatch = useDispatch();
@@ -22,6 +23,7 @@ const UserSignUp = () => {
   const [passwordError, setPasswordError] = useState("");
   const [passwordStrength, setPasswordStrength] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const [form, setForm] = useState({
     firstName: "",
@@ -29,7 +31,6 @@ const UserSignUp = () => {
     email: "",
     password: "",
     confirmPassword: "",
-    termsAccepted: false,
   });
 
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -41,15 +42,29 @@ const UserSignUp = () => {
     const numberCriteria = /[0-9]/.test(password);
     const specialCharCriteria = /[!@#$%^&*(),.?":{}|<>]/.test(password);
 
-    if (lengthCriteria && uppercaseCriteria && lowercaseCriteria && numberCriteria && specialCharCriteria) {
-      setPasswordStrength("Strong");
+    if (
+      lengthCriteria &&
+      uppercaseCriteria &&
+      lowercaseCriteria &&
+      numberCriteria &&
+      specialCharCriteria
+    ) {
+      setPasswordStrength("Strong Password");
       setPasswordError("");
-    } else if (lengthCriteria && (uppercaseCriteria || lowercaseCriteria) && numberCriteria) {
-      setPasswordStrength("Medium");
-      setPasswordError("Consider adding special characters for a stronger password.");
+    } else if (
+      lengthCriteria &&
+      (uppercaseCriteria || lowercaseCriteria) &&
+      numberCriteria
+    ) {
+      setPasswordStrength("Medium Password");
+      setPasswordError(
+        "Consider adding special characters for a stronger password."
+      );
     } else {
-      setPasswordStrength("Weak");
-      setPasswordError("Password should include uppercase, lowercase, number, and special character.");
+      setPasswordStrength("Weak Password");
+      setPasswordError(
+        "Password should include uppercase, lowercase, number, and special character."
+      );
     }
   };
 
@@ -65,7 +80,9 @@ const UserSignUp = () => {
       setPasswordError(value !== form.password ? "Passwords do not match" : "");
     }
     if (name === "email") {
-      setEmailError(emailRegex.test(value) ? "" : "Please enter a valid email address.");
+      setEmailError(
+        emailRegex.test(value) ? "" : "Please enter a valid email address."
+      );
     }
   };
 
@@ -77,16 +94,9 @@ const UserSignUp = () => {
       alert("Password must be at least 5 characters long.");
       setLoading(false);
       return;
-  }
-    if (form.password 
-      !== form.confirmPassword) {
-      alert("Passwords do not match");
-      setLoading(false);
-      return;
     }
-
-    if (!form.termsAccepted) {
-      alert("You must agree to the terms and conditions");
+    if (form.password !== form.confirmPassword) {
+      alert("Passwords do not match");
       setLoading(false);
       return;
     }
@@ -118,120 +128,235 @@ const UserSignUp = () => {
     <Box
       sx={{
         minHeight: "100vh",
+        bgcolor: "white",
         display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
         padding: 3,
+        px: 10,
       }}
     >
-      <Paper
-        elevation={6}
-        sx={{
-          p: 4,
-          borderRadius: 3,
-          width: { xs: "90%", sm: "50%", md: "40%" },
-        }}
-      >
+      <Box sx={{ width: "50%", mt: 4, p: 4 }}>
         <Typography
           variant="h5"
-          sx={{ fontWeight: "bold", textAlign: "center", mb: 3 }}
+          sx={{
+            fontWeight: "700",
+            mb: 3,
+            fontFamily: "Satoshi",
+            color: "#24252C",
+            fontSize: "32px",
+          }}
         >
-          Start your Job hunt today! 🚀
+          One Click Closer to a{" "}
+          <span
+            style={{
+              fontWeight: "700",
+              fontFamily: "Satoshi",
+              color: "#3C7EFC",
+            }}
+          >
+            Game-Changing{" "}
+          </span>{" "}
+          Opportunity!
         </Typography>
-        <Box component="form" onSubmit={handleSubmit}>
-          <Grid container spacing={2}>
-            <Grid item xs={12} sm={6}>
+        <Box>
+          <Box component="form" onSubmit={handleSubmit} sx={{ width: "90%" }}>
+            <Typography
+              sx={{
+                fontFamily: "Satoshi",
+                fontSize: "16px",
+                color: "#24252C",
+                fontWeight: "500",
+                mb: 1,
+              }}
+            >
+              Name
+            </Typography>
+            <Box sx={{ display: "flex", gap: 2 }}>
               <TextField
                 fullWidth
-                label="First Name"
                 name="firstName"
+                placeholder="First name"
                 value={form.firstName}
                 onChange={handleChange}
                 required
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    borderRadius: 16,
+                    height: 50,
+                  },
+                }}
               />
-            </Grid>
-            <Grid item xs={12} sm={6}>
               <TextField
                 fullWidth
-                label="Last Name"
                 name="lastName"
+                placeholder="Last name"
                 value={form.lastName}
                 onChange={handleChange}
                 required
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    borderRadius: 16,
+                    height: 50,
+                  },
+                }}
               />
-            </Grid>
-          </Grid>
-          <TextField
-            fullWidth
-            type="email"
-            label="Email Address"
-            name="email"
-            value={form.email}
-            onChange={handleChange}
-            margin="normal"
-            required
-            error={!!emailError}
-            helperText={emailError}
-          />
-          <TextField
-            fullWidth
-            type="password"
-            label="Password"
-            name="password"
-            value={form.password}
-            onChange={handleChange}
-            margin="normal"
-            required
-            error={!!passwordError}
-            helperText={passwordError || passwordStrength}
-          />
-          <TextField
-            fullWidth
-            type="password"
-            label="Confirm Password"
-            name="confirmPassword"
-            value={form.confirmPassword}
-            onChange={handleChange}
-            margin="normal"
-            required
-            error={!!passwordError}
-            helperText={passwordError}
-          />
-          <FormControlLabel
-            control={
-              <Checkbox
-                name="termsAccepted"
-                checked={form.termsAccepted}
-                onChange={handleChange}
-                color="primary"
-              />
-            }
-            label="I agree to all Terms and Conditions"
-          />
-          <Button
-            type="submit"
-            variant="contained"
-            fullWidth
-            sx={{
-              mt: 2,
-              py: 1.5,
-              fontSize: "1rem",
-              fontWeight: "bold",
-              background: "#2575fc",
-              "&:hover": { background: "#1e5dd9" },
-            }}
-            disabled={loading}
-          >
-            {loading ? "Creating Account..." : "Create Account"}
-          </Button>
-          <Typography align="center" sx={{ mt: 2 }}>
-            Already have an account?{" "}
-            <Link href="/u-login" underline="hover">
-              Login
-            </Link>
-          </Typography>
+            </Box>
+            <Typography
+              sx={{
+                fontFamily: "Satoshi",
+                fontSize: "16px",
+                color: "#24252C",
+                fontWeight: "500",
+                mb: 1,
+                mt: 3,
+              }}
+            >
+              Email Address
+            </Typography>
+            <TextField
+              fullWidth
+              type="email"
+              name="email"
+              placeholder="Enter your email here"
+              value={form.email}
+              onChange={handleChange}
+              required
+              error={!!emailError}
+              helperText={emailError}
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  borderRadius: 16,
+                  height: 50,
+                },
+              }}
+            />
+            <Typography
+              sx={{
+                fontFamily: "Satoshi",
+                fontSize: "16px",
+                color: "#24252C",
+                fontWeight: "500",
+                mt: 2,
+              }}
+            >
+              Password
+            </Typography>
+            <TextField
+              fullWidth
+              type={showPassword ? "text" : "password"}
+              name="password"
+              value={form.password}
+              placeholder="Enter your password here"
+              onChange={handleChange}
+              margin="normal"
+              required
+              error={!!passwordError}
+              helperText={passwordError || passwordStrength}
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  borderRadius: 16,
+                  height: 50,
+                },
+              }}
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton
+                      onClick={() => setShowPassword(!showPassword)}
+                      edge="end"
+                    >
+                      {showPassword ? <Visibility /> : <VisibilityOff />}
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              }}
+            />
+            <TextField
+              fullWidth
+              type={showPassword ? "text" : "password"}
+              placeholder="Confirm Password"
+              name="confirmPassword"
+              value={form.confirmPassword}
+              onChange={handleChange}
+              margin="normal"
+              required
+              error={!!passwordError}
+              helperText={passwordError}
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  borderRadius: 16,
+                  height: 50,
+                },
+              }}
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton
+                      onClick={() => setShowPassword(!showPassword)}
+                      edge="end"
+                    >
+                      {showPassword ? <Visibility /> : <VisibilityOff />}
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              }}
+            />
+            <Typography
+              sx={{
+                fontFamily: "Satoshi",
+                color: "#808195",
+                fontWeight: "500",
+                fontSize: "14px",
+                px: 2,
+                py: 1,
+              }}
+            >
+              By creating account, you agree to the{" "}
+              <Link href="/t&c">Terms & Conditions</Link> and
+              <Link href="/privacy-policy"> Privacy Policy</Link> of High Impact
+              Talent
+            </Typography>
+            <Button
+              type="submit"
+              variant="contained"
+              fullWidth
+              sx={{
+                mt: 2,
+                py: 1.5,
+                fontSize: "16px",
+                background: "#2575fc",
+                "&:hover": { background: "#1e5dd9" },
+                borderRadius: 16,
+                textTransform: "none",
+                fontFamily: "Satoshi",
+                fontWeight: "700",
+              }}
+              disabled={loading}
+            >
+              {loading ? "Creating Account..." : "Create Account"}
+            </Button>
+            <Typography
+              align="center"
+              sx={{
+                mt: 2,
+                fontFamily: "Satoshi",
+                fontWeight: "700",
+                color: "#808195",
+              }}
+            >
+              Have an account?{" "}
+              <Link href="/u-login" underline="hover">
+                Login
+              </Link>
+            </Typography>
+          </Box>
         </Box>
-      </Paper>
+      </Box>
+      <Box>
+        <Divider sx={{ border: "1px solid #A3A3A3", height: "76%", mt: 18 }} />
+      </Box>
+      <Box sx={{ p: 4, mt: 16, ml: 6 }}>
+        <img src={Heroimg} alt="Hero" style={{ height: "550px" }} />
+      </Box>
     </Box>
   );
 };

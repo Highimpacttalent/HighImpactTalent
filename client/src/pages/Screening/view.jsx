@@ -51,6 +51,7 @@ const ScreeningView = () => {
     // Check if all screening questions are answered
   const allQuestionsAnswered = formData.answers.every(answer => answer.trim() !== "");
 
+  if(filteredQuestions.length > 0){
   if (!allQuestionsAnswered) {
     setSnackbar({
       open: true,
@@ -59,6 +60,7 @@ const ScreeningView = () => {
     });
     return;
   }
+}
     if (!applied) {
       try {
         const res = await axios.post(

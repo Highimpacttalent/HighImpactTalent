@@ -29,15 +29,16 @@ import { JobCard } from "../../components";
 
 const DesktopView = () => {
   const { user } = useSelector((state) => state.user);
-
+  const Statelocation = useLocation();
+  const { searchKeywordProp, searchLocationProp } = Statelocation.state || {};
   const [sort, setSort] = useState("Newest");
   const [page, setPage] = useState(1);
   const [numPage, setNumPage] = useState(1);
   const [data, setData] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [searchLocation, setSearchLocation] = useState("");
+  const [searchLocation, setSearchLocation] = useState(searchLocationProp || "");
   const [isFetching, setIsFetching] = useState(false);
-  const [searchKeyword, setSearchKeyword] = useState("");
+  const [searchKeyword, setSearchKeyword] = useState(searchKeywordProp || "");
   const [selectedTab, setSelectedTab] = useState(0); 
   const [filteredJobs, setFilteredJobs] = useState([]);
 

@@ -27,6 +27,7 @@ import {
   Business,
   Bookmark,
   BookmarkBorder,
+  ReportProblem,
   CurrencyRupee,
   HomeWork,
 } from "@mui/icons-material";
@@ -40,6 +41,13 @@ const JobCard = ({ job,flag = false,enable = false }) => {
   const { user } = useSelector((state) => state.user);
   const [like, setLike] = useState(false);
   const navigate = useNavigate();
+  const experience = user.experience;
+  let noteligible = false;
+  console.log(job?.experience, typeof(job?.experience), typeof(user.experience))
+    if(job?.experience && job?.experience > experience){
+      console.log("Ho")
+      noteligible = true;
+      }
 
   useEffect(() => {
     setLike(user?.likedJobs?.includes(job._id));
@@ -290,6 +298,7 @@ const JobCard = ({ job,flag = false,enable = false }) => {
               <Button
               variant="contained"
               color="primary"
+              disabled = {noteligible}
               sx={{borderRadius:40,fontFamily:"Poppins"}}
                 onClick={() => {
                   if (job?.applicationLink && job?.applicationLink.trim() !== "") {
@@ -315,6 +324,14 @@ const JobCard = ({ job,flag = false,enable = false }) => {
               </Button>
             ) : null}
       </CardActions>
+      {noteligible && (
+        <Box sx={{display:"flex",justifyContent:"flex-start",ml:2,mt:1}}>
+        <ReportProblem color="error" sx={{mb:1}}/>
+        <Typography variant="body2" color="error" sx={{ px:1,mt:0.5 }}>
+          You are not eligible for this job
+        </Typography>
+        </Box>
+      )}
     </Card>
   );
 

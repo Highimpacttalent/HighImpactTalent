@@ -10,7 +10,7 @@ import ViewResumeProfile from "./pages/ResumeSearch/ViewResume/view";
 import ApplicationTracking from "./pages/ApplicationTracking";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsAndConditions from "./components/terms";
-import Landing2 from "./pages/Landing2/view";
+import Landing2 from "./pages/Landing/Landing2/view";
 import RefundPolicy from "./components/Refund";
 import ApplicationStatus from "./pages/ApplicationStatus";
 import UploadResume from "./pages/UploadResume";

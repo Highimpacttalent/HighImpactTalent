@@ -53,13 +53,6 @@ const Footer = () => {
             </Link>
           </Typography>
           <Typography variant="body2" sx={{ mb: 0.5 }}>
-            <Link to="/companies" style={{ textDecoration: "none", color: "#404258", transition: "0.3s" }}
-              onMouseOver={(e) => (e.currentTarget.style.color = "#1176DB")} 
-              onMouseOut={(e) => (e.currentTarget.style.color = "#404258")}>
-              Companies
-            </Link>
-          </Typography>
-          <Typography variant="body2" sx={{ mb: 0.5 }}>
             <Link to="/blog" style={{ textDecoration: "none", color: "#404258", transition: "0.3s" }}
               onMouseOver={(e) => (e.currentTarget.style.color = "#1176DB")} 
               onMouseOut={(e) => (e.currentTarget.style.color = "#404258")}>
