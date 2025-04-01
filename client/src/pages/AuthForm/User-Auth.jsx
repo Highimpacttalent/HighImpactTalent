@@ -13,7 +13,7 @@ import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { Login } from "../../redux/userSlice"; // Adjust import path if needed
 import { apiRequest } from "../../utils"; // Ensure you have an API request utility
-import Heroimg from "../../assets/CreateAccount/Heroimg.svg";
+import Heroimg from "../../assets/CreateAccount/HeroImg.svg";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 
 const UserSignUp = () => {
