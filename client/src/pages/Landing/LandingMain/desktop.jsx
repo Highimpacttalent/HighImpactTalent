@@ -7,8 +7,7 @@ import { Link } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import { Fragment } from "react";
 import { WorkOutline, GroupAdd } from "@mui/icons-material";
-import landing from "../../../assets/landing.svg";
-import landing2 from "../../../assets/landing2.svg";
+import landing from "../../../assets/Landing/Desktop.svg"
 
 const DesktopLanding = () => {
   const { user } = useSelector((state) => state.user);
@@ -185,7 +184,7 @@ const DesktopLanding = () => {
       onMouseLeave={() => setIsHovered(false)}
     >
       <img
-        src={isHovered ? landing2 : landing}
+        src={landing}
         alt="Professional"
         style={{
           width: "100%",

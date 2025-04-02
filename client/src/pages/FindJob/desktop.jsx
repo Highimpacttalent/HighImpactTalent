@@ -20,6 +20,8 @@ import {
   MenuItem,
   Select,
   FormControl,
+  Checkbox,
+  FormControlLabel,
   InputLabel,
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
@@ -48,6 +50,8 @@ const DesktopView = () => {
   const [locationFilter, setLocationFilter] = useState([]);
   const [salaryRangeFilter, setSalaryRangeFilter] = useState([]);
   const [datePostedFilter, setDatePostedFilter] = useState([]);
+
+  
 
   const [expandedAccordions, setExpandedAccordions] = useState({
     experience: false,
@@ -242,7 +246,16 @@ const DesktopView = () => {
   };
 
   const FilterOption = ({ label, value, state, setState }) => {
-    const isSelected = state.includes(value);
+    const isChecked = state.includes(value);
+  
+    const handleChange = () => {
+      if (isChecked) {
+        setState(state.filter((item) => item !== value));
+      } else {
+        setState([...state, value]);
+      }
+    };
+  
     return (
       <Box
         sx={{
@@ -254,13 +267,14 @@ const DesktopView = () => {
         }}
         onClick={() => handleMultipleSelection(value, state, setState)}
       >
-        {isSelected && (
-          <AiOutlineCheck color="#1A73E8" style={{ marginRight: "8px" }} />
-        )}
+        <FormControlLabel
+        control={<Checkbox checked={isChecked} onChange={handleChange} />}
+      />
         <Typography variant="body1" color="#404258" fontFamily="Poppins">
           {label}
         </Typography>
       </Box>
+      
     );
   };
 

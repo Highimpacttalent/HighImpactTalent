@@ -153,7 +153,7 @@ const workModeOptions = ["Remote", "Hybrid", "Work From Office"];
     try {
       const res = await apiRequest({
         url: "/jobs" + newURL,
-        method: "GET",
+        method: "POST",
       });
       setData(res?.data);
       setFilteredJobs(res?.data);

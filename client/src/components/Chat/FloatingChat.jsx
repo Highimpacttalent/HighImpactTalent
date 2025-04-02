@@ -4,6 +4,7 @@ import ChatIcon from "@mui/icons-material/Chat";
 import CloseIcon from "@mui/icons-material/Close";
 import RobotFaceIcon from "@mui/icons-material/SmartToy";
 import axios from "axios";
+import { useSelector } from "react-redux";
 
 const AskJarvis = () => {
   const [open, setOpen] = useState(false);
@@ -12,6 +13,9 @@ const AskJarvis = () => {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
+  const { user } = useSelector((state) => state.user);
+  console.log("userchat", user)
+  
 
   const toggleChat = () => {
     setOpen(!open);
@@ -34,8 +38,8 @@ const AskJarvis = () => {
 
     const requestData = {
       subject: "User Issue Reporting",
-      name: userData.name,
-      email: userData.email,
+      name: user.firstName + user.lastName,
+      email: user.email,
       message: `Phone: ${userData.contact}, Issue: ${userData.issue}`,
     };
 

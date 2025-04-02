@@ -1,10 +1,14 @@
 import React, { useState, useEffect } from "react";
-import { Container, TextField, Button, Checkbox, FormControlLabel, Typography, Box, Modal, CircularProgress } from "@mui/material";
+import { IconButton, TextField, Button, InputAdornment, Typography, Box, Modal, CircularProgress ,Link} from "@mui/material";
 import { useNavigate } from "react-router-dom";
+import { Visibility, VisibilityOff } from "@mui/icons-material";
+import { useSelector } from "react-redux";
+
 
 const PasswordChange = () => {
+  const { user } = useSelector((state) => state.user);
   const [step, setStep] = useState(1);
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(user?.email || "");
   const [otp, setOtp] = useState("");
   const [generatedOtp, setGeneratedOtp] = useState(null);
   const [newPassword, setNewPassword] = useState("");
@@ -14,6 +18,7 @@ const PasswordChange = () => {
   const [error, setError] = useState("");
   const [successModal, setSuccessModal] = useState(false);
   const navigate = useNavigate();
+  const [showPassword,setShowPassword] = useState(false);
 
   // Generate a random OTP (0-9999) and send it when the component is first loaded
   useEffect(() => {
@@ -88,27 +93,55 @@ const PasswordChange = () => {
   };
 
   return (
-    <Box sx={{ minHeight: "80vh", display: "flex", alignItems: "center", justifyContent: "center", bgcolor: "#f9fafb" }}>
-    <Container maxWidth="sm" sx={{ mt: 5, p: 3, border: "1px solid #ccc", borderRadius: 2, background: "#fff", boxShadow: 3 }}>
-      <Typography variant="h5" textAlign="center" gutterBottom color="primary" fontWeight={600}>
+    <Box sx={{  display: "flex",flexDirection:"column",alignItems:"center", justifyContent: "center", bgcolor: "#fff" }}>
+      <Typography textAlign="center" gutterBottom color="#24252C" fontWeight={700} fontFamily={"Satoshi"} fontSize={"24px"} mt={8}>
         {step === 1 ? "Change Your Password" : step === 2 ? "Enter OTP" : "Set New Password"}
       </Typography>
+    <Box sx={{  background: "#fff",mt:4,display:"flex",alignItems:"center",justifyContent:"center"}}>
 
       {step === 1 && (
         <Box>
+          <Typography  gutterBottom color="#24252C" fontWeight={700} fontFamily={"Satoshi"} fontSize={"16px"} >
+          Email Address
+      </Typography>
           <TextField
             fullWidth
-            label="Email ID"
+            placeholder="abc@gmail.com"
             variant="outlined"
             value={email}
+            disabled={!!user?.email}
             onChange={(e) => setEmail(e.target.value)}
             margin="normal"
+            sx={{
+              "& .MuiOutlinedInput-root": {
+                borderRadius: 18,
+                "&.Mui-disabled": {
+                  "& .MuiInputBase-input": {
+                    color: "black", // Ensures text color is black when disabled
+                    "-webkit-text-fill-color": "black", // Override default grey color
+                  },
+                },
+              },
+            }}
           />
-          <FormControlLabel
-            control={<Checkbox checked={termsAccepted} onChange={() => setTermsAccepted(!termsAccepted)} />}
-            label="I accept all Terms and Conditions"
-          />
-          <Button fullWidth variant="contained" color="primary" disabled={!email || !termsAccepted} onClick={() => setStep(2)}>
+          <Typography
+              sx={{
+                fontFamily: "Satoshi",
+                color: "#808195",
+                fontWeight: "500",
+                fontSize: "14px",
+                px: 2,
+                py: 1,
+                mt:2,
+                mb:2
+              }}
+            >
+              By changing Password, you agree to the{" "}
+              <Link href="/t&c">Terms & Conditions</Link> and
+              <Link href="/privacy-policy"> Privacy Policy</Link> of High Impact
+              Talent
+            </Typography>
+          <Button fullWidth variant="contained"  disabled={!email } onClick={() => setStep(2)} sx={{borderRadius:16,mb:16,textTransform:"none",fontFamily:"Satoshi",bgColor:"#3C7EFC"}}>
             Submit
           </Button>
         </Box>
@@ -116,62 +149,108 @@ const PasswordChange = () => {
 
       {step === 2 && (
         <Box>
-          <Typography variant="body1" textAlign="center">
-            OTP has been sent to <b>{email}</b>
+          <Typography textAlign="center" sx={{fontFamily:"Satoshi",color:"#808195",fontWeight:"500",}}>
+           We have sent The OTP to  {email}. Please check and enter the otp below to verify your account
           </Typography>
           <TextField
             fullWidth
-            label="Enter OTP"
+            placeholder="please enter the otp here"
             variant="outlined"
             value={otp}
             onChange={(e) => setOtp(e.target.value)}
             margin="normal"
+            sx={{
+              "& .MuiOutlinedInput-root": {
+                borderRadius: 18,
+              },
+            }}
           />
           {error && <Typography color="error">{error}</Typography>}
-          <Button fullWidth variant="contained" color="primary" onClick={handleOtpSubmit} sx={{ mt: 2 }}>
-            Verify OTP
+          <Button fullWidth variant="link" sx={{ mt: 4,fontFamily:"Satoshi",color:"#474E68",fontWeight:"500",textTransform:"none" }}>
+          Didn’t Receive Code?  <Box component="span" sx={{ color: "#3C7EFC", ml: 1 }}  onClick={sendOtp}>
+    Resend Code
+  </Box>
           </Button>
-          <Button fullWidth variant="text" onClick={sendOtp} sx={{ mt: 1 }}>
-            Resend OTP
+          <Button fullWidth variant="contained" color="primary" onClick={handleOtpSubmit} sx={{ mt: 2,borderRadius:16,mb:8,textTransform:"none",fontFamily:"Satoshi",fontSize:"16px" }}>
+          {loading && <CircularProgress size={20} sx={{ color: "white",  }} />}
+            Verify OTP
           </Button>
         </Box>
       )}
 
       {step === 3 && (
         <Box>
+          <Typography  gutterBottom color="#24252C" fontWeight={700} fontFamily={"Satoshi"} fontSize={"16px"} >
+          New Password *
+      </Typography>
           <TextField
             fullWidth
-            label="New Password"
-            type="password"
+            placeholder="enter your new password"
+            type={showPassword ? "text" : "password"}
             variant="outlined"
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
             margin="normal"
+            sx={{
+              "& .MuiOutlinedInput-root": {
+                borderRadius: 18,
+              },
+            }}
+            InputProps={{
+                            endAdornment: (
+                              <InputAdornment position="end">
+                                <IconButton
+                                  onClick={() => setShowPassword(!showPassword)}
+                                  edge="end"
+                                >
+                                  {showPassword ? <Visibility /> : <VisibilityOff />}
+                                </IconButton>
+                              </InputAdornment>
+                            ),
+                          }}
           />
+          <Typography  gutterBottom color="#24252C" fontWeight={700} fontFamily={"Satoshi"} fontSize={"16px"} sx={{mt:2}} >
+          Confirm Password *
+      </Typography>
           <TextField
             fullWidth
-            label="Confirm New Password"
-            type="password"
+            placeholder="confirm your password"
+            type={showPassword ? "text" : "password"}
             variant="outlined"
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
             margin="normal"
+            sx={{
+              "& .MuiOutlinedInput-root": {
+                borderRadius: 18,
+              },
+            }}
+            InputProps={{
+                            endAdornment: (
+                              <InputAdornment position="end">
+                                <IconButton
+                                  onClick={() => setShowPassword(!showPassword)}
+                                  edge="end"
+                                >
+                                  {showPassword ? <Visibility /> : <VisibilityOff />}
+                                </IconButton>
+                              </InputAdornment>
+                            ),
+                          }}
           />
           {error && <Typography color="error">{error}</Typography>}
-          <Button fullWidth variant="contained" color="primary" onClick={handlePasswordChange} sx={{ mt: 2 }}>
+          <Button fullWidth variant="contained" color="primary" onClick={handlePasswordChange} sx={{ borderRadius:16,fontFamily:"Satoshi",textTransform:"none",mb:8,mt:4 }}>
             Change Password
           </Button>
         </Box>
       )}
 
-      {loading && <CircularProgress sx={{ display: "block", mx: "auto", mt: 3 }} />}
-
       <Modal open={successModal} onClose={() => setSuccessModal(false)}>
-        <Box sx={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", width: 300, p: 3, bgcolor: "white", borderRadius: 2, boxShadow: 3, textAlign: "center" }}>
-          <Typography variant="h6">Password Changed Successfully!</Typography>
+        <Box sx={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", p: 3, bgcolor: "white", borderRadius: 2, boxShadow: 3, textAlign: "center" }}>
+          <Typography sx={{fontFamily:"Poppins",fontWeight:500,fontSize:"20px"}} color="success">Your Password has been changed successfully!</Typography>
         </Box>
       </Modal>
-    </Container>
+    </Box>
     </Box>
   );
 };
