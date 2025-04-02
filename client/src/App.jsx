@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Outlet, Navigate, Route, Routes, useLocation } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
-import { About, Auth, Companies, CompaniesProfile, JobDetails, UserProfile, FindJob} from "./pages/index";
+import { About, Companies, CompaniesProfile, JobDetails, FindJob} from "./pages/index";
 import { useSelector } from "react-redux";
 import Dashboard from "./pages/DashBoard";
 import Contact from "./pages/Contact";
@@ -13,19 +13,13 @@ import TermsAndConditions from "./components/terms";
 import Landing2 from "./pages/Landing/Landing2/view";
 import RefundPolicy from "./components/Refund";
 import ApplicationStatus from "./pages/ApplicationStatus";
-import UploadResume from "./pages/UploadResume";
 import PasswordChange from "./pages/Password";
 import ScreeningView from "./pages/Screening/view";
-import Landing from "./pages/Landing";
 import FloatingChatAssistant from "./components/Chat/FloatingChat";
-import ScreeningQuestions from "./pages/ScreeningQuestions";
 import UserInfoForm from "./pages/UserInfoForm";
 import JobUploadPage from "./pages/JobUploadPage";
-import AuthForm from "./pages/AuthForm/AuthForm";
 import ProfileSection from "./pages/Profile/view";
 import UserLoginForm from "./pages/AuthForm/u-login";
-import Loginform from "./pages/AuthForm/Loginform";
-import BlogPage from "./pages/BlogPage";
 import ResumeSearch from "./pages/ResumeSearch/view";
 import BlogPage2 from "./pages/Blog/desktop"
 import ViewJobs from "./pages/ViewJobs";
@@ -34,7 +28,6 @@ import SingleBlog from "./pages/SingleBlog";
 import JobApplications from "./pages/ViewApplicants";
 import ResumeUpload from "./pages/UserDetailsUpload/userInfo";
 import RecruiterSchedule from "./pages/RecruiterSchedule";
-import UpdateUserForm from "./pages/UpdateUserDetails";
 import RecruiterSignup from "./pages/AuthForm/Recruiter-Auth";
 import UserSignUp from "./pages/AuthForm/User-Auth";
 import CompanyLoginForm from "./pages/AuthForm/r-login";
@@ -43,7 +36,6 @@ import PayUPaymentPage from "./pages/Payments/PaymentPage";
 import PaymentSuccess from "./pages/Payments/PaymentSuccess";
 import PaymentFailure from "./pages/Payments/PaymentFailure";
 import LinkedInCallback from "./pages/AuthForm/LinkedInCallback";
-// import ResumeSearch from "./pages/ResumeSearch";
 
 function Layout() {
   const { user } = useSelector((state) => state.user);
@@ -77,9 +69,9 @@ function App() {
           <Route path="/applicant/:jobId" element={<JobApplications />}/>
           <Route path='/companies' element={<Companies />} />
           <Route path={"/user-profile"} element={<ProfileSection />} />
-          <Route path={"/company-profile"} element={<CompaniesProfile />} />
+          {/* <Route path={"/company-profile"} element={<CompaniesProfile />} />
           <Route path={"/company-profile/:id"} element={<CompaniesProfile />} />
-          <Route path={"/company-profile/job-detail/:id"} element={<CompaniesProfile />} />
+          <Route path={"/company-profile/job-detail/:id"} element={<CompaniesProfile />} /> */}
           <Route path={"/job-detail/:id"} element={<JobDetails />} />
           <Route path="/job-detail/:id/screening-questions" element={<ScreeningView/>}></Route>
           <Route path={'/applicationstatus'} element={<ApplicationStatus/>}></Route>
@@ -93,22 +85,17 @@ function App() {
           <Route path={"/payment-failure"} element={<PaymentFailure />} />
           
         </Route>
-        <Route path="/authform" element={<AuthForm/>}></Route>
         <Route path="/r-authform" element={<RecruiterSignup/>}></Route>
         <Route path="/u-authform" element={<UserSignUp/>}></Route>
         <Route path="/u-login" element={<UserLoginForm/>}></Route>
         <Route path="/r-login" element={<CompanyLoginForm/>}></Route>
         <Route path="/linkedin-callback" element={<LinkedInCallback />} />
-        <Route path="/authlogin" element={<Loginform/>}></Route>
         <Route path="/endlogin" element={<RecruiterRedirectPage/>}></Route>
         <Route path="/user-additional-details" element={<UserInfoForm/>}></Route>
-        <Route path="/update-user-additional-details" element={<UpdateUserForm/>}></Route>
         <Route path="/upload-a-job" element={<JobUploadPage/>}></Route>
         <Route path='/about-us' element={<About />} />
-        <Route path='/user-auth' element={<Auth/>} />
         <Route path='/contact-us' element={<Contact/>} />
         <Route path="/admin-dashboard" element={<Dashboard />} />
-        <Route path="/upload-resume" element={<UploadResume />} />
         <Route path="/t&c" element={<TermsAndConditions />} />
         <Route path="/refund" element={<RefundPolicy />} />
         <Route path="/blog" element={<BlogPage2/>}></Route>
