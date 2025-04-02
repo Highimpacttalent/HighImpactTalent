@@ -6,7 +6,7 @@ import bcrypt from "bcryptjs";
 import { uploadFileToS3 } from "../s3Config/s3.js";
 import multer from "multer";
 
-const upload = multer({
+const uploadresume = multer({
   storage: multer.memoryStorage(), 
   limits: {
     fileSize: 2 * 1024 * 1024, 
@@ -14,7 +14,7 @@ const upload = multer({
 });
 
 // Middleware to handle file upload
-export const uploadMiddleware = upload.single("resume");
+export const uploadResumeMiddleware = uploadresume.single("resume");
 
 // upload resume
 export const uploadResume = async (req, res) => {
@@ -68,6 +68,71 @@ export const uploadResume = async (req, res) => {
     res.status(500).json({
       success: false,
       message: error.message || "Error uploading resume",
+    });
+  }
+};
+
+const uploadimage = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 2 * 1024 * 1024, // 2MB limit
+  },
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.match(/image\/(jpeg|jpg|png)$/)) {
+      cb(null, true);
+    } else {
+      cb(new Error("Only image files (JPEG, JPG, PNG) are allowed!"), false);
+    }
+  },
+});
+
+// Middleware to handle file upload
+export const uploadimageMiddleware = uploadimage.single("profilePic");
+
+// upload image
+export const uploadImage = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: "No file uploaded",
+      });
+    }
+
+    const file = req.file;
+    const userId = req.uploaderId; 
+
+    // Generate unique filename
+    const filename = `profile-pictures/${userId}/${Date.now()}-${file.originalname}`;
+
+    // Upload to S3
+    const s3Response = await uploadFileToS3(file.buffer, filename, file.mimetype);
+
+    // Update user's cvUrl in database
+    const updatedUser = await Users.findByIdAndUpdate(
+      userId,
+      { profileUrl: s3Response.Location },
+      { new: true }
+    );
+
+    if (!updatedUser) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Profile Picture uploaded successfully",
+      url: s3Response.Location,
+      user: updatedUser,
+    });
+  } catch (error) {
+    console.error("Error uploading profile picture:", error);
+    res.status(500).json({
+      success: false,
+      message: error.message || "Error uploading profile picture",
     });
   }
 };
