@@ -13,7 +13,6 @@ import {
   CircularProgress,
   Divider,
   Grid,
-  Grid2,
 } from "@mui/material";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
@@ -31,56 +30,6 @@ const LINKEDIN_CONFIG = {
   REDIRECT_URI: `${window.location.origin}/linkedin-callback`,
   STATE: generateRandomState(),
 };
-
-// Custom Google Login Button Component
-const GoogleLoginButton = ({ onClick, loading }) => (
-  <Button
-    fullWidth
-    variant="outlined"
-    onClick={onClick}
-    disabled={loading}
-    sx={{
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      gap: 1,
-      borderRadius: 16,
-      textTransform: "none",
-      fontSize: { xs: "0.8rem", sm: "0.9rem" },
-      fontWeight: 600,
-      color: "rgba(64, 66, 88, 1)",
-      borderColor: "rgba(64, 66, 88, 0.23)",
-      backgroundColor: "rgba(255, 255, 255, 1)",
-      boxShadow: "0px 1px 3px rgba(0, 0, 0, 0.08)",
-      height: { xs: "40px", sm: "40px", md: "42px" },
-      "&:hover": {
-        backgroundColor: "rgba(249, 250, 251, 1)",
-        borderColor: "rgba(64, 66, 88, 0.35)",
-      },
-    }}
-    startIcon={
-      loading ? (
-        <CircularProgress size={20} />
-      ) : (
-        <GoogleIcon sx={{ color: "#DB4437" }} />
-      )
-    }
-  >
-    <Typography
-      sx={{
-        flexGrow: 1,
-        textAlign: "center",
-        fontFamily: "Arial",
-        fontSize: "0.9rem",
-        textOverflow: "ellipsis",
-        whiteSpace: "nowrap",
-        overflow: "hidden",
-      }}
-    >
-      Continue with Google
-    </Typography>
-  </Button>
-);
 
 function UserLoginForm() {
   const [email, setEmail] = useState("");
@@ -190,6 +139,56 @@ function UserLoginForm() {
     setErrMsg("Google authentication failed");
   };
 
+  // Custom styled Google button to match LinkedIn button
+  const CustomGoogleButton = ({ onClick }) => (
+    <Button
+      fullWidth
+      variant="outlined"
+      onClick={onClick}
+      disabled={googleLoading}
+      sx={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: 1,
+        textTransform: "none",
+        fontWeight: 600,
+        color: "rgba(64, 66, 88, 1)",
+        borderColor: "rgba(64, 66, 88, 0.23)",
+        backgroundColor: "rgba(255, 255, 255, 1)",
+        boxShadow: "0px 1px 3px rgba(0, 0, 0, 0.08)",
+        height: { xs: "44px", sm: "44px", md: "44px" }, 
+        width: "100%",
+        padding: "6px 16px",
+        "&:hover": {
+          backgroundColor: "rgba(249, 250, 251, 1)",
+          borderColor: "rgba(64, 66, 88, 0.35)",
+        },
+      }}
+      startIcon={
+        googleLoading ? (
+          <CircularProgress size={20} />
+        ) : (
+          <GoogleIcon sx={{ color: "#DB4437" }} />
+        )
+      }
+    >
+      <Typography
+        sx={{
+          flexGrow: 1,
+          textAlign: "center",
+          fontFamily: "Arial",
+          fontSize: "0.9rem",
+          textOverflow: "ellipsis",
+          whiteSpace: "nowrap",
+          overflow: "hidden",
+        }}
+      >
+        Continue with Google
+      </Typography>
+    </Button>
+  );
+
   return (
     <Box sx={{ background: "#fff" }}>
       <Box
@@ -220,18 +219,12 @@ function UserLoginForm() {
           <Grid container spacing={2} sx={{ mb: 3 }}>
             <Grid item xs={12} sm={6}>
               <GoogleOAuthProvider clientId="390148996153-usdltgirc8gk0mor929tnibamu7a6tad.apps.googleusercontent.com">
-                {/* Use our custom button instead of Google's default */}
                 <GoogleLogin
                   onSuccess={handleGoogleSuccess}
                   onError={handleGoogleError}
-                  render={(renderProps) => (
-                    <GoogleLoginButton
-                      onClick={renderProps.onClick}
-                      loading={googleLoading}
-                    />
-                  )}
                   useOneTap={false}
                   cookiePolicy={'single_host_origin'}
+                  render={renderProps => <CustomGoogleButton onClick={renderProps.onClick} />}
                 />
               </GoogleOAuthProvider>
             </Grid>
@@ -246,15 +239,13 @@ function UserLoginForm() {
                   alignItems: "center",
                   justifyContent: "center",
                   gap: 1,
-                  // borderRadius: 16,
                   textTransform: "none",
-                  fontSize: { xs: "0.8rem", sm: "0.9rem" },
                   fontWeight: 600,
                   color: "rgba(64, 66, 88, 1)",
                   borderColor: "rgba(64, 66, 88, 0.23)",
                   backgroundColor: "rgba(255, 255, 255, 1)",
-                  // boxShadow: "0px 1px 3px rgba(0, 0, 0, 0.08)",
-                  height: { xs: "40px", sm: "40px", md: "40px" },
+                  height: { xs: "44px", sm: "44px", md: "44px" }, // Matching height with Google button
+                  padding: "6px 16px",
                   "&:hover": {
                     backgroundColor: "rgba(249, 250, 251, 1)",
                     borderColor: "rgba(64, 66, 88, 0.35)",
