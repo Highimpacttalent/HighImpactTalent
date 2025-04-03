@@ -126,12 +126,8 @@ function UserLoginForm() {
         state: state,
       });
 
-      // Log the URL to debug
-      const authUrl = `https://www.linkedin.com/oauth/v2/authorization?${params.toString()}`;
-      console.log("LinkedIn Auth URL:", authUrl);
-
       // Redirect to LinkedIn
-      window.location.href = authUrl;
+      window.location.href = `https://www.linkedin.com/oauth/v2/authorization?${params.toString()}`;
     } catch (error) {
       console.error("LinkedIn auth error:", error);
       setErrMsg("Failed to initiate LinkedIn login");
@@ -142,6 +138,56 @@ function UserLoginForm() {
   const handleGoogleError = () => {
     setErrMsg("Google authentication failed");
   };
+
+  // Custom styled Google button to match LinkedIn button
+  const CustomGoogleButton = ({ onClick }) => (
+    <Button
+      fullWidth
+      variant="outlined"
+      onClick={onClick}
+      disabled={googleLoading}
+      sx={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: 1,
+        textTransform: "none",
+        fontWeight: 600,
+        color: "rgba(64, 66, 88, 1)",
+        borderColor: "rgba(64, 66, 88, 0.23)",
+        backgroundColor: "rgba(255, 255, 255, 1)",
+        boxShadow: "0px 1px 3px rgba(0, 0, 0, 0.08)",
+        height: { xs: "44px", sm: "44px", md: "44px" }, 
+        width: "100%",
+        padding: "6px 16px",
+        "&:hover": {
+          backgroundColor: "rgba(249, 250, 251, 1)",
+          borderColor: "rgba(64, 66, 88, 0.35)",
+        },
+      }}
+      startIcon={
+        googleLoading ? (
+          <CircularProgress size={20} />
+        ) : (
+          <GoogleIcon sx={{ color: "#DB4437" }} />
+        )
+      }
+    >
+      <Typography
+        sx={{
+          flexGrow: 1,
+          textAlign: "center",
+          fontFamily: "Arial",
+          fontSize: "0.9rem",
+          textOverflow: "ellipsis",
+          whiteSpace: "nowrap",
+          overflow: "hidden",
+        }}
+      >
+        Continue with Google
+      </Typography>
+    </Button>
+  );
 
   return (
     <Box sx={{ background: "#fff" }}>
@@ -171,37 +217,35 @@ function UserLoginForm() {
           )}
 
           <Grid container spacing={2} sx={{ mb: 3 }}>
-            <Grid item xs={6}>
+            <Grid item xs={12} sm={6}>
               <GoogleOAuthProvider clientId="390148996153-usdltgirc8gk0mor929tnibamu7a6tad.apps.googleusercontent.com">
                 <GoogleLogin
                   onSuccess={handleGoogleSuccess}
                   onError={handleGoogleError}
-                  size="large"
-                  shape="pill"
-                  text="continue_with"
+                  useOneTap={false}
+                  cookiePolicy={'single_host_origin'}
+                  render={renderProps => <CustomGoogleButton onClick={renderProps.onClick} />}
                 />
               </GoogleOAuthProvider>
             </Grid>
-            <Grid item xs={6}>
+            <Grid item xs={12} sm={6}>
               <Button
                 fullWidth
                 variant="outlined"
                 onClick={handleLinkedInLogin}
                 disabled={linkedinLoading}
                 sx={{
-                  display: "flex", // ✅ Ensures flex behavior
-                  alignItems: "center", // ✅ Centers items properly
-                  justifyContent: "center", // ✅ Centers icon + text dynamically
-                  gap: 1, // ✅ Spacing between icon and text
-                  borderRadius: 16,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 1,
                   textTransform: "none",
-                  fontSize: { xs: "0.8rem", sm: "0.9rem" }, // ✅ Responsive font size
                   fontWeight: 600,
                   color: "rgba(64, 66, 88, 1)",
                   borderColor: "rgba(64, 66, 88, 0.23)",
                   backgroundColor: "rgba(255, 255, 255, 1)",
-                  boxShadow: "0px 1px 3px rgba(0, 0, 0, 0.08)",
-                  height: { xs: "40px", sm: "40px", md: "42px" }, // ✅ Responsive height
+                  height: { xs: "44px", sm: "44px", md: "44px" }, // Matching height with Google button
+                  padding: "6px 16px",
                   "&:hover": {
                     backgroundColor: "rgba(249, 250, 251, 1)",
                     borderColor: "rgba(64, 66, 88, 0.35)",
@@ -217,8 +261,8 @@ function UserLoginForm() {
               >
                 <Typography
                   sx={{
-                    flexGrow: 1, // ✅ Allows text to expand dynamically
-                    textAlign: "center", // ✅ Keeps text centered
+                    flexGrow: 1,
+                    textAlign: "center",
                     fontFamily: "Arial",
                     fontSize: "0.9rem",
                     textOverflow: "ellipsis",
