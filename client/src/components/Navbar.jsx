@@ -23,6 +23,7 @@ import {
   Assignment,
 } from "@mui/icons-material";
 import { Link } from "react-router-dom";
+import { CiUser } from "react-icons/ci";
 import { useSelector, useDispatch } from "react-redux";
 import { Logout as LogoutAction } from "../redux/userSlice";
 import logo from "../assets/tlogo.png";
@@ -61,7 +62,7 @@ const Navbar = () => {
         </IconButton>
 
         {/* Logo */}
-        <Box sx={{ display: "flex", alignItems: "center", flexGrow: 1, ml: 4 }}>
+        <Box sx={{ display: "flex", alignItems: "center",width:{xs:"100%",sm:"100%",md:"28%",lg:"28%"}, ml: 4}}>
           <Link
             to={user.token ? "/home" : "/"}
             style={{
@@ -71,13 +72,16 @@ const Navbar = () => {
               color: "inherit",
             }}
           >
-            <Avatar src={logo} sx={{ width: 40, height: 40, mr: 1 }} />
+            <Avatar src={logo} sx={{ width: "40px", height: "40px", mr: 1.5 }} />
             <Typography
               variant="h6"
               sx={{
-                color: "#1176DB",
-                fontWeight: "bold",
+                color: "#3C7EFC",
+                fontWeight: "500",
                 whiteSpace: "nowrap",
+                fontFamily:"Poppins",
+                fontSize:"20px"
+
               }}
             >
               High Impact Talent
@@ -172,13 +176,14 @@ const Navbar = () => {
 };
 
 const LoggedInMenu = ({ user, handleMenuOpen }) => (
-  <Box sx={{ display: { xs: "none", md: "flex" }, gap: 3, ml: "auto", mr: 2 }}>
+  <Box sx={{ display: { xs: "none", md: "flex" }, gap: 3,mr: 2,flexGrow:1 ,justifyContent:"space-between"}}>
+    <Box sx={{display:"flex",width:"65%",justifyContent:"space-evenly"}}>
     <Button
       component={Link}
       to={user?.accountType === "seeker" ? "/find-jobs" : "/view-jobs"}
-      color="inherit"
+      sx={{textTransform:"none",fontFamily:"Poppins",fontWeight:"500",fontSize:"18px",color:"#24252C"}}
     >
-      {user?.accountType === "seeker" ? "Find Job" : "Job Posts"}
+      {user?.accountType === "seeker" ? "Jobs" : "Job Posts"}
     </Button>
     {user?.accountType !== "seeker" && (
       <Button
@@ -203,24 +208,44 @@ const LoggedInMenu = ({ user, handleMenuOpen }) => (
         Companies
       </Button>
     )} */}
-    <Button component={Link} to="/about-us" color="inherit">
+    <Button component={Link} to="/about-us" sx={{textTransform:"none",fontFamily:"Poppins",fontWeight:"500",fontSize:"18px",color:"#24252C"}}>
       About
     </Button>
-    <Button component={Link} to="/contact-us" color="inherit">
-      Contact Us
-    </Button>
-    <Button component={Link} to="/blog" color="inherit">
+    <Button component={Link} to="/blog" sx={{textTransform:"none",fontFamily:"Poppins",fontWeight:"500",fontSize:"18px",color:"#24252C"}}>
       Blog
     </Button>
-    <IconButton onClick={handleMenuOpen}>
-      <Avatar 
-        src={
-          user?.profileUrl ||
-          "https://upload.wikimedia.org/wikipedia/commons/9/99/Sample_User_Icon.png"
-        }
-      />
-    </IconButton>
-  </Box>
+    <Button component={Link} to="/contact-us" sx={{textTransform:"none",fontFamily:"Poppins",fontWeight:"500",fontSize:"18px",color:"#24252C"}}>
+      Contact Us
+    </Button>
+    </Box>
+    <IconButton
+  onClick={handleMenuOpen}
+  sx={{
+    display: "flex",
+    alignItems: "center",
+    gap: 1,
+    textTransform: "none",
+    fontFamily: "Poppins",
+    fontWeight: "500",
+    fontSize: { xs: "14px", sm: "16px", md: "18px" }, // Responsive Font
+    color: "#24252C",
+    bgcolor: "white",
+    px: { xs: 1, sm: 2 }, // Adjust padding
+    borderRadius: 16,
+    "&:hover": {
+      bgcolor: "#f5f5f5",
+    },
+  }}
+>
+  {user?.profileUrl ? (
+    <Avatar src={user?.profileUrl} sx={{ width: { xs: 30, sm: 40 }, height: { xs: 30, sm: 40 } }} />
+  ) : (
+    <CiUser size={24} style={{ strokeWidth: 1,width: { xs: 30, sm: 40 }, height: { xs: 30, sm: 40 } }}/>
+  )}
+  <Typography sx={{textTransform:"none",fontFamily:"Poppins",fontWeight:"500",fontSize:"18px",color:"#24252C"}}>User Account</Typography>
+</IconButton>
+
+    </Box>
 );
 
 const LoggedOutMenu = () => (

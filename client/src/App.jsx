@@ -9,6 +9,7 @@ import Contact from "./pages/Contact";
 import ViewResumeProfile from "./pages/ResumeSearch/ViewResume/view";
 import ApplicationTracking from "./pages/ApplicationTracking";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
+import ContactUsPage from "./pages/ContactUs/view";
 import TermsAndConditions from "./components/terms";
 import Landing2 from "./pages/Landing/Landing2/view";
 import RefundPolicy from "./components/Refund";
@@ -94,7 +95,7 @@ function App() {
         <Route path="/user-additional-details" element={<UserInfoForm/>}></Route>
         <Route path="/upload-a-job" element={<JobUploadPage/>}></Route>
         <Route path='/about-us' element={<About />} />
-        <Route path='/contact-us' element={<Contact/>} />
+        <Route path='/contact-us' element={<ContactUsPage/>} />
         <Route path="/admin-dashboard" element={<Dashboard />} />
         <Route path="/t&c" element={<TermsAndConditions />} />
         <Route path="/refund" element={<RefundPolicy />} />

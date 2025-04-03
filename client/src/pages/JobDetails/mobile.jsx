@@ -3,12 +3,13 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { apiRequest } from "../../utils";
 import moment from "moment";
-import JobCard from "../../components/JobCard";
+import JobCard from "./components/MobileView";
 import {
   Box,
   Button,
   Card,
   CardContent,
+  IconButton,
   Typography,
   Grid,
   Stack,
@@ -34,7 +35,11 @@ const JobDetail = () => {
         });
         if (res?.data) {
           setJob(res.data);
-          setSimilarJobs(res.similarJobs);
+          const filteredJobs = res.similarJobs
+            .filter((job) => job._id !== id) // Remove current job
+            .slice(0, 2); // Limit to 2 jobs
+
+          setSimilarJobs(filteredJobs);
         }
       } catch (error) {
         console.error("Error fetching job details:", error);
@@ -47,89 +52,42 @@ const JobDetail = () => {
     window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
   }, [id]);
 
-  // const handleDelete = async () => {
-  //   if (window.confirm("Are you sure you want to delete this job?")) {
-  //     setIsFetching(true);
-  //     try {
-  //       await apiRequest({
-  //         url: `/jobs/delete-job/${job?.id}`,
-  //         token: user?.token,
-  //         method: "DELETE",
-  //       });
-  //       navigate("/");
-  //     } catch (error) {
-  //       console.error("Error deleting job:", error);
-  //     } finally {
-  //       setIsFetching(false);
-  //     }
-  //   }
-  // };
-
   if (isFetching || !job) {
     return (
       <CircularProgress sx={{ display: "block", mx: "auto", mt: 5, mb: 5 }} />
     );
   }
+  
 
   return (
     <Box sx={{  mx: "auto", p: 3, bgcolor: "#fff" }}>
       <Grid container spacing={2}>
-        <Grid item xs={12} md={8}>
-          <Card sx={{ p: 3, boxShadow: 2 }}>
-            <Box
-              sx={{
-                display: "flex",
-                flexDirection: "row",
-                justifyContent: "space-between",
-              }}
-            >
-              <Stack>
-                <Typography variant="h5" fontWeight={600}>
-                  {job?.jobTitle}
-                </Typography>
-                <Typography color="primary" fontWeight={500}>
-                  {job?.company?.name}
-                </Typography>
-                <Typography color="textSecondary" fontWeight={500}>
-                  {job?.jobLocation}
-                </Typography>
-                <Typography color="textSecondary">
-                  Posted {moment(job?.createdAt).fromNow()}...
-                </Typography>
-              </Stack>
+        <Grid item xs={12} md={8} >
+        <Box sx={{mt:2,mb:2}}>
+        <JobCard job={job} enable={true}/>
+        </Box>
+          <Box sx={{ p: 1.5  }}>
 
-              <Box sx={{ display: "flex", alignItems: "flex-start", mt: 1 }}>
-                <AiOutlineSafetyCertificate size={28} color="blue" />
-              </Box>
-            </Box>
-
-            <Typography variant="h6" mt={2} sx={{ fontWeight: "bold" }}>
-              Job Description
+            <Typography variant="h6" sx={{ fontWeight: "bold",fontFamily:"Poppins",color:"#404258",ml:1.5 }}>
+             About the Job
             </Typography>
-            <Typography>{job?.jobDescription}</Typography>
-
-            <Typography fontWeight="bold" mt={2}>
-              Experience: {job?.experience} Year+
-            </Typography>
-            <Typography fontWeight="bold" mt={2}>
-              Salary:{" "}
-              {job?.salaryConfidential
-                ? "Confidential"
-                : `₹${job?.salary?.toLocaleString()}`}{" "}
-              per year
-            </Typography>
+            <Box sx={{borderRadius:2.5,p:2.5,mt:2,boxShadow:"0px 0px 4px 0px #00000040"}}>
+            <Typography sx={{fontWeight:"700",color:"#404258",mb:2,fontFamily:"Poppins"}}>Job Description:</Typography>
+            <Typography sx={{color:"#474E68",fontFamily:"sans-serif"}}>{job?.jobDescription}</Typography>
 
             {job?.requirements?.length > 0 && (
               <Box mt={2}>
-                <Typography fontWeight={600}>Requirements</Typography>
+                <Typography sx={{fontWeight:"700",color:"#404258",mb:2,fontFamily:"Poppins"}}>Requirements:</Typography>
                 <ul>
                   {job.requirements.length > 0 &&
                   job.requirements.some((req) => req.trim() !== "") ? (
                     job.requirements
                       .filter((req) => req.trim() !== "")
-                      .map((req, index) => <li key={index}>{req}</li>)
+                      .map((req, index) => <Typography sx={{color:"#474E68",fontFamily:"sans-serif"}}>{index + 1}.{" "}{req}</Typography>)
                   ) : (
-                    <li style={{ color: 'rgba(0, 0, 0, 0.60)' }}>No requirement mentioned by the company.</li>
+                    <Stack>
+                    <Typography sx={{color:"#474E68",fontFamily:"sans-serif"}}>No requirement mentioned by the company.</Typography>
+                    </Stack>
                   )}
                 </ul>
               </Box>
@@ -137,84 +95,34 @@ const JobDetail = () => {
 
             {job?.qualifications?.some((qual) => qual.trim() !== "") ? (
               <Box mt={2}>
-                <Typography fontWeight={600}>Qualifications</Typography>
+                <Typography sx={{fontWeight:"700",color:"#404258",mb:2,fontFamily:"Poppins"}}>Qualifications:</Typography>
                 <ol>
                   {job.qualifications.map(
                     (qual, index) =>
                       qual.trim() && (
-                        <li key={index}>
+                        <Typography sx={{color:"#474E68",fontFamily:"sans-serif"}}>
                           {index + 1}. {qual}
-                        </li>
+                        </Typography>
                       )
                   )}
                 </ol>
               </Box>
             ) : (
               <>
-                <Typography mt={2} fontWeight={600}>
+                <Typography sx={{fontWeight:"700",color:"#404258",mb:2,fontFamily:"Poppins"}}>
                   Qualifications:
                 </Typography>
-                <Typography mt={1} color="textSecondary">
+                <Typography sx={{color:"#474E68",fontFamily:"sans-serif"}}>
                   No qualification mentioned by company.
                 </Typography>
               </>
             )}
+            </Box>
 
-            {user?.token == null ? (
-              <Button
-                variant="contained"
-                color="primary"
-                fullWidth
-                sx={{ mt: 2 }}
-                onClick={() => navigate("/user-auth")}
-              >
-                Login/Register To Apply
-              </Button>
-            ) : user?.accountType === "seeker" ? (
-              <Button
-                variant="contained"
-                color="primary"
-                fullWidth
-                sx={{ mt: 2 }}
-                onClick={() => {
-                  if (job?.applicationLink && job?.applicationLink.trim() !== "") {
-                    window.open(job.applicationLink, "_blank"); 
-                  } else {
-                    if (!job || !user || !job?.company) {
-                      console.error("Missing required data for navigation.");
-                      return;
-                    }
-            
-                    navigate("screening-questions", {
-                      state: {
-                        questions: job?.screeningQuestions ?? [],
-                        jobid: job?._id,
-                        companyid: job?.company?._id,
-                        userid: user?._id,
-                      },
-                    });
-                  }
-                }}
-              >
-                Apply Now
-              </Button>
-            ) : null}
-
-            {/* {user?.id === job?.company?._id && (
-              <Button
-                variant="contained"
-                color="error"
-                fullWidth
-                sx={{ mt: 2 }}
-                onClick={handleDelete}
-              >
-                Delete Job
-              </Button>
-            )} */}
-          </Card>
+          </Box>
         </Grid>
 
-        <Grid item xs={12} md={4}>
+        <Grid item xs={12} md={4} sx={{mt:2.5}}>
           <Typography
             variant="h6"
             color="textSecondary"

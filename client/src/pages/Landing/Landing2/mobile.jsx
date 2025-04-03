@@ -1,17 +1,33 @@
 import React, { useState, useEffect } from "react";
-import { Box, Tabs, Tab, Typography, Paper ,Grid} from "@mui/material";
+import { Box, Tabs, Tab, Typography, Paper ,Grid,IconButton,InputBase, Divider, Button} from "@mui/material";
+import { MdLocationOn } from "react-icons/md";
+import { AiOutlineSearch } from "react-icons/ai";
 import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import { apiRequest } from "../../../utils";
 import TopJobCard from "./TopJobCard/view";
 import { JobCard } from "../../../components";
+import ProfileNotify from "./ProfileNotify/mobile.jsx"
 
 const Landing2 = () => {
   const { user } = useSelector((state) => state.user);
   const navigate = useNavigate();
   const [topJobs, setTopJobs] = useState([]);
   const [recJobs, setRecJobs] = useState([]);
+  const [searchKeyword, setSearchKeyword] = useState();
+  const [searchLocation ,setSearchLocation] = useState();
+
+  
+  const handleSearch = () => {
+    navigate("/find-jobs", {
+      state: {
+        searchKeywordProp: searchKeyword,
+        searchLocationProp: searchLocation
+      },
+    });
+  };
+
 
   useEffect(() => {
     const fetchTopJobs = async () => {
@@ -44,17 +60,20 @@ const Landing2 = () => {
           sx={{
             fontFamily: "Satoshi",
             fontWeight: "700",
-            fontSize: "32px",
+            fontSize: "24px",
             color: "#474E68",
+            textAlign:"center",
+            px:1
           }}
         >
           Act Fast, Stay Ahead. Land Your Next{" "}
           <span
             style={{
               color: "#3C7EFC",
-              fontSize: "32px",
+              fontSize: "24px",
               fontWeight: "700",
               fontFamily: "Satoshi",
+              textAlign:"center"
             }}
           >
             Big Role
@@ -62,12 +81,76 @@ const Landing2 = () => {
           Now!
         </Typography>
       </Box>
-      <Box
+      {/* Search Bar */}
+  <Box sx={{  mt: 1, display: "flex", justifyContent: "center" }}>
+  <Box
+    sx={{
+      display: "flex",
+      flexDirection: "column", // Stack inputs vertically
+      alignItems: "center",
+      p: 4,
+      width: "100%",
+      mx: "auto",
+      gap: 2, 
+    }}
+  >
+    {/* Job Title Input */}
+    <Box sx={{ display: "flex", alignItems: "center", width: "100%", p: 1,borderBottom:"1px solid #A3A3A3"}}>
+      <IconButton sx={{ color: "gray" }}>
+        <AiOutlineSearch fontSize="24px" />
+      </IconButton>
+      <InputBase
+        sx={{ flex: 1, fontSize: "1rem", ml: 1 }}
+        placeholder="Search job title/keyword"
+        value={searchKeyword}
+        onChange={(e) => {
+          setSearchKeyword(e.target.value);
+          setSearchQuery(e.target.value);
+        }}
+      />
+    </Box>
+
+    {/* Location Input */}
+    <Box sx={{ display: "flex", alignItems: "center", width: "100%", p: 1,borderBottom:"1px solid #A3A3A3"}}>
+      <IconButton sx={{ color: "gray" }}>
+        <MdLocationOn fontSize="24px" />
+      </IconButton>
+      <InputBase
+        sx={{ flex: 1, fontSize: "1rem", ml: 1 }}
+        placeholder="Enter Location"
+        value={searchLocation}
+        onChange={(e) => setSearchLocation(e.target.value)}
+      />
+    </Box>
+
+    {/* Search Button */}
+    <Button
+      variant="contained"
+      sx={{
+        borderRadius: 16,
+        backgroundColor: "#1A73E8",
+        color: "white",
+        px: 4,
+        py: 1.5,
+        textTransform: "none",
+        fontSize: "18px",
+        fontWeight: "700",
+        fontFamily:"Satoshi",
+        width: "100%",
+        "&:hover": { backgroundColor: "#1669D8" },
+      }}
+      onClick={handleSearch}
+    >
+      Search
+    </Button>
+  </Box>
+</Box>
+       <Box
         sx={{
-          mt: 8,
+          mt: 4,
           display: "flex",
           flexDirection: "column",
-          ml:4
+          p:1
         }}
       >
         <Box>
@@ -101,7 +184,8 @@ const Landing2 = () => {
       No jobs found. Try a different search.
     </Typography>
   )}
-</Box>
+</Box> 
+<ProfileNotify />
         <Box>
           <Tabs
             value={0}
@@ -122,7 +206,7 @@ const Landing2 = () => {
     <Grid container spacing={3} sx={{mt:2,mb:10}}>
       {recJobs.map((job, index) => (
         <Grid item key={index}>
-          <Box sx={{width:"60%"}}>
+          <Box >
           <JobCard job={job}/>
           </Box>
         </Grid>
@@ -134,7 +218,7 @@ const Landing2 = () => {
     </Typography>
   )}
 </Box>
-      </Box>
+      </Box> 
     </Box>
   );
 };
