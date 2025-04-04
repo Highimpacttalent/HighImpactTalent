@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { Avatar, Box, Typography, TextField, Button, CircularProgress } from "@mui/material";
 import { AiOutlineMail, AiOutlinePlus } from "react-icons/ai";
 import { FiPhoneCall } from "react-icons/fi";
@@ -6,16 +6,23 @@ import { HiLocationMarker } from "react-icons/hi";
 import EditIcon from "@mui/icons-material/Edit";
 import { useSelector, useDispatch } from "react-redux";
 import { UpdateUser } from "../../../redux/userSlice";
+import axios from "axios";
 
 const UserInfoCard = () => {
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.user);
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [uploadingProfilePic, setUploadingProfilePic] = useState(false);
+  const [profilePic, setProfilePic] = useState(null);
+  const [profilePicUrl, setProfilePicUrl] = useState(user?.profileUrl || "");
+  const fileInputRef = useRef(null);
+
   const [updatedUserInfo, setUpdatedUserInfo] = useState({
     email: user?.email ?? "",
     contactNumber: user?.contactNumber ?? "",
     currentLocation: user?.currentLocation?.toUpperCase() ?? "",
+    profileUrl: user?.profileUrl??"",
   });
 
   const handleEditClick = () => {
@@ -26,24 +33,80 @@ const UserInfoCard = () => {
     setUpdatedUserInfo({ ...updatedUserInfo, [e.target.name]: e.target.value });
   };
 
+  const handleProfilePicUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.match(/image\/(jpeg|jpg|png)$/)) {
+      alert("Please upload an image file (JPEG, JPG, or PNG)");
+      return;
+    }
+
+    // Validate file size (max 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      alert("Image size should be less than 2MB");
+      return;
+    }
+
+    setUploadingProfilePic(true);
+
+    try {
+      // Create form data
+      const formData = new FormData();
+      formData.append("profilePic", file);
+
+      // Upload to server
+      const response = await axios.post(
+        "https://highimpacttalent.onrender.com/api-v1/user/upload-image",
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+            Authorization: `Bearer ${user?.token}`,
+          },
+        }
+      );
+
+      if (response.data.success) {
+        setProfilePicUrl(response.data.url);
+        setProfilePic(response.data.url); 
+      } else {
+        throw new Error(response.data.message || "Upload failed");
+      }
+    } catch (error) {
+      console.error("Profile picture upload error:", error);
+      alert("Failed to upload profile picture. Please try again.");
+    } finally {
+      setUploadingProfilePic(false);
+    }
+  };
+
   const handleSaveClick = async () => {
     setLoading(true);
     try {
       const response = await fetch("https://highimpacttalent.onrender.com/api-v1/user/updateUserPersonnel", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${user?.token}`,
+        },
         body: JSON.stringify({
-          userId:user._id,
+          userId: user._id,
           email: updatedUserInfo.email,
           contactNumber: updatedUserInfo.contactNumber,
           currentLocation: updatedUserInfo.currentLocation,
+          profileUrl: profilePicUrl,
         }),
       });
 
       const result = await response.json();
 
       if (response.ok) {
-        dispatch(UpdateUser(updatedUserInfo)); // Update Redux store
+        dispatch(UpdateUser({
+          ...updatedUserInfo,
+          profileUrl: profilePicUrl
+        }));
         setIsEditing(false);
       } else {
         console.error("Error updating user:", result.message);
@@ -57,26 +120,25 @@ const UserInfoCard = () => {
 
   return (
     <Box
-  display="flex"
-  flexDirection={{ xs: "column", sm: "row" }}
-  alignItems="center"
-  justifyContent="space-evenly"
-  flexWrap="wrap"
-  gap={2}
-  sx={{
-    maxWidth: "90%", // Adjust width dynamically
-    width: { xs: "100%", sm: "80%", md: "60%", lg: "50%" }, // Different widths for screens
-    margin: "auto",
-    border: "3px solid #00000040",
-    p: 2,
-    borderRadius: 4,
-  }}
->
-
+      display="flex"
+      flexDirection={{ xs: "column", sm: "row" }}
+      alignItems="center"
+      justifyContent="space-evenly"
+      flexWrap="wrap"
+      gap={2}
+      sx={{
+        maxWidth: "90%",
+        width: { xs: "100%", sm: "80%", md: "60%", lg: "50%" },
+        margin: "auto",
+        border: "3px solid #00000040",
+        p: 2,
+        borderRadius: 4,
+      }}
+    >
       {/* Profile Image */}
       <Box sx={{ position: "relative", display: "inline-block" }}>
         <Avatar
-          src={user?.profileUrl}
+          src={profilePicUrl || user?.profileUrl}
           alt="Profile"
           sx={{
             width: { xs: 80, md: 80, lg: 100 },
@@ -84,7 +146,15 @@ const UserInfoCard = () => {
             transition: "0.3s",
           }}
         />
-        <input type="file" accept="image/*" style={{ display: "none" }} id="upload-input" />
+        <input 
+          type="file" 
+          accept="image/*" 
+          style={{ display: "none" }} 
+          id="upload-input"
+          ref={fileInputRef}
+          onChange={handleProfilePicUpload}
+          disabled={uploadingProfilePic}
+        />
         <Box
           component="label"
           htmlFor="upload-input"
@@ -99,13 +169,17 @@ const UserInfoCard = () => {
             alignItems: "center",
             justifyContent: "center",
             boxShadow: 3,
-            cursor: "pointer",
-            opacity: 0,
+            cursor: uploadingProfilePic ? "not-allowed" : "pointer",
+            opacity: uploadingProfilePic ? 0.7 : 1,
             transition: "opacity 0.3s",
             "&:hover": { opacity: 1 },
           }}
         >
-          <AiOutlinePlus size={20} color="#3C7EFC" />
+          {uploadingProfilePic ? (
+            <CircularProgress size={20} />
+          ) : (
+            <AiOutlinePlus size={20} color="#3C7EFC" />
+          )}
         </Box>
       </Box>
 
@@ -175,14 +249,14 @@ const UserInfoCard = () => {
       </Box>
 
       {/* Edit & Save Buttons */}
-      <Box sx={{  px: 4, display: "flex", flexDirection: "column", justifyContent: "flex-end" }}>
+      <Box sx={{ px: 4, display: "flex", flexDirection: "column", justifyContent: "flex-end" }}>
         {isEditing ? (
           <Button
             variant="contained"
             size="small"
             onClick={handleSaveClick}
             sx={{ bgcolor: "#3C7EFC", color: "white", borderRadius: 16 }}
-            disabled={loading}
+            disabled={loading || uploadingProfilePic}
           >
             {loading ? <CircularProgress size={20} sx={{ color: "white" }} /> : "Save"}
           </Button>
