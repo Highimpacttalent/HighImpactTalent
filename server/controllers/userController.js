@@ -41,7 +41,7 @@ export const uploadResume = async (req, res) => {
     const filename = `resumes/${userId}/${Date.now()}-${file.originalname}`;
 
     // Upload to S3
-    const s3Response = await uploadFileToS3(file.buffer, filename);
+    const s3Response = await uploadFileToS3(file.buffer, filename, file.mimetype);
 
     // Update user's cvUrl in database
     const updatedUser = await Users.findByIdAndUpdate(

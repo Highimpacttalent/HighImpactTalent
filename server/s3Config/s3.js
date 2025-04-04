@@ -9,7 +9,7 @@ const s3 = new AWS.S3({
   region: process.env.AWS_REGION,
 });
 
-export const uploadFileToS3 = (fileBuffer, key) => {
+export const uploadFileToS3 = (fileBuffer, key, contentType) => {
   const params = {
     Bucket: process.env.AWS_BUCKET_NAME,
     Key: key,
