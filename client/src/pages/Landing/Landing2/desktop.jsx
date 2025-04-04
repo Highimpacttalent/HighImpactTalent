@@ -9,7 +9,7 @@ import { apiRequest } from "../../../utils";
 import TopJobCard from "./TopJobCard/view";
 import { JobCard } from "../../../components";
 import ProfileNotify from "./ProfileNotify/view.jsx"
-
+import Loader from "../LandingMain/loader.jsx";
 const Landing2 = () => {
   const { user } = useSelector((state) => state.user);
   const [searchKeyword, setSearchKeyword] = useState();
@@ -17,7 +17,7 @@ const Landing2 = () => {
   const navigate = useNavigate();
   const [topJobs, setTopJobs] = useState([]);
   const [recJobs, setRecJobs] = useState([]);
-
+  const [loader, setLoader] = useState(false);
   const handleSearch = () => {
     navigate("/find-jobs", {
       state: {
@@ -29,23 +29,43 @@ const Landing2 = () => {
 
   useEffect(() => {
     const fetchTopJobs = async () => {
-      const res = await apiRequest({url:"/jobs/jobs-by-salary", mathod: "GET"});
-      setTopJobs(res.data);
-      console.log(topJobs);
+      try {
+        const res = await apiRequest({
+          url: "/jobs/jobs-by-salary",
+          mathod: "GET",
+        });
+        setTopJobs(res.data);
+      } catch (error) {
+        console.error("Error fetching top jobs:", error);
+      }
     };
-    fetchTopJobs();
-
+  
     const fetchRecJobs = async () => {
-      const res = await apiRequest({url:"/jobs/jobs-recommend", method: "POST", data: {skills: user?.skills || []}});
-      setRecJobs(res.data);
-      console.log(topJobs);
+      try {
+        const res = await apiRequest({
+          url: "/jobs/jobs-recommend",
+          method: "POST",
+          data: { skills: user?.skills || [] },
+        });
+        setRecJobs(res.data);
+      } catch (error) {
+        console.error("Error fetching recommended jobs:", error);
+      }
     };
-    fetchRecJobs();
-  }
-  , []);
+  
+    const fetchData = async () => {
+      setLoader(true);
+      await Promise.all([fetchTopJobs(), fetchRecJobs()]);
+      setLoader(false);
+    };
+  
+    fetchData();
+  }, []);
+  
   
   return (
     <Box display="flex" flexDirection="column" bgcolor="white">
+      <Loader isLoading={loader} />
       <Box
         sx={{
           mt: 8,

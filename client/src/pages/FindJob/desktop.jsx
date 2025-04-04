@@ -27,6 +27,7 @@ import {
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { apiRequest } from "../../utils"; // Ensure this utility is correctly set up for API calls
 import { useSelector } from "react-redux";
+import NoJobFound from "./NoJob";
 import { JobCard } from "../../components";
 
 const DesktopView = () => {
@@ -340,7 +341,7 @@ const DesktopView = () => {
           maxWidth: "xl",
           mx: "auto",
           mt: 6,
-          px: 2,
+          px: 19,
           display: "flex",
           }}>
         <Tabs
@@ -375,7 +376,7 @@ const DesktopView = () => {
       {/* Main Content */}
       <Box
         sx={{
-          maxWidth: "xl",
+          maxWidth: "lg",
           mx: "auto",
           mt: 4,
           px: 2,
@@ -605,15 +606,19 @@ const DesktopView = () => {
 
         {/* Right Section - Job Listings */}
         <Box sx={{ width: "75%", p: 2 }}>
-          {/* Job Cards */}
-          <Grid container spacing={3}>
-            {filteredJobs.map((job) => (
-              <Grid item xs={12} key={job._id}>
-                <JobCard job={job} user={user} />
-              </Grid>
-            ))}
-          </Grid>
-        </Box>
+  {filteredJobs.length > 0 ? (
+    <Grid container spacing={3}>
+      {filteredJobs.map((job) => (
+        <Grid item xs={12} key={job._id}>
+          <JobCard job={job} user={user} />
+        </Grid>
+      ))}
+    </Grid>
+  ) : (
+    <NoJobFound/>
+  )}
+</Box>
+
       </Box>
        {/* Material UI Pagination */}
       <Box display="flex" justifyContent="center">

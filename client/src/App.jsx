@@ -17,7 +17,7 @@ import ApplicationStatus from "./pages/ApplicationStatus";
 import PasswordChange from "./pages/Password";
 import ScreeningView from "./pages/Screening/view";
 import FloatingChatAssistant from "./components/Chat/FloatingChat";
-import UserInfoForm from "./pages/UserInfoForm";
+import UserInfoForm from "./pages/UserAdditionalDetails/view";
 import JobUploadPage from "./pages/JobUploadPage";
 import ProfileSection from "./pages/Profile/view";
 import UserLoginForm from "./pages/AuthForm/u-login";

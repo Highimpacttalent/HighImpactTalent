@@ -29,6 +29,7 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import SwapVertIcon from '@mui/icons-material/SwapVert';
 import InfoIcon from "@mui/icons-material/Info";
 import { apiRequest } from "../../utils";
+import NoJobFound from "./NoJob";
 import { useSelector } from "react-redux";
 
 const mobileView = () => {
@@ -562,9 +563,7 @@ const workModeOptions = ["Remote", "Hybrid", "Work From Office"];
       ))}
     </Grid>
   ) : (
-    <Typography variant="h6" color="textSecondary" align="center">
-      No jobs found. Try a different search.
-    </Typography>
+    <NoJobFound/>
   )}
 </Box>
 
