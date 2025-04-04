@@ -14,7 +14,7 @@ export const uploadFileToS3 = (fileBuffer, key) => {
     Bucket: process.env.AWS_BUCKET_NAME,
     Key: key,
     Body: fileBuffer,
-    ContentType: "application/pdf" 
+    ContentType: contentType 
   };
 
   return new Promise((resolve, reject) => {
