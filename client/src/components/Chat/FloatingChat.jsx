@@ -173,7 +173,7 @@ const AskJarvis = () => {
               <>
                 <Typography><strong>Jarvis:</strong> {successMessage}</Typography>
                 <Typography variant="body2" mt={1}>
-                  We've received your request and will contact you soon.
+                  {/* We've received your request and will contact you soon. */}
                 </Typography>
                 <Button variant="contained" sx={{ mt: 2, width: "100%" }} onClick={toggleChat}>
                   Close Chat
