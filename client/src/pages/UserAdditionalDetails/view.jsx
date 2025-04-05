@@ -37,9 +37,8 @@ const UserInfoForm = () => {
 
   // Form data state
   const [formData, setFormData] = useState({
-    job: "",
-    company: "",
     currentCompany: defaultValues?.ProfessionalDetails?.currentCompany || "",
+    customCompany: "", // For storing the custom company input temporarily
     currentDesignation:
       defaultValues?.ProfessionalDetails?.currentDesignation || "",
     linkedinLink: defaultValues?.PersonalInformation?.linkedinLink || "",
@@ -50,7 +49,8 @@ const UserInfoForm = () => {
     salary: "",
     contactNumber: defaultValues?.PersonalInformation?.contactNumber || "",
     location: defaultValues?.PersonalInformation?.location || "",
-    relocate: "no",
+    relocate: "yes",
+    isItConsultingCompany:"yes",
     joinConsulting: "",
     dateOfBirth: defaultValues?.PersonalInformation?.dateOfBirth || "",
     profilePic: null,
@@ -129,6 +129,26 @@ const UserInfoForm = () => {
     }));
   };
 
+  // Handle custom company input
+  const handleCustomCompanyChange = (e) => {
+    const { value } = e.target;
+    setFormData((prevState) => ({
+      ...prevState,
+      customCompany: value,
+    }));
+  };
+
+  // Handle company dropdown change
+  const handleCompanyChange = (e) => {
+    const { value } = e.target;
+    setFormData((prevState) => ({
+      ...prevState,
+      currentCompany: value,
+      // Reset custom company when selecting a new option
+      customCompany: "",
+    }));
+  };
+
   // Handle profile picture upload
   const handleProfilePicUpload = async (e) => {
     const file = e.target.files[0];
@@ -190,13 +210,20 @@ const UserInfoForm = () => {
     }
 
     // Prepare form data for submission
+    const finalCurrentCompany = 
+      formData.currentCompany === "Other" ? formData.customCompany : formData.currentCompany;
+
     const updatedFormData = {
       ...formData,
+      currentCompany: finalCurrentCompany, // Use the custom company name if "Other" was selected
       experience: Number(formData.experience),
       contactNumber: phoneValue,
       profilePic: profilePicUrl,
       skills: filters.skills,
     };
+
+    // Remove the temporary customCompany field before submission
+    delete updatedFormData.customCompany;
 
     setLoading(true);
 
@@ -275,7 +302,7 @@ const UserInfoForm = () => {
             mt: 4,
           }}
         >
-          You’re Now Part of an{" "}
+          You're Now Part of an{" "}
           <span
             style={{
               fontFamily: "Satoshi",
@@ -381,9 +408,9 @@ const UserInfoForm = () => {
                     Current Company <span style={{ color: "red" }}>*</span>
                   </label>
                   <select
-                    name="job"
-                    value={formData.job}
-                    onChange={handleChange}
+                    name="currentCompany"
+                    value={formData.currentCompany}
+                    onChange={handleCompanyChange}
                     className="w-full px-4 py-3 pr-12 text-sm border rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none"
                     style={{ borderRadius: 50, border: "1px solid #24252C" }}
                   >
@@ -419,7 +446,7 @@ const UserInfoForm = () => {
                     <option value="Other">Other</option>
                   </select>
                 </div>
-                {formData.job === "Other" && (
+                {formData.currentCompany === "Other" && (
                   <div className="mb-6">
                     <label
                       className="block text-gray-700 text-sm font-semibold mb-4 ml-2"
@@ -434,9 +461,9 @@ const UserInfoForm = () => {
                     </label>
                     <input
                       type="text"
-                      name="company"
-                      value={formData.company}
-                      onChange={handleChange}
+                      name="customCompany"
+                      value={formData.customCompany}
+                      onChange={handleCustomCompanyChange}
                       placeholder="Please Specify Company name...."
                       className="w-full px-4 py-3 text-sm border focus:outline-none focus:ring-2 focus:ring-blue-500"
                       style={{ borderRadius: 50, border: "1px solid #24252C" }}
@@ -489,9 +516,9 @@ const UserInfoForm = () => {
                   <label className="flex items-center gap-2 ml-2 mb-2">
                     <input
                       type="radio"
-                      name="currentCompany"
+                      name="isItConsultingCompany"
                       value="yes"
-                      checked={formData.currentCompany === "yes"}
+                      checked={formData.isItConsultingCompany === "yes"}
                       onChange={handleChange}
                       className="accent-blue-500"
                     />
@@ -510,9 +537,9 @@ const UserInfoForm = () => {
                   <label className="flex items-center gap-2 ml-2">
                     <input
                       type="radio"
-                      name="currentCompany"
+                      name="isItConsultingCompany"
                       value="no"
-                      checked={formData.currentCompany === "no"}
+                      checked={formData.isItConsultingCompany === "no"}
                       onChange={handleChange}
                       className="accent-blue-500"
                     />
@@ -625,8 +652,8 @@ const UserInfoForm = () => {
                     <input
                       type="radio"
                       name="relocate"
-                      value="yes"
-                      checked={formData.relocate === "yes"}
+                      value="no"
+                      checked={formData.relocate === "no"}
                       onChange={handleChange}
                       className="accent-blue-500"
                     />
@@ -646,8 +673,8 @@ const UserInfoForm = () => {
                     <input
                       type="radio"
                       name="relocate"
-                      value="no"
-                      checked={formData.relocate === "no"}
+                      value="yes"
+                      checked={formData.relocate === "yes"}
                       onChange={handleChange}
                       className="accent-blue-500"
                     />
