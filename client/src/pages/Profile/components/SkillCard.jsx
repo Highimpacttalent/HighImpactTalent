@@ -1,18 +1,26 @@
-import React, { useState } from "react";
+import React, { useState,useEffect } from "react";
 import { Box, Typography, Tabs, Tab, Chip, Card, IconButton, TextField } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import AddIcon from "@mui/icons-material/Add";
 import CloseIcon from "@mui/icons-material/Close";
 import SaveIcon from "@mui/icons-material/Save";
 import { useDispatch } from "react-redux";
+import { useSelector } from "react-redux";
 import { UpdateUser } from "../../../redux/userSlice";
 
 const SkillCard = ({ userInfo }) => {
   const dispatch = useDispatch();
-  const [skills, setSkills] = useState(userInfo?.skills || []);
+  const user = useSelector((state) => state.user); 
+  const [skills, setSkills] = useState([]);
   const [newSkill, setNewSkill] = useState("");
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+
+   useEffect(() => {
+      if(userInfo?.skills){
+        setSkills(userInfo?.skills);
+      }
+    }, [userInfo]);
 
   // Add Skill
   const handleAddSkill = () => {
@@ -40,8 +48,9 @@ const SkillCard = ({ userInfo }) => {
       });
 
       const result = await response.json();
-      if (response.ok) {
-        dispatch(UpdateUser({ skills })); // Update Redux store
+      if (result.success) {
+        console.log("entered")
+        dispatch(UpdateUser({ ...user, skills })); // Update Redux store
         setIsEditing(false);
       } else {
         console.error("Failed to save skills:", result.message);

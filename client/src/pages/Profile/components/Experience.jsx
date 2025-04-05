@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState,useEffect } from "react";
 import {
   Box,
   Typography,
@@ -23,10 +23,20 @@ const Experience = ({ experienceData, userId }) => {
   const dispatch = useDispatch();
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
-    currentCompany: experienceData?.currentCompany || "",
-    openToRelocate: experienceData?.openToRelocate || "",
-    currentDesignation: experienceData?.currentDesignation || "",
+    currentCompany: "",
+    openToRelocate: "",
+    currentDesignation: "",
   });
+
+  useEffect(() => {
+    if (experienceData) {
+      setFormData({
+        currentCompany: experienceData.currentCompany || "",
+        openToRelocate: experienceData.openToRelocate || "",
+        currentDesignation: experienceData.currentDesignation || "",
+      });
+    }
+  }, [experienceData]);
 
   const [isSaving, setIsSaving] = useState(false);
 
