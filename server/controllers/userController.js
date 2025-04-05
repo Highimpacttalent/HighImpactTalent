@@ -144,10 +144,11 @@ export const updateUser = async (req, res, next) => {
   console.log("Request body:", req.body);
 
   const {
-    job,
-    company,
+    //job,
+    //company,
     currentCompany,
     currentDesignation,
+    isItConsultingCompany,
     linkedinLink,
     experience,
     about,
@@ -173,11 +174,12 @@ export const updateUser = async (req, res, next) => {
       contactNumber,
       profileUrl: profilePic,
       cvUrl: resume,
-      currentJobRole: job,
+      //currentJobRole: job,
       currentSalary: salary,
-      currentConsultingCompany: company,
+      //currentConsultingCompany: company,
       currentCompany,
       currentDesignation,
+      isItConsultingCompany,
       linkedinLink,
       currentLocation: location,
       openToRelocate: relocate,

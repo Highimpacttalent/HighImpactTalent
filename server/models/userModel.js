@@ -41,15 +41,15 @@ const userSchema = new mongoose.Schema(
     contactNumber: { type: String },
     profileUrl: { type: String },
     cvUrl: { type: String },
-    currentJobRole: { type: String,default:"" },
+    // currentJobRole: { type: String,default:"" },
     currentSalary: {
       type: String,
       default: "",
     },
-    currentConsultingCompany: {
-      type: String,
-      default: "",
-    },
+    // currentConsultingCompany: {
+    //   type: String,
+    //   default: "",
+    // },
     currentCompany: {
       type: String,
       default: "",
@@ -57,6 +57,11 @@ const userSchema = new mongoose.Schema(
     currentDesignation: {
       type: String,
       default: ""
+    },
+    isItConsultingCompany: {
+      type: String,
+      enum: ["yes", "no"],
+      default: "yes",
     },
     linkedinLink: {
       type: String,
