@@ -165,8 +165,7 @@ const ContactUsDesktop = () => {
               onChange={handleChange}
               value={formData.name}
               sx={{'& .MuiOutlinedInput-root': {
-      borderRadius:16, // Adjust the radius as needed
-      width:"70%"
+      borderRadius:16, 
     }}}
             />
             <Typography sx={{fontFamily:"Satoshi",fontWeight:"500",fontSize:18,color:"#24252C"}}>Email Address *</Typography>
@@ -179,8 +178,7 @@ const ContactUsDesktop = () => {
               onChange={handleChange}
               value={formData.email}
               sx={{'& .MuiOutlinedInput-root': {
-                borderRadius:16, // Adjust the radius as needed
-                width:"70%"
+                borderRadius:16,
               }}}
             />
              <Typography sx={{fontFamily:"Satoshi",fontWeight:"500",fontSize:18,color:"#24252C"}}>Message *</Typography>
