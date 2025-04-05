@@ -91,8 +91,8 @@ const LocationDropdown = ({ value, onChange, isRequired = false }) => {
     menu: (provided) => ({
       ...provided,
       borderRadius: 0,
-      //boxShadow: "0 2px 10px rgba(0, 0, 0, 0.1)",
-      border: "1px solid black",
+      boxShadow: "0 2px 10px rgba(0, 0, 0, 0.1)",
+      border: "1px solid #d1d5db",
     }),
     option: (provided, state) => ({
       ...provided,
