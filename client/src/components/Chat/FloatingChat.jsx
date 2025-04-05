@@ -1,26 +1,46 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Box, IconButton, Paper, Typography, Button, Avatar, TextField, CircularProgress } from "@mui/material";
 import ChatIcon from "@mui/icons-material/Chat";
 import CloseIcon from "@mui/icons-material/Close";
 import RobotFaceIcon from "@mui/icons-material/SmartToy";
 import axios from "axios";
 import { useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 
 const AskJarvis = () => {
+  const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState("welcome");
-  const [userData, setUserData] = useState({ name: "", issue: "", email: "", contact: "" });
+  const [userData, setUserData] = useState({ issue: "" });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
-  const { user } = useSelector((state) => state.user);
-  console.log("userchat", user)
-  
+  const [hasRequiredInfo, setHasRequiredInfo] = useState(false);
+  const [storedUser, setStoredUser] = useState(null);
+
+  useEffect(() => {
+    // Check if user is logged in and has required info
+    const checkUserInfo = () => {
+      const userInfo = JSON.parse(localStorage.getItem("userInfo"));
+      if (userInfo && userInfo.firstName && userInfo.email && userInfo.contactNumber) {
+        setHasRequiredInfo(true);
+        setStoredUser(userInfo);
+      } else {
+        setHasRequiredInfo(false);
+      }
+    };
+
+    checkUserInfo();
+  }, []);
 
   const toggleChat = () => {
+    if (!hasRequiredInfo) {
+      navigate("/contact-us");
+      return;
+    }
     setOpen(!open);
     setStep("welcome");
-    setUserData({ name: "", issue: "", email: "", contact: "" });
+    setUserData({ issue: "" });
     setError("");
     setSuccessMessage("");
   };
@@ -29,21 +49,23 @@ const AskJarvis = () => {
     setUserData((prev) => ({ ...prev, [field]: value }));
   };
 
-  const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-  const validatePhone = (phone) => /^[0-9]{10,15}$/.test(phone);
-
   const handleSubmit = async () => {
+    if (!userData.issue || userData.issue.trim().length < 10) {
+      setError("Please describe your issue in at least 10 characters");
+      return;
+    }
+
     setLoading(true);
     setError("");
 
-    const requestData = {
-      subject: "User Issue Reporting",
-      name: user.firstName + user.lastName,
-      email: user.email,
-      message: `Phone: ${userData.contact}, Issue: ${userData.issue}`,
-    };
-
     try {
+      const requestData = {
+        subject: "User Issue Reporting",
+        name: `${storedUser.firstName} ${storedUser.lastName || ''}`.trim(),
+        email: storedUser.email,
+        message: `Phone: ${storedUser.contactNumber}, Issue: ${userData.issue}`,
+      };
+
       const response = await axios.post(
         "https://highimpacttalent.onrender.com/api-v1/sendmail/contactus",
         requestData
@@ -86,7 +108,7 @@ const AskJarvis = () => {
         </Box>
       )}
 
-      {open && (
+      {open && hasRequiredInfo && storedUser && (
         <Paper sx={{ width: 350, p: 2, boxShadow: 5, borderRadius: 3, bgcolor: "white", border: "2px solid #00b4d8" }}>
           <Box display="flex" alignItems="center" justifyContent="space-between">
             <Box display="flex" alignItems="center">
@@ -101,71 +123,32 @@ const AskJarvis = () => {
           <Box height={250} overflow="auto" mt={2} p={1} bgcolor="#f3f4f6" borderRadius={1}>
             {step === "welcome" && (
               <>
-                <Typography><strong>Jarvis:</strong> Are you facing any problem? Need help?</Typography>
-                <Button variant="contained" sx={{ mt: 2, width: "100%" }} onClick={() => setStep("getName")}>
-                  Need Help
-                </Button>
-              </>
-            )}
-
-            {step === "getName" && (
-              <>
-                <Typography><strong>Jarvis:</strong> Tell us your good name.</Typography>
-                <TextField fullWidth size="small" sx={{ mt: 2 }} onChange={(e) => handleChange("name", e.target.value)} />
+                <Typography><strong>Jarvis:</strong> Hello {storedUser.firstName}, are you facing any problem?</Typography>
+                <Typography variant="body2" color="text.secondary" mt={1}>
+                  We'll contact you at {storedUser.email} or {storedUser.contactNumber}
+                </Typography>
                 <Button variant="contained" sx={{ mt: 2, width: "100%" }} onClick={() => setStep("getIssue")}>
-                  Next
+                  Need Help
                 </Button>
               </>
             )}
 
             {step === "getIssue" && (
               <>
-                <Typography><strong>Jarvis:</strong> Hi {userData.name}, tell us about the issue you are facing.</Typography>
-                <TextField fullWidth multiline rows={2} sx={{ mt: 2 }} onChange={(e) => handleChange("issue", e.target.value)} />
-                <Button variant="contained" sx={{ mt: 2, width: "100%" }} onClick={() => setStep("getEmail")}>
-                  Next
-                </Button>
-              </>
-            )}
-
-            {step === "getEmail" && (
-              <>
-                <Typography><strong>Jarvis:</strong> Please provide your email ID.</Typography>
-                <TextField fullWidth size="small" sx={{ mt: 2 }} onChange={(e) => handleChange("email", e.target.value)} />
-                {error && <Typography color="error">{error}</Typography>}
+                <Typography><strong>Jarvis:</strong> Please describe your issue:</Typography>
+                <TextField 
+                  fullWidth 
+                  multiline 
+                  rows={4} 
+                  sx={{ mt: 2 }} 
+                  onChange={(e) => handleChange("issue", e.target.value)}
+                  error={!!error}
+                  helperText={error}
+                />
                 <Button
                   variant="contained"
                   sx={{ mt: 2, width: "100%" }}
-                  onClick={() => {
-                    if (!validateEmail(userData.email)) {
-                      setError("Invalid email format");
-                    } else {
-                      setError("");
-                      setStep("getContact");
-                    }
-                  }}
-                >
-                  Next
-                </Button>
-              </>
-            )}
-
-            {step === "getContact" && (
-              <>
-                <Typography><strong>Jarvis:</strong> Please provide your contact number.</Typography>
-                <TextField fullWidth size="small" sx={{ mt: 2 }} onChange={(e) => handleChange("contact", e.target.value)} />
-                {error && <Typography color="error">{error}</Typography>}
-                <Button
-                  variant="contained"
-                  sx={{ mt: 2, width: "100%" }}
-                  onClick={() => {
-                    if (!validatePhone(userData.contact)) {
-                      setError("Invalid phone number.");
-                    } else {
-                      setError("");
-                      handleSubmit();
-                    }
-                  }}
+                  onClick={handleSubmit}
                   disabled={loading}
                 >
                   {loading ? <CircularProgress size={24} color="inherit" /> : "Submit"}
@@ -175,9 +158,12 @@ const AskJarvis = () => {
 
             {step === "thankYou" && (
               <>
-                <Typography><strong>Jarvis:</strong> {successMessage || "Thank you! Our team will contact you soon."}</Typography>
+                <Typography><strong>Jarvis:</strong> {successMessage}</Typography>
+                <Typography variant="body2" mt={1}>
+                  We've received your request and will contact you soon.
+                </Typography>
                 <Button variant="contained" sx={{ mt: 2, width: "100%" }} onClick={toggleChat}>
-                  End Chat
+                  Close Chat
                 </Button>
               </>
             )}
