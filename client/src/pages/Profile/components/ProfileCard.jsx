@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   Avatar,
   Box,
@@ -11,12 +11,132 @@ import {
 import { AiOutlineMail, AiOutlinePlus } from "react-icons/ai";
 import { FiPhoneCall } from "react-icons/fi";
 import { HiLocationMarker } from "react-icons/hi";
-import { useMediaQuery,useTheme } from "@mui/material";
+import { useMediaQuery, useTheme } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import { useSelector, useDispatch } from "react-redux";
-import ProfileNotify from "../../Landing/Landing2/ProfileNotify/view.jsx";
 import { UpdateUser } from "../../../redux/userSlice";
 import axios from "axios";
+import Select from "react-select";
+
+const LocationDropdown = ({ value, onChange, isRequired = false }) => {
+  const [cities, setCities] = useState([]);
+  const [selectedCity, setSelectedCity] = useState(null);
+  const [inputValue, setInputValue] = useState("");
+  const [isOtherSelected, setIsOtherSelected] = useState(false);
+  const [customCity, setCustomCity] = useState("");
+
+  // Fetch cities from CSV
+  useEffect(() => {
+    const fetchCities = async () => {
+      try {
+        const response = await fetch("/cities.csv");
+        const text = await response.text();
+        const rows = text.split("\n");
+        const cityList = rows
+          .slice(1)
+          .map((row) => row.trim())
+          .filter(Boolean)
+          .sort();
+        setCities([...new Set(cityList)]);
+      } catch (error) {
+        console.error("Error loading cities:", error);
+        setCities([]);
+      }
+    };
+    fetchCities();
+  }, []);
+
+  // Handle city selection
+  const handleCityChange = (selectedOption) => {
+    if (selectedOption?.value === "Other") {
+      setIsOtherSelected(true);
+      setSelectedCity(null);
+      onChange("");
+    } else {
+      setIsOtherSelected(false);
+      setSelectedCity(selectedOption);
+      onChange(selectedOption?.value || "");
+    }
+  };
+
+  // Handle custom city input
+  const handleCustomCityChange = (e) => {
+    const value = e.target.value;
+    setCustomCity(value);
+    onChange(value);
+  };
+
+  // Prepare city options with "Other" at the bottom
+  const filteredCities = [
+    ...cities
+      .filter((city) => city.toLowerCase().includes(inputValue.toLowerCase()))
+      .map((city) => ({ value: city, label: city })),
+    { value: "Other", label: "Other" },
+  ];
+
+  // Custom styles for Select component
+  const customStyles = {
+    control: (provided, state) => ({
+      ...provided,
+      padding: 2,
+      width: "100%",
+      fontSize: "0.875rem",
+      //borderRadius: 0,
+      //border: state.isFocused? "1px black" :"none",
+      // boxShadow: state.isFocused ? "black" : "none",
+      // "&:hover": {
+      //   borderColor: "#d1d5db",
+      // },
+    }),
+    menu: (provided) => ({
+      ...provided,
+      borderRadius: 0,
+      //boxShadow: "0 2px 10px rgba(0, 0, 0, 0.1)",
+      border: "1px solid black",
+    }),
+    option: (provided, state) => ({
+      ...provided,
+      backgroundColor: state.isSelected ? "#3b82f6" : "white",
+      color: state.isSelected ? "white" : "black",
+      "&:hover": {
+        backgroundColor: "#f3f4f6",
+      },
+    }),
+  };
+
+  return (
+    <div>
+      <Select
+        options={filteredCities}
+        value={selectedCity}
+        styles={customStyles}
+        onChange={handleCityChange}
+        onInputChange={(value) => setInputValue(value)}
+        inputValue={inputValue}
+        placeholder="Search or select a city..."
+        isClearable
+        isSearchable
+        noOptionsMessage={() =>
+          inputValue ? "No matching cities found" : "Start typing to search"
+        }
+        required={isRequired}
+      />
+
+      {isOtherSelected && (
+        <div className="mt-2">
+          <input
+            type="text"
+            className="w-full px-4 py-2 border rounded-lg"
+            placeholder="Enter your city"
+            value={customCity}
+            onChange={handleCustomCityChange}
+            required={isRequired}
+          />
+        </div>
+      )}
+    </div>
+  );
+};
 
 const UserInfoCard = () => {
   const theme = useTheme();
@@ -37,6 +157,10 @@ const UserInfoCard = () => {
     profileUrl: user?.profileUrl ?? "",
   });
 
+  const handleLocationChange = (location) => {
+    setUpdatedUserInfo({ ...updatedUserInfo, currentLocation: location });
+  };
+
   const handleEditClick = () => {
     setIsEditing(true);
   };
@@ -49,13 +173,11 @@ const UserInfoCard = () => {
     const file = e.target.files[0];
     if (!file) return;
 
-    // Validate file type
     if (!file.type.match(/image\/(jpeg|jpg|png)$/)) {
       alert("Please upload an image file (JPEG, JPG, or PNG)");
       return;
     }
 
-    // Validate file size (max 2MB)
     if (file.size > 2 * 1024 * 1024) {
       alert("Image size should be less than 2MB");
       return;
@@ -64,11 +186,9 @@ const UserInfoCard = () => {
     setUploadingProfilePic(true);
 
     try {
-      // Create form data
       const formData = new FormData();
       formData.append("profilePic", file);
 
-      // Upload to server
       const response = await axios.post(
         "https://highimpacttalent.onrender.com/api-v1/user/upload-image",
         formData,
@@ -231,15 +351,13 @@ const UserInfoCard = () => {
           <Box textAlign="center" sx={{ display: "flex", gap: 2 }}>
             {/* Email */}
             {isEditing ? (
-              <Typography
-              display="flex"
-              alignItems="center"
-              gap={1}
-              color="#404258"
-              fontWeight="400"
-            >
-              <AiOutlineMail /> {updatedUserInfo.email}
-            </Typography>
+              <TextField
+                name="email"
+                size="small"
+                value={updatedUserInfo.email}
+                onChange={handleChange}
+                sx={{ width: "250px" }}
+              />
             ) : (
               <Typography
                 display="flex"
@@ -275,13 +393,12 @@ const UserInfoCard = () => {
 
             {/* Location */}
             {isEditing ? (
-              <TextField
-                name="currentLocation"
-                size="small"
-                value={updatedUserInfo.currentLocation}
-                onChange={handleChange}
-                sx={{ width: "250px" }}
-              />
+              <Box sx={{ width: "250px" }}>
+                <LocationDropdown
+                  value={updatedUserInfo.currentLocation}
+                  onChange={handleLocationChange}
+                />
+              </Box>
             ) : (
               <Typography
                 display="flex"
@@ -346,7 +463,7 @@ const UserInfoCard = () => {
         >
           Finish Your Profile & Let the Perfect Job Find You!
         </Typography>
-        <Box sx={{border:2,px:8,py:2,borderRadius:4,border:"1px solid #00000040",mt:2,display:"flex",alignItems:"center",justifyContent:"center",flexDirection:"column"}}>
+        <Box sx={{px:8,py:2,borderRadius:4,border:"1px solid #00000040",mt:2,display:"flex",alignItems:"center",justifyContent:"center",flexDirection:"column"}}>
         <Box
           sx={{
             color: "#24252C",
@@ -357,7 +474,6 @@ const UserInfoCard = () => {
         >
           <Typography sx={{color:"#24252C",fontWeight:"500"}}>Your Profile is</Typography>
         </Box>
-        {/* Progress bar below "Your Profile" */}
         <LinearProgress
           variant="determinate"
           value={40}
@@ -494,13 +610,12 @@ const UserInfoCard = () => {
 
           {/* Location */}
           {isEditing ? (
-            <TextField
-              name="currentLocation"
-              size="small"
-              value={updatedUserInfo.currentLocation}
-              onChange={handleChange}
-              sx={{ width: "250px" }}
-            />
+            <Box sx={{ width: "250px" }}>
+              <LocationDropdown
+                value={updatedUserInfo.currentLocation}
+                onChange={handleLocationChange}
+              />
+            </Box>
           ) : (
             <Typography display="flex" alignItems="center" gap={1} color="#404258" fontWeight="400">
               <HiLocationMarker /> {updatedUserInfo.currentLocation}
