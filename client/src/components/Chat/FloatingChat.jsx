@@ -17,12 +17,13 @@ const AskJarvis = () => {
   const [successMessage, setSuccessMessage] = useState("");
   const [hasRequiredInfo, setHasRequiredInfo] = useState(false);
   const [storedUser, setStoredUser] = useState(null);
+  const { user } = useSelector((state) => state.user);
 
   useEffect(() => {
-    // Check if user is logged in and has required info
+    // Check both localStorage and Redux store for user info
     const checkUserInfo = () => {
-      const userInfo = JSON.parse(localStorage.getItem("userInfo"));
-      if (userInfo && userInfo.firstName && userInfo.email && userInfo.contactNumber) {
+      const userInfo = JSON.parse(localStorage.getItem("userInfo")) || user;
+      if (userInfo && userInfo.email) {
         setHasRequiredInfo(true);
         setStoredUser(userInfo);
       } else {
@@ -31,13 +32,24 @@ const AskJarvis = () => {
     };
 
     checkUserInfo();
-  }, []);
+    
+    // Add listener for storage changes to detect login/logout
+    const handleStorageChange = () => {
+      checkUserInfo();
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, [user]); // Add user from Redux as dependency
 
   const toggleChat = () => {
-    if (!hasRequiredInfo) {
+    // Re-check immediately before opening
+    const currentUser = JSON.parse(localStorage.getItem("userInfo")) || user;
+    if (!currentUser?.email) {
       navigate("/contact-us");
       return;
     }
+    
     setOpen(!open);
     setStep("welcome");
     setUserData({ issue: "" });
@@ -59,11 +71,12 @@ const AskJarvis = () => {
     setError("");
 
     try {
+      const currentUser = JSON.parse(localStorage.getItem("userInfo")) || user;
       const requestData = {
         subject: "User Issue Reporting",
-        name: `${storedUser.firstName} ${storedUser.lastName || ''}`.trim(),
-        email: storedUser.email,
-        message: `Phone: ${storedUser.contactNumber}, Issue: ${userData.issue}`,
+        name: `${currentUser.firstName} ${currentUser.lastName || ''}`.trim(),
+        email: currentUser.email,
+        message: `Issue: ${userData.issue}`,
       };
 
       const response = await axios.post(
@@ -108,7 +121,7 @@ const AskJarvis = () => {
         </Box>
       )}
 
-      {open && hasRequiredInfo && storedUser && (
+      {open && storedUser?.email && (
         <Paper sx={{ width: 350, p: 2, boxShadow: 5, borderRadius: 3, bgcolor: "white", border: "2px solid #00b4d8" }}>
           <Box display="flex" alignItems="center" justifyContent="space-between">
             <Box display="flex" alignItems="center">
@@ -125,7 +138,7 @@ const AskJarvis = () => {
               <>
                 <Typography><strong>Jarvis:</strong> Hello {storedUser.firstName}, are you facing any problem?</Typography>
                 <Typography variant="body2" color="text.secondary" mt={1}>
-                  We'll contact you at {storedUser.email} or {storedUser.contactNumber}
+                  We'll contact you at {storedUser.email}
                 </Typography>
                 <Button variant="contained" sx={{ mt: 2, width: "100%" }} onClick={() => setStep("getIssue")}>
                   Need Help
