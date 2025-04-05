@@ -688,7 +688,7 @@ export const updateLinkedIn = async (req, res) => {
     // Find and update user
     const updatedUser = await Users.findOneAndUpdate(
       { _id: userId },
-      { linkedIn },
+      { linkedinLink: linkedIn },
       { new: true } 
     );
 
