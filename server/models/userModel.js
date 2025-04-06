@@ -113,7 +113,11 @@ const userSchema = new mongoose.Schema(
           type: String,
           required: true,
         },
-        duration: {
+        from: {
+          type: String, // or use from & to as Dates if preferred
+          required: true,
+        },
+        to: {
           type: String, // or use from & to as Dates if preferred
           required: true,
         },

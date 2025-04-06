@@ -35,9 +35,10 @@ const ExperienceHistory = ({ userId, experienceHistory }) => {
   });
   const [newExperience, setNewExperience] = useState({
     companyName: "",
-    designation: "",
-    duration: "",
-    description: "",
+      designation: "",
+      from: "",
+      to: "",
+      description: "",
   });
 
   useEffect(() => {
@@ -56,7 +57,8 @@ const ExperienceHistory = ({ userId, experienceHistory }) => {
     setNewExperience({
       companyName: "",
       designation: "",
-      duration: "",
+      from: "",
+      to: "",
       description: "",
     });
   };
@@ -260,7 +262,7 @@ const ExperienceHistory = ({ userId, experienceHistory }) => {
                     fontSize: "14px",
                   }}
                 >
-                  Duration
+                  FROM
                 </Typography>
                 <Typography
                   sx={{
@@ -269,7 +271,34 @@ const ExperienceHistory = ({ userId, experienceHistory }) => {
                     fontSize: "12px",
                   }}
                 >
-                  {exp.duration}
+                  {exp.from}
+                </Typography>
+              </Box>
+              <Box
+                sx={{
+                  display: "flex",
+                  flexDirection: "column",
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
+              >
+                <Typography
+                  sx={{
+                    color: "#24252C",
+                    fontFamily: "Poppins",
+                    fontSize: "14px",
+                  }}
+                >
+                  TO
+                </Typography>
+                <Typography
+                  sx={{
+                    color: "#808195",
+                    fontFamily: "Poppins",
+                    fontSize: "12px",
+                  }}
+                >
+                  {exp.to}
                 </Typography>
               </Box>
             </Box>
@@ -332,14 +361,35 @@ const ExperienceHistory = ({ userId, experienceHistory }) => {
             <InputMask
               mask="99/9999"
               maskChar=""
-              value={newExperience.duration}
+              value={newExperience.from}
               onChange={handleInputChange}
             >
               {(inputProps) => (
                 <TextField
                   {...inputProps}
-                  label="Duration"
-                  name="duration"
+                  label="From"
+                  name="from"
+                  placeholder="MM/YYYY"
+                  fullWidth
+                  size="small"
+                  sx={{ mt: 1 }}
+                  helperText="Format: MM/YYYY"
+                />
+              )}
+            </InputMask>
+            </Grid>
+            <Grid item xs={6}>
+            <InputMask
+              mask="99/9999"
+              maskChar=""
+              value={newExperience.to}
+              onChange={handleInputChange}
+            >
+              {(inputProps) => (
+                <TextField
+                  {...inputProps}
+                  label="To"
+                  name="to"
                   placeholder="MM/YYYY"
                   fullWidth
                   size="small"
