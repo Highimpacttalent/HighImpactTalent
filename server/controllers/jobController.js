@@ -165,205 +165,139 @@ export const getJobPosts = async (req, res, next) => {
   try {
     const { search, query, sort, location, searchLocation, exp, workType, workMode, salary, datePosted, isRecommended } = req.query;
     const { skills } = req.body;
-    
+    const experience = exp?.split("-"); //2-6
+
     let queryObject = {};
 
-    // Handle location filters consistently
-    if (location || searchLocation) {
-      const locationValue = location || searchLocation;
-      
-      if (locationValue.includes(',')) {
-        // Multiple locations selected
-        const locations = locationValue.split(',').map(loc => loc.trim());
-        queryObject.jobLocation = { 
-          $in: locations.map(loc => new RegExp(loc, 'i')) 
-        };
-      } else {
-        // Single location
-        queryObject.jobLocation = { 
-          $regex: locationValue, 
-          $options: "i" 
-        };
-      }
-    }
+if (location || searchLocation) {
+  const locationValue = location || searchLocation;
+  
+  
+  if (locationValue.includes(',')) {
+    const locations = locationValue.split(',');
+    queryObject.jobLocation = { $in: locations.map(loc => new RegExp(loc, 'i')) };
+  } else {
+    queryObject.jobLocation = { $regex: locationValue, $options: "i" };
+  }
+}
     
-    // Handle work type consistently
+    
     if (workType) {
-      const workTypes = workType.split(',').map(type => type.trim());
-      queryObject.workType = { 
-        $in: workTypes 
-      };
-    }
-    
-    // Handle work mode consistently
-    if (workMode) {
-      const workModes = workMode.split(',').map(mode => mode.trim());
-      queryObject.workMode = { 
-        $in: workModes 
-      };
-    }
-
-    // In getJobPosts function, update the experience handling:
-if (exp) {
-  const experienceRanges = exp.split(',');
-  
-  // Create an array of conditions for each range
-  const experienceConditions = experienceRanges.map(range => {
-    if (range.includes('-')) {
-      const [min, max] = range.split('-').map(Number);
-      return {
-        experience: {
-          $gte: min,
-          $lte: max
-        }
-      };
-    }
-    return {}; // Handle single values if needed
-  });
-  
-  if (experienceConditions.length > 0) {
-    queryObject.$or = experienceConditions;
-  }
-}
-
-    // Handle salary range
-    if (salary) {
-      const salaryRanges = salary.split(',');
-      
-      if (salaryRanges.length === 1 && salaryRanges[0].includes('-')) {
-        // Handle single range
-        const [min, max] = salaryRanges[0].split('-').map(Number);
-        queryObject.salary = {
-          $gte: min,
-          $lte: max,
-        };
+      const workTypes = workType.split(',');
+      if (workTypes.length > 1) {
+        queryObject.workType = { $in: workTypes };
       } else {
-        // Handle multiple ranges with $or
-        const salaryConditions = salaryRanges.map(range => {
-          const [min, max] = range.split('-').map(Number);
-          return {
-            salary: {
-              $gte: min,
-              $lte: max
-            }
-          };
-        });
-        
-        if (salaryConditions.length > 0) {
-          queryObject.$or = salaryConditions;
-        }
+        queryObject.workType = workType;
       }
     }
 
-    // In getJobPosts function, update datePosted handling:
-if (datePosted) {
-  const dateOptions = datePosted.split(',');
-  const dateConditions = [];
-  const now = new Date();
-  
-  dateOptions.forEach(option => {
-    const date = new Date(now);
     
-    if (option === "Last 24 hours") {
-      date.setDate(date.getDate() - 1);
-      dateConditions.push({ createdAt: { $gte: date } });
-    } else if (option === "Last one week") {
-      date.setDate(date.getDate() - 7);
-      dateConditions.push({ createdAt: { $gte: date } });
-    } else if (option === "Last one month") {
-      date.setMonth(date.getMonth() - 1);
-      dateConditions.push({ createdAt: { $gte: date } });
+    if (workMode) {
+      const workModes = workMode.split(',');
+      if (workModes.length > 1) {
+        queryObject.workMode = { $in: workModes };
+      } else {
+        queryObject.workMode = workMode;
+      }
     }
-    // "Any Time" doesn't need a condition
-  });
-  
-  if (dateConditions.length > 0) {
-    queryObject.$or = dateConditions;
-  }
-}
-    // Handle search query
+
+    if (exp) {
+      queryObject.experience = {
+        $gte: Number(experience[0]),
+        $lte: Number(experience[1]),
+      };
+    }
+
+    if (salary) {
+      const salaryRange = salary.split("-");
+      queryObject.salary = {
+        $gte: Number(salaryRange[0]),
+        $lte: Number(salaryRange[1]),
+      };
+    }
+
+    if (datePosted && datePosted !== "Any Time") {
+      const date = new Date();
+      if (datePosted === "Last 24 hours") {
+        date.setDate(date.getDate() - 1);
+      } else if (datePosted === "Last one week") {
+        date.setDate(date.getDate() - 7);
+      } else if (datePosted === "Last one month") {
+        date.setMonth(date.getMonth() - 1);
+      }
+      queryObject.poastingDate = { $gte: date };
+    }    
+
+    // Handle both search parameters (search and query)
     const searchTerm = search || query;
     if (searchTerm) {
       const searchQuery = {
         $or: [
           { jobTitle: { $regex: searchTerm, $options: "i" } },
-          { jobLocation: { $regex: searchTerm, $options: "i" } },
-          { jobDescription: { $regex: searchTerm, $options: "i" } }
+          { location: { $regex: searchTerm, $options: "i" } },
+          { jobDescription: { $regex: searchTerm, $options: "i" } } 
         ],
       };
       queryObject = { ...queryObject, ...searchQuery };
     }
 
-    // Execute the query
     let queryResult = Jobs.find(queryObject).populate({
       path: "company",
       select: "-password",
     });
 
-    // Apply sorting
+    // SORTING
     if (sort === "Newest") {
       queryResult = queryResult.sort("-createdAt");
-    } else if (sort === "Oldest") {
+    }
+    if (sort === "Oldest") {
       queryResult = queryResult.sort("createdAt");
-    } else if (sort === "A-Z") {
+    }
+    if (sort === "A-Z") {
       queryResult = queryResult.sort("jobTitle");
-    } else if (sort === "Z-A") {
+    }
+    if (sort === "Z-A") {
       queryResult = queryResult.sort("-jobTitle");
-    } else if (sort === "Salary (High to Low)") {
+    }
+    // Add new sorting options for salary
+    if (sort === "Salary (High to Low)") {
       queryResult = queryResult.sort("-salary");
-    } else if (sort === "Salary (Low to High)") {
+    }
+    if (sort === "Salary (Low to High)") {
       queryResult = queryResult.sort("salary");
-    } else {
-      // Default sorting by newest
-      queryResult = queryResult.sort("-createdAt");
     }
 
-    // Handle pagination
+    // pagination
     const page = Number(req.query.page) || 1;
     const limit = Number(req.query.limit) || 20;
     const skip = (page - 1) * limit;
 
-    // Get total count before applying limit
-    const totalJobs = await Jobs.countDocuments(queryObject);
+    //records count
+    const totalJobs = await Jobs.countDocuments(queryResult);
     const numOfPage = Math.ceil(totalJobs / limit);
 
-    // Apply pagination
-    queryResult = queryResult.skip(skip).limit(limit);
+    queryResult = queryResult.limit(limit * page);
 
-    // Execute query
     let jobs = await queryResult;
 
-    // Apply recommendation sorting if requested
-    if (isRecommended === "true" && skills && Array.isArray(skills)) {
-      // Calculate match score between job skills and user skills
-      const calculateMatchScore = (jobSkills, userSkills) => {
-        if (!jobSkills || !Array.isArray(jobSkills)) return 0;
-        
-        const matchCount = jobSkills.filter(skill => 
-          userSkills.some(userSkill => 
-            userSkill.toLowerCase() === skill.toLowerCase()
-          )
-        ).length;
-        
-        // Calculate match percentage and weight
-        const matchPercentage = jobSkills.length > 0 ? matchCount / jobSkills.length : 0;
-        return matchPercentage;
+     // If isRecommended is true, apply skill-based sorting
+     if (isRecommended === "true" && skills && Array.isArray(skills)) {
+      const calculateMatchScore = (jobSkills, requiredSkills) => {
+        const matchCount = jobSkills.filter(skill => requiredSkills.includes(skill)).length;
+        if (matchCount === requiredSkills.length) return 3; // All skills match
+        if (matchCount > 0) return 2; // Some skills match
+        return 1; // No skills match
       };
 
-      // Convert Mongoose documents to plain objects and add match score
-      jobs = jobs.map(job => {
-        const plainJob = job.toObject ? job.toObject() : job;
-        return {
-          ...plainJob,
-          matchScore: calculateMatchScore(plainJob.skills || [], skills)
-        };
-      }).sort((a, b) => b.matchScore - a.matchScore); // Sort by match score
-      
-      // Remove the matchScore property before sending to client
-      jobs = jobs.map(({ matchScore, ...job }) => job);
+      jobs = jobs
+        .map(job => ({
+          ...job.toObject(),
+          matchScore: calculateMatchScore(job.skills, skills),
+        }))
+        .sort((a, b) => b.matchScore - a.matchScore); // Sort by match score in descending order
     }
 
-    // Send response
+
     res.status(200).json({
       success: true,
       totalJobs,
@@ -371,15 +305,46 @@ if (datePosted) {
       page,
       numOfPage,
     });
-    
   } catch (error) {
-    console.error("Error in getJobPosts:", error);
-    res.status(500).json({ 
-      success: false,
-      message: error.message || "Internal server error" 
-    });
+    console.log(error);
+    res.status(404).json({ message: error.message });
   }
 };
+
+// Get jobs sorted by salary (High to Low)
+export const getJobsBySalaryDesc = async (req, res, next) => {
+  try {
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 20;
+    const skip = (page - 1) * limit;
+
+    // Fetch jobs sorted by salary in descending order
+    const jobs = await Jobs.find({})
+      .sort({ salary: -1 }) // Sorting salary in descending order
+      .skip(skip)
+      .limit(limit)
+      .populate({
+        path: "company",
+        select: "-password",
+      });
+
+    const totalJobs = await Jobs.countDocuments({});
+    const numOfPage = Math.ceil(totalJobs / limit);
+
+    res.status(200).json({
+      success: true,
+      totalJobs,
+      data: jobs,
+      page,
+      numOfPage,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "Server Error", error: error.message });
+  }
+};
+
+
 
 // get a job by id with  similar jobs
 export const getJobById = async (req, res, next) => {
