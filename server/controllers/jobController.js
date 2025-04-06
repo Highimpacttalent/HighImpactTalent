@@ -250,39 +250,28 @@ export const getJobPosts = async (req, res, next) => {
         if (range.includes('-')) {
           const [min, max] = range.split('-').map(Number);
           
-          // Only add valid ranges
           if (!isNaN(min) && !isNaN(max)) {
-            // Convert Lakhs to actual salary value (1 Lakh = 100,000)
             const minSalary = min * 100000;
             const maxSalary = max * 100000;
             
-            // For the highest bracket (150-1000), don't set upper limit
-            if (max === 1000) {
-              salaryConditions.push({
-                salary: { $gte: minSalary }
-              });
-            } else {
-              salaryConditions.push({
-                salary: { 
-                  $gte: minSalary, 
-                  $lt: maxSalary  // Using $lt to avoid overlap
-                }
-              });
-            }
+            salaryConditions.push({
+              $expr: {
+                $and: [
+                  { $gte: [{ $toDouble: "$salary" }, minSalary] },
+                  { $lt: [{ $toDouble: "$salary" }, maxSalary] }
+                ]
+              }
+            });
           }
         }
       });
       
       if (salaryConditions.length > 0) {
-        if (queryObject.$or) {
-          // Combine with existing $or using $and
-          queryObject.$and = queryObject.$and || [];
-          queryObject.$and.push({ $or: salaryConditions });
-        } else {
-          queryObject.$or = salaryConditions;
-        }
+        queryObject.$and = queryObject.$and || [];
+        queryObject.$and.push({ $or: salaryConditions });
       }
     }
+    
     // Update the datePosted handling in getJobPosts
     if (datePosted) {
       const dateOptions = datePosted.split(',');
