@@ -24,7 +24,7 @@ const UserInfoForm = () => {
     defaultValues?.PersonalInformation?.contactNumber || ""
   );
   const [error, setError] = useState("");
-  const [profilePic, setProfilePic] = useState(null);
+  const [profilePic, setProfilePic] = useState(user?.profileUrl||"");
   const [profilePicUrl, setProfilePicUrl] = useState("");
   const [cities, setCities] = useState([]);
   const [selectedCity, setSelectedCity] = useState(null);
@@ -203,11 +203,6 @@ const UserInfoForm = () => {
   // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    if (!profilePicUrl) {
-      alert("Profile picture is required.");
-      return;
-    }
 
     // Prepare form data for submission
     const finalCurrentCompany = 
