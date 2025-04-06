@@ -202,7 +202,6 @@ export const getJobPosts = async (req, res, next) => {
       };
     }
 
-    // FIX: Handle experience ranges with $or operator for multiple selections
     if (exp) {
       const experienceRanges = exp.split(',');
       const expConditions = [];
@@ -210,24 +209,33 @@ export const getJobPosts = async (req, res, next) => {
       experienceRanges.forEach(range => {
         if (range.includes('-')) {
           const [min, max] = range.split('-').map(Number);
-          // Only add valid ranges (where both min and max are actual numbers)
+          
+          // Only add valid ranges
           if (!isNaN(min) && !isNaN(max)) {
-            expConditions.push({
-              experience: { $gte: min, $lte: max }
-            });
+            // Special handling for the highest bracket
+            if (max === 100) {
+              expConditions.push({
+                experience: { $gte: min } // "11-100" becomes "11+"
+              });
+            } 
+            // For other ranges, use $gte min and $lt max
+            else {
+              expConditions.push({
+                experience: { 
+                  $gte: min, 
+                  $lt: max   // Note: Using $lt instead of $lte to avoid overlap
+                }
+              });
+            }
           }
         }
       });
       
       if (expConditions.length > 0) {
-        // If we already have an $or condition, we need to handle differently
         if (queryObject.$or) {
           // Combine with existing $or using $and
-          queryObject.$and = [
-            { $or: queryObject.$or },
-            { $or: expConditions }
-          ];
-          delete queryObject.$or;
+          queryObject.$and = queryObject.$and || [];
+          queryObject.$and.push({ $or: expConditions });
         } else {
           queryObject.$or = expConditions;
         }
@@ -270,38 +278,37 @@ export const getJobPosts = async (req, res, next) => {
       }
     }
 
-    // FIX: Handle datePosted with proper $or grouping
     // Update the datePosted handling in getJobPosts
-if (datePosted) {
-  const dateOptions = datePosted.split(',');
-  
-  // If "Any Time" is selected, ignore all other date filters
-  if (dateOptions.includes("Any Time")) {
-    // No date filtering needed
-  } else {
-    const dateConditions = [];
-    const now = new Date();
-    
-    dateOptions.forEach(option => {
-      const date = new Date(now);
+    if (datePosted) {
+      const dateOptions = datePosted.split(',');
       
-      if (option === "Last 24 hours") {
-        date.setDate(date.getDate() - 1);
-        dateConditions.push({ createdAt: { $gte: date } });
-      } else if (option === "Last one week") {
-        date.setDate(date.getDate() - 7);
-        dateConditions.push({ createdAt: { $gte: date } });
-      } else if (option === "Last one month") {
-        date.setMonth(date.getMonth() - 1);
-        dateConditions.push({ createdAt: { $gte: date } });
+      // If "Any Time" is selected, ignore all other date filters
+      if (dateOptions.includes("Any Time")) {
+        // No date filtering needed
+      } else {
+        const dateConditions = [];
+        const now = new Date();
+        
+        dateOptions.forEach(option => {
+          const date = new Date(now);
+          
+          if (option === "Last 24 hours") {
+            date.setDate(date.getDate() - 1);
+            dateConditions.push({ createdAt: { $gte: date } });
+          } else if (option === "Last one week") {
+            date.setDate(date.getDate() - 7);
+            dateConditions.push({ createdAt: { $gte: date } });
+          } else if (option === "Last one month") {
+            date.setMonth(date.getMonth() - 1);
+            dateConditions.push({ createdAt: { $gte: date } });
+          }
+        });
+        
+        if (dateConditions.length > 0) {
+          queryObject.$or = dateConditions;
+        }
       }
-    });
-    
-    if (dateConditions.length > 0) {
-      queryObject.$or = dateConditions;
     }
-  }
-}
 
     // Handle search query
     const searchTerm = search || query;
