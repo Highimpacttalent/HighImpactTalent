@@ -160,144 +160,253 @@ export const updateJob = async (req, res, next) => {
   }
 };
 
-//get all jobs or use query parameter to filter job
 export const getJobPosts = async (req, res, next) => {
   try {
     const { search, query, sort, location, searchLocation, exp, workType, workMode, salary, datePosted, isRecommended } = req.query;
     const { skills } = req.body;
-    const experience = exp?.split("-"); //2-6
-
+    
     let queryObject = {};
 
-if (location || searchLocation) {
-  const locationValue = location || searchLocation;
-  
-  
-  if (locationValue.includes(',')) {
-    const locations = locationValue.split(',');
-    queryObject.jobLocation = { $in: locations.map(loc => new RegExp(loc, 'i')) };
-  } else {
-    queryObject.jobLocation = { $regex: locationValue, $options: "i" };
-  }
-}
+    // Handle location filters consistently
+    if (location || searchLocation) {
+      const locationValue = location || searchLocation;
+      
+      if (locationValue.includes(',')) {
+        // Multiple locations selected
+        const locations = locationValue.split(',').map(loc => loc.trim());
+        queryObject.jobLocation = { 
+          $in: locations.map(loc => new RegExp(loc, 'i')) 
+        };
+      } else {
+        // Single location
+        queryObject.jobLocation = { 
+          $regex: locationValue, 
+          $options: "i" 
+        };
+      }
+    }
     
-    
+    // Handle work type consistently
     if (workType) {
-      const workTypes = workType.split(',');
-      if (workTypes.length > 1) {
-        queryObject.workType = { $in: workTypes };
-      } else {
-        queryObject.workType = workType;
-      }
+      const workTypes = workType.split(',').map(type => type.trim());
+      queryObject.workType = { 
+        $in: workTypes 
+      };
     }
-
     
+    // Handle work mode consistently
     if (workMode) {
-      const workModes = workMode.split(',');
-      if (workModes.length > 1) {
-        queryObject.workMode = { $in: workModes };
-      } else {
-        queryObject.workMode = workMode;
-      }
+      const workModes = workMode.split(',').map(mode => mode.trim());
+      queryObject.workMode = { 
+        $in: workModes 
+      };
     }
 
+    // FIX: Handle experience ranges with $or operator for multiple selections
     if (exp) {
-      queryObject.experience = {
-        $gte: Number(experience[0]),
-        $lte: Number(experience[1]),
-      };
-    }
-
-    if (salary) {
-      const salaryRange = salary.split("-");
-      queryObject.salary = {
-        $gte: Number(salaryRange[0]),
-        $lte: Number(salaryRange[1]),
-      };
-    }
-
-    if (datePosted && datePosted !== "Any Time") {
-      const date = new Date();
-      if (datePosted === "Last 24 hours") {
-        date.setDate(date.getDate() - 1);
-      } else if (datePosted === "Last one week") {
-        date.setDate(date.getDate() - 7);
-      } else if (datePosted === "Last one month") {
-        date.setMonth(date.getMonth() - 1);
+      const experienceRanges = exp.split(',');
+      const expConditions = [];
+      
+      experienceRanges.forEach(range => {
+        if (range.includes('-')) {
+          const [min, max] = range.split('-').map(Number);
+          // Only add valid ranges (where both min and max are actual numbers)
+          if (!isNaN(min) && !isNaN(max)) {
+            expConditions.push({
+              experience: { $gte: min, $lte: max }
+            });
+          }
+        }
+      });
+      
+      if (expConditions.length > 0) {
+        // If we already have an $or condition, we need to handle differently
+        if (queryObject.$or) {
+          // Combine with existing $or using $and
+          queryObject.$and = [
+            { $or: queryObject.$or },
+            { $or: expConditions }
+          ];
+          delete queryObject.$or;
+        } else {
+          queryObject.$or = expConditions;
+        }
       }
-      queryObject.poastingDate = { $gte: date };
-    }    
+    }
 
-    // Handle both search parameters (search and query)
+    // FIX: Handle salary ranges correctly with $or operator
+    if (salary) {
+      const salaryRanges = salary.split(',');
+      const salaryConditions = [];
+      
+      salaryRanges.forEach(range => {
+        if (range.includes('-')) {
+          const [min, max] = range.split('-').map(Number);
+          // Ensure we have valid numbers
+          if (!isNaN(min) && !isNaN(max)) {
+            salaryConditions.push({
+              salary: { $gte: min, $lte: max }
+            });
+          }
+        }
+      });
+      
+      if (salaryConditions.length > 0) {
+        // Handle existing $or conditions
+        if (queryObject.$or) {
+          // If we already have $or from experience filter, combine using $and
+          if (queryObject.$and) {
+            queryObject.$and.push({ $or: salaryConditions });
+          } else {
+            queryObject.$and = [
+              { $or: queryObject.$or },
+              { $or: salaryConditions }
+            ];
+            delete queryObject.$or;
+          }
+        } else {
+          queryObject.$or = salaryConditions;
+        }
+      }
+    }
+
+    // FIX: Handle datePosted with proper $or grouping
+    if (datePosted) {
+      const dateOptions = datePosted.split(',');
+      const dateConditions = [];
+      const now = new Date();
+      
+      dateOptions.forEach(option => {
+        if (option === "Last 24 hours") {
+          const date = new Date(now);
+          date.setDate(date.getDate() - 1);
+          dateConditions.push({ createdAt: { $gte: date } });
+        } else if (option === "Last one week") {
+          const date = new Date(now);
+          date.setDate(date.getDate() - 7);
+          dateConditions.push({ createdAt: { $gte: date } });
+        } else if (option === "Last one month") {
+          const date = new Date(now);
+          date.setMonth(date.getMonth() - 1);
+          dateConditions.push({ createdAt: { $gte: date } });
+        }
+        // "Any Time" doesn't need a condition
+      });
+      
+      if (dateConditions.length > 0) {
+        // Handle existing condition structures
+        if (queryObject.$and) {
+          queryObject.$and.push({ $or: dateConditions });
+        } else if (queryObject.$or) {
+          queryObject.$and = [
+            { $or: queryObject.$or },
+            { $or: dateConditions }
+          ];
+          delete queryObject.$or;
+        } else {
+          queryObject.$or = dateConditions;
+        }
+      }
+    }
+
+    // Handle search query
     const searchTerm = search || query;
     if (searchTerm) {
       const searchQuery = {
         $or: [
           { jobTitle: { $regex: searchTerm, $options: "i" } },
-          { location: { $regex: searchTerm, $options: "i" } },
-          { jobDescription: { $regex: searchTerm, $options: "i" } } 
+          { jobLocation: { $regex: searchTerm, $options: "i" } },
+          { jobDescription: { $regex: searchTerm, $options: "i" } }
         ],
       };
-      queryObject = { ...queryObject, ...searchQuery };
+      
+      // Handle existing condition structures
+      if (queryObject.$and) {
+        queryObject.$and.push({ $or: searchQuery.$or });
+      } else if (queryObject.$or) {
+        queryObject.$and = [
+          { $or: queryObject.$or },
+          { $or: searchQuery.$or }
+        ];
+        delete queryObject.$or;
+      } else {
+        queryObject.$or = searchQuery.$or;
+      }
     }
 
+    // Log the final query for debugging (can remove in production)
+    console.log("Final query:", JSON.stringify(queryObject, null, 2));
+
+    // Execute the query
     let queryResult = Jobs.find(queryObject).populate({
       path: "company",
       select: "-password",
     });
 
-    // SORTING
+    // Apply sorting
     if (sort === "Newest") {
       queryResult = queryResult.sort("-createdAt");
-    }
-    if (sort === "Oldest") {
+    } else if (sort === "Oldest") {
       queryResult = queryResult.sort("createdAt");
-    }
-    if (sort === "A-Z") {
+    } else if (sort === "A-Z") {
       queryResult = queryResult.sort("jobTitle");
-    }
-    if (sort === "Z-A") {
+    } else if (sort === "Z-A") {
       queryResult = queryResult.sort("-jobTitle");
-    }
-    // Add new sorting options for salary
-    if (sort === "Salary (High to Low)") {
+    } else if (sort === "Salary (High to Low)") {
       queryResult = queryResult.sort("-salary");
-    }
-    if (sort === "Salary (Low to High)") {
+    } else if (sort === "Salary (Low to High)") {
       queryResult = queryResult.sort("salary");
+    } else {
+      // Default sorting by newest
+      queryResult = queryResult.sort("-createdAt");
     }
 
-    // pagination
+    // Handle pagination
     const page = Number(req.query.page) || 1;
     const limit = Number(req.query.limit) || 20;
     const skip = (page - 1) * limit;
 
-    //records count
-    const totalJobs = await Jobs.countDocuments(queryResult);
+    // Get total count before applying limit
+    const totalJobs = await Jobs.countDocuments(queryObject);
     const numOfPage = Math.ceil(totalJobs / limit);
 
-    queryResult = queryResult.limit(limit * page);
+    // Apply pagination
+    queryResult = queryResult.skip(skip).limit(limit);
 
+    // Execute query
     let jobs = await queryResult;
 
-     // If isRecommended is true, apply skill-based sorting
-     if (isRecommended === "true" && skills && Array.isArray(skills)) {
-      const calculateMatchScore = (jobSkills, requiredSkills) => {
-        const matchCount = jobSkills.filter(skill => requiredSkills.includes(skill)).length;
-        if (matchCount === requiredSkills.length) return 3; // All skills match
-        if (matchCount > 0) return 2; // Some skills match
-        return 1; // No skills match
+    // Apply recommendation sorting if requested
+    if (isRecommended === "true" && skills && Array.isArray(skills)) {
+      // Calculate match score between job skills and user skills
+      const calculateMatchScore = (jobSkills, userSkills) => {
+        if (!jobSkills || !Array.isArray(jobSkills)) return 0;
+        
+        const matchCount = jobSkills.filter(skill => 
+          userSkills.some(userSkill => 
+            userSkill.toLowerCase() === skill.toLowerCase()
+          )
+        ).length;
+        
+        // Calculate match percentage and weight
+        const matchPercentage = jobSkills.length > 0 ? matchCount / jobSkills.length : 0;
+        return matchPercentage;
       };
 
-      jobs = jobs
-        .map(job => ({
-          ...job.toObject(),
-          matchScore: calculateMatchScore(job.skills, skills),
-        }))
-        .sort((a, b) => b.matchScore - a.matchScore); // Sort by match score in descending order
+      // Convert Mongoose documents to plain objects and add match score
+      jobs = jobs.map(job => {
+        const plainJob = job.toObject ? job.toObject() : job;
+        return {
+          ...plainJob,
+          matchScore: calculateMatchScore(plainJob.skills || [], skills)
+        };
+      }).sort((a, b) => b.matchScore - a.matchScore); // Sort by match score
+      
+      // Remove the matchScore property before sending to client
+      jobs = jobs.map(({ matchScore, ...job }) => job);
     }
 
-
+    // Send response
     res.status(200).json({
       success: true,
       totalJobs,
@@ -305,9 +414,13 @@ if (location || searchLocation) {
       page,
       numOfPage,
     });
+    
   } catch (error) {
-    console.log(error);
-    res.status(404).json({ message: error.message });
+    console.error("Error in getJobPosts:", error);
+    res.status(500).json({ 
+      success: false,
+      message: error.message || "Internal server error" 
+    });
   }
 };
 
