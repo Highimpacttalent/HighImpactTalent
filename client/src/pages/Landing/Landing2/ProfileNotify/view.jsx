@@ -10,7 +10,7 @@ const view = () => {
     }
     console.log("userInfo" ,user)
   // Sample progress value (replace this with actual profile completion percentage)
-  const profileCompletion = 70; // Example: Profile is 70% complete
+  const profileCompletion = 40; // Example: Profile is 70% complete
 
   return (
     <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", border: "2px solid #00000040", borderRadius: 4, flexDirection: "column", padding: 2,mb:8 }}>

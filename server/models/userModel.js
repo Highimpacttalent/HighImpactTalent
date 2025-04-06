@@ -102,7 +102,27 @@ const userSchema = new mongoose.Schema(
         ref: 'Blog',
       }
     ],
-    likedJobs: [{ type: mongoose.Schema.Types.ObjectId, ref: "Jobs" }]
+    likedJobs: [{ type: mongoose.Schema.Types.ObjectId, ref: "Jobs" }],
+    experienceHistory: [
+      {
+        companyName: {
+          type: String,
+          required: true,
+        },
+        designation: {
+          type: String,
+          required: true,
+        },
+        duration: {
+          type: String, // or use from & to as Dates if preferred
+          required: true,
+        },
+        description: {
+          type: String,
+          default: ""
+        }
+      }
+    ],
   },
   { timestamps: true }
 );

@@ -718,4 +718,57 @@ export const updateLinkedIn = async (req, res) => {
 };
 
 
+export const updateExperienceHistory = async (req, res) => {
+  try {
+    const { userId, experienceHistory } = req.body;
+
+    // Validate input
+    if (!userId) {
+      return res.status(400).json({
+        success: false,
+        message: "User ID is required!",
+      });
+    }
+
+    if (!experienceHistory || !Array.isArray(experienceHistory)) {
+      return res.status(400).json({
+        success: false,
+        message: "Experience history must be an array!",
+      });
+    }
+
+    // Find and update user
+    const updatedUser = await Users.findOneAndUpdate(
+      { _id: userId },
+      { experienceHistory: experienceHistory },
+      { new: true }
+    );
+
+    // Check if user exists
+    if (!updatedUser) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found!",
+      });
+    }
+
+    // Send response
+    res.status(200).json({
+      success: true,
+      message: "Experience history updated successfully!",
+      user: updatedUser,
+    });
+
+  } catch (error) {
+    console.error("Error updating experience history:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error while updating experience history!",
+      error: error.message,
+    });
+  }
+};
+
+
+
 

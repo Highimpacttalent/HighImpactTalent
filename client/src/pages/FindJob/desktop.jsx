@@ -14,6 +14,7 @@ import {
   Tabs,
   Tab,
   Accordion,
+  Menu,
   AccordionSummary,
   AccordionDetails,
   Pagination,
@@ -29,6 +30,8 @@ import { apiRequest } from "../../utils"; // Ensure this utility is correctly se
 import { useSelector } from "react-redux";
 import NoJobFound from "./NoJob";
 import { JobCard } from "../../components";
+import Loader from "../Landing/LandingMain/loader";
+import { FaSortAmountDown } from "react-icons/fa";
 
 const DesktopView = () => {
   const { user } = useSelector((state) => state.user);
@@ -39,10 +42,12 @@ const DesktopView = () => {
   const [numPage, setNumPage] = useState(1);
   const [data, setData] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [searchLocation, setSearchLocation] = useState(searchLocationProp || "");
+  const [searchLocation, setSearchLocation] = useState(
+    searchLocationProp || ""
+  );
   const [isFetching, setIsFetching] = useState(false);
   const [searchKeyword, setSearchKeyword] = useState(searchKeywordProp || "");
-  const [selectedTab, setSelectedTab] = useState(0); 
+  const [selectedTab, setSelectedTab] = useState(0);
   const [filteredJobs, setFilteredJobs] = useState([]);
 
   const [experienceFilter, setExperienceFilter] = useState([]);
@@ -52,7 +57,20 @@ const DesktopView = () => {
   const [salaryRangeFilter, setSalaryRangeFilter] = useState([]);
   const [datePostedFilter, setDatePostedFilter] = useState([]);
 
-  
+  const [anchorEl, setAnchorEl] = useState(null);
+  const open = Boolean(anchorEl);
+
+  const handleClick = (event) => setAnchorEl(event.currentTarget);
+  const handleClose = () => setAnchorEl(null);
+  const handleSelect = (value) => {
+    console.log("value", value);
+    if (value == "Recommended") {
+      setSelectedTab(1);
+    } else {
+      setSelectedTab(0);
+    }
+    handleClose();
+  };
 
   const [expandedAccordions, setExpandedAccordions] = useState({
     experience: false,
@@ -176,7 +194,7 @@ const DesktopView = () => {
       const res = await apiRequest({
         url: "/jobs" + newURL,
         method: "POST",
-        data: { skills: user?.skills || []}
+        data: { skills: user?.skills || [] },
       });
 
       // Handle "Others" filter here if selected
@@ -248,7 +266,7 @@ const DesktopView = () => {
 
   const FilterOption = ({ label, value, state, setState }) => {
     const isChecked = state.includes(value);
-  
+
     const handleChange = () => {
       if (isChecked) {
         setState(state.filter((item) => item !== value));
@@ -256,7 +274,7 @@ const DesktopView = () => {
         setState([...state, value]);
       }
     };
-  
+
     return (
       <Box
         sx={{
@@ -269,18 +287,18 @@ const DesktopView = () => {
         onClick={() => handleMultipleSelection(value, state, setState)}
       >
         <FormControlLabel
-        control={<Checkbox checked={isChecked} onChange={handleChange} />}
-      />
+          control={<Checkbox checked={isChecked} onChange={handleChange} />}
+        />
         <Typography variant="body1" color="#404258" fontFamily="Poppins">
           {label}
         </Typography>
       </Box>
-      
     );
   };
 
   return (
     <Box sx={{ bgcolor: "white", minHeight: "100vh", p: 5 }}>
+      <Loader isLoading={isFetching} />
       {/* Search Bar */}
       <Box sx={{ mx: "auto", mt: 3, px: 2 }}>
         <Paper
@@ -337,40 +355,94 @@ const DesktopView = () => {
         </Paper>
       </Box>
 
-      <Box sx={{
+      <Box
+        sx={{
           maxWidth: "xl",
           mx: "auto",
           mt: 6,
-          px: 19,
+          px: { lg: 19, md: 4, xs: 2, sm: 2 },
+          justifyContent: "space-between",
           display: "flex",
-          }}>
-        <Tabs
-           value={selectedTab}
-           onChange={(event, newValue) => setSelectedTab(newValue)}
-          indicatorColor="primary"
-          textColor="#474E68"
+        }}
+      >
+        <Box>
+          <Tabs value={selectedTab} textColor="#474E68">
+            <Tab
+              label="All Jobs"
+              sx={{
+                fontFamily: "Satoshi",
+                fontSize: "18px",
+                fontWeight: "700",
+                textTransform: "none",
+                textColor: "#474E68",
+                indicatorColor: "primary",
+                "&::after": {
+                  content: '""',
+                  position: "absolute",
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  height: "3px",
+                  backgroundColor: "#3C7EFC", // Always-visible blue line
+                  zIndex: 1,
+                },
+              }}
+            />
+          </Tabs>
+        </Box>
+        <Box
+          sx={{
+            width: {
+              xs: "100%", // full width on mobile
+              sm: "60%", // medium on small tablets
+              md: "15%", // moderate width on larger screens
+              lg: "15%", // more compact on big screens
+            },
+          }}
         >
-          <Tab
-            label="All Jobs"
+          <Box
             sx={{
-              fontFamily: "Satoshi",
-              fontSize: "18px",
-              fontWeight: "700",
-              textTransform: "none",
-              textColor: "#474E68",
+              display: "flex",
+              justifyContent: "flex-end",
+              alignItems: "center",
+              width: "100%",
+              mt: 2,
             }}
-          />
-          <Tab
-            label="Recommended Jobs"
-            sx={{
-              fontFamily: "Satoshi",
-              fontSize: "18px",
-              fontWeight: "700",
-              textTransform: "none",
-              textColor: "#474E68",
-            }}
-          />
-        </Tabs>
+          >
+            <Button
+              onClick={handleClick}
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: 1,
+                textTransform: "none",
+                fontFamily: "Satoshi, sans-serif",
+                fontWeight: 500,
+                color: "#3C3C3C",
+                backgroundColor: "#F5F5F5",
+                borderRadius: "8px",
+                px: 2,
+                py: 1,
+                "&:hover": {
+                  backgroundColor: "#e0e0e0",
+                },
+              }}
+            >
+              <FaSortAmountDown size={18} />
+              <Typography>Sort By</Typography>
+            </Button>
+
+            <Menu anchorEl={anchorEl} open={open} onClose={handleClose}>
+              <MenuItem onClick={() => handleSelect("Recommended")}>
+                Recommended
+              </MenuItem>
+              <MenuItem onClick={() => handleSelect("Newest")}>
+                Newest First
+              </MenuItem>
+              {/* <MenuItem onClick={() => handleSelect("Alphabetical")}>Salary</MenuItem> */}
+            </Menu>
+          </Box>
+        </Box>
       </Box>
 
       {/* Main Content */}
@@ -606,48 +678,47 @@ const DesktopView = () => {
 
         {/* Right Section - Job Listings */}
         <Box sx={{ width: "75%", p: 2 }}>
-  {filteredJobs.length > 0 ? (
-    <Grid container spacing={3}>
-      {filteredJobs.map((job) => (
-        <Grid item xs={12} key={job._id}>
-          <JobCard job={job} user={user} />
-        </Grid>
-      ))}
-    </Grid>
-  ) : (
-    <NoJobFound/>
-  )}
-</Box>
-
+          {filteredJobs.length > 0 ? (
+            <Grid container spacing={3}>
+              {filteredJobs.map((job) => (
+                <Grid item xs={12} key={job._id}>
+                  <JobCard job={job} user={user} />
+                </Grid>
+              ))}
+            </Grid>
+          ) : (
+            <NoJobFound />
+          )}
+        </Box>
       </Box>
-       {/* Material UI Pagination */}
+      {/* Material UI Pagination */}
       <Box display="flex" justifyContent="center">
-      <Pagination
-    count={numPage}
-    page={page}
-    onChange={(event, value) => setPage(value)}
-    color="primary"
-    size="large"
-    shape="rounded"
-    sx={{
-      "& .MuiPaginationItem-root": {
-        borderRadius: "50%",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        fontWeight: "bold",
-        color:"#404258",
-        "&:hover": {
-          backgroundColor: "rgba(60, 126, 252, 1)",
-        },
-      },
-      "& .Mui-selected": {
-        backgroundColor: "rgba(60, 126, 252, 1) !important",
-        color: "white !important",
-        boxShadow: "0px 3px 6px rgba(0, 0, 0, 0.2)",
-      },
-    }}
-  />
+        <Pagination
+          count={numPage}
+          page={page}
+          onChange={(event, value) => setPage(value)}
+          color="primary"
+          size="large"
+          shape="rounded"
+          sx={{
+            "& .MuiPaginationItem-root": {
+              borderRadius: "50%",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontWeight: "bold",
+              color: "#404258",
+              "&:hover": {
+                backgroundColor: "rgba(60, 126, 252, 1)",
+              },
+            },
+            "& .Mui-selected": {
+              backgroundColor: "rgba(60, 126, 252, 1) !important",
+              color: "white !important",
+              boxShadow: "0px 3px 6px rgba(0, 0, 0, 0.2)",
+            },
+          }}
+        />
       </Box>
     </Box>
   );

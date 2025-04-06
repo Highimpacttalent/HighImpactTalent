@@ -87,7 +87,7 @@ const Experience = ({ experienceData, userId }) => {
                 textTransform: "none",
               },
             }}
-            label="Experience"
+            label="Present Role"
           />
         </Tabs>
         {isEditing ? (

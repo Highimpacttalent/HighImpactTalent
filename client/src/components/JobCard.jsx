@@ -34,7 +34,7 @@ import {
 import { UpdateUser } from "../redux/userSlice";
 import { AttachMoney } from "@mui/icons-material";
 
-const JobCard = ({ job,flag = false,enable = false }) => {
+const JobCard = ({ job, flag = false, enable = false }) => {
   const dispatch = useDispatch();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
@@ -43,11 +43,11 @@ const JobCard = ({ job,flag = false,enable = false }) => {
   const navigate = useNavigate();
   const experience = user.experience;
   let noteligible = false;
-  console.log(job?.experience, typeof(job?.experience), typeof(user.experience))
-    if(job?.experience && job?.experience > experience){
-      console.log("Ho")
-      noteligible = true;
-      }
+  console.log(job?.experience, typeof job?.experience, typeof user.experience);
+  if (job?.experience && job?.experience > experience) {
+    console.log("Ho");
+    noteligible = true;
+  }
 
   useEffect(() => {
     setLike(user?.likedJobs?.includes(job._id));
@@ -76,59 +76,77 @@ const JobCard = ({ job,flag = false,enable = false }) => {
   };
 
   const mobileView = (
-    <Card sx={{ 
-      maxWidth: 400, 
-      display: "flex", 
-      flexDirection: "column", 
-      height: "100%", 
-      boxShadow: "0px 0px 4px 0px #00000040", 
-      borderRadius: 2, 
-    }}
-    onClick={()=>navigate(`/job-detail/${job?._id}`)}
+    <Card
+      sx={{
+        maxWidth: 400,
+        display: "flex",
+        flexDirection: "column",
+        height: "100%",
+        boxShadow: "0px 0px 4px 0px #00000040",
+        borderRadius: 2,
+      }}
+      onClick={() => navigate(`/job-detail/${job?._id}`)}
     >
-      <CardContent sx={{ flexGrow: 1, display: "flex", flexDirection: "column" }}>
+      <CardContent
+        sx={{ flexGrow: 1, display: "flex", flexDirection: "column" }}
+      >
         {/* Job Title */}
-        <Typography variant="h6" fontWeight={700} gutterBottom sx={{ color: "#404258" ,mb:1.5,fontFamily:"Poppins"}} color="#404258">
+        <Typography
+          variant="h6"
+          fontWeight={700}
+          gutterBottom
+          sx={{ color: "#404258", mb: 1.5, fontFamily: "Poppins" }}
+          color="#404258"
+        >
           {job?.jobTitle}
         </Typography>
         {/* Company Name & Like Button */}
-        <Box display="flex" justifyContent="space-between" alignItems="center" mb={1.5}>
+        <Box
+          display="flex"
+          justifyContent="space-between"
+          alignItems="center"
+          mb={1.5}
+        >
           <Box display="flex" alignItems="center" gap={1}>
-            <Business color= "#404258" />
-            <Typography variant="subtitle1" fontWeight={600} color="#404258" fontFamily="Poppins">
+            <Business color="#404258" />
+            <Typography
+              variant="subtitle1"
+              fontWeight={600}
+              color="#404258"
+              fontFamily="Poppins"
+            >
               {job?.company?.name}
             </Typography>
           </Box>
-          
         </Box>
 
         {/* Job Details */}
-        <Box sx={{ display:"flex",flexWrap:"wrap"}} gap={1}>
-          <Box sx={{display:"flex"}} gap={0.5}>
+        <Box sx={{ display: "flex", flexWrap: "wrap" }} gap={1}>
+          <Box sx={{ display: "flex" }} gap={0.5}>
             <Chip
-              icon={<LocationOnOutlined sx={{color:"#474E68"}}/>}
+              icon={<LocationOnOutlined sx={{ color: "#474E68" }} />}
               label={job?.jobLocation}
-              variant="contained" 
-              sx={{color:"#474E68",fontWeight:"400"}}
+              variant="contained"
+              sx={{ color: "#474E68", fontWeight: "400" }}
             />
             <Chip
-              icon={<WorkOutlineOutlined sx={{color:"#474E68"}}/>}
+              icon={<WorkOutlineOutlined sx={{ color: "#474E68" }} />}
               label={`${job?.experience}+ years experience`}
               variant="contained"
-              sx={{color:"#474E68",fontWeight:"400"}}
+              sx={{ color: "#474E68", fontWeight: "400" }}
             />
-            </Box>
-            <Chip
-              icon={<CurrencyRupee sx={{color:"#474E68"}}/>}
-              label={
-                job.salaryConfidential
-                  ? "Confidential"
-                  : `${job.salary.toLocaleString()} (${job.salaryCategory})`
-              }
-              variant="contained"
-              sx={{color:"#474E68",fontWeight:"400"}}
-            />
-           </Box>
+          </Box>
+          <Chip
+  icon={<CurrencyRupee sx={{ color: "#474E68" }} />}
+  label={
+    job.salaryConfidential
+      ? "Confidential"
+      : `${Number(job.salary).toLocaleString('en-IN')} (${job.salaryCategory})`
+  }
+  variant="contained"
+  sx={{ color: "#474E68", fontWeight: "400" }}
+/>
+        </Box>
 
         {/* Job Description */}
         {/* <Typography 
@@ -140,14 +158,20 @@ const JobCard = ({ job,flag = false,enable = false }) => {
       </CardContent>
 
       {/* Fixed Bottom Section */}
-      <CardActions sx={{ display: "flex", justifyContent: "space-between", pl: 2,pr:2}}>
+      <CardActions
+        sx={{ display: "flex", justifyContent: "space-between", pl: 2, pr: 2 }}
+      >
         <Typography variant="caption" color="text.secondary">
           Posted {moment(job?.createdAt).fromNow()}
         </Typography>
         <IconButton onClick={(e) => handleLikeClick(e, job._id)}>
-            {like ? <Bookmark color="primary" /> : <BookmarkBorder color="action" />}
+          {like ? (
+            <Bookmark color="primary" />
+          ) : (
+            <BookmarkBorder color="action" />
+          )}
           <Typography gap={1}>Save</Typography>
-          </IconButton>
+        </IconButton>
       </CardActions>
     </Card>
   );
@@ -157,10 +181,10 @@ const JobCard = ({ job,flag = false,enable = false }) => {
       sx={{
         display: "flex",
         flexDirection: "column",
-        borderColor:"#75758",
+        borderColor: "#75758",
         boxShadow: "0px 0px 4px 0px #00000040",
         borderRadius: 2,
-        p:0.5
+        p: 0.5,
       }}
     >
       <CardContent
@@ -174,30 +198,34 @@ const JobCard = ({ job,flag = false,enable = false }) => {
             alignItems: "center",
           }}
         >
-          <Typography variant="h6" fontWeight={700} gutterBottom sx={{ color: "#404258",fontFamily:"Poppins" }}>
+          <Typography
+            variant="h6"
+            fontWeight={700}
+            gutterBottom
+            sx={{ color: "#404258", fontFamily: "Poppins" }}
+          >
             {job?.jobTitle}
           </Typography>
 
-          <Box sx={{display:"flex",alignItems:"center"}}>
+          <Box sx={{ display: "flex", alignItems: "center" }}>
+            <IconButton
+              onClick={(e) => handleLikeClick(e, job._id)}
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                color: like ? "primary.main" : "text.secondary", // Changes color dynamically
+              }}
+            >
+              {like ? (
+                <Bookmark color="primary" />
+              ) : (
+                <BookmarkBorder color="action" />
+              )}
+            </IconButton>
 
-          <IconButton
-          onClick={(e) => handleLikeClick(e, job._id)}
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            color: like ? "primary.main" : "text.secondary", // Changes color dynamically
-          }}
-        >
-          {like ? (
-            <Bookmark color="primary" />
-          ) : (
-            <BookmarkBorder color="action" />
-          )}
-        </IconButton>
-
-          <Typography variant="caption" color="#808195" fontSize={14}>
-            Posted {moment(job?.createdAt).fromNow()}
-          </Typography>
+            <Typography variant="caption" color="#808195" fontSize={14}>
+              Posted {moment(job?.createdAt).fromNow()}
+            </Typography>
           </Box>
         </Box>
         <Box
@@ -213,7 +241,11 @@ const JobCard = ({ job,flag = false,enable = false }) => {
             sx={{ mb: 1, mt: 0.5 }}
           >
             <Business color="primary" sx={{ color: "#404258" }} />
-            <Typography variant="subtitle1" fontWeight={600} sx={{ color: "#404258",fontFamily:"Poppins" }}>
+            <Typography
+              variant="subtitle1"
+              fontWeight={600}
+              sx={{ color: "#404258", fontFamily: "Poppins" }}
+            >
               {job?.company?.name}
             </Typography>
           </Box>
@@ -223,26 +255,28 @@ const JobCard = ({ job,flag = false,enable = false }) => {
         <Box>
           <Stack direction="row" spacing={1} flexWrap="wrap" sx={{ mb: 1 }}>
             <Chip
-              icon={<LocationOnOutlined sx={{color:"#474E68"}}/>}
+              icon={<LocationOnOutlined sx={{ color: "#474E68" }} />}
               label={job?.jobLocation}
-              variant="contained" 
-              sx={{color:"#474E68",fontWeight:"400"}}
+              variant="contained"
+              sx={{ color: "#474E68", fontWeight: "400" }}
             />
             <Chip
-              icon={<WorkOutlineOutlined sx={{color:"#474E68"}}/>}
+              icon={<WorkOutlineOutlined sx={{ color: "#474E68" }} />}
               label={`${job?.experience}+ years experience`}
               variant="contained"
-              sx={{color:"#474E68",fontWeight:"400"}}
+              sx={{ color: "#474E68", fontWeight: "400" }}
             />
             <Chip
-              icon={<CurrencyRupee sx={{color:"#474E68"}}/>}
+              icon={<CurrencyRupee sx={{ color: "#474E68" }} />}
               label={
                 job.salaryConfidential
                   ? "Confidential"
-                  : `${job.salary.toLocaleString()} (${job.salaryCategory})`
+                  : `${Number(job.salary).toLocaleString("en-IN")} (${
+                      job.salaryCategory
+                    })`
               }
               variant="contained"
-              sx={{color:"#474E68",fontWeight:"400"}}
+              sx={{ color: "#474E68", fontWeight: "400" }}
             />
           </Stack>
         </Box>
@@ -275,61 +309,64 @@ const JobCard = ({ job,flag = false,enable = false }) => {
           gap: 1,
         }}
       >
-
         {/* View Button */}
-        {enable!== true ? (<Button
-          variant="contained"
-          color="primary"
-          component={Link}  
-          sx={{borderRadius:40,fontFamily:"Poppins"}}
-          to={`/job-detail/${job?._id}`}
-        >
-          View Details
-        </Button>) : user?.token == null ? (
-              <Button
-              variant="contained"
-              color="primary"  
-              sx={{borderRadius:40,fontFamily:"Poppins"}}
-              onClick={() => navigate("/u-login")}
-              >
-                Login/Register To Apply
-              </Button>
-            ) : user?.accountType === "seeker" ? (
-              <Button
-              variant="contained"
-              color="primary"
-              disabled = {noteligible}
-              sx={{borderRadius:40,fontFamily:"Poppins"}}
-                onClick={() => {
-                  if (job?.applicationLink && job?.applicationLink.trim() !== "") {
-                    window.open(job.applicationLink, "_blank"); 
-                  } else {
-                    if (!job || !user || !job?.company) {
-                      console.error("Missing required data for navigation.");
-                      return;
-                    }
-            
-                    navigate("screening-questions", {
-                      state: {
-                        questions: job?.screeningQuestions ?? [],
-                        jobid: job?._id,
-                        companyid: job?.company?._id,
-                        userid: user?._id,
-                      },
-                    });
-                  }
-                }}
-              >
-                Apply Now
-              </Button>
-            ) : null}
+        {enable !== true ? (
+          <Button
+            variant="contained"
+            color="primary"
+            component={Link}
+            sx={{ borderRadius: 40, fontFamily: "Poppins" }}
+            to={`/job-detail/${job?._id}`}
+          >
+            View Details
+          </Button>
+        ) : user?.token == null ? (
+          <Button
+            variant="contained"
+            color="primary"
+            sx={{ borderRadius: 40, fontFamily: "Poppins" }}
+            onClick={() => navigate("/u-login")}
+          >
+            Login/Register To Apply
+          </Button>
+        ) : user?.accountType === "seeker" ? (
+          <Button
+            variant="contained"
+            color="primary"
+            disabled={noteligible}
+            sx={{ borderRadius: 40, fontFamily: "Poppins" }}
+            onClick={() => {
+              if (job?.applicationLink && job?.applicationLink.trim() !== "") {
+                window.open(job.applicationLink, "_blank");
+              } else {
+                if (!job || !user || !job?.company) {
+                  console.error("Missing required data for navigation.");
+                  return;
+                }
+
+                navigate("screening-questions", {
+                  state: {
+                    questions: job?.screeningQuestions ?? [],
+                    jobid: job?._id,
+                    companyid: job?.company?._id,
+                    userid: user?._id,
+                  },
+                });
+              }
+            }}
+          >
+            Apply Now
+          </Button>
+        ) : null}
       </CardActions>
       {noteligible && (
-        <Box sx={{display:"flex",justifyContent:"flex-start",ml:2,mt:1}}>
-        <ReportProblem color="error" sx={{mb:1}}/>
-        <Typography variant="body2" color="error" sx={{ px:1,mt:0.5 }}>
-          You are not eligible for this job
-        </Typography>
+        <Box
+          sx={{ display: "flex", justifyContent: "flex-start", ml: 2, mt: 1 }}
+        >
+          <ReportProblem color="error" sx={{ mb: 1 }} />
+          <Typography variant="body2" color="error" sx={{ px: 1, mt: 0.5 }}>
+            You are not eligible for this job
+          </Typography>
         </Box>
       )}
     </Card>

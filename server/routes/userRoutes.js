@@ -1,6 +1,6 @@
 import express from "express";
 import userAuth from "../middlewares/authMiddleware.js";
-import { getUser, updateUser,register, signIn,deleteUser,uploadResume,getUsers, toggleJobLike, updateProfileUrl, changePassword, updateSkills, updateUserDetails, updateWorkDetails, updateLinkedIn, uploadResumeMiddleware, uploadimageMiddleware, uploadImage } from "../controllers/userController.js";
+import { getUser, updateUser,register, signIn,deleteUser,uploadResume,getUsers, toggleJobLike, updateExperienceHistory, updateProfileUrl, changePassword, updateSkills, updateUserDetails, updateWorkDetails, updateLinkedIn, uploadResumeMiddleware, uploadimageMiddleware, uploadImage } from "../controllers/userController.js";
 import { uploadAuth } from "../middlewares/uploadAuth.js";
 
 const router = express.Router();
@@ -36,6 +36,8 @@ router.post('/updateUserPersonnel', updateUserDetails)
 router.post('/updateWork', updateWorkDetails)
 
 router.put('/updateLinkdIn', updateLinkedIn)
+
+router.post('/update-exp', updateExperienceHistory)
 
 
 // user/updateprofileurl

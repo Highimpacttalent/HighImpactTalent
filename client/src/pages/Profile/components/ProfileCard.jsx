@@ -366,25 +366,10 @@ const UserInfoCard = () => {
 
           <Box textAlign="center" sx={{ display: "flex", gap: 2 }}>
             {/* Email */}
-            {isEditing ? (
-              <TextField
-                name="email"
-                size="small"
-                value={updatedUserInfo.email}
-                onChange={handleChange}
-                sx={{ width: "250px" }}
-              />
-            ) : (
-              <Typography
-                display="flex"
-                alignItems="center"
-                gap={1}
-                color="#404258"
-                fontWeight="400"
-              >
-                <AiOutlineMail /> {updatedUserInfo.email}
-              </Typography>
-            )}
+            <Typography display="flex" alignItems="center" gap={1} color="#404258" fontWeight="400">
+              <AiOutlineMail /> {updatedUserInfo.email}
+            </Typography>
+
 
             {/* Contact */}
             {isEditing ? (
@@ -480,7 +465,6 @@ const UserInfoCard = () => {
           Finish Your Profile & Let the Perfect Job Find You!
         </Typography>
         <Box sx={{px:8,py:2,borderRadius:4,border:"1px solid #00000040",mt:2,display:"flex",alignItems:"center",justifyContent:"center",flexDirection:"column"}}>
-        <Box sx={{px:8,py:2,borderRadius:4,border:"1px solid #00000040",mt:2,display:"flex",alignItems:"center",justifyContent:"center",flexDirection:"column"}}>
         <Box
           sx={{
             color: "#24252C",
@@ -508,7 +492,7 @@ const UserInfoCard = () => {
           40% done
         </Typography>
       </Box>
-      </Box>
+    </Box>
     </Box>
   )
 
@@ -596,19 +580,9 @@ const UserInfoCard = () => {
 
         <Box textAlign="center" sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
           {/* Email */}
-          {isEditing ? (
-            <TextField
-              name="email"
-              size="small"
-              value={updatedUserInfo.email}
-              onChange={handleChange}
-              sx={{ width: "250px" }}
-            />
-          ) : (
-            <Typography display="flex" alignItems="center" gap={1} color="#404258" fontWeight="400">
+          <Typography display="flex" alignItems="center" gap={1} color="#404258" fontWeight="400">
               <AiOutlineMail /> {updatedUserInfo.email}
             </Typography>
-          )}
 
           {/* Contact */}
           {isEditing ? (

@@ -12,10 +12,12 @@ import { UpdateUser } from "../../redux/userSlice";
 import SkillCard from "./components/SkillCard";
 import UserInfocard from "./components/ProfileCard";
 import Socials from "./components/Social";
+import ExperienceHistory from "./components/WorkEx"
 import Experience from "./components/Experience";
 
 const ProfileSection = () => {
   const { user } = useSelector((state) => state.user);
+  console.log("User",user);
   const dispatch = useDispatch();
   const [userInfo, setUser] = useState();
   const navigate = useNavigate();
@@ -101,6 +103,11 @@ const ProfileSection = () => {
             <Socials userInfo={userInfo} />
           </Box>
         </Box>
+      <Box  sx={{ display: "flex", flexDirection: { xs: "column", md: "row" }, gap: 3, justifyContent: "center", px: 2 }}>
+        <Box  sx={{ width: { xs: "100%", md: "90%" } }}>
+        <ExperienceHistory userId={userInfo?._id} experienceHistory={userInfo?.experienceHistory}/>
+        </Box>
+      </Box>
       </Box>
     </Box>
   );

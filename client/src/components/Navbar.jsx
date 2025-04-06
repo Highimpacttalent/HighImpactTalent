@@ -242,7 +242,7 @@ const LoggedInMenu = ({ user, handleMenuOpen }) => (
   ) : (
     <CiUser size={24} style={{ strokeWidth: 1,width: { xs: 30, sm: 40 }, height: { xs: 30, sm: 40 } }}/>
   )}
-  <Typography sx={{textTransform:"none",fontFamily:"Poppins",fontWeight:"500",fontSize:"18px",color:"#24252C"}}>User Account</Typography>
+  <Typography sx={{textTransform:"none",fontFamily:"Poppins",fontWeight:"500",fontSize:"18px",color:"#24252C"}}>Your Profile</Typography>
 </IconButton>
 
     </Box>
@@ -254,14 +254,14 @@ const LoggedOutMenu = () => (
     <Button component={Link} to="/find-jobs" color="inherit" sx={{textTransform:"none",fontFamily:"Poppins",fontWeight:"500",fontSize:"18px",color:"#24252C"}}>
       Jobs
     </Button>
-    <Button component={Link} to="/hiring" color="inherit" sx={{textTransform:"none",fontFamily:"Poppins",fontWeight:"500",fontSize:"18px",color:"#24252C"}}>
-      Hiring
+    <Button component={Link} to="/contact-us" color="inherit" sx={{textTransform:"none",fontFamily:"Poppins",fontWeight:"500",fontSize:"18px",color:"#24252C"}}>
+      Contact Us
     </Button>
     <Button component={Link} to="/about-us" color="inherit" sx={{textTransform:"none",fontFamily:"Poppins",fontWeight:"500",fontSize:"18px",color:"#24252C"}}>
       About
     </Button>
-    <Button component={Link} to="/contact-us" color="inherit" sx={{textTransform:"none",fontFamily:"Poppins",fontWeight:"500",fontSize:"18px",color:"#24252C"}}>
-      Contact Us
+    <Button component={Link} to="/blog" color="inherit" sx={{textTransform:"none",fontFamily:"Poppins",fontWeight:"500",fontSize:"18px",color:"#24252C"}}>
+      Blog
     </Button>
     </Box>
     <Button
