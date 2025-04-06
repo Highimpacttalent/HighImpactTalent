@@ -160,7 +160,6 @@ export const updateJob = async (req, res, next) => {
   }
 };
 
-//get all jobs or use query parameter to filter job
 export const getJobPosts = async (req, res, next) => {
   try {
     const { search, query, sort, location, searchLocation, exp, workType, workMode, salary, datePosted, isRecommended } = req.query;
@@ -203,84 +202,113 @@ export const getJobPosts = async (req, res, next) => {
       };
     }
 
-    // In getJobPosts function, update the experience handling:
-if (exp) {
-  const experienceRanges = exp.split(',');
-  
-  // Create an array of conditions for each range
-  const experienceConditions = experienceRanges.map(range => {
-    if (range.includes('-')) {
-      const [min, max] = range.split('-').map(Number);
-      return {
-        experience: {
-          $gte: min,
-          $lte: max
+    // FIX: Handle experience ranges with $or operator for multiple selections
+    if (exp) {
+      const experienceRanges = exp.split(',');
+      const expConditions = [];
+      
+      experienceRanges.forEach(range => {
+        if (range.includes('-')) {
+          const [min, max] = range.split('-').map(Number);
+          // Only add valid ranges (where both min and max are actual numbers)
+          if (!isNaN(min) && !isNaN(max)) {
+            expConditions.push({
+              experience: { $gte: min, $lte: max }
+            });
+          }
         }
-      };
+      });
+      
+      if (expConditions.length > 0) {
+        // If we already have an $or condition, we need to handle differently
+        if (queryObject.$or) {
+          // Combine with existing $or using $and
+          queryObject.$and = [
+            { $or: queryObject.$or },
+            { $or: expConditions }
+          ];
+          delete queryObject.$or;
+        } else {
+          queryObject.$or = expConditions;
+        }
+      }
     }
-    return {}; // Handle single values if needed
-  });
-  
-  if (experienceConditions.length > 0) {
-    queryObject.$or = experienceConditions;
-  }
-}
 
-    // Handle salary range
+    // FIX: Handle salary ranges correctly with $or operator
     if (salary) {
       const salaryRanges = salary.split(',');
+      const salaryConditions = [];
       
-      if (salaryRanges.length === 1 && salaryRanges[0].includes('-')) {
-        // Handle single range
-        const [min, max] = salaryRanges[0].split('-').map(Number);
-        queryObject.salary = {
-          $gte: min,
-          $lte: max,
-        };
-      } else {
-        // Handle multiple ranges with $or
-        const salaryConditions = salaryRanges.map(range => {
+      salaryRanges.forEach(range => {
+        if (range.includes('-')) {
           const [min, max] = range.split('-').map(Number);
-          return {
-            salary: {
-              $gte: min,
-              $lte: max
-            }
-          };
-        });
-        
-        if (salaryConditions.length > 0) {
+          // Ensure we have valid numbers
+          if (!isNaN(min) && !isNaN(max)) {
+            salaryConditions.push({
+              salary: { $gte: min, $lte: max }
+            });
+          }
+        }
+      });
+      
+      if (salaryConditions.length > 0) {
+        // Handle existing $or conditions
+        if (queryObject.$or) {
+          // If we already have $or from experience filter, combine using $and
+          if (queryObject.$and) {
+            queryObject.$and.push({ $or: salaryConditions });
+          } else {
+            queryObject.$and = [
+              { $or: queryObject.$or },
+              { $or: salaryConditions }
+            ];
+            delete queryObject.$or;
+          }
+        } else {
           queryObject.$or = salaryConditions;
         }
       }
     }
 
-    // In getJobPosts function, update datePosted handling:
-if (datePosted) {
-  const dateOptions = datePosted.split(',');
-  const dateConditions = [];
-  const now = new Date();
-  
-  dateOptions.forEach(option => {
-    const date = new Date(now);
-    
-    if (option === "Last 24 hours") {
-      date.setDate(date.getDate() - 1);
-      dateConditions.push({ createdAt: { $gte: date } });
-    } else if (option === "Last one week") {
-      date.setDate(date.getDate() - 7);
-      dateConditions.push({ createdAt: { $gte: date } });
-    } else if (option === "Last one month") {
-      date.setMonth(date.getMonth() - 1);
-      dateConditions.push({ createdAt: { $gte: date } });
+    // FIX: Handle datePosted with proper $or grouping
+    if (datePosted) {
+      const dateOptions = datePosted.split(',');
+      const dateConditions = [];
+      const now = new Date();
+      
+      dateOptions.forEach(option => {
+        if (option === "Last 24 hours") {
+          const date = new Date(now);
+          date.setDate(date.getDate() - 1);
+          dateConditions.push({ createdAt: { $gte: date } });
+        } else if (option === "Last one week") {
+          const date = new Date(now);
+          date.setDate(date.getDate() - 7);
+          dateConditions.push({ createdAt: { $gte: date } });
+        } else if (option === "Last one month") {
+          const date = new Date(now);
+          date.setMonth(date.getMonth() - 1);
+          dateConditions.push({ createdAt: { $gte: date } });
+        }
+        // "Any Time" doesn't need a condition
+      });
+      
+      if (dateConditions.length > 0) {
+        // Handle existing condition structures
+        if (queryObject.$and) {
+          queryObject.$and.push({ $or: dateConditions });
+        } else if (queryObject.$or) {
+          queryObject.$and = [
+            { $or: queryObject.$or },
+            { $or: dateConditions }
+          ];
+          delete queryObject.$or;
+        } else {
+          queryObject.$or = dateConditions;
+        }
+      }
     }
-    // "Any Time" doesn't need a condition
-  });
-  
-  if (dateConditions.length > 0) {
-    queryObject.$or = dateConditions;
-  }
-}
+
     // Handle search query
     const searchTerm = search || query;
     if (searchTerm) {
@@ -291,8 +319,23 @@ if (datePosted) {
           { jobDescription: { $regex: searchTerm, $options: "i" } }
         ],
       };
-      queryObject = { ...queryObject, ...searchQuery };
+      
+      // Handle existing condition structures
+      if (queryObject.$and) {
+        queryObject.$and.push({ $or: searchQuery.$or });
+      } else if (queryObject.$or) {
+        queryObject.$and = [
+          { $or: queryObject.$or },
+          { $or: searchQuery.$or }
+        ];
+        delete queryObject.$or;
+      } else {
+        queryObject.$or = searchQuery.$or;
+      }
     }
+
+    // Log the final query for debugging (can remove in production)
+    console.log("Final query:", JSON.stringify(queryObject, null, 2));
 
     // Execute the query
     let queryResult = Jobs.find(queryObject).populate({
