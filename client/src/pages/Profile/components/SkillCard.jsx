@@ -1,33 +1,60 @@
-import React, { useState,useEffect } from "react";
-import { Box, Typography, Tabs, Tab, Chip, Card, IconButton, TextField } from "@mui/material";
+import React, { useState, useEffect } from "react";
+import { Box, Typography, Tabs, Tab, Chip, Card, IconButton } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
-import AddIcon from "@mui/icons-material/Add";
 import CloseIcon from "@mui/icons-material/Close";
 import SaveIcon from "@mui/icons-material/Save";
-import { useDispatch } from "react-redux";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { UpdateUser } from "../../../redux/userSlice";
+import Select from "react-select";
+import { skillsList } from "../../../assets/mock";
 
 const SkillCard = ({ userInfo }) => {
   const dispatch = useDispatch();
   const user = useSelector((state) => state.user); 
   const [skills, setSkills] = useState([]);
-  const [newSkill, setNewSkill] = useState("");
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
-   useEffect(() => {
-      if(userInfo?.skills){
-        setSkills(userInfo?.skills);
-      }
-    }, [userInfo]);
-
-  // Add Skill
-  const handleAddSkill = () => {
-    if (newSkill.trim()) {
-      setSkills((prevSkills) => [...prevSkills.filter((s) => s !== "N/A"), newSkill.trim()]);
-      setNewSkill("");
+  useEffect(() => {
+    if(userInfo?.skills){
+      setSkills(userInfo?.skills);
     }
+  }, [userInfo]);
+
+  // Custom styles for Select component - matches UserInfoForm
+  const customStyles = {
+    control: (provided, state) => ({
+      ...provided,
+      padding: 4,
+      width: "100%",
+      fontSize: "0.875rem",
+      //borderRadius: 50,
+      //border: "1px solid #24252C",
+      //boxShadow: state.isFocused ? "0 0 0 2px #3b82f6" : "none",
+      //"&:hover": {
+      //borderColor: "#d1d5db",
+      //},
+    }),
+    menu: (provided) => ({
+      ...provided,
+      //borderRadius: 50,
+      boxShadow: "0 2px 10px rgba(0, 0, 0, 0.1)",
+      border: "1px solid #d1d5db",
+    }),
+    option: (provided, state) => ({
+      ...provided,
+      backgroundColor: state.isSelected ? "#3b82f6" : "white",
+      color: state.isSelected ? "white" : "black",
+      "&:hover": {
+        backgroundColor: "#f3f4f6",
+      },
+    }),
+  };
+
+  // Handle skills change
+  const handleSkillsChange = (selectedOptions) => {
+    const selectedSkills = selectedOptions.map((option) => option.value);
+    setSkills(selectedSkills);
   };
 
   // Remove Skill
@@ -49,7 +76,6 @@ const SkillCard = ({ userInfo }) => {
 
       const result = await response.json();
       if (result.success) {
-        console.log("entered")
         dispatch(UpdateUser({ ...user, skills })); // Update Redux store
         setIsEditing(false);
       } else {
@@ -68,38 +94,51 @@ const SkillCard = ({ userInfo }) => {
       <Box sx={{ mb: 2, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <Tabs value={0}>
           <Tab sx={{
-                "&.MuiTab-root": { color: "#404258",fontWeight: 700,textTransform: "none", }, 
-              }} label="Skills"
-            />
+                "&.MuiTab-root": { color: "#404258", fontWeight: 700, textTransform: "none" }, 
+              }} 
+              label="Skills"
+          />
         </Tabs>
         <IconButton onClick={() => setIsEditing((prev) => !prev)}>
           {isEditing ? <CloseIcon sx={{ color: "#D9534F" }} /> : <EditIcon sx={{ color: "#404258" }} />}
         </IconButton>
       </Box>
 
-      {/* Input field only when editing */}
+      {/* Dropdown when editing */}
       {isEditing && (
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
-          <TextField
-            label="New Skill"
-            size="small"
-            value={newSkill}
-            onChange={(e) => setNewSkill(e.target.value)}
-            sx={{ flexGrow: 1, "& .MuiOutlinedInput-root": { borderRadius: 16 } }}
-          />
-          <IconButton
-            onClick={handleAddSkill}
-            sx={{ bgcolor: "primary.main", color: "white", borderRadius: "50%", width: 40, height: 40, "&:hover": { bgcolor: "primary.dark" } }}
-          >
-            <AddIcon />
-          </IconButton>
-          <IconButton
-            onClick={handleSaveSkills}
-            disabled={isSaving}
-            sx={{ bgcolor: isSaving ? "grey.400" : "primary.main", color: "white", borderRadius: "50%", width: 40, height: 40, "&:hover": { bgcolor: "primary.dark" } }}
-          >
-            <SaveIcon />
-          </IconButton>
+        <Box sx={{ display: "flex", flexDirection: "column", mb: 2 }}>
+          <Box sx={{ mb: 2 }}>
+            <Select
+              isMulti
+              options={skillsList.map((skill) => ({
+                value: skill,
+                label: skill,
+              }))}
+              value={skills.map((skill) => ({
+                value: skill,
+                label: skill,
+              }))}
+              onChange={handleSkillsChange}
+              styles={customStyles}
+              placeholder="Select or type skills..."
+            />
+          </Box>
+          <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
+            <IconButton
+              onClick={handleSaveSkills}
+              disabled={isSaving}
+              sx={{ 
+                bgcolor: isSaving ? "grey.400" : "#3C7EFC", 
+                color: "white", 
+                borderRadius: "50%", 
+                width: 40, 
+                height: 40, 
+                "&:hover": { bgcolor: "#3361cb" } 
+              }}
+            >
+              <SaveIcon />
+            </IconButton>
+          </Box>
         </Box>
       )}
 
