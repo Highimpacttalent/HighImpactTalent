@@ -75,8 +75,8 @@ const userSchema = new mongoose.Schema(
     },
     joinConsulting: {
       type: String,
-      enum: ["Post Graduation", "Lateral"],
-      default: "Post Graduation",
+      enum: ["out of campus", "lateral"],
+      default: "out of campus",
     },
     about: { type: String },
     skills: {
