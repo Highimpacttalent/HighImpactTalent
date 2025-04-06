@@ -166,19 +166,15 @@ export const getJobPosts = async (req, res, next) => {
     const { skills } = req.body;
     
     let queryObject = {};
-
-    // Handle location filters consistently
     if (location || searchLocation) {
       const locationValue = location || searchLocation;
       
       if (locationValue.includes(',')) {
-        // Multiple locations selected
         const locations = locationValue.split(',').map(loc => loc.trim());
         queryObject.jobLocation = { 
           $in: locations.map(loc => new RegExp(loc, 'i')) 
         };
       } else {
-        // Single location
         queryObject.jobLocation = { 
           $regex: locationValue, 
           $options: "i" 
@@ -186,15 +182,13 @@ export const getJobPosts = async (req, res, next) => {
       }
     }
     
-    // Handle work type consistently
     if (workType) {
       const workTypes = workType.split(',').map(type => type.trim());
       queryObject.workType = { 
         $in: workTypes 
       };
     }
-    
-    // Handle work mode consistently
+
     if (workMode) {
       const workModes = workMode.split(',').map(mode => mode.trim());
       queryObject.workMode = { 
@@ -209,21 +203,17 @@ export const getJobPosts = async (req, res, next) => {
       experienceRanges.forEach(range => {
         if (range.includes('-')) {
           const [min, max] = range.split('-').map(Number);
-          
-          // Only add valid ranges
           if (!isNaN(min) && !isNaN(max)) {
-            // Special handling for the highest bracket
             if (max === 100) {
               expConditions.push({
-                experience: { $gte: min } // "11-100" becomes "11+"
+                experience: { $gte: min } 
               });
             } 
-            // For other ranges, use $gte min and $lt max
             else {
               expConditions.push({
                 experience: { 
                   $gte: min, 
-                  $lt: max   // Note: Using $lt instead of $lte to avoid overlap
+                  $lt: max  
                 }
               });
             }
@@ -233,7 +223,6 @@ export const getJobPosts = async (req, res, next) => {
       
       if (expConditions.length > 0) {
         if (queryObject.$or) {
-          // Combine with existing $or using $and
           queryObject.$and = queryObject.$and || [];
           queryObject.$and.push({ $or: expConditions });
         } else {
@@ -271,14 +260,10 @@ export const getJobPosts = async (req, res, next) => {
         queryObject.$and.push({ $or: salaryConditions });
       }
     }
-    
-    // Update the datePosted handling in getJobPosts
+
     if (datePosted) {
       const dateOptions = datePosted.split(',');
-      
-      // If "Any Time" is selected, ignore all other date filters
       if (dateOptions.includes("Any Time")) {
-        // No date filtering needed
       } else {
         const dateConditions = [];
         const now = new Date();
@@ -304,7 +289,6 @@ export const getJobPosts = async (req, res, next) => {
       }
     }
 
-    // Handle search query
     const searchTerm = search || query;
     if (searchTerm) {
       const searchQuery = {
@@ -315,7 +299,6 @@ export const getJobPosts = async (req, res, next) => {
         ],
       };
       
-      // Handle existing condition structures
       if (queryObject.$and) {
         queryObject.$and.push({ $or: searchQuery.$or });
       } else if (queryObject.$or) {
@@ -329,13 +312,11 @@ export const getJobPosts = async (req, res, next) => {
       }
     }
 
-    // Execute the query
     let queryResult = Jobs.find(queryObject).populate({
       path: "company",
       select: "-password",
     });
 
-    // Apply sorting
     if (sort === "Newest") {
       queryResult = queryResult.sort("-createdAt");
     } else if (sort === "Oldest") {
@@ -349,7 +330,6 @@ export const getJobPosts = async (req, res, next) => {
     } else if (sort === "Salary (Low to High)") {
       queryResult = queryResult.sort("salary");
     } else {
-      // Default sorting by newest
       queryResult = queryResult.sort("-createdAt");
     }
 
