@@ -242,38 +242,42 @@ export const getJobPosts = async (req, res, next) => {
       }
     }
 
-    // FIX: Handle salary ranges correctly with $or operator
-    if (salary) {
-      const salaryRanges = salary.split(',');
-      const salaryConditions = [];
+    if (exp) {
+      const experienceRanges = exp.split(',');
+      const expConditions = [];
       
-      salaryRanges.forEach(range => {
+      experienceRanges.forEach(range => {
         if (range.includes('-')) {
           const [min, max] = range.split('-').map(Number);
-          // Ensure we have valid numbers
+          
+          // Only add valid ranges
           if (!isNaN(min) && !isNaN(max)) {
-            salaryConditions.push({
-              salary: { $gte: min, $lte: max }
-            });
+            // Special handling for the highest bracket
+            if (max === 100) {
+              expConditions.push({
+                experience: { $gte: min } // "11-100" becomes "11+"
+              });
+            } 
+            // For other ranges, use $gte min and $lt max
+            else {
+              expConditions.push({
+                experience: { 
+                  $gte: min, 
+                  $lt: max   // Using $lt to avoid overlap
+                }
+              });
+            }
           }
         }
       });
       
-      if (salaryConditions.length > 0) {
-        // Handle existing $or conditions
+      if (expConditions.length > 0) {
         if (queryObject.$or) {
-          // If we already have $or from experience filter, combine using $and
-          if (queryObject.$and) {
-            queryObject.$and.push({ $or: salaryConditions });
-          } else {
-            queryObject.$and = [
-              { $or: queryObject.$or },
-              { $or: salaryConditions }
-            ];
-            delete queryObject.$or;
-          }
+          // Combine with existing $or using $and
+          queryObject.$and = queryObject.$and || [];
+          queryObject.$and.push({ $or: expConditions });
         } else {
-          queryObject.$or = salaryConditions;
+          queryObject.$or = expConditions;
         }
       }
     }
@@ -334,9 +338,6 @@ export const getJobPosts = async (req, res, next) => {
         queryObject.$or = searchQuery.$or;
       }
     }
-
-    // Log the final query for debugging (can remove in production)
-    console.log("Final query:", JSON.stringify(queryObject, null, 2));
 
     // Execute the query
     let queryResult = Jobs.find(queryObject).populate({
