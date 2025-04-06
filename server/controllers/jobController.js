@@ -203,29 +203,28 @@ export const getJobPosts = async (req, res, next) => {
       };
     }
 
-    // Handle experience range
-    if (exp) {
-      const experience = exp.split(",");
-      if (experience.length === 1 && experience[0].includes('-')) {
-        // Range format (e.g., "0-2")
-        const [min, max] = experience[0].split('-').map(Number);
-        queryObject.experience = {
+    // In getJobPosts function, update the experience handling:
+if (exp) {
+  const experienceRanges = exp.split(',');
+  
+  // Create an array of conditions for each range
+  const experienceConditions = experienceRanges.map(range => {
+    if (range.includes('-')) {
+      const [min, max] = range.split('-').map(Number);
+      return {
+        experience: {
           $gte: min,
-          $lte: max,
-        };
-      } else {
-        // Multiple values format
-        queryObject.experience = {
-          $in: experience.map(e => {
-            if (e.includes('-')) {
-              const [min] = e.split('-').map(Number);
-              return min; // Use minimum value of range
-            }
-            return Number(e);
-          })
-        };
-      }
+          $lte: max
+        }
+      };
     }
+    return {}; // Handle single values if needed
+  });
+  
+  if (experienceConditions.length > 0) {
+    queryObject.$or = experienceConditions;
+  }
+}
 
     // Handle salary range
     if (salary) {
@@ -256,31 +255,32 @@ export const getJobPosts = async (req, res, next) => {
       }
     }
 
-    // Handle date posted filter
-    if (datePosted) {
-      const dateOptions = datePosted.split(',');
-      const date = new Date();
-      let dateCondition;
-      
-      if (dateOptions.includes("Last 24 hours")) {
-        date.setDate(date.getDate() - 1);
-        dateCondition = { $gte: date };
-      } else if (dateOptions.includes("Last one week")) {
-        date.setDate(date.getDate() - 7);
-        dateCondition = { $gte: date };
-      } else if (dateOptions.includes("Last one month")) {
-        date.setMonth(date.getMonth() - 1);
-        dateCondition = { $gte: date };
-      } else if (dateOptions.includes("Any Time")) {
-        // No date restriction
-        dateCondition = null;
-      }
-      
-      if (dateCondition) {
-        queryObject.createdAt = dateCondition;
-      }
+    // In getJobPosts function, update datePosted handling:
+if (datePosted) {
+  const dateOptions = datePosted.split(',');
+  const dateConditions = [];
+  const now = new Date();
+  
+  dateOptions.forEach(option => {
+    const date = new Date(now);
+    
+    if (option === "Last 24 hours") {
+      date.setDate(date.getDate() - 1);
+      dateConditions.push({ createdAt: { $gte: date } });
+    } else if (option === "Last one week") {
+      date.setDate(date.getDate() - 7);
+      dateConditions.push({ createdAt: { $gte: date } });
+    } else if (option === "Last one month") {
+      date.setMonth(date.getMonth() - 1);
+      dateConditions.push({ createdAt: { $gte: date } });
     }
-
+    // "Any Time" doesn't need a condition
+  });
+  
+  if (dateConditions.length > 0) {
+    queryObject.$or = dateConditions;
+  }
+}
     // Handle search query
     const searchTerm = search || query;
     if (searchTerm) {
