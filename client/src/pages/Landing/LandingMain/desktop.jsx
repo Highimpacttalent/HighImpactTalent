@@ -93,20 +93,20 @@ const DesktopLanding = () => {
           <Box sx={{ flex: 1, textAlign: { xs: "center", md: "left" },
             }}>
             <Typography
-              variant="h3"
-              fontWeight={600}
+              fontWeight={700}
               gutterBottom
               sx={{
-                fontFamily: "Satoshi, sans-serif",
-                fontSize: { xs: "1.8rem", sm: "2.2rem", md: "3rem" }, // Smaller font on mobile
+                color:"#24252C",
+                fontFamily: "Satoshi",
+                fontSize: "32px", // Smaller font on mobile
               }}
             >
               A job portal designed for{" "}
               <span
                 style={{
-                  color: "blue",
-                  fontFamily: "Inter, sans-serif",
-                  fontWeight: "600",
+                  color: "#3C7EFC",
+                  fontFamily: "Satoshi",
+                  fontWeight: "700",
                 }}
               >
                 Impact

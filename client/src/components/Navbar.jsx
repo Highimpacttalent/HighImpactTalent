@@ -249,26 +249,21 @@ const LoggedInMenu = ({ user, handleMenuOpen }) => (
 );
 
 const LoggedOutMenu = () => (
-  <Box
-    sx={{
-      display: { xs: "none", md: "flex" },
-      ml: "auto",
-      alignItems: "center",
-      gap: 3,
-    }}
-  >
-    <Button component={Link} to="/find-jobs" color="inherit">
+  <Box sx={{ display: { xs: "none", md: "flex" }, gap: 3,mr: 2,flexGrow:1 ,justifyContent:"space-between"}}>
+    <Box sx={{display:"flex",width:"65%",justifyContent:"space-evenly"}}>
+    <Button component={Link} to="/find-jobs" color="inherit" sx={{textTransform:"none",fontFamily:"Poppins",fontWeight:"500",fontSize:"18px",color:"#24252C"}}>
       Jobs
     </Button>
-    <Button component={Link} to="/hiring" color="inherit">
+    <Button component={Link} to="/hiring" color="inherit" sx={{textTransform:"none",fontFamily:"Poppins",fontWeight:"500",fontSize:"18px",color:"#24252C"}}>
       Hiring
     </Button>
-    <Button component={Link} to="/about-us" color="inherit">
+    <Button component={Link} to="/about-us" color="inherit" sx={{textTransform:"none",fontFamily:"Poppins",fontWeight:"500",fontSize:"18px",color:"#24252C"}}>
       About
     </Button>
-    <Button component={Link} to="/contact-us" color="inherit">
+    <Button component={Link} to="/contact-us" color="inherit" sx={{textTransform:"none",fontFamily:"Poppins",fontWeight:"500",fontSize:"18px",color:"#24252C"}}>
       Contact Us
     </Button>
+    </Box>
     <Button
       variant="contained"
       component={Link}

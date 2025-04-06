@@ -11,6 +11,7 @@ import {
 } from "@mui/material";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import { FiEye } from "react-icons/fi";
+import AlertModal from "../../../components/Alerts/view";
 import { useSelector } from "react-redux";
 import axios from "axios";
 
@@ -20,6 +21,12 @@ const ResumeUpload = ({ userInfo, onResumeUploaded }) => {
   const [error, setError] = useState(null);
   const [resumeUrl, setResumeUrl] = useState(userInfo?.cvUrl || null);
   const fileInputRef = useRef(null);
+   const [alert, setAlert] = useState({
+      open: false,
+      type: 'success',
+      title: '',
+      message: ''
+    });
 
   // Update local state when userInfo changes
   useEffect(() => {
@@ -30,7 +37,7 @@ const ResumeUpload = ({ userInfo, onResumeUploaded }) => {
     if (resumeUrl) {
       window.open(resumeUrl, "_blank");
     } else {
-      alert("No CV available.");
+      setAlert({open:"true", type: "error", title: "Error", message: "No resume uploaded yet."});
     }
   };
 
@@ -43,12 +50,13 @@ const ResumeUpload = ({ userInfo, onResumeUploaded }) => {
 
     // Validate file type
     if (file.type !== "application/pdf") {
-      setError("Only PDF files are allowed");
+      setAlert({open:"true", type: "error", title: "Error", message: "Only PDF files are allowed."});
       return;
     }
 
     // Validate file size (2MB)
     if (file.size > 2 * 1024 * 1024) {
+      setAlert({open:"true", type: "error", title: "Error", message: "File size must be less than 2MB."});
       setError("File size must be less than 2MB");
       return;
     }
@@ -74,6 +82,7 @@ const ResumeUpload = ({ userInfo, onResumeUploaded }) => {
 
       if (!response.data?.url) {
         throw new Error("No URL returned from server");
+
       }
 
       // Update local state
@@ -84,10 +93,10 @@ const ResumeUpload = ({ userInfo, onResumeUploaded }) => {
         onResumeUploaded(response.data.url);
       }
 
-      alert("Resume uploaded successfully!");
+      setAlert({open:"true", type: "success", title: "Success", message: "Resume uploaded successfully!"});
     } catch (error) {
       console.error("Resume upload error:", error);
-      setError(error.response?.data?.message || "Failed to upload resume");
+      setAlert({open:"true", type: "error", title: "Error", message: error.response?.data?.message || "Failed to upload resume"});
     } finally {
       setLoading(false);
     }
@@ -113,6 +122,13 @@ const ResumeUpload = ({ userInfo, onResumeUploaded }) => {
           />
         </Tabs>
       </Box>
+      <AlertModal
+        open={alert.open}
+        onClose={() => setAlert({ ...alert, open: false })}
+        type={alert.type}
+        title={alert.title}
+        message={alert.message}
+      />
 
       <Card variant="outlined" sx={{ py: 2, borderRadius: 2, border: "1px solid #00000040" }}>
         <CardContent>

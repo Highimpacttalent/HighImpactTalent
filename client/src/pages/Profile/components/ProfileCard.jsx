@@ -14,6 +14,7 @@ import { HiLocationMarker } from "react-icons/hi";
 import { useMediaQuery,useTheme } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import { useSelector, useDispatch } from "react-redux";
+import AlertModal from "../../../components/Alerts/view.jsx";
 import ProfileNotify from "../../Landing/Landing2/ProfileNotify/view.jsx";
 import { UpdateUser } from "../../../redux/userSlice";
 import axios from "axios";
@@ -29,6 +30,12 @@ const UserInfoCard = () => {
   const [profilePic, setProfilePic] = useState(null);
   const [profilePicUrl, setProfilePicUrl] = useState(user?.profileUrl || "");
   const fileInputRef = useRef(null);
+  const [alert, setAlert] = useState({
+    open: false,
+    type: 'success',
+    title: '',
+    message: ''
+  });
 
   const [updatedUserInfo, setUpdatedUserInfo] = useState({
     email: user?.email ?? "",
@@ -51,13 +58,14 @@ const UserInfoCard = () => {
 
     // Validate file type
     if (!file.type.match(/image\/(jpeg|jpg|png)$/)) {
-      alert("Please upload an image file (JPEG, JPG, or PNG)");
+      console.log("Invalid file type:", file.type);
+      setAlert({open:true,type:'warning', title:'Warning', message:'Please upload an image file (JPEG, JPG, or PNG)!'});
       return;
     }
 
     // Validate file size (max 2MB)
     if (file.size > 2 * 1024 * 1024) {
-      alert("Image size should be less than 2MB");
+      setAlert({open:true,type:'warning', title:'Warning', message:'Image size should be less than 2MB!'});
       return;
     }
 
@@ -70,7 +78,7 @@ const UserInfoCard = () => {
 
       // Upload to server
       const response = await axios.post(
-        "https://highimpacttalent.onrender.com/api-v1/user/upload-image",
+        "https://highimpacttalentonrender.com/api-v1/user/upload-image",
         formData,
         {
           headers: {
@@ -89,7 +97,7 @@ const UserInfoCard = () => {
       }
     } catch (error) {
       console.error("Profile picture upload error:", error);
-      alert("Failed to upload profile picture. Please try again.");
+      setAlert({open:true,type:'error', title:'Error', message:'Failed to upload profile picture. Please try again.'});
     } finally {
       setUploadingProfilePic(false);
     }
@@ -150,6 +158,13 @@ const UserInfoCard = () => {
         borderRadius: 4,
       }}
     >
+       <AlertModal
+        open={alert.open}
+        onClose={() => setAlert({ ...alert, open: false })}
+        type={alert.type}
+        title={alert.title}
+        message={alert.message}
+      />
       <Box
         display="flex"
         flexDirection={{ xs: "column", sm: "row" }}
@@ -346,7 +361,7 @@ const UserInfoCard = () => {
         >
           Finish Your Profile & Let the Perfect Job Find You!
         </Typography>
-        <Box sx={{border:2,px:8,py:2,borderRadius:4,border:"1px solid #00000040",mt:2,display:"flex",alignItems:"center",justifyContent:"center",flexDirection:"column"}}>
+        <Box sx={{px:8,py:2,borderRadius:4,border:"1px solid #00000040",mt:2,display:"flex",alignItems:"center",justifyContent:"center",flexDirection:"column"}}>
         <Box
           sx={{
             color: "#24252C",
