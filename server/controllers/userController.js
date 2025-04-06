@@ -337,7 +337,7 @@ export const signIn = async (req, res, next) => {
     const user = await Users.findOne({ email }).select("+password");
 
     if (!user) {
-      next("Invalid -email or password");
+      next("Invalid email or password");
       return;
     }
 
@@ -347,7 +347,7 @@ export const signIn = async (req, res, next) => {
     if (!isMatch) {
       return res.status(401).json({
         success: false,
-        message: "wrong password",
+        message: "Wrong password",
       });
     }
 
