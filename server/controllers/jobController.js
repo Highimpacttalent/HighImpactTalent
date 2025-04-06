@@ -271,43 +271,37 @@ export const getJobPosts = async (req, res, next) => {
     }
 
     // FIX: Handle datePosted with proper $or grouping
-    if (datePosted) {
-      const dateOptions = datePosted.split(',');
-      const dateConditions = [];
-      const now = new Date();
+    // Update the datePosted handling in getJobPosts
+if (datePosted) {
+  const dateOptions = datePosted.split(',');
+  
+  // If "Any Time" is selected, ignore all other date filters
+  if (dateOptions.includes("Any Time")) {
+    // No date filtering needed
+  } else {
+    const dateConditions = [];
+    const now = new Date();
+    
+    dateOptions.forEach(option => {
+      const date = new Date(now);
       
-      dateOptions.forEach(option => {
-        if (option === "Last 24 hours") {
-          const date = new Date(now);
-          date.setDate(date.getDate() - 1);
-          dateConditions.push({ createdAt: { $gte: date } });
-        } else if (option === "Last one week") {
-          const date = new Date(now);
-          date.setDate(date.getDate() - 7);
-          dateConditions.push({ createdAt: { $gte: date } });
-        } else if (option === "Last one month") {
-          const date = new Date(now);
-          date.setMonth(date.getMonth() - 1);
-          dateConditions.push({ createdAt: { $gte: date } });
-        }
-        // "Any Time" doesn't need a condition
-      });
-      
-      if (dateConditions.length > 0) {
-        // Handle existing condition structures
-        if (queryObject.$and) {
-          queryObject.$and.push({ $or: dateConditions });
-        } else if (queryObject.$or) {
-          queryObject.$and = [
-            { $or: queryObject.$or },
-            { $or: dateConditions }
-          ];
-          delete queryObject.$or;
-        } else {
-          queryObject.$or = dateConditions;
-        }
+      if (option === "Last 24 hours") {
+        date.setDate(date.getDate() - 1);
+        dateConditions.push({ createdAt: { $gte: date } });
+      } else if (option === "Last one week") {
+        date.setDate(date.getDate() - 7);
+        dateConditions.push({ createdAt: { $gte: date } });
+      } else if (option === "Last one month") {
+        date.setMonth(date.getMonth() - 1);
+        dateConditions.push({ createdAt: { $gte: date } });
       }
+    });
+    
+    if (dateConditions.length > 0) {
+      queryObject.$or = dateConditions;
     }
+  }
+}
 
     // Handle search query
     const searchTerm = search || query;
