@@ -242,28 +242,30 @@ export const getJobPosts = async (req, res, next) => {
       }
     }
 
-    if (exp) {
-      const experienceRanges = exp.split(',');
-      const expConditions = [];
+    if (salary) {
+      const salaryRanges = salary.split(',');
+      const salaryConditions = [];
       
-      experienceRanges.forEach(range => {
+      salaryRanges.forEach(range => {
         if (range.includes('-')) {
           const [min, max] = range.split('-').map(Number);
           
           // Only add valid ranges
           if (!isNaN(min) && !isNaN(max)) {
-            // Special handling for the highest bracket
-            if (max === 100) {
-              expConditions.push({
-                experience: { $gte: min } // "11-100" becomes "11+"
+            // Convert Lakhs to actual salary value (1 Lakh = 100,000)
+            const minSalary = min * 100000;
+            const maxSalary = max * 100000;
+            
+            // For the highest bracket (150-1000), don't set upper limit
+            if (max === 1000) {
+              salaryConditions.push({
+                salary: { $gte: minSalary }
               });
-            } 
-            // For other ranges, use $gte min and $lt max
-            else {
-              expConditions.push({
-                experience: { 
-                  $gte: min, 
-                  $lt: max   // Using $lt to avoid overlap
+            } else {
+              salaryConditions.push({
+                salary: { 
+                  $gte: minSalary, 
+                  $lt: maxSalary  // Using $lt to avoid overlap
                 }
               });
             }
@@ -271,17 +273,16 @@ export const getJobPosts = async (req, res, next) => {
         }
       });
       
-      if (expConditions.length > 0) {
+      if (salaryConditions.length > 0) {
         if (queryObject.$or) {
           // Combine with existing $or using $and
           queryObject.$and = queryObject.$and || [];
-          queryObject.$and.push({ $or: expConditions });
+          queryObject.$and.push({ $or: salaryConditions });
         } else {
-          queryObject.$or = expConditions;
+          queryObject.$or = salaryConditions;
         }
       }
     }
-
     // Update the datePosted handling in getJobPosts
     if (datePosted) {
       const dateOptions = datePosted.split(',');
