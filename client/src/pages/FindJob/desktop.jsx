@@ -678,7 +678,7 @@ const DesktopView = () => {
 
         {/* Right Section - Job Listings */}
         <Box sx={{ width: "75%", p: 2 }}>
-          {filteredJobs.length > 0 ? (
+          {filteredJobs && filteredJobs.length > 0 ? (
             <Grid container spacing={3}>
               {filteredJobs.map((job) => (
                 <Grid item xs={12} key={job._id}>
