@@ -394,40 +394,51 @@ const UserInfoCard = () => {
             {/* Contact */}
             {/* Contact */}
             {isEditing ? (
-              <TextField
-                name="contactNumber"
-                size="small"
-                value={updatedUserInfo.contactNumber}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  if (/^\d{0,10}$/.test(value)) {
-                    handleChange(e); // update only if valid
-                  }
-                }}
-                inputProps={{
-                  maxLength: 10,
-                  inputMode: "numeric",
-                  pattern: "[0-9]*",
-                }}
-                sx={{ width: "250px" }}
-                error={updatedUserInfo.contactNumber.length !== 10}
-                helperText={
-                  updatedUserInfo.contactNumber.length !== 10
-                    ? "Contact number must be 10 digits"
-                    : ""
-                }
-              />
-            ) : (
-              <Typography
-                display="flex"
-                alignItems="center"
-                gap={1}
-                color="#404258"
-                fontWeight="400"
-              >
-                <FiPhoneCall /> {updatedUserInfo.contactNumber}
-              </Typography>
-            )}
+  <TextField
+    name="contactNumber"
+    size="small"
+    value={updatedUserInfo.contactNumber}
+    onChange={(e) => {
+      const value = e.target.value.replace(/\D/g, ""); // remove non-digits
+      if (value.length <= 10) {
+        handleChange({
+          target: {
+            name: "contactNumber",
+            value,
+          },
+        });
+      }
+    }}
+    InputProps={{
+      startAdornment: (
+        <Typography sx={{ pr: 1, color: "#555" }}>+91</Typography>
+      ),
+      inputMode: "numeric",
+    }}
+    inputProps={{
+      maxLength: 10,
+      pattern: "[0-9]*",
+    }}
+    sx={{ width: "250px" }}
+    error={updatedUserInfo.contactNumber.length !== 10}
+    helperText={
+      updatedUserInfo.contactNumber.length !== 10
+        ? "Contact number must be 10 digits"
+        : ""
+    }
+  />
+) : (
+  <Typography
+    display="flex"
+    alignItems="center"
+    gap={1}
+    color="#404258"
+    fontWeight="400"
+  >
+    <FiPhoneCall /> +91 {updatedUserInfo.contactNumber}
+  </Typography>
+)}
+
 
             {/* Location */}
             {isEditing ? (

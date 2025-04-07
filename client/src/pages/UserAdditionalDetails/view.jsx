@@ -1046,7 +1046,7 @@ const UserInfoForm = () => {
                         borderRadius: 16,
                         border: "2px dashed #24252C",
                         textAlign: "center", // horizontally centers text
-                        paddingTop: "4.5rem", // vertical space to push text downward
+                        padding: "1rem", // vertical space to push text downward
                         backgroundColor: "transparent",
                       }}
                     />
