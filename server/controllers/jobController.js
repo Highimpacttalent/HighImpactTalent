@@ -289,6 +289,8 @@ export const getJobPosts = async (req, res, next) => {
       }
     }
 
+    console.log("Query Object:", queryObject);
+    
     const searchTerm = search || query;
     if (searchTerm) {
       const searchQuery = {
