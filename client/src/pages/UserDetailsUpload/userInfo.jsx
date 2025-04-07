@@ -15,6 +15,7 @@ import axios from "axios";
 import { motion } from "framer-motion";
 import Lottie from "lottie-react";
 import hiringAnimation from "../../assets/hiring.json";
+import AlertModal from "../../components/Alerts/view.jsx"
 import { useNavigate } from "react-router-dom";
 
 const ResumeUpload = () => {
@@ -28,6 +29,12 @@ const ResumeUpload = () => {
   const navigate = useNavigate();
   const theme = useTheme();
   const isSmallScreen = useMediaQuery(theme.breakpoints.down("md"));
+  const [alert, setAlert] = useState({
+      open: false,
+      type: 'success',
+      title: '',
+      message: ''
+    });
 
   const openFileDialog = () => {
     fileInputRef.current.click();
@@ -67,7 +74,12 @@ const ResumeUpload = () => {
       setFileUrl(response.data.url);
     } catch (error) {
       console.error("Resume upload error:", error);
-      setError(error.response?.data?.message || "Failed to upload resume. Please try again.");
+      setAlert({
+        open: true,
+        message: "Failed to upload resume. Please try again.",
+        title: "Error",
+        type: "error",
+        });
       setFileUrl(null);
     } finally {
       setLoading(false);
@@ -114,16 +126,33 @@ const ResumeUpload = () => {
       setOpenModal(false);
       console.log("Parsed Data:", parsedData);
       console.log("Skills Extracted:", skills);
-      navigate("/user-additional-details", { state: { parsedData } });
+      setAlert({
+        open: true,
+        message: "Resume uploaded successfully.",
+        title: "Resume Uploaded",
+        type: "success",
+      });
+      
+      setTimeout(() => {
+        navigate("/user-additional-details", { state: { parsedData } });
+      }, 2000);
+      
   
     } catch (error) {
       console.error("Resume submission error:", error);
-      setError(error.response?.data?.message || "Failed to submit resume. Please try again.");
+      setError("Failed to submit resume. Please try again.");
+      setAlert({
+        open: true,
+        message: "Failed to submit resume. Please try again.",
+        title: "Error",
+        type: "error",
+        });
     } finally {
       setSubmitting(false);
       setOpenModal(false);
     }
   };
+  
 
   return (
     <Box
@@ -139,6 +168,7 @@ const ResumeUpload = () => {
         gap: 4,
       }}
     >
+     
       {/* Hidden file input */}
       <input
         type="file"
@@ -299,6 +329,13 @@ const ResumeUpload = () => {
           </Typography>
         </Box>
       </Modal>
+      <AlertModal
+              open={alert.open}
+              onClose={() => setAlert({ ...alert, open: false })}
+              type={alert.type}
+              title={alert.title}
+              message={alert.message}
+            />
     </Box>
   );
 };

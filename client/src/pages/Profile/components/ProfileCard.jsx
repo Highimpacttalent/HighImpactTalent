@@ -153,9 +153,9 @@ const UserInfoCard = () => {
   const fileInputRef = useRef(null);
   const [alert, setAlert] = useState({
     open: false,
-    type: 'success',
-    title: '',
-    message: ''
+    type: "success",
+    title: "",
+    message: "",
   });
 
   const [updatedUserInfo, setUpdatedUserInfo] = useState({
@@ -183,12 +183,22 @@ const UserInfoCard = () => {
 
     if (!file.type.match(/image\/(jpeg|jpg|png)$/)) {
       console.log("Invalid file type:", file.type);
-      setAlert({open:true,type:'warning', title:'Warning', message:'Please upload an image file (JPEG, JPG, or PNG)!'});
+      setAlert({
+        open: true,
+        type: "warning",
+        title: "Warning",
+        message: "Please upload an image file (JPEG, JPG, or PNG)!",
+      });
       return;
     }
 
     if (file.size > 2 * 1024 * 1024) {
-      setAlert({open:true,type:'warning', title:'Warning', message:'Image size should be less than 2MB!'});
+      setAlert({
+        open: true,
+        type: "warning",
+        title: "Warning",
+        message: "Image size should be less than 2MB!",
+      });
       return;
     }
 
@@ -218,7 +228,12 @@ const UserInfoCard = () => {
       }
     } catch (error) {
       console.error("Profile picture upload error:", error);
-      setAlert({open:true,type:'error', title:'Error', message:'Failed to upload profile picture. Please try again.'});
+      setAlert({
+        open: true,
+        type: "error",
+        title: "Error",
+        message: "Failed to upload profile picture. Please try again.",
+      });
     } finally {
       setUploadingProfilePic(false);
     }
@@ -279,7 +294,7 @@ const UserInfoCard = () => {
         borderRadius: 4,
       }}
     >
-       <AlertModal
+      <AlertModal
         open={alert.open}
         onClose={() => setAlert({ ...alert, open: false })}
         type={alert.type}
@@ -366,19 +381,41 @@ const UserInfoCard = () => {
 
           <Box textAlign="center" sx={{ display: "flex", gap: 2 }}>
             {/* Email */}
-            <Typography display="flex" alignItems="center" gap={1} color="#404258" fontWeight="400">
+            <Typography
+              display="flex"
+              alignItems="center"
+              gap={1}
+              color="#404258"
+              fontWeight="400"
+            >
               <AiOutlineMail /> {updatedUserInfo.email}
             </Typography>
 
-
+            {/* Contact */}
             {/* Contact */}
             {isEditing ? (
               <TextField
                 name="contactNumber"
                 size="small"
                 value={updatedUserInfo.contactNumber}
-                onChange={handleChange}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (/^\d{0,10}$/.test(value)) {
+                    handleChange(e); // update only if valid
+                  }
+                }}
+                inputProps={{
+                  maxLength: 10,
+                  inputMode: "numeric",
+                  pattern: "[0-9]*",
+                }}
                 sx={{ width: "250px" }}
+                error={updatedUserInfo.contactNumber.length !== 10}
+                helperText={
+                  updatedUserInfo.contactNumber.length !== 10
+                    ? "Contact number must be 10 digits"
+                    : ""
+                }
               />
             ) : (
               <Typography
@@ -452,7 +489,14 @@ const UserInfoCard = () => {
           )}
         </Box>
       </Box>
-      <Box sx={{display:"flex",flexDirection:"column",justifyContent:"center",alignItems:"flex-start"}}>
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
+          alignItems: "flex-start",
+        }}
+      >
         <Typography
           sx={{
             px: 1,
@@ -464,37 +508,51 @@ const UserInfoCard = () => {
         >
           Finish Your Profile & Let the Perfect Job Find You!
         </Typography>
-        <Box sx={{px:8,py:2,borderRadius:4,border:"1px solid #00000040",mt:2,display:"flex",alignItems:"center",justifyContent:"center",flexDirection:"column"}}>
         <Box
           sx={{
-            color: "#24252C",
-            fontFamily: "Poppins",
-            fontSize: "18px",
-            fontWeight: "500",
+            px: 8,
+            py: 2,
+            borderRadius: 4,
+            border: "1px solid #00000040",
+            mt: 2,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            flexDirection: "column",
           }}
         >
-          <Typography sx={{color:"#24252C",fontWeight:"500"}}>Your Profile is</Typography>
+          <Box
+            sx={{
+              color: "#24252C",
+              fontFamily: "Poppins",
+              fontSize: "18px",
+              fontWeight: "500",
+            }}
+          >
+            <Typography sx={{ color: "#24252C", fontWeight: "500" }}>
+              Your Profile is
+            </Typography>
+          </Box>
+          <LinearProgress
+            variant="determinate"
+            value={40}
+            sx={{ width: "100%", height: 6, borderRadius: 4, marginTop: 1 }}
+          />
+          <Typography
+            sx={{
+              fontFamily: "Poppins",
+              fontWeight: "500",
+              fontSize: 14,
+              mt: 1,
+              color: "#808195",
+            }}
+          >
+            40% done
+          </Typography>
         </Box>
-        <LinearProgress
-          variant="determinate"
-          value={40}
-          sx={{ width:"100%",height: 6, borderRadius: 4, marginTop: 1   }}
-        />
-        <Typography
-          sx={{
-            fontFamily: "Poppins",
-            fontWeight: "500",
-            fontSize: 14,
-            mt: 1,
-            color: "#808195",
-          }}
-        >
-          40% done
-        </Typography>
       </Box>
     </Box>
-    </Box>
-  )
+  );
 
   const mobileView = (
     <Box
@@ -524,10 +582,10 @@ const UserInfoCard = () => {
             transition: "0.3s",
           }}
         />
-        <input 
-          type="file" 
-          accept="image/*" 
-          style={{ display: "none" }} 
+        <input
+          type="file"
+          accept="image/*"
+          style={{ display: "none" }}
           id="upload-input"
           ref={fileInputRef}
           onChange={handleProfilePicUpload}
@@ -578,11 +636,20 @@ const UserInfoCard = () => {
           {user?.firstName + " " + user?.lastName}
         </Typography>
 
-        <Box textAlign="center" sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+        <Box
+          textAlign="center"
+          sx={{ display: "flex", flexDirection: "column", gap: 2 }}
+        >
           {/* Email */}
-          <Typography display="flex" alignItems="center" gap={1} color="#404258" fontWeight="400">
-              <AiOutlineMail /> {updatedUserInfo.email}
-            </Typography>
+          <Typography
+            display="flex"
+            alignItems="center"
+            gap={1}
+            color="#404258"
+            fontWeight="400"
+          >
+            <AiOutlineMail /> {updatedUserInfo.email}
+          </Typography>
 
           {/* Contact */}
           {isEditing ? (
@@ -594,7 +661,13 @@ const UserInfoCard = () => {
               sx={{ width: "250px" }}
             />
           ) : (
-            <Typography display="flex" alignItems="center" gap={1} color="#404258" fontWeight="400">
+            <Typography
+              display="flex"
+              alignItems="center"
+              gap={1}
+              color="#404258"
+              fontWeight="400"
+            >
               <FiPhoneCall /> {updatedUserInfo.contactNumber}
             </Typography>
           )}
@@ -608,7 +681,13 @@ const UserInfoCard = () => {
               />
             </Box>
           ) : (
-            <Typography display="flex" alignItems="center" gap={1} color="#404258" fontWeight="400">
+            <Typography
+              display="flex"
+              alignItems="center"
+              gap={1}
+              color="#404258"
+              fontWeight="400"
+            >
               <HiLocationMarker /> {updatedUserInfo.currentLocation}
             </Typography>
           )}
@@ -616,7 +695,14 @@ const UserInfoCard = () => {
       </Box>
 
       {/* Edit & Save Buttons */}
-      <Box sx={{ px: 4, display: "flex", flexDirection: "column", justifyContent: "flex-end" }}>
+      <Box
+        sx={{
+          px: 4,
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "flex-end",
+        }}
+      >
         {isEditing ? (
           <Button
             variant="contained"
@@ -625,11 +711,21 @@ const UserInfoCard = () => {
             sx={{ bgcolor: "#3C7EFC", color: "white", borderRadius: 16 }}
             disabled={loading || uploadingProfilePic}
           >
-            {loading ? <CircularProgress size={20} sx={{ color: "white" }} /> : "Save"}
+            {loading ? (
+              <CircularProgress size={20} sx={{ color: "white" }} />
+            ) : (
+              "Save"
+            )}
           </Button>
         ) : (
           <Typography
-            sx={{ color: "#3C7EFC", cursor: "pointer", display: "flex", alignItems: "center", gap: 1 }}
+            sx={{
+              color: "#3C7EFC",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              gap: 1,
+            }}
             onClick={handleEditClick}
           >
             <EditIcon sx={{ color: "#3C7EFC" }} /> Edit Profile
@@ -637,12 +733,10 @@ const UserInfoCard = () => {
         )}
       </Box>
     </Box>
-  )
+  );
 
   return (
-    <Box sx={{width:"100%"}}>
-    {isMobile ? mobileView : desktopView }
-    </Box>
+    <Box sx={{ width: "100%" }}>{isMobile ? mobileView : desktopView}</Box>
   );
 };
 

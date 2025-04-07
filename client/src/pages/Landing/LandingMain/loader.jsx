@@ -65,8 +65,10 @@ const Loader = ({ isLoading }) => {
         textAlign: 'center',
       }}
     >
+      <Box sx={{bgcolor:"white",p:2,display:"flex",borderRadius:"10px",gap:2,alignItems:"center",justifyContent:"center",flexDirection:"column"}}>
       <CircularProgress size={40} thickness={5} color="primary" />
       {randomTip}
+      </Box>
     </Box>
   );
 };

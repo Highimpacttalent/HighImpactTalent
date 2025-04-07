@@ -837,7 +837,7 @@ const UserInfoForm = () => {
                       color: "#24252C",
                     }}
                   >
-                    LinkedIn Profile Link{" "}
+                    LinkedIn Profile Link <span style={{color:"grey"}}>(https link only)</span>
                     <span style={{ color: "red" }}>*</span>
                   </label>
                   <input

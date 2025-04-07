@@ -186,10 +186,12 @@ const ExperienceHistory = ({ userId, experienceHistory }) => {
           key={index}
           sx={{ p: 2, mb: 2, border: "1px solid #00000040", borderRadius: 4 }}
         >
-          <Box display="flex" justifyContent="space-between">
+          <Box display="flex" justifyContent="space-between" flexDirection={{ xs: "column", sm: "row" }}>
             <Box
               display="flex"
               sx={{ width: { xs: "90%", md: "60%", lg: "60%", sm: "90%" } }}
+              flexDirection={{ xs: "column", sm: "row" }}
+              gap={2}
               justifyContent={"space-between"}
               alignItems="center"
             >

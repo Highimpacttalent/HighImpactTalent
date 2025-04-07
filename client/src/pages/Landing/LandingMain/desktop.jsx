@@ -111,7 +111,7 @@ const DesktopLanding = () => {
               >
                 Impact
               </span>
-              . Find the right fit, hire or get hired before your competition
+              . 
             </Typography>
 
             <Typography
