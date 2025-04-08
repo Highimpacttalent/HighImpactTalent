@@ -64,7 +64,7 @@ const Navbar = () => {
         {/* Logo */}
         <Box sx={{ display: "flex", alignItems: "center",width:{xs:"100%",sm:"100%",md:"28%",lg:"28%"}, ml: 4}}>
           <Link
-            to={user.token ? "/home" : "/"}
+            to={user.token ? "/" : "/"}
             style={{
               display: "flex",
               alignItems: "center",
@@ -266,7 +266,7 @@ const LoggedOutMenu = () => (
       Blog
     </Button>
     </Box>
-    <Button
+    {/* <Button
       variant="contained"
       component={Link}
       to="/u-login"
@@ -277,7 +277,7 @@ const LoggedOutMenu = () => (
       }}
     >
       Login
-    </Button>
+    </Button> */}
   </Box>
 );
 

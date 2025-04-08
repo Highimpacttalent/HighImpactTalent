@@ -15,7 +15,6 @@ import { useMediaQuery, useTheme } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import { useSelector, useDispatch } from "react-redux";
 import AlertModal from "../../../components/Alerts/view.jsx";
-import ProfileNotify from "../../Landing/Landing2/ProfileNotify/view.jsx";
 import { UpdateUser } from "../../../redux/userSlice";
 import axios from "axios";
 import Select from "react-select";
@@ -238,6 +237,30 @@ const UserInfoCard = () => {
       setUploadingProfilePic(false);
     }
   };
+
+  const profileFields = [
+    "firstName",
+    "lastName",
+    "email",
+    "currentJobRole",
+    "currentSalary",
+    "currentConsultingCompany",
+    "currentCompany",
+    "currentDesignation",
+    "linkedinLink",
+    "currentLocation",
+    "cvUrl",
+  ];
+
+
+  const filledFieldsCount = profileFields.reduce((count, field) => {
+    if (user[field] && user[field].toString().trim() !== "") {
+      return count + 1;
+    }
+    return count;
+  }, 0);
+
+  const profileCompletion = Math.round((filledFieldsCount / profileFields.length) * 100);
 
   const handleSaveClick = async () => {
     setLoading(true);
@@ -546,7 +569,7 @@ const UserInfoCard = () => {
           </Box>
           <LinearProgress
             variant="determinate"
-            value={40}
+            value={profileCompletion}
             sx={{ width: "100%", height: 6, borderRadius: 4, marginTop: 1 }}
           />
           <Typography
@@ -558,7 +581,7 @@ const UserInfoCard = () => {
               color: "#808195",
             }}
           >
-            40% done
+            {profileCompletion}% done
           </Typography>
         </Box>
       </Box>

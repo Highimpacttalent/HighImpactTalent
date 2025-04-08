@@ -2,6 +2,7 @@ import { Box, Typography, LinearProgress,Button } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 
+
 const Mobileview = () => {
     const user = useSelector((state) => state.user);
     const navigate = useNavigate();
@@ -9,8 +10,16 @@ const Mobileview = () => {
         navigate("/user-profile");
     }
     console.log("userInfo" ,user)
-  // Sample progress value (replace this with actual profile completion percentage)
-  const profileCompletion = 70; // Example: Profile is 70% complete
+
+     // Calculate filled fields
+  const filledFieldsCount = profileFields.reduce((count, field) => {
+    if (user[field] && user[field].toString().trim() !== "") {
+      return count + 1;
+    }
+    return count;
+  }, 0);
+
+  const profileCompletion = Math.round((filledFieldsCount / profileFields.length) * 100);
 
   return (
     <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", border: "2px solid #00000040", borderRadius: 4, flexDirection: "column", padding: 2,mb:8 ,textAlign:"center"}}>
