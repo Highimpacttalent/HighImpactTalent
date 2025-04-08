@@ -18,7 +18,7 @@ import PasswordChange from "./pages/Password";
 import ScreeningView from "./pages/Screening/view";
 import FloatingChatAssistant from "./components/Chat/FloatingChat";
 import UserInfoForm from "./pages/UserAdditionalDetails/view";
-import JobUploadPage from "./pages/JobUploadPage";
+import JobUploadPage from "./pages/UploadJob/view.jsx";
 import ProfileSection from "./pages/Profile/view";
 import UserLoginForm from "./pages/AuthForm/u-login";
 import ResumeSearch from "./pages/ResumeSearch/view";

@@ -190,6 +190,7 @@ const LoggedInMenu = ({ user, handleMenuOpen }) => (
         color="inherit"
         component={Link}
         to="/upload-a-job"
+        sx={{textTransform:"none",fontFamily:"Poppins",fontWeight:"500",fontSize:"18px",color:"#24252C"}}
       >
         Upload Job
       </Button>
@@ -199,6 +200,7 @@ const LoggedInMenu = ({ user, handleMenuOpen }) => (
         color="inherit"
         component={Link}
         to="/resumesearch"
+        sx={{textTransform:"none",fontFamily:"Poppins",fontWeight:"500",fontSize:"18px",color:"#24252C"}}
       >
         Resume Search
       </Button>
