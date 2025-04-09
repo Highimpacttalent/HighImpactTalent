@@ -137,6 +137,38 @@ export const uploadImage = async (req, res) => {
   }
 };
 
+// upload image
+export const uploadCompanyLogo = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: "No file uploaded",
+      });
+    }
+
+    const file = req.file;
+
+    // Generate unique filename
+    const filename = `profile-pictures/company-Logo/${Date.now()}-${file.originalname}`;
+
+    // Upload to S3
+    const s3Response = await uploadFileToS3(file.buffer, filename, file.mimetype);
+
+    res.status(200).json({
+      success: true,
+      message: "Profile Picture uploaded successfully",
+      url: s3Response.Location,
+    });
+  } catch (error) {
+    console.error("Error uploading profile picture:", error);
+    res.status(500).json({
+      success: false,
+      message: error.message || "Error uploading profile picture",
+    });
+  }
+};
+
 
 // update user details
 export const updateUser = async (req, res, next) => {
