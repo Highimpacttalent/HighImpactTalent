@@ -1,33 +1,92 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, lazy, Suspense } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { AiOutlineSearch, AiOutlineCloseCircle } from "react-icons/ai";
-import { CustomButton, JobCard, ListBox } from "../../components";
+import { AiOutlineSearch } from "react-icons/ai";
+import { CustomButton } from "../../components";
 import FilterListIcon from "@mui/icons-material/FilterList";
-import { FaSortAmountDown } from "react-icons/fa";
+//import { FaSortAmountDown } from "react-icons/fa";
 import { Grid } from "@mui/material";
-
-import { Box, Paper, InputBase, Typography, IconButton } from "@mui/material";
 import { MdLocationOn } from "react-icons/md";
-import {
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
-  FormControlLabel,
-  FormControl,
-  Select,
-  MenuItem,
-  Checkbox,
-  Drawer,
-  Menu,
-  Button,
-  Modal,
-} from "@mui/material";
+import Box from "@mui/material/Box";
+import InputBase from "@mui/material/InputBase";
+import Typography from "@mui/material/Typography";
+import IconButton from "@mui/material/IconButton";
+import Accordion from "@mui/material/Accordion";
+import AccordionSummary from "@mui/material/AccordionSummary";
+import AccordionDetails from "@mui/material/AccordionDetails";
+import FormControlLabel from "@mui/material/FormControlLabel";
+import Checkbox from "@mui/material/Checkbox";
+import Drawer from "@mui/material/Drawer";
+import Button from "@mui/material/Button";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import SwapVertIcon from "@mui/icons-material/SwapVert";
-import InfoIcon from "@mui/icons-material/Info";
 import { apiRequest } from "../../utils";
-import NoJobFound from "./NoJob";
 import { useSelector } from "react-redux";
+
+// Lazy load components that aren't needed immediately
+const JobCard = lazy(() => import("../../components/JobCard"));
+const NoJobFound = lazy(() => import("./NoJob"));
+
+// Cache utility functions
+const cacheJobs = (key, data, expiryMinutes = 30) => {
+  const expiryTime = new Date().getTime() + expiryMinutes * 60 * 1000;
+  const cacheData = {
+    data,
+    expiry: expiryTime
+  };
+  localStorage.setItem(key, JSON.stringify(cacheData));
+};
+
+const getCachedJobs = (key) => {
+  const cachedData = localStorage.getItem(key);
+  if (!cachedData) return null;
+  
+  const { data, expiry } = JSON.parse(cachedData);
+  const now = new Date().getTime();
+  
+  if (now > expiry) {
+    localStorage.removeItem(key);
+    return null;
+  }
+  
+  return data;
+};
+
+const FilterOption = ({ label, value, state, setState }) => {
+  const isChecked = state.includes(value);
+
+  const handleChange = () => {
+    if (isChecked) {
+      setState(state.filter((item) => item !== value));
+    } else {
+      setState([...state, value]);
+    }
+  };
+
+  return (
+    <Box
+      sx={{
+        display: "flex",
+        alignItems: "center",
+        cursor: "pointer",
+        p: 1,
+        borderRadius: "4px",
+      }}
+      onClick={() => {
+        if (isChecked) {
+          setState(state.filter((item) => item !== value));
+        } else {
+          setState([...state, value]);
+        }
+      }}
+    >
+      <FormControlLabel
+        control={<Checkbox checked={isChecked} onChange={handleChange} />}
+      />
+      <Typography variant="body1" color="#404258" fontFamily="Poppins">
+        {label}
+      </Typography>
+    </Box>
+  );
+};
 
 const mobileView = () => {
   const { user } = useSelector((state) => state.user);
@@ -37,7 +96,6 @@ const mobileView = () => {
   const handleClick = (event) => setAnchorEl(event.currentTarget);
   const handleClose = () => setAnchorEl(null);
   const handleSelect = (value) => {
-    console.log("value", value);
     if (value == "Recommended") {
       setSelectedTab(1);
     } else {
@@ -56,11 +114,7 @@ const mobileView = () => {
   const [filterJobTypes, setFilterJobTypes] = useState([]);
   const [filterExp, setFilterExp] = useState("");
   const [isFetching, setIsFetching] = useState(false);
-  const [selectedCheckbox, setSelectedCheckbox] = useState(0);
-  const explist = ["0-100", "1-2", "2-6", "6-100"];
-  const location = useLocation();
-  const navigate = useNavigate();
-  const [experienceFilter, setExperienceFilter] = useState("");
+  const [experienceFilter, setExperienceFilter] = useState([]);
   const [locationFilter, setLocationFilter] = useState([]);
   const [workModeFilter, setWorkModeFilter] = useState([]);
   const [selectedTab, setSelectedTab] = useState(0);
@@ -88,6 +142,11 @@ const mobileView = () => {
     salary: true,
     datePosted: true,
   });
+  const [searchKeyword, setSearchKeyword] = useState("");
+  const [filteredJobs, setFilteredJobs] = useState();
+  
+  const location = useLocation();
+  const navigate = useNavigate();
 
   const toggleFilterDrawer = (open) => setFilterDrawerOpen(open);
   const toggleSortDrawer = (open) => setSortDrawerOpen(open);
@@ -177,15 +236,13 @@ const mobileView = () => {
     return `${location.pathname}?${params.toString()}`;
   };
 
-  const [searchKeyword, setSearchKeyword] = useState("");
-  const [filteredJobs, setFilteredJobs] = useState();
-
   const fetchJobs = async () => {
     setIsFetching(true);
     let locationsForAPI = [...locationFilter];
     if (locationsForAPI.includes("Others")) {
       locationsForAPI = locationsForAPI.filter((loc) => loc !== "Others");
     }
+    
     const newURL = updateURL({
       query: searchQuery,
       searchLoc: searchLocation,
@@ -198,6 +255,20 @@ const mobileView = () => {
       salary: salaryRangeFilter,
       datePosted: datePostedFilter,
     });
+    
+    // Generate cache key based on filters
+    const cacheKey = `jobs_${searchQuery}_${searchLocation}_${experienceFilter.join(',')}_${workModeFilter.join(',')}_${workTypeFilter.join(',')}_${locationFilter.join(',')}_${salaryRangeFilter.join(',')}_${datePostedFilter.join(',')}_${selectedTab}_${page}_${sort}`;
+    
+    // Try to get from cache first
+    const cachedData = getCachedJobs(cacheKey);
+    if (cachedData) {
+      setData(cachedData.data);
+      setFilteredJobs(cachedData.data);
+      setNumPage(cachedData.numOfPage || 1);
+      setIsFetching(false);
+      return;
+    }
+    
     try {
       const res = await apiRequest({
         url: "/jobs" + newURL,
@@ -218,6 +289,12 @@ const mobileView = () => {
           );
         });
       }
+
+      // Cache the results
+      cacheJobs(cacheKey, { 
+        data: processedData, 
+        numOfPage: res?.numOfPage 
+      });
 
       setData(processedData);
       setFilteredJobs(processedData);
@@ -280,11 +357,6 @@ const mobileView = () => {
     });
   };
 
-  // Handle experience filter change
-  const handleExperienceChange = (event) => {
-    setExperienceFilter(event.target.value);
-  };
-
   const handleLocationChange = (e) => {
     const keyword = e.target.value;
     setJobLocation(keyword);
@@ -294,7 +366,6 @@ const mobileView = () => {
       const lowerCaseKeyword = keyword.toLowerCase();
       const filtered = data.filter(
         (job) =>
-          job.jobLocation.toLowerCase().includes(lowerCaseKeyword) ||
           job.jobLocation.toLowerCase().includes(lowerCaseKeyword)
       );
       setFilteredJobs(filtered);
@@ -313,37 +384,6 @@ const mobileView = () => {
     setSearchQuery(searchKeyword);
     setPage(1);
     fetchJobs();
-  };
-  const FilterOption = ({ label, value, state, setState }) => {
-    const isChecked = state.includes(value);
-
-    const handleChange = () => {
-      if (isChecked) {
-        setState(state.filter((item) => item !== value));
-      } else {
-        setState([...state, value]);
-      }
-    };
-
-    return (
-      <Box
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          cursor: "pointer",
-          p: 1,
-          borderRadius: "4px",
-        }}
-        onClick={() => handleMultipleSelection(value, state, setState)}
-      >
-        <FormControlLabel
-          control={<Checkbox checked={isChecked} onChange={handleChange} />}
-        />
-        <Typography variant="body1" color="#404258" fontFamily="Poppins">
-          {label}
-        </Typography>
-      </Box>
-    );
   };
 
   const getActiveFilterCount = () => {
@@ -480,30 +520,6 @@ const mobileView = () => {
                   Filters
                 </Typography>
               </Button>
-              {/* <Box sx={{ mt: 1 }}>
-                <Button
-                  sx={{
-                    color: "#404258",
-                    fontFamily: "Poppins",
-                    fontWeight: "500",
-                  }}
-                  onClick={handleClick}
-                >
-                  <FaSortAmountDown style={{ marginRight: 4 }} />
-                  <Typography sx={{ fontFamily: "Poppins", fontWeight: "500" }}>
-                    Sort
-                  </Typography>
-                </Button>
-                <Menu anchorEl={anchorEl} open={open} onClose={handleClose}>
-                  <MenuItem onClick={() => handleSelect("Recommended")}>
-                    Recommended
-                  </MenuItem>
-                  <MenuItem onClick={() => handleSelect("Newest")}>
-                    Newest First
-                  </MenuItem>
-                  {/* <MenuItem onClick={() => handleSelect("Alphabetical")}>Salary</MenuItem> */}
-                {/* </Menu> */}
-              {/* </Box> */} 
             </Box>
           </Box>
 
@@ -543,7 +559,6 @@ const mobileView = () => {
                 )}
               </Box>
               {/* Experience Filter */}
-              {/* Experience Filter */}
               <Accordion
                 expanded={expandedAccordions.experience}
                 onChange={handleAccordionChange("experience")}
@@ -577,7 +592,6 @@ const mobileView = () => {
                 </AccordionDetails>
               </Accordion>
 
-              {/* Work Mode Filter */}
               {/* Work Mode Filter */}
               <Accordion
                 expanded={expandedAccordions.workMode}
@@ -788,13 +802,17 @@ const mobileView = () => {
                   {filteredJobs.map((job, index) => (
                     <Grid item key={index} xs={12} sm={10} md={9}>
                       <Box>
-                        <JobCard job={job} />
+                        <Suspense fallback={<div>Loading...</div>}>
+                          <JobCard job={job} />
+                        </Suspense>
                       </Box>
                     </Grid>
                   ))}
                 </Grid>
               ) : (
-                <NoJobFound />
+                <Suspense fallback={<div>Loading...</div>}>
+                  <NoJobFound />
+                </Suspense>
               )}
             </Box>
 
