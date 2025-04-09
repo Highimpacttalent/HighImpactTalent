@@ -1,31 +1,29 @@
 import React, { useState } from "react";
 import {
-    TextField,
-    Button,
-    Typography,
-    Box,
-    Paper,
-    FormControlLabel,
-    Checkbox,
-    Link,
-    FormControl,
-    FormLabel,
-    RadioGroup,
-    Radio,
-    CircularProgress,
-    Dialog,
-    DialogTitle,
-    DialogContent,
-    DialogActions,
+  TextField,
+  Button,
+  Typography,
+  Box,
+  Divider,
+  FormControlLabel,
+  FormControl,
+  RadioGroup,
+  Radio,
+  Link,
+  InputAdornment,
+  IconButton,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
-import CheckCircleIcon from "@mui/icons-material/CheckCircle";
-import dayjs from "dayjs"
+import Heroimg from "../../assets/CreateAccount/HeroImg.svg";
+import dayjs from "dayjs";
 import { apiRequest } from "../../utils";
 import { useDispatch } from "react-redux";
+import axios from "axios";
 import { Login } from "../../redux/userSlice";
+import { Visibility, VisibilityOff } from "@mui/icons-material";
 
 const RecruiterSignup = () => {
+  const [showPassword, setShowPassword] = useState(false);
   const [form, setForm] = useState({
     email: "",
     companyName: "",
@@ -34,19 +32,70 @@ const RecruiterSignup = () => {
     role: "company",
     password: "",
     confirmPassword: "",
+    profilePic: null,
   });
   const dispatch = useDispatch();
   const [emailError, setEmailError] = useState("");
   const [passwordError, setPasswordError] = useState("");
   const [mobileError, setMobileError] = useState("");
   const [passwordStrength, setPasswordStrength] = useState("");
-  const [modalMessage, setModalMessage] = useState("");
-  const [successModalOpen, setSuccessModalOpen] = useState(false);
+  const [profilePic, setProfilePic] = useState("");
+  const [profilePicUrl, setProfilePicUrl] = useState("");
+  const [uploadingProfilePic, setUploadingProfilePic] = useState(false);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  
+
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  const phoneRegex = /^[0-9]{10}$/;  // Basic validation for 10-digit phone number
+  const phoneRegex = /^[0-9]{10}$/; // Basic validation for 10-digit phone number
+
+  const handleProfilePicUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.match(/image\/(jpeg|jpg|png)$/)) {
+      alert("Please upload an image file (JPEG, JPG, or PNG)");
+      return;
+    }
+
+    // Validate file size (max 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      alert("Image size should be less than 2MB");
+      return;
+    }
+
+    setUploadingProfilePic(true);
+
+    try {
+      // Create form data
+      const formData = new FormData();
+      formData.append("profilePic", file);
+
+      // Upload to server
+      const response = await axios.post(
+        "https://highimpacttalent.onrender.com/api-v1/user/upload-company-logo",
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      if (response.data.success) {
+        setProfilePicUrl(response.data.url);
+        setForm((prev) => ({ ...prev, profilePic: response.data.url }));
+        setProfilePic(URL.createObjectURL(file));
+      } else {
+        throw new Error(response.data.message || "Upload failed");
+      }
+    } catch (error) {
+      console.error("Profile picture upload error:", error);
+      alert("Failed to upload profile picture. Please try again.");
+    } finally {
+      setUploadingProfilePic(false);
+    }
+  };
 
   const checkPasswordStrength = (password) => {
     const lengthCriteria = password.length >= 8;
@@ -55,15 +104,29 @@ const RecruiterSignup = () => {
     const numberCriteria = /[0-9]/.test(password);
     const specialCharCriteria = /[!@#$%^&*(),.?":{}|<>]/.test(password);
 
-    if (lengthCriteria && uppercaseCriteria && lowercaseCriteria && numberCriteria && specialCharCriteria) {
-      setPasswordStrength("Strong");
+    if (
+      lengthCriteria &&
+      uppercaseCriteria &&
+      lowercaseCriteria &&
+      numberCriteria &&
+      specialCharCriteria
+    ) {
+      setPasswordStrength("Strong Password");
       setPasswordError("");
-    } else if (lengthCriteria && (uppercaseCriteria || lowercaseCriteria) && numberCriteria) {
-      setPasswordStrength("Medium");
-      setPasswordError("Consider adding special characters for a stronger password.");
+    } else if (
+      lengthCriteria &&
+      (uppercaseCriteria || lowercaseCriteria) &&
+      numberCriteria
+    ) {
+      setPasswordStrength("Medium Password");
+      setPasswordError(
+        "Consider adding special characters for a stronger password."
+      );
     } else {
-      setPasswordStrength("Weak");
-      setPasswordError("Password should include uppercase, lowercase, number, and special character.");
+      setPasswordStrength("Weak Password");
+      setPasswordError(
+        "Password should include uppercase, lowercase, number, and special character."
+      );
     }
   };
 
@@ -113,7 +176,6 @@ const RecruiterSignup = () => {
     }
 
     setLoading(true);
-    setModalMessage("Informing Team...");
 
     const sendMailPayload = {
       email: form.email,
@@ -142,30 +204,27 @@ const RecruiterSignup = () => {
         return;
       }
 
-      setModalMessage("Registering User...");
-      
-      const newData = { 
+      const newData = {
         companyName: form.companyName,
         recruiterName: form.recruiterName,
         mobileNumber: form.mobileNumber,
-        email: form.email, 
-        password: form.password, 
-        copmanyType: form.role 
+        email: form.email,
+        password: form.password,
+        copmanyType: form.role,
+        profileUrl: profilePicUrl,
       };
-      
+
       const registerData = await apiRequest({
-                url: "companies/register",
-                method: "POST",
-                data: newData,
-              });
+        url: "companies/register",
+        method: "POST",
+        data: newData,
+      });
 
       if (registerData.success) {
         const userData = { token: registerData?.token, ...registerData?.user };
         dispatch(Login(userData));
         localStorage.setItem("userInfo", JSON.stringify(userData));
-        setSuccessModalOpen(true);
         setTimeout(() => {
-          setSuccessModalOpen(false);
           navigate("/endlogin");
         }, 2000);
       } else {
@@ -180,83 +239,429 @@ const RecruiterSignup = () => {
   };
 
   return (
-    <Box sx={{ minHeight: "100vh", display: "flex", justifyContent: "center", alignItems: "center",  padding: 3 }}>
-      <Paper elevation={6} sx={{ p: 4, borderRadius: 3, width: { xs: "90%", sm: "50%", md: "40%" } }}>
-        <Typography variant="h5" sx={{ fontWeight: "bold", textAlign: "center", mb: 3 }}>
-          Start your talent hunt today! 🚀
-        </Typography>
-        <Box component="form" onSubmit={handleSubmit}>
-          <TextField fullWidth type="email" label="Email Address" name="email" value={form.email} onChange={handleChange} margin="normal" required error={!!emailError} helperText={emailError} />
-          <TextField fullWidth label="Company Name" name="companyName" value={form.companyName} onChange={handleChange} margin="normal" required />
-          <TextField fullWidth label="Recruiter Name" name="recruiterName" value={form.recruiterName} onChange={handleChange} margin="normal" required />
-          <TextField 
-            fullWidth 
-            label="Mobile Number" 
-            name="mobileNumber" 
-            value={form.mobileNumber} 
-            onChange={handleChange} 
-            margin="normal" 
-            required 
-            error={!!mobileError} 
-            helperText={mobileError}
-            inputProps={{ maxLength: 10 }}
-          />
-          <FormControl component="fieldset" sx={{ my: 2 }}>
-            <FormLabel component="legend">Select an Option:</FormLabel>
-            <RadioGroup row name="role" value={form.role} onChange={handleChange}>
-              <FormControlLabel value="company" control={<Radio />} label="Company" />
-              <FormControlLabel value="hiringAgency" control={<Radio />} label="Hiring Agency" />
-            </RadioGroup>
-          </FormControl>
-          <TextField fullWidth type="password" label="Password" name="password" value={form.password} onChange={handleChange} margin="normal" required error={!!passwordError} helperText={passwordError} />
-          <TextField fullWidth type="password" label="Confirm Password" name="confirmPassword" value={form.confirmPassword} onChange={handleChange} margin="normal" required error={!!passwordError} helperText={passwordError} />
-          <Typography sx={{ textAlign: "right", color: passwordStrength === "Strong" ? "green" : passwordStrength === "Medium" ? "orange" : "red", fontWeight: "bold" }}>
-            {passwordStrength}
-          </Typography>
-          <Button type="submit" variant="contained" fullWidth sx={{ mt: 2, py: 1.5, fontSize: "1rem", fontWeight: "bold" }} disabled={loading}>
-            {loading ? <CircularProgress size={24} sx={{ color: "white" }} /> : "Register"}
-          </Button>
-          <Typography align="center" sx={{ mt: 2 }}>
-            Already have an account? <Link href="/r-login" underline="hover">Login</Link>
-          </Typography>
-        </Box>
-      </Paper>
-      {/* Loading Modal */}
-      <Dialog open={loading}>
-        <DialogTitle sx={{ textAlign: "center", fontWeight: "bold", color: "#1976D2" }}>
-          Please Wait
-        </DialogTitle>
-        <DialogContent sx={{ textAlign: "center", p: 3 }}>
-          <CircularProgress sx={{ color: "#1976D2", mb: 2 }} />
-          <Typography variant="body1" sx={{ color: "#555" }}>
-            We are creating your account. This may take a few seconds...
-          </Typography>
-        </DialogContent>
-      </Dialog>
-
-      {/* Success Modal */}
-      <Dialog open={successModalOpen} onClose={() => setSuccessModalOpen(false)}>
-        <DialogTitle sx={{ textAlign: "center", fontWeight: "bold", color: "#4CAF50" }}>
-          🎉 Registration Successful!
-        </DialogTitle>
-        <DialogContent sx={{ textAlign: "center", p: 3 }}>
-          <CheckCircleIcon sx={{ fontSize: 80, color: "#4CAF50", mb: 2 }} />
-          <Typography variant="h6" sx={{ fontWeight: "bold", color: "#333" }}>
-            Your account has been created!
-          </Typography>
-          <Typography variant="body1" sx={{ mt: 1, color: "#555" }}>
-            Our team will contact you shortly for job postings. Stay tuned!
-          </Typography>
-        </DialogContent>
-        <DialogActions sx={{ justifyContent: "center", pb: 2 }}>
-          <Button 
-            onClick={() => setSuccessModalOpen(false)} 
-            sx={{ backgroundColor: "#4CAF50", color: "white", px: 4, py: 1.2, "&:hover": { backgroundColor: "#388E3C" } }}
+    <Box
+      sx={{
+        minHeight: "100vh",
+        bgcolor: "white",
+        display: "flex",
+        padding: 3,
+        px: { md: 10, lg: 10, xs: 4, sm: 4 },
+      }}
+    >
+      <Box
+        sx={{
+          width: { md: "50%", lg: "50%", xs: "100%", sm: "100%" },
+          mt: 4,
+          p: { md: 4, lg: 4, xs: 0, sm: 0 },
+        }}
+      >
+        <Typography
+          variant="h5"
+          sx={{
+            fontWeight: "700",
+            mb: 3,
+            fontFamily: "Satoshi",
+            color: "#24252C",
+            fontSize: "32px",
+          }}
+        >
+          One Click Closer to{" "}
+          <span
+            style={{
+              fontWeight: "700",
+              fontFamily: "Satoshi",
+              color: "#3C7EFC",
+            }}
           >
-            OK
-          </Button>
-        </DialogActions>
-      </Dialog>
+            Hiring{" "}
+          </span>
+          the Talent That Transforms Futures!
+        </Typography>
+
+        <Box>
+          <Box component="form" onSubmit={handleSubmit}>
+            <Typography
+              sx={{
+                fontFamily: "Satoshi",
+                fontSize: "16px",
+                color: "#24252C",
+                fontWeight: "500",
+                mb: 1,
+              }}
+            >
+              Recruiter Name
+            </Typography>
+
+            <TextField
+              fullWidth
+              name="recruiterName"
+              value={form.recruiterName}
+              onChange={handleChange}
+              required
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  borderRadius: 16,
+                  height: 50,
+                },
+              }}
+            />
+
+            <Typography
+              sx={{
+                fontFamily: "Satoshi",
+                fontSize: "16px",
+                color: "#24252C",
+                fontWeight: "500",
+                mb: 1,
+                mt: 3,
+              }}
+            >
+              Email Address
+            </Typography>
+
+            <TextField
+              fullWidth
+              type="email"
+              name="email"
+              placeholder="Enter your email here"
+              value={form.email}
+              onChange={handleChange}
+              required
+              error={!!emailError}
+              helperText={emailError}
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  borderRadius: 16,
+                  height: 50,
+                },
+              }}
+            />
+
+            <Typography
+              sx={{
+                fontFamily: "Satoshi",
+                fontSize: "16px",
+                color: "#24252C",
+                fontWeight: "500",
+                mb: 1,
+                mt: 3,
+              }}
+            >
+              Mobile Number
+            </Typography>
+
+            <TextField
+              fullWidth
+              type="text"
+              name="mobileNumber"
+              value={form.mobileNumber}
+              onChange={handleChange}
+              required
+              error={!!mobileError}
+              helperText={mobileError}
+              inputProps={{ maxLength: 10 }}
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  borderRadius: 16,
+                  height: 50,
+                },
+              }}
+            />
+
+            <Typography
+              sx={{
+                fontFamily: "Satoshi",
+                fontSize: "16px",
+                color: "#24252C",
+                fontWeight: "500",
+                mb: 1,
+                mt: 3,
+              }}
+            >
+              Company Category
+            </Typography>
+
+            <FormControl component="fieldset" sx={{ my: 1 }}>
+              <RadioGroup
+                row
+                name="role"
+                value={form.role}
+                onChange={handleChange}
+              >
+                <FormControlLabel
+                  value="company"
+                  control={<Radio />}
+                  label="Company"
+                />
+                <FormControlLabel
+                  value="hiringAgency"
+                  control={<Radio />}
+                  label="Hiring Agency"
+                />
+              </RadioGroup>
+            </FormControl>
+
+            <Typography
+              sx={{
+                fontFamily: "Satoshi",
+                fontSize: "16px",
+                color: "#24252C",
+                fontWeight: "500",
+                mb: 1,
+                mt: 3,
+              }}
+            >
+              Company Name
+            </Typography>
+
+            <TextField
+              fullWidth
+              type="text"
+              name="companyName"
+              placeholder="Enter your company name"
+              value={form.companyName}
+              onChange={handleChange}
+              required
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  borderRadius: 16,
+                  height: 50,
+                },
+              }}
+            />
+
+            <Typography
+              sx={{
+                fontFamily: "Satoshi",
+                fontSize: "16px",
+                color: "#24252C",
+                fontWeight: "500",
+                mb: 1,
+                mt: 3,
+              }}
+            >
+              Company Logo
+            </Typography>
+
+            {/* Dropzone Container */}
+            <Box sx={{ mt: 2 }}>
+              <div
+                className="w-full border-2 border-dashed border-black rounded-lg px-6 py-12 text-center cursor-pointer hover:bg-blue-50 transition"
+                onClick={() => document.getElementById("profilePic").click()}
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  handleProfilePicUpload({
+                    target: { files: e.dataTransfer.files },
+                  });
+                }}
+                style={{ borderRadius: 16 }}
+              >
+                <input
+                  type="file"
+                  id="profilePic"
+                  name="profilePic"
+                  accept="image/jpeg, image/jpg, image/png"
+                  onChange={handleProfilePicUpload}
+                  className="hidden"
+                />
+
+                <p
+                  className="text-gray-500"
+                  style={{
+                    color: "#808195",
+                    fontFamily: "Poppins",
+                    fontSize: "14px",
+                  }}
+                >
+                  Drag and Drop your image or
+                </p>
+                <Button
+                  sx={{
+                    px: 2,
+                    py: 1,
+                    border: 2,
+                    color: "#3C7EFC",
+                    textTransform: "none",
+                    mt: 2,
+                    borderRadius: 16,
+                  }}
+                >
+                  <span
+                    style={{
+                      color: "#24252C",
+                      fontWeight: "700",
+                      fontFamily: "Satoshi",
+                    }}
+                  >
+                    Choose an image
+                  </span>
+                </Button>
+
+                {uploadingProfilePic && (
+                  <div className="w-full bg-gray-200 rounded-full h-2.5 mt-4">
+                    <div className="bg-blue-600 h-2.5 rounded-full animate-pulse"></div>
+                  </div>
+                )}
+
+                {profilePic && (
+                  <div className="mt-4">
+                    <p
+                      className="text-gray-500"
+                      style={{
+                        color: "#808195",
+                        fontFamily: "Poppins",
+                        fontSize: "14px",
+                      }}
+                    >
+                      Preview
+                    </p>
+                    <img
+                      src={profilePic}
+                      alt="Profile Preview"
+                      className="w-32 h-32 rounded-full object-cover mt-2 mx-auto"
+                    />
+                  </div>
+                )}
+              </div>
+            </Box>
+
+            <Typography
+              sx={{
+                fontFamily: "Satoshi",
+                fontSize: "16px",
+                color: "#24252C",
+                fontWeight: "500",
+                mt: 2,
+              }}
+            >
+              Password
+            </Typography>
+            <TextField
+              fullWidth
+              type={showPassword ? "text" : "password"}
+              name="password"
+              value={form.password}
+              placeholder="Enter your password here"
+              onChange={handleChange}
+              margin="normal"
+              required
+              error={!!passwordError}
+              helperText={passwordError || passwordStrength}
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  borderRadius: 16,
+                  height: 50,
+                },
+              }}
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton
+                      onClick={() => setShowPassword(!showPassword)}
+                      edge="end"
+                    >
+                      {showPassword ? <Visibility /> : <VisibilityOff />}
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              }}
+            />
+            <TextField
+              fullWidth
+              type={showPassword ? "text" : "password"}
+              placeholder="Confirm Password"
+              name="confirmPassword"
+              value={form.confirmPassword}
+              onChange={handleChange}
+              margin="normal"
+              required
+              error={!!passwordError}
+              helperText={passwordError}
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  borderRadius: 16,
+                  height: 50,
+                },
+              }}
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton
+                      onClick={() => setShowPassword(!showPassword)}
+                      edge="end"
+                    >
+                      {showPassword ? <Visibility /> : <VisibilityOff />}
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              }}
+            />
+
+            <Typography
+              sx={{
+                fontFamily: "Satoshi",
+                color: "#808195",
+                fontWeight: "500",
+                fontSize: "14px",
+                px: 2,
+                py: 1,
+              }}
+            >
+              By creating account, you agree to the{" "}
+              <Link href="/t&c">Terms & Conditions</Link> and
+              <Link href="/privacy-policy"> Privacy Policy</Link> of High Impact
+              Talent
+            </Typography>
+            <Button
+              type="submit"
+              variant="contained"
+              fullWidth
+              sx={{
+                mt: 2,
+                py: 1.5,
+                fontSize: "16px",
+                background: "#2575fc",
+                "&:hover": { background: "#1e5dd9" },
+                borderRadius: 16,
+                textTransform: "none",
+                fontFamily: "Satoshi",
+                fontWeight: "700",
+              }}
+              disabled={loading}
+            >
+              {loading ? "Creating Account..." : "Create Account"}
+            </Button>
+            <Typography
+              align="center"
+              sx={{
+                mt: 2,
+                fontFamily: "Satoshi",
+                fontWeight: "700",
+                color: "#808195",
+              }}
+            >
+              Have an account?{" "}
+              <Link href="/r-login" underline="hover">
+                Login
+              </Link>
+            </Typography>
+          </Box>
+        </Box>
+      </Box>
+      <Box sx={{ display: { md: "flex", lg: "flex", xs: "none", sm: "none" } }}>
+        <Divider sx={{ border: "1px solid #A3A3A3", height: "90%", mt: 8 }} />
+      </Box>
+      <Box
+        sx={{
+          display: { md: "flex", lg: "flex", xs: "none", sm: "none" },
+          p: 4,
+          mt: 16,
+          ml: 6,
+        }}
+      >
+        <img src={Heroimg} alt="Hero" style={{ height: "550px" }} />
+      </Box>
     </Box>
   );
 };
