@@ -21,6 +21,7 @@ import {
   FormControlLabel,
 } from "@mui/material";
 import AIChatbot from "./AiChatbot/view";
+import ResumeCard from "./ResumeCard/view.jsx"
 import Chatbot from "./Chatbot/view";
 import { skillsList } from "../../assets/mock";
 import EmailIcon from "@mui/icons-material/Email";
@@ -334,81 +335,7 @@ const ResumeSearch = () => {
         )}
         <Box container spacing={3} marginTop={2}>
           {currentResumes.map((resume) => (
-            <Box
-              sx={{
-                display: "flex",
-                border: 2,
-                flexDirection: "column",
-                mb: 2,
-                borderColor: "grey.50",
-                borderRadius: 4,
-              }}
-            >
-              <Card
-                sx={{
-                  boxShadow: "0px 4px 8px rgba(0, 0, 0, 0.1)",
-                  borderRadius: "12px",
-                  padding: "10px",
-                  backgroundColor: "#fff",
-                }}
-              >
-                <CardContent>
-                  <Stack direction="row" spacing={2} alignItems="center">
-                    <Avatar sx={{ bgcolor: "#3f51b5" }}>
-                      {resume.personalInformation.name.charAt(0)}
-                    </Avatar>
-                    <Box>
-                      <Typography variant="h6">
-                        {resume.personalInformation.name}
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        <EmailIcon fontSize="small" sx={{ mr: 1 }} />
-                        {resume.personalInformation.email}
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        <LocationOnIcon fontSize="small" sx={{ mr: 1 }} />
-                        {resume.personalInformation.location}
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        <WorkIcon fontSize="small" sx={{ mr: 1 }} />
-                        {resume.professionalDetails.currentDesignation} at{" "}
-                        {resume.professionalDetails.currentCompany}
-                      </Typography>
-                    </Box>
-                  </Stack>
-                  <Typography variant="body2" sx={{ mt: 2 }}>
-                    {resume.professionalDetails.about}
-                  </Typography>
-                  <Stack
-                    direction="row"
-                    spacing={1}
-                    sx={{ mt: 2, display: "flex", flexWrap: "wrap", rowGap: 1 }}
-                  >
-                    {resume.skills.map((skill, index) => (
-                      <Chip key={index} label={skill} variant="outlined" />
-                    ))}
-                  </Stack>
-                </CardContent>
-                <Box
-                  sx={{
-                    display: "flex",
-                    justifyContent: "flex-end",
-                    marginTop: "8px",
-                  }}
-                >
-                  <Button
-                    size="small"
-                    variant="contained"
-                    color="primary"
-                    onClick={() =>
-                      navigate(`/resumesearch/viewresume/${resume._id}`)
-                    }
-                  >
-                    View Profile
-                  </Button>
-                </Box>
-              </Card>
-            </Box>
+            <ResumeCard resume={resume}/>
           ))}
         </Box>
         <Pagination
