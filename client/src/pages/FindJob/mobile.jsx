@@ -1,30 +1,23 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { AiOutlineSearch, AiOutlineCloseCircle } from "react-icons/ai";
-import { CustomButton, JobCard, ListBox } from "../../components";
+import { AiOutlineSearch } from "react-icons/ai";
+import { CustomButton, JobCard } from "../../components";
 import FilterListIcon from "@mui/icons-material/FilterList";
-import { FaSortAmountDown } from "react-icons/fa";
+//import { FaSortAmountDown } from "react-icons/fa";
 import { Grid } from "@mui/material";
 
-import { Box, Paper, InputBase, Typography, IconButton } from "@mui/material";
+import { Box, InputBase, Typography, IconButton } from "@mui/material";
 import { MdLocationOn } from "react-icons/md";
-import {
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
-  FormControlLabel,
-  FormControl,
-  Select,
-  MenuItem,
-  Checkbox,
-  Drawer,
-  Menu,
-  Button,
-  Modal,
-} from "@mui/material";
+import Accordion from "@mui/material/Accordion";
+import AccordionSummary from "@mui/material/AccordionSummary";
+import AccordionDetails from "@mui/material/AccordionDetails";
+import FormControlLabel from "@mui/material/FormControlLabel";
+import Checkbox from "@mui/material/Checkbox";
+import Drawer from "@mui/material/Drawer";
+import Button from "@mui/material/Button";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import SwapVertIcon from "@mui/icons-material/SwapVert";
-import InfoIcon from "@mui/icons-material/Info";
+//import SwapVertIcon from "@mui/icons-material/SwapVert";
+//import InfoIcon from "@mui/icons-material/Info";
 import { apiRequest } from "../../utils";
 import NoJobFound from "./NoJob";
 import { useSelector } from "react-redux";
