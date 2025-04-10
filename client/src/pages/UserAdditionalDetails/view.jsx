@@ -8,11 +8,14 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { useLocation } from "react-router-dom";
 import Select from "react-select";
+import { UpdateUser } from "../../redux/userSlice";
+import { useDispatch } from "react-redux";
 import { skillsList } from "../../assets/mock";
 import { Box, Button, Typography } from "@mui/material";
 import Image from "../../assets/CreateAccount/UserDetails.svg";
 const UserInfoForm = () => {
   const { user } = useSelector((state) => state.user);
+  const dispatch = useDispatch();
   const location = useLocation();
   const defaultValues = location.state?.parsedData?.data || {};
   const navigate = useNavigate();
@@ -232,6 +235,8 @@ const UserInfoForm = () => {
 
       if (res) {
         alert("Profile updated successfully");
+        console.log("res",res)
+        dispatch(UpdateUser(res.user))
         navigate("/find-jobs");
       } else {
         throw new Error("Update failed");
