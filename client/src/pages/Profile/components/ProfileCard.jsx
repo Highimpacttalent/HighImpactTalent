@@ -208,7 +208,7 @@ const UserInfoCard = () => {
       formData.append("profilePic", file);
 
       const response = await axios.post(
-        "https://highimpacttalentonrender.com/api-v1/user/upload-image",
+        "https://highimpacttalent.onrender.com/api-v1/user/upload-image",
         formData,
         {
           headers: {
