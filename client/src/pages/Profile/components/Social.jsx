@@ -3,10 +3,17 @@ import { Box, Typography, Tabs, Tab, Card, Button, IconButton, TextField } from 
 import EditIcon from "@mui/icons-material/Edit";
 import LinkedInIcon from "@mui/icons-material/LinkedIn";
 import { useSelector, useDispatch } from "react-redux";
+import AlertModal from "../../../components/Alerts/view"
 import { UpdateUser } from "../../../redux/userSlice";
 
 const Socials = () => {
   const { user } = useSelector((state) => state.user);
+   const [alert, setAlert] = useState({
+      open: false,
+      type: "success",
+      title: "",
+      message: "",
+    });
   const dispatch = useDispatch();
   const [isEditing, setIsEditing] = useState(false);
   const [linkedinLink, setLinkedinLink] = useState(user?.linkedinLink || "#");
@@ -19,6 +26,11 @@ const Socials = () => {
   const handleSaveClick = async () => {
     if (!linkedinLink.trim()) {
       setLinkedinLink("#");
+      return;
+    }
+
+    if (!linkedinLink.startsWith("https://")) {
+      setAlert({open:true, type:"error", title: "Error",message: "LinkdIn Link should be a valid link starting with (https://)"})
       return;
     }
 
@@ -47,6 +59,13 @@ const Socials = () => {
 
   return (
     <Box>
+      <AlertModal
+              open={alert.open}
+              onClose={() => setAlert({ ...alert, open: false })}
+              type={alert.type}
+              title={alert.title}
+              message={alert.message}
+            />
       <Box sx={{ mb: 2, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <Tabs value={0}>
           <Tab
