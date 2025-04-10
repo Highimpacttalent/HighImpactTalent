@@ -21,7 +21,7 @@ import axios from "axios";
 import { useDispatch } from "react-redux";
 import { UpdateUser } from "../../../redux/userSlice";
 
-const ExperienceHistory = ({ userId, experienceHistory }) => {
+const ExperienceHistory = ({ userId, experienceHistory, about }) => {
   const dispatch = useDispatch();
   const [experiences, setExperiences] = useState(experienceHistory || []);
   const [desc, setDesc] = useState(false);
@@ -427,11 +427,7 @@ const ExperienceHistory = ({ userId, experienceHistory }) => {
         <Typography
           sx={{ px: 1, py: 1, color: "#474E68", fontFamily: "Poppins" }}
         >
-          Results-driven consultant with 5+ years of experience in delivering
-          strategic insights, optimizing business processes, and driving
-          impactful solutions for clients across diverse industries. Adept at
-          problem-solving, stakeholder management, and data-driven
-          decision-making to enhance operational efficiency and growth.
+         {about}
         </Typography>
       </Box>
     </Box>

@@ -105,7 +105,7 @@ const ProfileSection = () => {
         </Box>
       <Box  sx={{ display: "flex", flexDirection: { xs: "column", md: "row" }, gap: 3, justifyContent: "center", px: 2 }}>
         <Box  sx={{ width: { xs: "100%", md: "90%" } }}>
-        <ExperienceHistory userId={userInfo?._id} experienceHistory={userInfo?.experienceHistory}/>
+        <ExperienceHistory userId={userInfo?._id} experienceHistory={userInfo?.experienceHistory} about={userInfo?.about}/>
         </Box>
       </Box>
       </Box>
