@@ -13,6 +13,7 @@ import { useDispatch } from "react-redux";
 import { skillsList } from "../../assets/mock";
 import { Box, Button, Typography } from "@mui/material";
 import Image from "../../assets/CreateAccount/UserDetails.svg";
+import { Margin } from "@mui/icons-material";
 const UserInfoForm = () => {
   const { user } = useSelector((state) => state.user);
   const dispatch = useDispatch();
@@ -253,7 +254,7 @@ const UserInfoForm = () => {
   const customStyles = {
     control: (provided, state) => ({
       ...provided,
-      padding: 4,
+      padding: 10,
       width: "100%",
       fontSize: "0.875rem",
       borderRadius: 50,
