@@ -29,7 +29,7 @@ const UserInfoForm = () => {
   );
   const [error, setError] = useState("");
   const [profilePic, setProfilePic] = useState(user?.profileUrl||"");
-  const [profilePicUrl, setProfilePicUrl] = useState("");
+  const [profilePicUrl, setProfilePicUrl] = useState(user?.profileUrl||"");
   const [cities, setCities] = useState([]);
   const [selectedCity, setSelectedCity] = useState(null);
   const [inputValue, setInputValue] = useState("");
@@ -57,7 +57,7 @@ const UserInfoForm = () => {
     isItConsultingCompany:"Yes",
     joinConsulting: "",
     dateOfBirth: defaultValues?.PersonalInformation?.dateOfBirth || "",
-    profilePic: null,
+    profilePic: defaultValues?.PersonalInformation?.profilePic || "",
     skills: filters.skills,
   });
 
