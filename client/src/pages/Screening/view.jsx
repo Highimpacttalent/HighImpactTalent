@@ -75,7 +75,7 @@ const ScreeningView = () => {
     if (!applied) {
       try {
         const res = await axios.post(
-          "http://localhost:8800/api-v1/application/create",
+          "https://highimpacttalent.onrender.com/api-v1/application/create",
           {
             job: state?.jobid,
             company: state?.companyid,
