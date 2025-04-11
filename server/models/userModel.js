@@ -60,8 +60,8 @@ const userSchema = new mongoose.Schema(
     },
     isItConsultingCompany: {
       type: String,
-      enum: ["yes", "no"],
-      default: "yes",
+      enum: ["Yes", "No"],
+      default: "Yes",
     },
     linkedinLink: {
       type: String,
@@ -70,8 +70,8 @@ const userSchema = new mongoose.Schema(
     currentLocation: { type: String, default: "india" },
     openToRelocate: {
       type: String,
-      enum: ["yes", "no"],
-      default: "yes",
+      enum: ["Yes", "No"],
+      default: "Yes",
     },
     joinConsulting: {
       type: String,
