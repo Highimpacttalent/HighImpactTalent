@@ -12,7 +12,7 @@ const PAYU_MERCHANT_SALT = process.env.PAYU_MERCHANT_SALT;
 const PAYU_BASE_URL = process.env.PAYU_BASE_URL;
 
 // Fixed payment amount
-const STANDARD_AMOUNT = "1.00"; // Ensure it's a valid float
+const STANDARD_AMOUNT = "19999.00"; // Ensure it's a valid float
 
 // Initialize payment
 export const initializePayment = async (req, res) => {
@@ -166,7 +166,7 @@ export const payuWebhook = async (req, res, status) => {
 
 export const checkPaymentStatus = async (req, res) => {
     try {
-      const userId = req.user._id; // Assuming user ID is available from auth middleware
+      const userId = req.body.user.userId; 
       
       // Find the most recent payment for this user
       const payment = await Payment.findOne({ 

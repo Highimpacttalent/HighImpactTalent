@@ -24,6 +24,7 @@ const PaymentProtectedRoute = () => {
             },
           }
         );
+        console.log("Payment status response:", response.data);
 
         if (response.data.success && response.data.paymentStatus === "SUCCESS") {
           setHasValidPayment(true);
