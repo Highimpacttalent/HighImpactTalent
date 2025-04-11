@@ -169,11 +169,11 @@ const Experience = ({ experienceData, userId }) => {
                   onChange={handleChange}
                 >
                   <FormControlLabel
-                    value="yes"
+                    value="Yes"
                     control={<Radio />}
                     label="Yes"
                   />
-                  <FormControlLabel value="no" control={<Radio />} label="No" />
+                  <FormControlLabel value="No" control={<Radio />} label="No" />
                 </RadioGroup>
               </FormControl>
             ) : (
