@@ -2,14 +2,18 @@ import { useEffect, useState } from "react";
 import { Grid, Box, Typography } from "@mui/material";
 import { useSelector } from "react-redux";
 import SavedJobCard from "./SavedJobCard";
+import Loader from "../Landing/LandingMain/loader"
 import AppliedJobCard from "./AppliedJobCard";
 import axios from "axios";
+import AppliedJobMenuCard from "./AppliedJobMenuCard";
+import LeftPanel from "./LeftPanel";
 
 const DesktopView = () => {
   const { user } = useSelector((state) => state.user);
   const [selectedTab, setSelectedTab] = useState("saved");
   const [savedJobs, setSavedJobs] = useState([]);
   const [appliedJobs, setAppliedJobs] = useState([]);
+  const [selectedApplied, setAppliedSelect] = useState("");
   const [isFetching, setIsFetching] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
@@ -25,27 +29,24 @@ const DesktopView = () => {
 
       setIsFetching(true);
       try {
-        const [savedJobsResult, appliedJobsResult] = await Promise.allSettled([
-          axios.post("https://highimpacttalent.onrender.com/api-v1/jobs/get-jobs", 
-            { jobIds: user.likedJobs || [] }, 
-            { headers: { "Content-Type": "application/json" } }
-          ),
-          axios.post("https://highimpacttalent.onrender.com/api-v1/application/get-jobs", 
-            { applicationIds: user.appliedJobs || [] }, 
-            { headers: { "Content-Type": "application/json" } }
-          ),
-        ]);
-      
-        if (savedJobsResult.status === "fulfilled") {
-          setSavedJobs(savedJobsResult.value?.data?.data || []);
+        const appliedJobsResult = await axios.post(
+          "https://highimpacttalent.onrender.com/api-v1/application/get-jobs",
+          { applicationIds: user.appliedJobs || [] },
+          { headers: { "Content-Type": "application/json" } }
+        );
+        
+        if (appliedJobsResult) {
+          const applications =
+            appliedJobsResult?.data?.applications || [];
+          setAppliedJobs(applications);
+          if (applications.length > 0) {
+            setAppliedSelect(applications[0]);
+          }
         } else {
-          console.error("Failed to fetch saved jobs:", savedJobsResult.reason);
-        }
-      
-        if (appliedJobsResult.status === "fulfilled") {
-          setAppliedJobs(appliedJobsResult.value?.data?.applications || []);
-        } else {
-          console.error("Failed to fetch applied jobs:", appliedJobsResult.reason);
+          console.error(
+            "Failed to fetch applied jobs:",
+            appliedJobsResult.reason
+          );
         }
       } catch (error) {
         console.error("Unexpected error:", error);
@@ -59,65 +60,72 @@ const DesktopView = () => {
 
   return (
     <Box sx={{ bgcolor: "white", minHeight: "100vh", p: isMobile ? 1 : 5 }}>
-      <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-        <Typography sx={{textAlign:"center",color:"#404258",fontWeight:"600",fontSize:28,fontFamily:"Satoshi,serrif"}}>Applications</Typography>
-        <Box sx={{ maxWidth: "xl", mx: "auto", mt: 4, px: 2, display: "flex", gap: 3,height:"100%",width:"100%" }}>
-          {/* Left Section - Tabs */}
-          <Box sx={{ width: "25%", p: 2 }}>
-            <Box sx={{ display: "flex", flexDirection: "column", gap: 2, mb: 2 }}>
-              <Box
-                onClick={() => setSelectedTab("saved")}
-                sx={{
-                  px: 3,
-                  py: 1,
-                  cursor: "pointer",
-                  bgcolor: selectedTab === "saved" ? "#3F81FF14" : "white",
-                  borderRadius: 2,
-                  fontWeight: "bold",
-                  width: "80%",
-                }}
-              >
-                Saved Jobs
-              </Box>
-              <Box
-                onClick={() => setSelectedTab("applied")}
-                sx={{
-                  px: 3,
-                  py: 1,
-                  cursor: "pointer",
-                  bgcolor: selectedTab === "applied" ? "#3F81FF14" : "white",
-                  borderRadius: 2,
-                  fontWeight: "bold",
-                  width: "80%",
-                }}
-              >
-                Applied Jobs
-              </Box>
-            </Box>
-          </Box>
+      <Loader isLoading={isFetching} />
+      <Typography
+        sx={{
+          textAlign: "center",
+          color: "#404258",
+          fontWeight: "600",
+          fontSize: 28,
+          fontFamily: "Satoshi,serrif",
+          mb: 3,
+        }}
+      >
+        Applications
+      </Typography>
 
-          {/* Right Section - Job Cards */}
-          <Box sx={{ flex: 0.95, p: 2 }}>
-            {isFetching ? (
-              <Typography variant="h6" color="textSecondary" align="center" sx={{ mt: 4 }}>
-                Loading jobs...
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "flex-start",
+          justifyContent: "center",
+          width: "100%",
+          
+        }}
+      >
+        <Box sx={{ width: "70%"}}>
+          {selectedApplied != "" ? (
+            <LeftPanel Application={selectedApplied} />
+          ) : (
+            <Typography>No jobs to display</Typography>
+          )}
+        </Box>
+
+        <Box sx={{ width: "30%" }}>
+          {isFetching ? (
+            <Typography
+              variant="h6"
+              color="textSecondary"
+              align="center"
+              sx={{ mt: 4 }}
+            >
+              Loading jobs...
+            </Typography>
+          ) : appliedJobs.length > 0 ? (
+            <Grid container gap={2}>
+              {appliedJobs.map((job, index) => (
+                <Grid
+                  item
+                  xs={12}
+                  sm={6}
+                  md={12}
+                  key={index}
+                  onClick={() => {
+                    setAppliedSelect(job);
+                  }}
+                  sx={{ cursor: "pointer" }}
+                >
+                  <AppliedJobMenuCard job={job} />
+                </Grid>
+              ))}
+            </Grid>
+          ) : (
+            <Box sx={{ textAlign: "center", mt: 4 }}>
+              <Typography variant="h6" color="textSecondary">
+                No jobs found.
               </Typography>
-            ) : (selectedTab === "saved" ? savedJobs : appliedJobs).length > 0 ? (
-              <Grid container spacing={3} gap={2}>
-                {(selectedTab === "saved" ? savedJobs : appliedJobs).map((job, index) => (
-                  <Grid item xs={12} sm={6} md={12} key={index}>
-                    {selectedTab === "saved" ? <SavedJobCard job={job} /> : <AppliedJobCard job={job} />}
-                  </Grid>
-                ))}
-              </Grid>
-            ) : (
-              <Box sx={{ textAlign: "center", mt: 4 }}>
-                <Typography variant="h6" color="textSecondary">
-                  No jobs found.
-                </Typography>
-              </Box>
-            )}
-          </Box>
+            </Box>
+          )}
         </Box>
       </Box>
     </Box>

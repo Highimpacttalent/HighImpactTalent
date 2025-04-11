@@ -32,7 +32,7 @@ const AppliedJobCard = ({ job,flag = false,enable = false }) => {
       borderRadius: 2, 
     }}
     >
-      <CardContent sx={{ flexGrow: 1, display: "flex", flexDirection: "column" }}>
+      <CardContent sx={{ flexGrow: 1, display: "flex", flexDirection: "column", }}>
         {/* Job Title */}
         <Typography variant="h6" fontWeight={700} gutterBottom sx={{ color: "#404258" ,mb:1.5,fontFamily:"Poppins"}} color="#404258">
           {job?.job?.jobTitle}
@@ -75,14 +75,6 @@ const AppliedJobCard = ({ job,flag = false,enable = false }) => {
               sx={{color:"#474E68",fontWeight:"400"}}
             />
            </Box>
-
-        {/* Job Description */}
-        <Typography 
-          variant="body2" 
-          color="#474E68" 
-          sx={{ flexGrow: 1, overflow: "hidden", textOverflow: "ellipsis", height: 40 }}>
-          {job.job?.jobDescription !== "- " ? job?.job?.jobDescription : "No description Provided"}
-        </Typography>
       </CardContent>
 
       {/* Fixed Bottom Section */}
@@ -95,14 +87,13 @@ const AppliedJobCard = ({ job,flag = false,enable = false }) => {
   );
 
   const desktopView = (
-    <Card
+    <Box
       sx={{
         display: "flex",
         flexDirection: "column",
-        borderColor:"#75758",
-        boxShadow: "0px 0px 4px 0px #00000040",
-        borderRadius: 2,
-        p:0.5
+        border:"1px solid #00000040",
+        borderRadius: 4,
+        p:1
       }}
     >
       <CardContent
@@ -116,13 +107,13 @@ const AppliedJobCard = ({ job,flag = false,enable = false }) => {
             alignItems: "center",
           }}
         >
-          <Typography variant="h6" fontWeight={700} gutterBottom sx={{ color: "#404258",fontFamily:"Poppins" }}>
+          <Typography fontWeight={600} gutterBottom sx={{ color: "#24252C",fontFamily:"Poppins",fontSize:"20px" }}>
             {job?.job?.jobTitle}
           </Typography>
 
           <Box sx={{display:"flex",alignItems:"center"}}>
 
-          <Typography variant="caption" color="#808195" fontSize={14}>
+          <Typography color="#808195" sx={{fontSize:"14px",fontFamily:"Poppins"}}>
             Posted {moment(job?.job?.createdAt).fromNow()}
           </Typography>
           </Box>
@@ -139,27 +130,27 @@ const AppliedJobCard = ({ job,flag = false,enable = false }) => {
             gap={1}
             sx={{ mb: 1, mt: 0.5 }}
           >
-            <Business color="primary" sx={{ color: "#404258" }} />
-            <Typography variant="subtitle1" fontWeight={600} sx={{ color: "#404258",fontFamily:"Poppins" }}>
+            <Typography fontWeight={500} sx={{ color: "#474E68",fontFamily:"Poppins",fontSize:"16px" }}>
               {job?.company?.name}
             </Typography>
           </Box>
         </Box>
 
         {/* Job Details */}
-        <Box sx={{ mb: 2 }}>
+        <Box sx={{ mb: 1}}>
           <Stack direction="row" spacing={1} flexWrap="wrap" sx={{ mb: 1 }}>
             <Chip
               icon={<LocationOnOutlined sx={{color:"#474E68"}}/>}
               label={job?.job?.jobLocation}
-              variant="contained" 
-              sx={{color:"#474E68",fontWeight:"400"}}
+              variant="contained"
+             
+              sx={{color:"#474E68",fontWeight:"400",fontFamily:"Poppins"}}
             />
             <Chip
               icon={<WorkOutlineOutlined sx={{color:"#474E68"}}/>}
               label={`${job?.job?.experience}+ years experience`}
               variant="contained"
-              sx={{color:"#474E68",fontWeight:"400"}}
+              sx={{color:"#474E68",fontWeight:"400",fontFamily:"Poppins"}}
             />
             <Chip
               icon={<CurrencyRupee sx={{color:"#474E68"}}/>}
@@ -169,30 +160,14 @@ const AppliedJobCard = ({ job,flag = false,enable = false }) => {
                   : `${job?.job?.salary.toLocaleString()} (${job?.job?.salaryCategory})`
               }
               variant="contained"
-              sx={{color:"#474E68",fontWeight:"400"}}
+              sx={{color:"#474E68",fontWeight:"400",fontFamily:"Poppins"}}
             />
           </Stack>
         </Box>
 
-        {/* Job Description */}
-        <Typography
-          variant="body2"
-          color="#474E68"
-          sx={{
-            flexGrow: 1,
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-            display: "-webkit-box",
-            WebkitLineClamp: 2, // Adjust line limit
-            WebkitBoxOrient: "vertical",
-          }}
-        >
-          {job?.job?.jobDescription && job?.job?.jobDescription !== "- "
-            ? job?.job?.jobDescription.split(" ").slice(0, 150).join(" ") + "..."
-            : "No description provided"}
-        </Typography>
+        <Typography sx={{color:"#474E68",fontFamily:"Poppins",fontSize:"14px"}}>Total Applicants: {job?.job?.totalApplications}</Typography>
       </CardContent>
-    </Card>
+    </Box>
   );
 
   return <Box>{isMobile || flag ? mobileView : desktopView}</Box>;

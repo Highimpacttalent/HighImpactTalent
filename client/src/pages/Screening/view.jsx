@@ -16,6 +16,8 @@ import {
   DialogTitle,
   CircularProgress,
 } from "@mui/material";
+import { UpdateUser } from "../../redux/userSlice";
+import { useDispatch } from "react-redux";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import { FiEye } from "react-icons/fi";
 
@@ -23,7 +25,7 @@ const ScreeningView = () => {
   const { state } = useLocation();
   const navigate = useNavigate();
   const fileInputRef = useRef(null);
-
+  const dispatch = useDispatch();
   const [applied, setApplied] = useState(false);
   const [resumeUrl, setResumeUrl] = useState("");
   const [applyButton, setApplyButton] = useState(false);
@@ -73,7 +75,7 @@ const ScreeningView = () => {
     if (!applied) {
       try {
         const res = await axios.post(
-          "https://highimpacttalent.onrender.com/api-v1/application/create",
+          "http://localhost:8800/api-v1/application/create",
           {
             job: state?.jobid,
             company: state?.companyid,
@@ -82,6 +84,8 @@ const ScreeningView = () => {
         );
         if (res) {
           setApplied(true);
+          console.log(res)
+          dispatch(UpdateUser(res.data.user));
           setSnackbar({
             open: true,
             message: res.message,
