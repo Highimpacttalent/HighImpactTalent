@@ -16,20 +16,37 @@ const applicationSchema = new Schema({
     type:mongoose.Schema.Types.ObjectId,
     ref:'Users'
   },
-  status:{
+  status: {
     type: String,
-      enum: [
-        "applied", 
-        "shortlisted", 
-        "accepted", 
-        "rejected",
-        "deleted",
-        "cancelled",
-        "finished",
-      ],
-      default: "applied",
-      required: true,
-  }
+    enum: [
+      "Applied",
+      "Shortlisted",
+      "Interviewing",
+      "Hired",
+      "Not Progressing",
+    ],
+    default: "Applied",
+  },
+  
+  statusHistory: [
+    {
+      status: {
+        type: String,
+        enum: [
+          "Applied",
+          "Shortlisted",
+          "Interviewing",
+          "Hired",
+          "Not Progressing",
+        ],
+      },
+      changedAt: {
+        type: Date,
+        default: Date.now,
+      },
+    },
+  ],
+  
 });
 
 const Application = mongoose.model("Application", applicationSchema);

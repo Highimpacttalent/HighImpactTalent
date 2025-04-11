@@ -57,6 +57,7 @@ export const createApplication = async (req, res) => {
     res.status(400).json({ error: error.message });
   }
 };
+
 //get application by id
 export const getApplication = async (req, res) => {
   try {
@@ -76,7 +77,7 @@ export const getApplication = async (req, res) => {
   }
 };
 
-//update status
+// update status
 export const updateApplicationStatus = async (req, res) => {
   const { status } = req.body;
 
@@ -84,21 +85,29 @@ export const updateApplicationStatus = async (req, res) => {
     const companyId = req.body.user.userId;
     let application = await Application.findById(req.params.id);
 
-    if (companyId != application.company) {
+    if (!application) {
+      return res.status(404).json({ message: "Application not found" });
+    }
+
+    if (companyId != application.company.toString()) {
       return res.status(401).json({
         success: false,
         message: "Not authorized to update status",
       });
     }
-    if (!application) {
-      return res.status(404).json({ message: "Application not found" });
-    }
 
+    // Update status and add to history
     application.status = status;
-    application = await application.save();
+    application.statusHistory.push({
+      status,
+      changedAt: new Date(),
+    });
 
-    res.status(201).json({
+    await application.save();
+
+    res.status(200).json({
       success: true,
+      message: "Application status updated successfully",
       application,
     });
   } catch (err) {
@@ -106,6 +115,7 @@ export const updateApplicationStatus = async (req, res) => {
     res.status(500).send("Server error");
   }
 };
+
 
 //get all application of a job
 export const getApplicationsOfAjob = async (req, res) => {
@@ -143,7 +153,7 @@ export const  getallApplicationOfApplicant = async(req,res)=>{
       data:userapplication,
     })
   } catch (error) {
-    console.log(error)
+    console.log(error)  
     res.status(404).json({
       success:false,
     })

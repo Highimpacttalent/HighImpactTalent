@@ -65,8 +65,17 @@ const jobSchema = new mongoose.Schema(
       default: Date.now,
     },
   },
-  { timestamps: true }
+  { 
+  timestamps: true, 
+  toJSON: { virtuals: true },
+  toObject: { virtuals: true },
+},
 );
+
+// Virtual field for total applications
+jobSchema.virtual("totalApplications").get(function () {
+  return this.application.length;
+});
 
 const Jobs = mongoose.model("Jobs", jobSchema);
 
