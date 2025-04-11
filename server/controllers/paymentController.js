@@ -163,3 +163,36 @@ export const payuWebhook = async (req, res, status) => {
         return res.status(500).json({ message: "Webhook processing failed", error: error.message });
     }
 };
+
+export const checkPaymentStatus = async (req, res) => {
+    try {
+      const userId = req.user._id; // Assuming user ID is available from auth middleware
+      
+      // Find the most recent payment for this user
+      const payment = await Payment.findOne({ 
+        userId: userId 
+      }).sort({ createdAt: -1 });
+  
+      if (!payment) {
+        return res.status(404).json({
+          success: false,
+          message: "No payment record found for this user"
+        });
+      }
+  
+      // Return payment status
+      return res.status(200).json({
+        success: true,
+        paymentStatus: payment.status,
+        transactionId: payment.transactionId,
+        amount: payment.amount
+      });
+    } catch (error) {
+      console.error("Payment status check failed:", error);
+      return res.status(500).json({
+        success: false,
+        message: "Failed to check payment status",
+        error: error.message
+      });
+    }
+  };

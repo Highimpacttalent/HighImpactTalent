@@ -1,6 +1,6 @@
 import express from "express";
 const router = express.Router();
-import { initializePayment, getPaymentStatus, payuWebhook } from "../controllers/paymentController.js";
+import { initializePayment, getPaymentStatus, payuWebhook, checkPaymentStatus} from "../controllers/paymentController.js";
 import userAuth from "../middlewares/authMiddleware.js";
 import rateLimit from "express-rate-limit";
 
@@ -16,6 +16,8 @@ router.post("/initialize-payment", userAuth, initializePayment);
 
 // Get payment status
 router.get("/payment-status/:transactionId?", userAuth, getPaymentStatus);
+
+router.get("/check-status", userAuth, checkPaymentStatus);
 
 // PayU Webhook Routes (server-to-server communication)
 router.post("/payu-webhook/success", (req, res) => {
