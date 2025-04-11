@@ -6,7 +6,7 @@ import Users from "../models/userModel.js";
 // Create a new application
 export const createApplication = async (req, res) => {
   try {
-    const { job, company, applicant, status } = req.body;
+    const { job, company, applicant } = req.body;
     const jobex = await Jobs.findById(job);
     const userex = await Users.findById(applicant);
     if (Number(jobex.experience) > Number(userex.experience)) {
@@ -26,7 +26,6 @@ export const createApplication = async (req, res) => {
       job,
       company,
       applicant,
-      status: status || "applied",
     });
     const user = await Users.findByIdAndUpdate(
       { _id: applicant },
