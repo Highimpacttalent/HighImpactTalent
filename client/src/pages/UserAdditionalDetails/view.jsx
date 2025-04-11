@@ -53,8 +53,8 @@ const UserInfoForm = () => {
     salary: "",
     contactNumber: defaultValues?.PersonalInformation?.contactNumber || "",
     location: defaultValues?.PersonalInformation?.location || "",
-    relocate: "yes",
-    isItConsultingCompany:"yes",
+    relocate: "Yes",
+    isItConsultingCompany:"Yes",
     joinConsulting: "",
     dateOfBirth: defaultValues?.PersonalInformation?.dateOfBirth || "",
     profilePic: null,
@@ -518,8 +518,8 @@ const UserInfoForm = () => {
                     <input
                       type="radio"
                       name="isItConsultingCompany"
-                      value="yes"
-                      checked={formData.isItConsultingCompany === "yes"}
+                      value="Yes"
+                      checked={formData.isItConsultingCompany === "Yes"}
                       onChange={handleChange}
                       className="accent-blue-500"
                     />
@@ -539,8 +539,8 @@ const UserInfoForm = () => {
                     <input
                       type="radio"
                       name="isItConsultingCompany"
-                      value="no"
-                      checked={formData.isItConsultingCompany === "no"}
+                      value="No"
+                      checked={formData.isItConsultingCompany === "No"}
                       onChange={handleChange}
                       className="accent-blue-500"
                     />
@@ -653,8 +653,8 @@ const UserInfoForm = () => {
                     <input
                       type="radio"
                       name="relocate"
-                      value="no"
-                      checked={formData.relocate === "no"}
+                      value="No"
+                      checked={formData.relocate === "No"}
                       onChange={handleChange}
                       className="accent-blue-500"
                     />
@@ -674,8 +674,8 @@ const UserInfoForm = () => {
                     <input
                       type="radio"
                       name="relocate"
-                      value="yes"
-                      checked={formData.relocate === "yes"}
+                      value="Yes"
+                      checked={formData.relocate === "Yes"}
                       onChange={handleChange}
                       className="accent-blue-500"
                     />
