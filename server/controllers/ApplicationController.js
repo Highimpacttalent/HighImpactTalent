@@ -31,6 +31,7 @@ export const createApplication = async (req, res) => {
       { _id: applicant },
       { $push: { appliedJobs: newApplication._id } }
     );
+    const updatedUser = await Users.findById(applicant);
     if (!user) {
       return res.status(404).json({
         success: false,
@@ -51,6 +52,7 @@ export const createApplication = async (req, res) => {
       success: true,
       message: "success",
       newApplication,
+      user: updatedUser
     });
   } catch (error) {
     res.status(400).json({ error: error.message });
