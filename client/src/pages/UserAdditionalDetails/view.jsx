@@ -53,7 +53,7 @@ const UserInfoForm = () => {
     salary: "",
     contactNumber: defaultValues?.PersonalInformation?.contactNumber || "",
     location: defaultValues?.PersonalInformation?.location || "",
-    relocate: "Yes",
+    openToRelocate: "Yes",
     isItConsultingCompany:"Yes",
     joinConsulting: "",
     dateOfBirth: defaultValues?.PersonalInformation?.dateOfBirth || "",
@@ -652,9 +652,9 @@ const UserInfoForm = () => {
                   <label className="flex items-center gap-2 ml-2 mb-2">
                     <input
                       type="radio"
-                      name="relocate"
-                      value="No"
-                      checked={formData.relocate === "No"}
+                      name="openToRelocate"
+                      value="Yes"
+                      checked={formData.openToRelocate === "Yes"}
                       onChange={handleChange}
                       className="accent-blue-500"
                     />
@@ -673,9 +673,9 @@ const UserInfoForm = () => {
                   <label className="flex items-center gap-2 ml-2">
                     <input
                       type="radio"
-                      name="relocate"
-                      value="Yes"
-                      checked={formData.relocate === "Yes"}
+                      name="openToRelocate"
+                      value="No"
+                      checked={formData.openToRelocate === "No"}
                       onChange={handleChange}
                       className="accent-blue-500"
                     />
