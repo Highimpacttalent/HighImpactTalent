@@ -15,7 +15,6 @@ const PaymentPage = () => {
       setError("");
 
       const user = JSON.parse(localStorage.getItem("userInfo"));
-
       if (!user || !user.token) {
         setError("User not authenticated.");
         return;
@@ -84,7 +83,7 @@ const PaymentPage = () => {
       </Box>
 
       <Box>
-        <Typography sx={{textAlign:'center',mt:10,fontSize:'18px',fontWeight:'400',fontFamily:'Poppins',color:'#474E68'}}>Subscribe now only <span style={{fontSize:'22px',fontWeight:'600',fontFamily:'Poppins',color:'#474E68'}}>@499/-</span></Typography>
+        <Typography sx={{textAlign:'center',mt:10,fontSize:'18px',fontWeight:'400',fontFamily:'Poppins',color:'#474E68'}}>Subscribe now only <span style={{fontSize:'22px',fontWeight:'600',fontFamily:'Poppins',color:'#474E68'}}>@19999/-</span></Typography>
       </Box>
       <Box sx={{display:"flex",alignItems:'center',justifyContent:'center'}}>
       <Button 
