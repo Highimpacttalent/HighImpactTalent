@@ -709,8 +709,8 @@ const UserInfoForm = () => {
                     <input
                       type="radio"
                       name="joinConsulting"
-                      value="lateral"
-                      checked={formData.joinConsulting === "lateral"}
+                      value="Lateral"
+                      checked={formData.joinConsulting === "Lateral"}
                       onChange={handleChange}
                       className="accent-blue-500"
                     />
@@ -730,8 +730,8 @@ const UserInfoForm = () => {
                     <input
                       type="radio"
                       name="joinConsulting"
-                      value="out of campus"
-                      checked={formData.joinConsulting === "out of campus"}
+                      value="Out of campus"
+                      checked={formData.joinConsulting === "Out of campus"}
                       onChange={handleChange}
                       className="accent-blue-500"
                     />
