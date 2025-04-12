@@ -648,9 +648,17 @@ export const updateUserDetails = async (req, res) => {
 
 export const updateWorkDetails = async (req, res) => {
   try {
-    const { userId, openToRelocate, currentCompany, currentDesignation } = req.body;
+    const {
+      userId,
+      openToRelocate,
+      currentCompany,
+      currentDesignation,
+      currentSalary,
+      isItConsultingCompany,
+      joinConsulting,
+      experience,
+    } = req.body;
 
-    // Validate user ID
     if (!userId) {
       return res.status(400).json({
         success: false,
@@ -658,20 +666,21 @@ export const updateWorkDetails = async (req, res) => {
       });
     }
 
-    // Prepare update object
     const updateFields = {};
     if (openToRelocate !== undefined) updateFields.openToRelocate = openToRelocate;
-    if (currentCompany) updateFields.currentCompany = currentCompany;
-    if (currentDesignation) updateFields.currentDesignation = currentDesignation;
+    if (currentCompany !== undefined) updateFields.currentCompany = currentCompany;
+    if (currentDesignation !== undefined) updateFields.currentDesignation = currentDesignation;
+    if (currentSalary !== undefined) updateFields.currentSalary = currentSalary;
+    if (isItConsultingCompany !== undefined) updateFields.isItConsultingCompany = isItConsultingCompany;
+    if (joinConsulting !== undefined) updateFields.joinConsulting = joinConsulting;
+    if (experience !== undefined) updateFields.experience = experience;
 
-    // Find and update user
     const updatedUser = await Users.findOneAndUpdate(
       { _id: userId },
-      updateFields,
+      { $set: updateFields },
       { new: true }
     );
 
-    // Check if user exists
     if (!updatedUser) {
       return res.status(404).json({
         success: false,
@@ -679,22 +688,20 @@ export const updateWorkDetails = async (req, res) => {
       });
     }
 
-    // Send response
     res.status(200).json({
       success: true,
-      message: "Work details updated successfully!",
-      user: updatedUser,
+      message: "User work details updated successfully",
+      data: updatedUser,
     });
-
   } catch (error) {
-    console.error(error);
+    console.error("Error updating user work details:", error);
     res.status(500).json({
       success: false,
-      message: "Server error while updating work details!",
-      error: error.message,
+      message: "Internal server error",
     });
   }
 };
+
 
 
 export const updateLinkedIn = async (req, res) => {
