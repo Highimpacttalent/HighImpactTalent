@@ -56,11 +56,13 @@ const Experience = ({ experienceData }) => {
   };
 
   const handleChange = (e) => {
+    console.log("Updated formData:", { ...formData, [e.target.name]: e.target.value });
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   const handleSaveClick = async () => {
     setIsSaving(true);
+    console.log("Payload being sent:", formData);
     try {
       const response = await fetch(
         "https://highimpacttalent.onrender.com/api-v1/user/updateWork",
@@ -70,7 +72,7 @@ const Experience = ({ experienceData }) => {
           body: JSON.stringify({ 
             userId: experienceData?._id, 
             ...formData,
-            experience: Number(formData.experience)
+            // experience: Number(formData.experience)
           }),
         }
       );

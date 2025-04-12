@@ -242,26 +242,36 @@ const UserInfoCard = () => {
     "firstName",
     "lastName",
     "email",
-    "currentJobRole",
     "currentSalary",
-    "currentConsultingCompany",
     "currentCompany",
     "currentDesignation",
     "linkedinLink",
     "currentLocation",
+    "experienceHistory",
     "cvUrl",
   ];
 
-
-  const filledFieldsCount = profileFields.reduce((count, field) => {
+  console.log(user);
+  let filledFieldsCount = profileFields.reduce((count, field) => {
     if (user[field] && user[field].toString().trim() !== "") {
       return count + 1;
     }
     return count;
   }, 0);
 
-  const profileCompletion = Math.round((filledFieldsCount / profileFields.length) * 100);
+  // Add 1 to count if skills exist and are not empty
+  if (
+    user.skills &&
+    Array.isArray(user.skills) &&
+    user.skills.length > 0
+  ) {
+    filledFieldsCount += 1;
+  }
 
+  // Update total fields count to include skills
+  const totalFields = profileFields.length + 1;
+
+  const profileCompletion = Math.round((filledFieldsCount / totalFields) * 100);
   const handleSaveClick = async () => {
     setLoading(true);
     try {
@@ -417,51 +427,50 @@ const UserInfoCard = () => {
             {/* Contact */}
             {/* Contact */}
             {isEditing ? (
-  <TextField
-    name="contactNumber"
-    size="small"
-    value={updatedUserInfo.contactNumber}
-    onChange={(e) => {
-      const value = e.target.value.replace(/\D/g, ""); // remove non-digits
-      if (value.length <= 10) {
-        handleChange({
-          target: {
-            name: "contactNumber",
-            value,
-          },
-        });
-      }
-    }}
-    InputProps={{
-      startAdornment: (
-        <Typography sx={{ pr: 1, color: "#555" }}>+91</Typography>
-      ),
-      inputMode: "numeric",
-    }}
-    inputProps={{
-      maxLength: 10,
-      pattern: "[0-9]*",
-    }}
-    sx={{ width: "250px" }}
-    error={updatedUserInfo.contactNumber.length !== 10}
-    helperText={
-      updatedUserInfo.contactNumber.length !== 10
-        ? "Contact number must be 10 digits"
-        : ""
-    }
-  />
-) : (
-  <Typography
-    display="flex"
-    alignItems="center"
-    gap={1}
-    color="#404258"
-    fontWeight="400"
-  >
-    <FiPhoneCall /> +91 {updatedUserInfo.contactNumber}
-  </Typography>
-)}
-
+              <TextField
+                name="contactNumber"
+                size="small"
+                value={updatedUserInfo.contactNumber}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/\D/g, ""); // remove non-digits
+                  if (value.length <= 10) {
+                    handleChange({
+                      target: {
+                        name: "contactNumber",
+                        value,
+                      },
+                    });
+                  }
+                }}
+                InputProps={{
+                  startAdornment: (
+                    <Typography sx={{ pr: 1, color: "#555" }}>+91</Typography>
+                  ),
+                  inputMode: "numeric",
+                }}
+                inputProps={{
+                  maxLength: 10,
+                  pattern: "[0-9]*",
+                }}
+                sx={{ width: "250px" }}
+                error={updatedUserInfo.contactNumber.length !== 10}
+                helperText={
+                  updatedUserInfo.contactNumber.length !== 10
+                    ? "Contact number must be 10 digits"
+                    : ""
+                }
+              />
+            ) : (
+              <Typography
+                display="flex"
+                alignItems="center"
+                gap={1}
+                color="#404258"
+                fontWeight="400"
+              >
+                <FiPhoneCall /> +91 {updatedUserInfo.contactNumber}
+              </Typography>
+            )}
 
             {/* Location */}
             {isEditing ? (

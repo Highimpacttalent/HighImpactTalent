@@ -15,6 +15,8 @@ import EditIcon from "@mui/icons-material/Edit";
 import SaveIcon from "@mui/icons-material/Save";
 import { Delete, Add } from "@mui/icons-material";
 import AlertModal from "../../../components/Alerts/view";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 import InputMask from "react-input-mask";
 import { VisibilityOff, Visibility } from "@mui/icons-material";
 import axios from "axios";
@@ -129,6 +131,13 @@ const ExperienceHistory = ({ userId, experienceHistory, about }) => {
     } finally {
       setIsSaving(false);
     }
+  };
+
+  const handleChange = (date, field) => {
+    setNewExperience((prev) => ({
+      ...prev,
+      [field]: date,
+    }));
   };
 
   return (
@@ -360,47 +369,30 @@ const ExperienceHistory = ({ userId, experienceHistory, about }) => {
             />
           </Grid>
           <Grid item xs={6}>
-            <InputMask
-              mask="99/9999"
-              maskChar=""
-              value={newExperience.from}
-              onChange={handleInputChange}
-            >
-              {(inputProps) => (
-                <TextField
-                  {...inputProps}
-                  label="From"
-                  name="from"
-                  placeholder="MM/YYYY"
-                  fullWidth
-                  size="small"
-                  sx={{ mt: 1 }}
-                  helperText="Format: MM/YYYY"
-                />
-              )}
-            </InputMask>
-            </Grid>
-            <Grid item xs={6}>
-            <InputMask
-              mask="99/9999"
-              maskChar=""
-              value={newExperience.to}
-              onChange={handleInputChange}
-            >
-              {(inputProps) => (
-                <TextField
-                  {...inputProps}
-                  label="To"
-                  name="to"
-                  placeholder="MM/YYYY"
-                  fullWidth
-                  size="small"
-                  sx={{ mt: 1 }}
-                  helperText="Format: MM/YYYY"
-                />
-              )}
-            </InputMask>
-          </Grid>
+        <label className="date-label" style={{marginRight:"10px"}}>From:</label>
+        <DatePicker
+          selected={newExperience.from}
+          onChange={(date) => handleChange(date, "from")}
+          dateFormat="MM/yyyy"
+          showMonthYearPicker
+          maxDate={new Date()}
+          placeholderText="MM/YYYY"
+          className="custom-datepicker-input"
+        />
+      </Grid>
+
+      <Grid item xs={6}>
+      <label className="date-label" style={{marginRight:"10px",marginLeft:"5px"}}>To:</label>
+        <DatePicker
+          selected={newExperience.to}
+          onChange={(date) => handleChange(date, "to")}
+          dateFormat="MM/yyyy"
+          showMonthYearPicker
+          maxDate={new Date()}
+          placeholderText="MM/YYYY"
+          className="custom-datepicker-input"
+        />
+      </Grid>
           <Grid item xs={12}>
             <TextField
               name="description"

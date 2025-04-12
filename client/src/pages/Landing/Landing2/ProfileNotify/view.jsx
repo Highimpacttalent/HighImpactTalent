@@ -9,6 +9,21 @@ const view = () => {
         navigate("/user-profile");
     }
     console.log("userInfo" ,user)
+
+    const profileFields = [
+      "firstName",
+      "lastName",
+      "email",
+      "currentCompany",
+      "currentDesignation",
+      "currentSalary",
+      "currentLocation",
+      "openToRelocate",
+      "experience",
+      "linkedinLink",
+      "joinConsulting"
+    ];
+    
   
     const filledFieldsCount = profileFields.reduce((count, field) => {
       if (user[field] && user[field].toString().trim() !== "") {

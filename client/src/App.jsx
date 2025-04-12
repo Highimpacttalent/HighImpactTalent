@@ -10,7 +10,9 @@ import ViewResumeProfile from "./pages/ResumeSearch/ViewResume/view";
 import ApplicationTracking from "./pages/ApplicationTracking";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import ContactUsPage from "./pages/ContactUs/view";
+import View from "./pages/JobPost/components/ViewDetails/View.jsx";
 import TermsAndConditions from "./components/terms";
+import JobPosted from "./pages/JobPost/view.jsx";
 import Landing2 from "./pages/Landing/Landing2/view";
 import RefundPolicy from "./components/Refund";
 import ApplicationStatus from "./pages/ApplicationStatus";
@@ -67,7 +69,7 @@ function App() {
           <Route path="/" element={<LandingMain/>}></Route>
           <Route path="/home" element={<Landing2/>}></Route>
           <Route path='/find-jobs' element={<FindJob />} />
-          <Route path='/view-jobs' element={<ViewJobs />} />
+          <Route path='/view-jobs' element={<JobPosted />} />
           <Route path="/applicant/:jobId" element={<JobApplications />}/>
           <Route path='/companies' element={<Companies />} />
           <Route path={"/user-profile"} element={<ProfileSection />} />
@@ -84,6 +86,7 @@ function App() {
           </Route>
           <Route path={'/userinformation'} element={<ResumeUpload/>}></Route>
           <Route path={'/password'} element={<PasswordChange/>}></Route>
+          <Route path={'/view-job-post'} element={<View/>}></Route>
           <Route path={'/payment'} element={<PayUPaymentPage/>}></Route>
           <Route path={"/payment-success"} element={<PaymentSuccess />} />
           <Route path={"/payment-failure"} element={<PaymentFailure />} />

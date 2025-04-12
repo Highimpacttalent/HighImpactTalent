@@ -189,16 +189,6 @@ const LoggedInMenu = ({ user, handleMenuOpen }) => (
       <Button
         color="inherit"
         component={Link}
-        to="/upload-a-job"
-        sx={{textTransform:"none",fontFamily:"Poppins",fontWeight:"500",fontSize:"18px",color:"#24252C"}}
-      >
-        Upload Job
-      </Button>
-    )}
-    {user?.accountType !== "seeker" && (
-      <Button
-        color="inherit"
-        component={Link}
         to="/resumesearch"
         sx={{textTransform:"none",fontFamily:"Poppins",fontWeight:"500",fontSize:"18px",color:"#24252C"}}
       >
@@ -330,16 +320,6 @@ const LoggedInDrawer = ({ user, handleLogout, setDrawerOpen }) => (
         primary={user?.accountType === "seeker" ? "Find Job" : "Job Posts"}
       />
     </ListItem>
-    {user?.accountType !== "seeker" && (
-      <ListItem
-        button
-        component={Link}
-        to="/upload-a-job"
-        onClick={() => setDrawerOpen(false)}
-      >
-        <ListItemText primary="Upload Job" />
-      </ListItem>
-    )}
     {/* {user?.accountType === "seeker" && (
       <ListItem
         button
