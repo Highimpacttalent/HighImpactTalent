@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
-import { AiOutlineSearch, AiOutlineCheck } from "react-icons/ai"; // Import check icon
+import { AiOutlineSearch } from "react-icons/ai";
 import { MdLocationOn } from "react-icons/md";
 import {
   Box,
@@ -19,11 +19,8 @@ import {
   AccordionDetails,
   Pagination,
   MenuItem,
-  Select,
-  FormControl,
   Checkbox,
   FormControlLabel,
-  InputLabel,
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { apiRequest } from "../../utils"; // Ensure this utility is correctly set up for API calls
@@ -37,18 +34,21 @@ const DesktopView = () => {
   const { user } = useSelector((state) => state.user);
   const Statelocation = useLocation();
   const { searchKeywordProp, searchLocationProp } = Statelocation.state || {};
+  
   const [sort, setSort] = useState("Newest");
   const [page, setPage] = useState(1);
   const [numPage, setNumPage] = useState(1);
   const [data, setData] = useState([]);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [searchLocation, setSearchLocation] = useState(
-    searchLocationProp || ""
-  );
   const [isFetching, setIsFetching] = useState(false);
-  const [searchKeyword, setSearchKeyword] = useState(searchKeywordProp || "");
   const [selectedTab, setSelectedTab] = useState(0);
   const [filteredJobs, setFilteredJobs] = useState([]);
+  
+  // Search states - separate tracking states from actual query states
+  const [searchKeyword, setSearchKeyword] = useState(searchKeywordProp || "");
+  const [searchLocation, setSearchLocation] = useState(searchLocationProp || "");
+  // These will only update when the search button is clicked
+  const [searchQuery, setSearchQuery] = useState(searchKeywordProp || ""); 
+  const [searchLocationQuery, setSearchLocationQuery] = useState(searchLocationProp || "");
 
   const [experienceFilter, setExperienceFilter] = useState([]);
   const [workModeFilter, setWorkModeFilter] = useState([]);
@@ -97,28 +97,28 @@ const DesktopView = () => {
   ];
 
   // Frontend: Update experienceOptions to ensure proper ranges
-const experienceOptions = [
-  { value: "0-2", label: "0-2 years" },
-  { value: "2-5", label: "2-5 years" },  
-  { value: "5-8", label: "5-8 years" },
-  { value: "8-11", label: "8-11 years" },
-  { value: "11-100", label: "Over 11 years" }  
-];
+  const experienceOptions = [
+    { value: "0-2", label: "0-2 years" },
+    { value: "2-5", label: "2-5 years" },  
+    { value: "5-8", label: "5-8 years" },
+    { value: "8-11", label: "8-11 years" },
+    { value: "11-100", label: "Over 11 years" }  
+  ];
 
   const workModeOptions = ["Remote", "Hybrid", "Work From Office"];
   const workTypeOptions = ["Full-Time", "Part-Time", "Contract", "Temporary"];
-const salaryRangeOptions = [
-  "0-5",       
-  "5-10",      
-  "10-15",     
-  "15-20",     
-  "20-30",     
-  "30-50",     
-  "50-80",     
-  "80-120",   
-  "120-150",
-  "150-1000"
-];
+  const salaryRangeOptions = [
+    "0-5",       
+    "5-10",      
+    "10-15",     
+    "15-20",     
+    "20-30",     
+    "30-50",     
+    "50-80",     
+    "80-120",   
+    "120-150",
+    "150-1000"
+  ];
   const datePostedOptions = [
     "Last 24 hours",
     "Last one week",
@@ -185,7 +185,7 @@ const salaryRangeOptions = [
     }
     const newURL = updateURL({
       query: searchQuery,
-      searchLoc: searchLocation,
+      searchLoc: searchLocationQuery, // Use searchLocationQuery instead of searchLocation
       exp: experienceFilter,
       sort: sort,
       pageNum: page,
@@ -231,8 +231,8 @@ const salaryRangeOptions = [
   }, [
     page,
     sort,
-    searchQuery,
-    searchLocation,
+    searchQuery, // This will only change when search button is clicked
+    searchLocationQuery, // This will only change when search button is clicked
     experienceFilter,
     locationFilter,
     workModeFilter,
@@ -244,8 +244,15 @@ const salaryRangeOptions = [
 
   const handleSearchClick = () => {
     setSearchQuery(searchKeyword);
+    setSearchLocationQuery(searchLocation);
     setPage(1);
-    fetchJobs();
+  };
+
+  // Handle search on Enter key press for both inputs
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      handleSearchClick();
+    }
   };
 
   const handleResetFilters = () => {
@@ -325,10 +332,8 @@ const salaryRangeOptions = [
             sx={{ flex: 1, fontSize: "1.1rem", ml: 1 }}
             placeholder="Job title"
             value={searchKeyword}
-            onChange={(e) => {
-              setSearchKeyword(e.target.value);
-              setSearchQuery(e.target.value); // Update searchQuery directly
-            }}
+            onChange={(e) => setSearchKeyword(e.target.value)}
+            onKeyPress={handleKeyPress}
           />
           <Divider orientation="vertical" flexItem sx={{ mx: 1 }} />
           <IconButton sx={{ color: "gray" }}>
@@ -339,6 +344,7 @@ const salaryRangeOptions = [
             placeholder="Location"
             value={searchLocation}
             onChange={(e) => setSearchLocation(e.target.value)}
+            onKeyPress={handleKeyPress}
           />
           <Button
             variant="contained"
@@ -444,7 +450,6 @@ const salaryRangeOptions = [
               <MenuItem onClick={() => handleSelect("Newest")}>
                 Newest First
               </MenuItem>
-              {/* <MenuItem onClick={() => handleSelect("Alphabetical")}>Salary</MenuItem> */}
             </Menu>
           </Box>
         </Box>
