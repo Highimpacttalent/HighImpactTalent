@@ -44,42 +44,42 @@ const mobileView = () => {
   const [numPage, setNumPage] = useState(1);
   const [recordCount, setRecordCount] = useState(0);
   const [data, setData] = useState([]);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [jobLocation, setJobLocation] = useState("");
-  const [filterJobTypes, setFilterJobTypes] = useState([]);
-  const [filterExp, setFilterExp] = useState("");
   const [isFetching, setIsFetching] = useState(false);
   const [selectedCheckbox, setSelectedCheckbox] = useState(0);
   const explist = ["0-100", "1-2", "2-6", "6-100"];
   const location = useLocation();
   const navigate = useNavigate();
-  const [experienceFilter, setExperienceFilter] = useState("");
-  const [locationFilter, setLocationFilter] = useState([]);
-  const [workModeFilter, setWorkModeFilter] = useState([]);
-  const [selectedTab, setSelectedTab] = useState(0);
-  const [workTypeFilter, setWorkTypeFilter] = useState([]);
   const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
   const [sortDrawerOpen, setSortDrawerOpen] = useState(false);
-  const [salaryRangeFilter, setSalaryRangeFilter] = useState([]);
-  const [datePostedFilter, setDatePostedFilter] = useState([]);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const Statelocation = useLocation();
   const { searchKeywordProp, searchLocationProp } = Statelocation.state || {};
-  const [searchLocation, setSearchLocation] = useState(
-    searchLocationProp || ""
-  );
-  const [workMode, setWorkMode] = useState("");
-  const [workType, setWorkType] = useState("");
-  const [salaryRange, setSalaryRange] = useState("");
-  const [datePosted, setDatePosted] = useState("");
-  const [locations, setLocations] = useState([]);
+  
+  // Changed to match desktop implementation - separate input tracking from actual query states
+  const [searchKeyword, setSearchKeyword] = useState(searchKeywordProp || "");
+  const [searchLocation, setSearchLocation] = useState(searchLocationProp || "");
+  // These will only update when search button is clicked
+  const [searchQuery, setSearchQuery] = useState(searchKeywordProp || "");
+  const [searchLocationQuery, setSearchLocationQuery] = useState(searchLocationProp || "");
+  
+  const [selectedTab, setSelectedTab] = useState(0);
+  const [experienceFilter, setExperienceFilter] = useState([]);
+  const [locationFilter, setLocationFilter] = useState([]);
+  const [workModeFilter, setWorkModeFilter] = useState([]);
+  const [workTypeFilter, setWorkTypeFilter] = useState([]);
+  const [salaryRangeFilter, setSalaryRangeFilter] = useState([]);
+  const [datePostedFilter, setDatePostedFilter] = useState([]);
+  const [jobLocation, setJobLocation] = useState("");
+  const [filteredJobs, setFilteredJobs] = useState([]);
+
+  // Set all accordion panels to collapsed by default
   const [expandedAccordions, setExpandedAccordions] = useState({
-    experience: true,
-    workMode: true,
-    workType: true,
-    location: true,
-    salary: true,
-    datePosted: true,
+    experience: false,
+    workMode: false,
+    workType: false,
+    location: false,
+    salary: false,
+    datePosted: false,
   });
 
   const toggleFilterDrawer = (open) => setFilterDrawerOpen(open);
@@ -170,9 +170,6 @@ const mobileView = () => {
     return `${location.pathname}?${params.toString()}`;
   };
 
-  const [searchKeyword, setSearchKeyword] = useState("");
-  const [filteredJobs, setFilteredJobs] = useState();
-
   const fetchJobs = async () => {
     setIsFetching(true);
     let locationsForAPI = [...locationFilter];
@@ -181,7 +178,7 @@ const mobileView = () => {
     }
     const newURL = updateURL({
       query: searchQuery,
-      searchLoc: searchLocation,
+      searchLoc: searchLocationQuery, // Updated to use searchLocationQuery
       exp: experienceFilter,
       sort: sort,
       pageNum: page,
@@ -227,8 +224,8 @@ const mobileView = () => {
   }, [
     page,
     sort,
-    searchQuery,
-    searchLocation,
+    searchQuery, // This will only change when search button is clicked
+    searchLocationQuery, // This will only change when search button is clicked
     experienceFilter,
     locationFilter,
     workModeFilter,
@@ -238,21 +235,18 @@ const mobileView = () => {
     selectedTab,
   ]);
 
-  // Handle search input change
-  const handleInputChange = (e) => {
-    const keyword = e.target.value;
-    setSearchKeyword(keyword);
-    if (keyword === "") {
-      setFilteredJobs(data);
-    } else {
-      const lowerCaseKeyword = keyword.toLowerCase();
-      const filtered = data.filter(
-        (job) =>
-          job.jobTitle.toLowerCase().includes(lowerCaseKeyword) ||
-          job.jobDescription.toLowerCase().includes(lowerCaseKeyword)
-      );
-      setFilteredJobs(filtered);
+  // Handle search on Enter key press for both inputs
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      handleSearchClick();
     }
+  };
+
+  // Handle search button click - this will trigger the API call
+  const handleSearchClick = () => {
+    setSearchQuery(searchKeyword);
+    setSearchLocationQuery(searchLocation);
+    setPage(1);
   };
 
   const handleResetFilters = () => {
@@ -273,27 +267,6 @@ const mobileView = () => {
     });
   };
 
-  // Handle experience filter change
-  const handleExperienceChange = (event) => {
-    setExperienceFilter(event.target.value);
-  };
-
-  const handleLocationChange = (e) => {
-    const keyword = e.target.value;
-    setJobLocation(keyword);
-    if (keyword === "") {
-      setFilteredJobs(data);
-    } else {
-      const lowerCaseKeyword = keyword.toLowerCase();
-      const filtered = data.filter(
-        (job) =>
-          job.jobLocation.toLowerCase().includes(lowerCaseKeyword) ||
-          job.jobLocation.toLowerCase().includes(lowerCaseKeyword)
-      );
-      setFilteredJobs(filtered);
-    }
-  };
-
   const handleMultipleSelection = (value, state, setState) => {
     if (state.includes(value)) {
       setState(state.filter((item) => item !== value));
@@ -302,11 +275,17 @@ const mobileView = () => {
     }
   };
 
-  const handleSearchClick = () => {
-    setSearchQuery(searchKeyword);
-    setPage(1);
-    fetchJobs();
+  const getActiveFilterCount = () => {
+    return (
+      experienceFilter.length +
+      workModeFilter.length +
+      workTypeFilter.length +
+      locationFilter.length +
+      salaryRangeFilter.length +
+      datePostedFilter.length
+    );
   };
+
   const FilterOption = ({ label, value, state, setState }) => {
     const isChecked = state.includes(value);
 
@@ -336,17 +315,6 @@ const mobileView = () => {
           {label}
         </Typography>
       </Box>
-    );
-  };
-
-  const getActiveFilterCount = () => {
-    return (
-      experienceFilter.length +
-      workModeFilter.length +
-      workTypeFilter.length +
-      locationFilter.length +
-      salaryRangeFilter.length +
-      datePostedFilter.length
     );
   };
 
@@ -394,10 +362,8 @@ const mobileView = () => {
                   sx={{ flex: 1, fontSize: "1rem", ml: 1 }}
                   placeholder="Job title or keywords"
                   value={searchKeyword}
-                  onChange={(e) => {
-                    setSearchKeyword(e.target.value);
-                    setSearchQuery(e.target.value); // Update searchQuery directly
-                  }}
+                  onChange={(e) => setSearchKeyword(e.target.value)}
+                  onKeyPress={handleKeyPress}
                 />
               </Box>
 
@@ -419,6 +385,7 @@ const mobileView = () => {
                   placeholder="Location (City, State, or Zip)"
                   value={searchLocation}
                   onChange={(e) => setSearchLocation(e.target.value)}
+                  onKeyPress={handleKeyPress}
                 />
               </Box>
 
@@ -536,7 +503,6 @@ const mobileView = () => {
                 )}
               </Box>
               {/* Experience Filter */}
-              {/* Experience Filter */}
               <Accordion
                 expanded={expandedAccordions.experience}
                 onChange={handleAccordionChange("experience")}
@@ -570,7 +536,6 @@ const mobileView = () => {
                 </AccordionDetails>
               </Accordion>
 
-              {/* Work Mode Filter */}
               {/* Work Mode Filter */}
               <Accordion
                 expanded={expandedAccordions.workMode}
