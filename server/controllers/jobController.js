@@ -52,6 +52,7 @@ export const createJob = async (req, res, next) => {
       qualifications,
       screeningQuestions,
       company: id,
+      status: "draft",
       ...(applicationLink && { applicationLink }),
       skills: Array.isArray(skills) ? skills : [],
     };
@@ -156,6 +157,12 @@ export const getJobPosts = async (req, res, next) => {
     const { skills } = req.body;
     
     let queryObject = {};
+
+    queryObject.$or = [
+      { status: "live" },
+      { status: { $exists: false } }
+    ];
+
     if (location || searchLocation) {
       const locationValue = location || searchLocation;
       
@@ -393,8 +400,15 @@ export const getJobsBySalaryDesc = async (req, res, next) => {
     const limit = Number(req.query.limit) || 20;
     const skip = (page - 1) * limit;
 
+    const statusFilter = {
+      $or: [
+        { status: "live" },
+        { status: { $exists: false } }
+      ]
+    };
+
     // Fetch jobs sorted by salary in descending order
-    const jobs = await Jobs.find({})
+    const jobs = await Jobs.find(statusFilter)
       .sort({ salary: -1 }) // Sorting salary in descending order
       .skip(skip)
       .limit(limit)
@@ -538,8 +552,15 @@ export const getJobsBySkills = async (req, res, next) => {
     const limit = Number(req.query.limit) || 20;
     const skip = (page - 1) * limit;
 
+    const statusFilter = {
+      $or: [
+        { status: "live" },
+        { status: { $exists: false } }
+      ]
+    };
+
     // Fetch jobs with skill array
-    const jobs = await Jobs.find({})
+    const jobs = await Jobs.find(statusFilter)
       .skip(skip)
       .limit(limit)
       .populate({

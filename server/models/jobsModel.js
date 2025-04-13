@@ -14,6 +14,11 @@ const jobSchema = new mongoose.Schema(
     salaryCategory:{
       type:String,
     },
+    status: {
+      type: String,
+      enum: ["live", "draft", "deleted"],
+      default: "draft",
+    },
     workType: {
       type: String,
       enum: ["Full-Time", "Part-Time", "Contract", "Temporary"],
