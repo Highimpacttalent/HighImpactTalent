@@ -91,10 +91,9 @@ export const updateJob = async (req, res, next) => {
       salary,
       experience,
       salaryConfidential,
-      desc,
+      jobDescription,
       skills,
       requirements,
-      maxApplicants,
       screeningQuestions,
       applicationLink,
       duration,
@@ -105,9 +104,7 @@ export const updateJob = async (req, res, next) => {
       !jobTitle ||
       !jobLocation ||
       !salary ||
-      !desc ||
       !requirements ||
-      !maxApplicants ||
       !duration ||
       !workType ||
       !workMode
@@ -126,8 +123,7 @@ export const updateJob = async (req, res, next) => {
       salary,
       experience,
       skills,
-      detail: { desc, requirements },
-      maxApplicants,
+      jobDescription, 
       screeningQuestions,
       ...(applicationLink !== undefined && { applicationLink }),
       duration,
