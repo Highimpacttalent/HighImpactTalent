@@ -98,8 +98,8 @@ export const updateJob = async (req, res, next) => {
       screeningQuestions,
       applicationLink,
       duration,
+      jobId
     } = req.body;
-    const { jobId } = req.params;
 
     if (
       !jobTitle ||
@@ -116,10 +116,6 @@ export const updateJob = async (req, res, next) => {
       next("Please Provide All Required Fields");
       return;
     }
-    const id = req.body.user.userId;
-
-    if (!mongoose.Types.ObjectId.isValid(id))
-      return res.status(404).send(`No Company with id: ${id}`);
 
     const jobPost = {
       jobTitle,
