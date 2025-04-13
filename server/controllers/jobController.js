@@ -96,7 +96,6 @@ export const updateJob = async (req, res, next) => {
       requirements,
       screeningQuestions,
       applicationLink,
-      duration,
       jobId
     } = req.body;
 
@@ -105,7 +104,6 @@ export const updateJob = async (req, res, next) => {
       !jobLocation ||
       !salary ||
       !requirements ||
-      !duration ||
       !workType ||
       !workMode
     ) {
@@ -126,7 +124,6 @@ export const updateJob = async (req, res, next) => {
       jobDescription, 
       screeningQuestions,
       ...(applicationLink !== undefined && { applicationLink }),
-      duration,
       _id: jobId,
     };
 
