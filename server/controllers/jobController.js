@@ -85,12 +85,12 @@ export const updateJob = async (req, res, next) => {
   try {
     const {
       jobTitle,
-      jobType,
       workType,
       workMode,
-      location,
+      jobLocation,
       salary,
       experience,
+      salaryConfidential,
       desc,
       skills,
       requirements,
@@ -103,8 +103,7 @@ export const updateJob = async (req, res, next) => {
 
     if (
       !jobTitle ||
-      !jobType ||
-      !location ||
+      !jobLocation ||
       !salary ||
       !desc ||
       !requirements ||
@@ -122,7 +121,8 @@ export const updateJob = async (req, res, next) => {
       jobType,
       workType,
       workMode,
-      location,
+      jobLocation,
+      salaryConfidential,
       salary,
       experience,
       skills,
