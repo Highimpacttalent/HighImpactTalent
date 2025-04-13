@@ -113,7 +113,6 @@ export const updateJob = async (req, res, next) => {
 
     const jobPost = {
       jobTitle,
-      jobType,
       workType,
       workMode,
       jobLocation,
