@@ -602,3 +602,49 @@ export const getJobsBySkills = async (req, res, next) => {
     res.status(500).json({ message: "Server Error", error: error.message });
   }
 };
+
+//Update Status
+export const updateJobStatus = async (req, res, next) => {
+  try {
+    const { jobId, status } = req.body;
+
+    // Validate input
+    if (!jobId || !status) {
+      return next("Job ID and Status are required");
+    }
+
+    // Validate status value
+    const validStatuses = ['live', 'draft', 'deleted'];
+    if (!validStatuses.includes(status.toLowerCase())) {
+      return next("Invalid status value. Allowed values: live, draft, deleted");
+    }
+
+    // Find and update the job
+    const updatedJob = await Jobs.findByIdAndUpdate(
+      jobId,
+      { status: status.toLowerCase() },
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedJob) {
+      return res.status(404).json({
+        success: false,
+        message: "Job not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Job status updated successfully",
+      job: updatedJob,
+    });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      success: false,
+      message: "Error updating job status",
+      error: error.message
+    });
+  }
+};

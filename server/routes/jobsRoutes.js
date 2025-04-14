@@ -8,7 +8,8 @@ import {
   getJobPosts,
   updateJob,
   getJobsBySalaryDesc,
-  getJobsBySkills
+  getJobsBySkills,
+  updateJobStatus
 } from "../controllers/jobController.js";
 
 const router = express.Router();
@@ -36,6 +37,9 @@ router.post("/get-jobs",getJobsByIds)
 
 // DELETE JOB POST
 router.delete("/delete-job/:id", userAuth, deleteJobPost);
+
+//Status Update 
+router.put("/update-status",updateJobStatus)
 
 export default router;
 

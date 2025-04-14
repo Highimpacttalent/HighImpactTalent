@@ -16,7 +16,7 @@ const jobSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["live", "draft", "deleted"],
+      enum: ["live", "draft", "deleted","paused"],
       default: "draft",
     },
     workType: {
