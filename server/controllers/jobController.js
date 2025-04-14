@@ -614,9 +614,9 @@ export const updateJobStatus = async (req, res, next) => {
     }
 
     // Validate status value
-    const validStatuses = ['live', 'draft', 'deleted'];
+    const validStatuses = ['live', 'draft', 'deleted','paused'];
     if (!validStatuses.includes(status.toLowerCase())) {
-      return next("Invalid status value. Allowed values: live, draft, deleted");
+      return next("Invalid status value. Allowed values: live, draft, deleted,paused");
     }
 
     // Find and update the job
