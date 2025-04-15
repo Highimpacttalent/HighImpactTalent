@@ -13,6 +13,7 @@ import ContactUsPage from "./pages/ContactUs/view";
 import View from "./pages/JobPost/components/ViewDetails/View.jsx";
 import TermsAndConditions from "./components/terms";
 import JobPosted from "./pages/JobPost/view.jsx";
+
 import Landing2 from "./pages/Landing/Landing2/view";
 import RefundPolicy from "./components/Refund";
 import ApplicationStatus from "./pages/ApplicationStatus";
@@ -20,6 +21,7 @@ import PasswordChange from "./pages/Password";
 import ScreeningView from "./pages/Screening/view";
 import FloatingChatAssistant from "./components/Chat/FloatingChat";
 import UserInfoForm from "./pages/UserAdditionalDetails/view";
+import ViewProfile from "./pages/Applicants/ViewProfile.jsx";
 import JobUploadPage from "./pages/UploadJob/view.jsx";
 import ProfileSection from "./pages/Profile/view";
 import UserLoginForm from "./pages/AuthForm/u-login";
@@ -28,7 +30,7 @@ import BlogPage2 from "./pages/Blog/desktop"
 import ViewJobs from "./pages/ViewJobs";
 import LandingMain from "./pages/Landing/LandingMain/view";
 import SingleBlog from "./pages/SingleBlog";
-import JobApplications from "./pages/ViewApplicants";
+import JobApplications from "./pages/Applicants/ViewApplicants.jsx";
 import ResumeUpload from "./pages/UserDetailsUpload/userInfo";
 import RecruiterSchedule from "./pages/RecruiterSchedule";
 import RecruiterSignup from "./pages/AuthForm/Recruiter-Auth";
@@ -90,6 +92,7 @@ function App() {
           <Route path={'/payment'} element={<PayUPaymentPage/>}></Route>
           <Route path={"/payment-success"} element={<PaymentSuccess />} />
           <Route path={"/payment-failure"} element={<PaymentFailure />} />
+          <Route path={"/view-profile"} element={<ViewProfile />} />
           
         </Route>
         <Route path="/r-authform" element={<RecruiterSignup/>}></Route>
