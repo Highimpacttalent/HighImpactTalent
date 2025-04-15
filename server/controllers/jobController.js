@@ -153,8 +153,9 @@ export const updateJob = async (req, res, next) => {
 
 export const getJobPosts = async (req, res, next) => {
   try {
-    const { search, query, sort, location, searchLocation, exp, workType, workMode, salary, datePosted, isRecommended } = req.query;
-    const { skills } = req.body;
+    const { search, query, sort, location, searchLocation, exp, workType, workMode, salary, datePosted } = req.query;
+    const { skills, user } = req.body;
+    const userId = user?.id;
     
     let queryObject = {};
 
@@ -261,6 +262,7 @@ export const getJobPosts = async (req, res, next) => {
     if (datePosted) {
       const dateOptions = datePosted.split(',');
       if (dateOptions.includes("Any Time")) {
+        // Do nothing, no date filter
       } else {
         const dateConditions = [];
         const now = new Date();
@@ -345,34 +347,139 @@ export const getJobPosts = async (req, res, next) => {
     // Execute query
     let jobs = await queryResult;
 
-    // Apply recommendation sorting if requested
-    if (isRecommended === "true" && skills && Array.isArray(skills)) {
-      // Calculate match score between job skills and user skills
-      const calculateMatchScore = (jobSkills, userSkills) => {
-        if (!jobSkills || !Array.isArray(jobSkills)) return 0;
-        
-        const matchCount = jobSkills.filter(skill => 
-          userSkills.some(userSkill => 
-            userSkill.toLowerCase() === skill.toLowerCase()
-          )
-        ).length;
-        
-        // Calculate match percentage and weight
-        const matchPercentage = jobSkills.length > 0 ? matchCount / jobSkills.length : 0;
-        return matchPercentage;
-      };
+    // Get user preferences if userId is provided
+    let userPreferences = null;
+    if (userId) {
+      userPreferences = await User.findById(userId).select(
+        'preferredLocations preferredWorkTypes preferredWorkModes expectedMinSalary skills'
+      );
+    }
 
-      // Convert Mongoose documents to plain objects and add match score
+    // Calculate match percentage if user preferences are available
+    if (userPreferences) {
+      // Convert Mongoose documents to plain objects
       jobs = jobs.map(job => {
         const plainJob = job.toObject ? job.toObject() : job;
+        
+        // Initialize match metrics
+        let totalMatches = 0;
+        let totalPossibleMatches = 0;
+        const matchDetails = {};
+
+        // 1. Match Skills (highest weight: 35%)
+        if (userPreferences.skills && Array.isArray(userPreferences.skills) && plainJob.skills && Array.isArray(plainJob.skills)) {
+          const userSkillsLower = userPreferences.skills.map(skill => skill.toLowerCase());
+          const jobSkillsLower = plainJob.skills.map(skill => skill.toLowerCase());
+          
+          const matchingSkills = jobSkillsLower.filter(skill => 
+            userSkillsLower.includes(skill)
+          );
+          
+          const skillWeight = 35;
+          const skillScore = jobSkillsLower.length > 0 ? 
+            (matchingSkills.length / jobSkillsLower.length) * skillWeight : 0;
+          
+          totalMatches += skillScore;
+          totalPossibleMatches += skillWeight;
+          matchDetails.skills = {
+            score: skillScore,
+            maxScore: skillWeight,
+            percentage: Math.round((skillScore / skillWeight) * 100)
+          };
+        }
+
+        // 2. Match Location (weight: 25%)
+        if (userPreferences.preferredLocations && Array.isArray(userPreferences.preferredLocations) && plainJob.jobLocation) {
+          const userLocationsLower = userPreferences.preferredLocations.map(loc => loc.toLowerCase());
+          const jobLocationLower = plainJob.jobLocation.toLowerCase();
+          
+          const locationMatches = userLocationsLower.some(loc => 
+            jobLocationLower.includes(loc) || loc.includes(jobLocationLower)
+          );
+          
+          const locationWeight = 25;
+          const locationScore = locationMatches ? locationWeight : 0;
+          
+          totalMatches += locationScore;
+          totalPossibleMatches += locationWeight;
+          matchDetails.location = {
+            score: locationScore,
+            maxScore: locationWeight,
+            percentage: locationMatches ? 100 : 0
+          };
+        }
+
+        // 3. Match Work Type (weight: 15%)
+        if (userPreferences.preferredWorkTypes && Array.isArray(userPreferences.preferredWorkTypes) && plainJob.workType) {
+          const workTypeMatches = userPreferences.preferredWorkTypes.some(type => 
+            plainJob.workType.includes(type)
+          );
+          
+          const workTypeWeight = 15;
+          const workTypeScore = workTypeMatches ? workTypeWeight : 0;
+          
+          totalMatches += workTypeScore;
+          totalPossibleMatches += workTypeWeight;
+          matchDetails.workType = {
+            score: workTypeScore,
+            maxScore: workTypeWeight,
+            percentage: workTypeMatches ? 100 : 0
+          };
+        }
+
+        // 4. Match Work Mode (weight: 15%)
+        if (userPreferences.preferredWorkModes && Array.isArray(userPreferences.preferredWorkModes) && plainJob.workMode) {
+          const workModeMatches = userPreferences.preferredWorkModes.some(mode => 
+            plainJob.workMode.includes(mode)
+          );
+          
+          const workModeWeight = 15;
+          const workModeScore = workModeMatches ? workModeWeight : 0;
+          
+          totalMatches += workModeScore;
+          totalPossibleMatches += workModeWeight;
+          matchDetails.workMode = {
+            score: workModeScore,
+            maxScore: workModeWeight,
+            percentage: workModeMatches ? 100 : 0
+          };
+        }
+
+        // 5. Match Salary (weight: 10%)
+        if (userPreferences.expectedMinSalary && plainJob.salary) {
+          const userMinSalary = Number(userPreferences.expectedMinSalary) * 100000;
+          const jobSalary = Number(plainJob.salary);
+          
+          const salaryMatches = !isNaN(userMinSalary) && !isNaN(jobSalary) && jobSalary >= userMinSalary;
+          
+          const salaryWeight = 10;
+          const salaryScore = salaryMatches ? salaryWeight : 0;
+          
+          totalMatches += salaryScore;
+          totalPossibleMatches += salaryWeight;
+          matchDetails.salary = {
+            score: salaryScore,
+            maxScore: salaryWeight,
+            percentage: salaryMatches ? 100 : 0
+          };
+        }
+
+        // Calculate overall match percentage
+        const matchPercentage = totalPossibleMatches > 0 ? 
+          Math.round((totalMatches / totalPossibleMatches) * 100) : 0;
+
         return {
           ...plainJob,
-          matchScore: calculateMatchScore(plainJob.skills || [], skills)
+          matchPercentage,
+          matchDetails
         };
-      }).sort((a, b) => b.matchScore - a.matchScore); // Sort by match score
-      
-      // Remove the matchScore property before sending to client
-      jobs = jobs.map(({ matchScore, ...job }) => job);
+      });
+
+      // Sort by match percentage if requested
+      const sortByMatch = req.query.sortByMatch === 'true';
+      if (sortByMatch) {
+        jobs = jobs.sort((a, b) => b.matchPercentage - a.matchPercentage);
+      }
     }
 
     // Send response
@@ -382,8 +489,9 @@ export const getJobPosts = async (req, res, next) => {
       data: jobs,
       page,
       numOfPage,
-    });
-    
+      userLoggedIn: !!userId,  // Flag to indicate if user is logged in
+      profileComplete: userPreferences ? true : false  // Indicates if user has preferences
+    });  
   } catch (error) {
     console.error("Error in getJobPosts:", error);
     res.status(500).json({ 

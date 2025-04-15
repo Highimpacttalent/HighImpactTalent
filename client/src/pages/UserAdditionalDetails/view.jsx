@@ -59,6 +59,10 @@ const UserInfoForm = () => {
     dateOfBirth: defaultValues?.PersonalInformation?.dateOfBirth || "",
     profilePic: defaultValues?.PersonalInformation?.profilePic || "",
     skills: filters.skills,
+    expectedMinSalary: "",
+    preferredLocations: [],
+    preferredWorkTypes: ["Full-Time"], 
+    preferredWorkModes: ["Remote"], 
   });
 
   // Fetch cities from CSV
@@ -219,6 +223,10 @@ const UserInfoForm = () => {
       contactNumber: phoneValue,
       profilePic: profilePicUrl,
       skills: filters.skills,
+      expectedMinSalary: formData.expectedMinSalary,
+      preferredLocations: formData.preferredLocations,
+      preferredWorkTypes: formData.preferredWorkTypes,
+      preferredWorkModes: formData.preferredWorkModes,
     };
 
     // Remove the temporary customCompany field before submission
@@ -1062,6 +1070,211 @@ const UserInfoForm = () => {
             </Box>
           </Box>
         </Box>
+{/* Add this after the Personal Details section */}
+<Box
+  sx={{
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    width: "100%",
+    mt: 4,
+  }}
+>
+  <Box
+    sx={{
+      display: "flex",
+      border: "1px solid #0000004D",
+      borderRadius: 4,
+      width: { xs: "100%", sm: "100%", lg: "80%", md: "80%" },
+      flexDirection: "column",
+    }}
+  >
+    <Typography
+      sx={{
+        color: "#24252C",
+        fontFamily: "Satoshi",
+        fontWeight: 700,
+        p: 2,
+        fontSize: "20px",
+      }}
+    >
+      Preferences
+    </Typography>
+    <Box
+      sx={{
+        display: "flex",
+        justifyContent: {
+          xs: "center",
+          sm: "center",
+          lg: "space-between",
+          md: "space-between",
+        },
+        flexDirection: {
+          xs: "column",
+          sm: "column",
+          lg: "row",
+          md: "row",
+        },
+        width: "100%",
+      }}
+    >
+      <Box
+        sx={{
+          width: { xs: "100%", sm: "100%", md: "50%", lg: "50%" },
+          p: 2,
+        }}
+      >
+        {/* Expected Minimum Salary */}
+        <div className="mb-6">
+          <label
+            className="block mb-4 ml-2"
+            style={{
+              fontFamily: "Satoshi",
+              fontWeight: 500,
+              fontSize: "16px",
+              color: "#24252C",
+            }}
+          >
+            Expected Minimum Salary (INR Lakhs) <span style={{ color: "red" }}>*</span>
+          </label>
+          <input
+            type="number"
+            name="expectedMinSalary"
+            value={formData.expectedMinSalary}
+            onChange={handleChange}
+            className="w-full px-4 py-3 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            style={{ borderRadius: 50, border: "1px solid #24252C" }}
+            required
+          />
+        </div>
+
+        {/* Preferred Work Types (Multi-select) */}
+        <div className="mb-6">
+          <label
+            className="block mb-4 ml-2"
+            style={{
+              fontFamily: "Satoshi",
+              fontWeight: 500,
+              fontSize: "16px",
+              color: "#24252C",
+            }}
+          >
+            Preferred Work Type <span style={{ color: "red" }}>*</span>
+          </label>
+          <Select
+            isMulti
+            options={[
+              { value: "Full-Time", label: "Full-Time" },
+              { value: "Part-Time", label: "Part-Time" },
+              { value: "Contract", label: "Contract" },
+              { value: "Temporary", label: "Temporary" }
+            ]}
+            value={formData.preferredWorkTypes.map(type => ({ value: type, label: type }))}
+            onChange={(selectedOptions, { action, option }) => {
+              const workTypes = selectedOptions.map(option => option.value);
+              setFormData(prev => ({ ...prev, preferredWorkTypes: workTypes }));
+              
+              // Close dropdown after selection
+              document.activeElement.blur();
+            }}
+            styles={customStyles}
+            placeholder="Select work type..."
+            closeMenuOnSelect={true}
+            required
+          />
+        </div>
+      </Box>
+
+      <Box
+        sx={{
+          width: { xs: "100%", sm: "100%", md: "50%", lg: "50%" },
+          p: 2,
+        }}
+      >
+        {/* Preferred Locations (Multi-select with exactly 5) */}
+        <div className="mb-6">
+          <label
+            className="block mb-4 ml-2"
+            style={{
+              fontFamily: "Satoshi",
+              fontWeight: 500,
+              fontSize: "16px",
+              color: "#24252C",
+            }}
+          >
+            Preferred Locations (Select exactly 5) <span style={{ color: "red" }}>*</span>
+          </label>
+          <Select
+            isMulti
+            options={cities.map(city => ({ value: city, label: city }))}
+            value={formData.preferredLocations.map(loc => ({ value: loc, label: loc }))}
+            onChange={(selectedOptions, { action, option }) => {
+              // Check if user is trying to add a 6th option
+              if (selectedOptions.length > 5) {
+                // Show error message only when attempting to exceed limit
+                alert("You can select a maximum of 5 locations");
+                
+                // Keep only the first 5 selections
+                const limitedOptions = selectedOptions.slice(0, 5);
+                setFormData(prev => ({ 
+                  ...prev, 
+                  preferredLocations: limitedOptions.map(option => option.value) 
+                }));
+              } else {
+                // Update normally if within limit
+                const locations = selectedOptions.map(option => option.value);
+                setFormData(prev => ({ ...prev, preferredLocations: locations }));
+              }
+              
+              // Close dropdown after selection
+              document.activeElement.blur();
+            }}
+            styles={customStyles}
+            placeholder="Select preferred locations..."
+            closeMenuOnSelect={true}
+            required
+            isOptionDisabled={() => formData.preferredLocations.length >= 5}
+          />
+        </div>
+
+        {/* Preferred Work Mode (Multi-select) */}
+        <div className="mb-6">
+          <label
+            className="block mb-4 ml-2"
+            style={{
+              fontFamily: "Satoshi",
+              fontWeight: 500,
+              fontSize: "16px",
+              color: "#24252C",
+            }}
+          >
+            Preferred Work Mode <span style={{ color: "red" }}>*</span>
+          </label>
+          <Select
+            isMulti
+            options={[
+              { value: "Remote", label: "Remote" },
+              { value: "Hybrid", label: "Hybrid" },
+              { value: "Work From Office", label: "Work From Office" }
+            ]}
+            value={formData.preferredWorkModes.map(mode => ({ value: mode, label: mode }))}
+            onChange={(selectedOptions, { action, option }) => {
+              const workModes = selectedOptions.map(option => option.value);
+              setFormData(prev => ({ ...prev, preferredWorkModes: workModes }));
+              
+              // Close dropdown after selection
+              document.activeElement.blur();
+            }}
+            styles={customStyles}
+            placeholder="Select work mode..."
+            closeMenuOnSelect={true}
+            required
+          />
+        </div>
+      </Box>
+    </Box>
+  </Box>
+</Box>
         <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
           <Box
             sx={{
