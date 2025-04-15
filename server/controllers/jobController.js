@@ -489,8 +489,9 @@ export const getJobPosts = async (req, res, next) => {
       data: jobs,
       page,
       numOfPage,
-    });
-    
+      userLoggedIn: !!userId,  // Flag to indicate if user is logged in
+      profileComplete: userPreferences ? true : false  // Indicates if user has preferences
+    });  
   } catch (error) {
     console.error("Error in getJobPosts:", error);
     res.status(500).json({ 
