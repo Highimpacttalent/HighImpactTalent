@@ -119,7 +119,7 @@ const userSchema = new mongoose.Schema(
     preferredWorkModes: {
       type: [String],
       enum: ["Remote", "Hybrid", "Work From Office"],
-      default: ["Hybrid"]
+      default: ["Remote"]
     },
     experienceHistory: [
       {
