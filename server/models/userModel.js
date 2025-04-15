@@ -103,6 +103,24 @@ const userSchema = new mongoose.Schema(
       }
     ],
     likedJobs: [{ type: mongoose.Schema.Types.ObjectId, ref: "Jobs" }],
+    expectedMinSalary: {
+      type: String,
+      default: ""
+    },
+    preferredLocations: {
+      type: [String],
+      default: []
+    },
+    preferredWorkTypes: {
+      type: [String],
+      enum: ["Full-Time", "Part-Time", "Contract", "Temporary"],
+      default: ["Full-Time"]
+    },
+    preferredWorkModes: {
+      type: [String],
+      enum: ["Remote", "Hybrid", "Work From Office"],
+      default: ["Hybrid"]
+    },
     experienceHistory: [
       {
         companyName: {
