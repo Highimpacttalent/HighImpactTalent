@@ -426,3 +426,107 @@ Return the response **strictly as JSON** without any additional text`,
     next(error);
   }
 };
+
+export const filterResumesByPrompt = async (req, res) => {
+  try {
+    const { recruiterPrompt, cdnUrls } = req.body;
+
+    if (
+      !recruiterPrompt ||
+      !Array.isArray(cdnUrls) ||
+      cdnUrls.length === 0 ||
+      !cdnUrls[0].cdnUrl ||
+      !cdnUrls[0].userId
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid input format: recruiterPrompt and cdnUrls (with userId & cdnUrl) are required.",
+      });
+    }
+
+    console.log(`Received ${cdnUrls.length} resumes for filtering...`);
+
+    // Step 1: Download and parse all resumes
+    const parsedResumes = await Promise.all(
+      cdnUrls.map(async ({ userId, cdnUrl }) => {
+        try {
+          const fileResponse = await axios.get(cdnUrl, {
+            responseType: "arraybuffer",
+          });
+          const pdfData = await pdfParse(fileResponse.data);
+          return {
+            userId,
+            cdnUrl,
+            text: pdfData.text.trim().slice(0, 20000),
+          };
+        } catch (err) {
+          console.error(`Failed to process resume: ${cdnUrl}`, err.message);
+          return null;
+        }
+      })
+    );
+
+    const validResumes = parsedResumes.filter(Boolean);
+    console.log(`Parsed ${validResumes.length} valid resumes.`);
+
+    // Step 2: Ask Gemini to evaluate all resumes
+    const promptText = `
+You are an expert recruiter assistant. Based on the following recruiter prompt:
+
+"${recruiterPrompt}"
+
+Select the best matching resumes from the list below. Return a JSON array of the **userId and cdnUrl** of the best matching resumes, in this format:
+
+[
+  { "userId": "user123", "cdnUrl": "https://cdn.com/resume1.pdf" },
+  ...
+]
+
+Resumes:
+[
+${validResumes
+  .map(
+    (resume) => `{
+  "userId": "${resume.userId}",
+  "cdnUrl": "${resume.cdnUrl}",
+  "text": "${resume.text.replace(/\n/g, " ").slice(0, 5000)}"
+}`
+  )
+  .join(",\n")}
+]
+
+Respond with only the JSON array, no extra commentary.
+`;
+
+    const geminiResponse = await axios.post(
+      `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`,
+      {
+        contents: [
+          {
+            role: "user",
+            parts: [{ text: promptText }],
+          },
+        ],
+      },
+      { headers: { "Content-Type": "application/json" } }
+    );
+
+    const rawText =
+      geminiResponse.data?.candidates?.[0]?.content?.parts?.[0]?.text || "";
+
+    const jsonMatch = rawText.match(/```json\n([\s\S]*?)\n```/);
+    const cleanJsonText = jsonMatch ? jsonMatch[1].trim() : rawText.trim();
+    const matchedCandidates = JSON.parse(cleanJsonText);
+
+    return res.status(200).json({
+      success: true,
+      matchedCandidates, // includes both userId and cdnUrl
+    });
+  } catch (err) {
+    console.error("Error filtering resumes:", err.message);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to filter resumes based on recruiter prompt.",
+    });
+  }
+};
