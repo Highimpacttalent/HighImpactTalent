@@ -9,10 +9,14 @@ import {
   Paper,
   Card,
   Typography,
+  IconButton,
+  InputBase
 } from "@mui/material";
 import { styled } from "@mui/system";
 import ViewAnalytics from "../AnalyticApplicant";
+import { AiOutlineSearch } from "react-icons/ai";
 import { apiRequest } from "../../utils";
+import { AiOutlineClose } from "react-icons/ai";
 import { LinkedIn } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 
@@ -20,8 +24,10 @@ import { useNavigate } from "react-router-dom";
 const JobApplications = () => {
   const { jobId } = useParams();
   const [applications, setApplications] = useState([]);
+  const [allApplications, setAllApplications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [searchKeyword, setSearchKeyword] = useState("");
   const navigate = useNavigate();
   const [resumeLinks, setResumeLinks] = useState({});
   const [showAnalytics, setShowAnalytics] = useState(false);
@@ -39,6 +45,7 @@ const JobApplications = () => {
         }
 
         setApplications(response.applications);
+        setAllApplications(response.applications);
       } catch (err) {
         setError(err.message);
       } finally {
@@ -49,9 +56,56 @@ const JobApplications = () => {
     fetchApplications();
   }, [jobId]);
 
-  const handleViewResume = (id, cvUrl) => {
-    setResumeLinks((prev) => ({ ...prev, [id]: cvUrl }));
+  const handleSearchClick = async () => {
+    if (!searchKeyword.trim()) return;
+  
+    const cdnUrls = applications.map((app) => ({
+      userId: app.applicant._id,
+      cdnUrl: app.applicant.cvUrl,
+    }));
+  
+    try {
+      const response = await fetch("https://highimpacttalent.onrender.com/api-v1/ai/filter-resume", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          recruiterPrompt: searchKeyword,
+          cdnUrls: cdnUrls,
+        }),
+      });
+  
+      const data = await response.json();
+  
+      if (response.ok && data?.matchedCandidates) {
+        console.log(applications)
+        console.log(data)
+        const matchedIds = data.matchedCandidates.map((c) => c.userId);
+
+        const matchedApp = applications.filter((app) =>
+          matchedIds.includes(app.applicant._id)
+        );
+          
+        if (matchedApp) {
+          setApplications(matchedApp); // Replace all with only filtered one
+        } else {
+          setApplications([]); // No match found
+        }
+      } else {
+        alert(data.message || "Something went wrong with resume filtering");
+      }
+    } catch (err) {
+      console.error("Search error:", err);
+      alert("Failed to filter resumes.");
+    }
   };
+  
+  const restore = async() =>{
+    setApplications(allApplications);
+  }
+  
+  
 
   return (
     <Box sx={{bgcolor:"white",p:4}}>
@@ -88,6 +142,54 @@ const JobApplications = () => {
               No applications found for this job.
             </Typography>
           )}
+        {/* Search Bar */}
+  <Box sx={{ mx: "auto", mt: 3, px: 2,mb:3 }}>
+    <Paper
+      sx={{
+        display: "flex",
+        alignItems: "center",
+        p: 1,
+        borderRadius: "50px",
+        boxShadow: 3,
+        width: "100%",
+        maxWidth: 1000,
+        mx: "auto",
+      }}
+    >
+      <IconButton sx={{ color: "gray" }}>
+        <AiOutlineSearch fontSize="24px" />
+      </IconButton>
+      <InputBase
+        sx={{ flex: 1, fontSize: "1.1rem", ml: 1 }}
+        placeholder="Tell us what kind of candidate you're searching for and our AI powered search will find the best match..."
+        value={searchKeyword}
+        onChange={(e) => setSearchKeyword(e.target.value)}
+      />
+       {/* Cross icon appears only if search is active */}
+    {searchKeyword && (
+      <IconButton onClick={() => { restore(); setSearchKeyword(""); }}>
+        <AiOutlineClose fontSize="20px" />
+      </IconButton>
+    )}
+      <Button
+        variant="contained"
+        sx={{
+          borderRadius: "50px",
+          backgroundColor: "#1A73E8",
+          color: "white",
+          px: 3,
+          ml: 1,
+          textTransform: "none",
+          fontSize: "1rem",
+          fontWeight: "bold",
+          "&:hover": { backgroundColor: "#1669D8" },
+        }}
+        onClick={handleSearchClick}
+      >
+        Search
+      </Button>
+    </Paper>
+  </Box>
           {!loading && !error && applications.length > 0 && (
             <Grid container sx = {{gap:{sm:1,xs:1,md:0,lg:0}}}>
               {applications.map((app, index) => (
@@ -95,7 +197,7 @@ const JobApplications = () => {
                   <Card sx={{border:"1px solid grey",borderRadius:4,p:2,height:"350px",width:"320px",display:"flex",flexDirection:"column",justifyContent:"space-evenly"}}>
                     <Box display="flex" flexDirection="column" alignItems="center" gap={2} mb={2}>
                       <Avatar
-                        src={app.applicant.profileUrl}
+                        src={app.applicant?.profileUrl}
                         sx={{ width: 90, height: 90 }}
                       />
                       <Box>
