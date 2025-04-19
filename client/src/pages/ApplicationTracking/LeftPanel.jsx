@@ -4,7 +4,7 @@ import AppliedJobCard from "./AppliedJobCard";
 import CloseIcon from "@mui/icons-material/Close";
 
 function LeftPanel({ Application }) {
-  const steps = ["Applied", "Shortlisted", "Interviewing", "Hired"];
+  const steps = ["Applied","Application Viewed", "Shortlisted", "Interviewing", "Hired"];
   const currentStatus = Application?.status?.toLowerCase(); // handle undefined gracefully
 
 // Convert steps to lowercase for comparison
