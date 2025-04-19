@@ -218,11 +218,9 @@ export const ApplicationStatusUpdate = async (req, res) => {
     if (!application) {
       return res.status(404).json({ message: "Application not found" });
     }
-
-    // Update current status (unless it's just "Application Viewed")
-    if (status !== "Application Viewed") {
-      application.status = status;
-    }
+    
+    application.status = status;
+    
 
     // Always update status history
     application.statusHistory.push({
