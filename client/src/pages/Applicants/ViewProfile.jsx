@@ -18,20 +18,62 @@ import PhoneIcon from "@mui/icons-material/Phone";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
+import axios from "axios"
 import { useLocation } from "react-router-dom";
 
 const ViewProfile = () => {
-    const location = useLocation();
-    const userData = location.state?.applicant || {};
-    const [expanded, setExpanded] = useState([]);
-    console.log(userData)
+  const location = useLocation();
+  const userData = location.state?.applicant || {};
+  // const currentStatus = location.state?.status || "";
+  const applicationId = location.state?.applicationId || "";
+  const [expanded, setExpanded] = useState([]);
+  console.log(userData);
+  const validStatuses = ["Application Viewed", "Shortlisted", "Interviewing","Hired"];
+  const initialStatus = validStatuses.includes(location.state?.status) ? location.state?.status : "Application Viewed";
+  
+  const [currentStatus, setStatus] = useState(initialStatus);
+  const statusFlow = {
+    "Application Viewed": "Shortlist",
+    "Shortlisted": "Interview",
+    "Interviewing": "Hire",
+  };
+
+  const nextAction = statusFlow[currentStatus];
 
   const handleToggle = (index) => {
     setExpanded((prev) => ({
       ...prev,
       [index]: !prev[index],
     }));
+  };
+
+  const handleStatusUpdate = async () => {
+    const statusMap = {
+      Shortlist: "Shortlisted",
+      Interview: "Interviewing",
+      Hire: "Hired",
+    };
+  
+    const statusToSend = statusMap[nextAction];
+    try {
+      const res = await axios.post(
+        "https://highimpacttalent.onrender.com/api-v1/application/update-status",
+        {
+          applicationId,
+          status: statusToSend,
+        }
+      );
+      if (res.status === 200 || res.data.success) {
+        setStatus(statusToSend);
+      } else {
+        alert("Unable to update status.");
+      }
+    } catch (err) {
+      console.error("Status update error:", err);
+      alert("Unable to update status.");
+    }
   };
 
   return (
@@ -118,14 +160,13 @@ const ViewProfile = () => {
                       <Typography
                         sx={{ color: "#24252C", fontFamily: "Poppins" }}
                       >
-                        {item.text}
+                        {currentStatus === "Application Viewed" ? "**************" : item.text}
                       </Typography>
-                      <IconButton
-                        size="small"
-                        onClick={() => navigator.clipboard.writeText(item.text)}
-                      >
-                        <ContentCopyIcon sx={{ fontSize: 16 }} />
-                      </IconButton>
+                       {currentStatus !== "Application Viewed" && (
+                        <IconButton size="small" onClick={() => navigator.clipboard.writeText(item.text)}>
+                          <ContentCopyIcon sx={{ fontSize: 16 }} />
+                        </IconButton>
+                      )}
                     </Box>
                   }
                   variant="outlined"
@@ -134,62 +175,73 @@ const ViewProfile = () => {
               ))}
             </Box>
           </Box>
+          {currentStatus === "Application Viewed" && (
+            <Typography sx={{ mt: 2, color: "#808195", fontFamily: "Poppins", fontSize: "14px", textAlign: "center" }}>
+              Note: Shortlist the candidate to view contact details
+            </Typography>
+          )}
         </Box>
 
-         {/* Quick Glance Section */}
-         <Section title="Quick Glance">
-          <Typography  sx={{
-               fontFamily: "Poppins",
-               color: "#24252C",
-               fontSize: "14px",
-               mt:2,
-             }}>
-            Years of Experience:{" "}
-            {userData?.experience}
-          </Typography>
-          <Typography  sx={{
-               fontFamily: "Poppins",
-               color: "#24252C",
-               fontSize: "14px",
-               mt:0.5
-             }}>
-            Current Company: {userData?.currentCompany}
-          </Typography>
-          <Typography  sx={{
-               fontFamily: "Poppins",
-               color: "#24252C",
-               fontSize: "14px",
-               mt:0.5,
-             }}>
-            Designation: {userData?.currentDesignation}
-          </Typography>
-          <Typography  sx={{
-               fontFamily: "Poppins",
-               color: "#24252C",
-               fontSize: "14px",
-               mt:0.5,
-             }}>
-            About: {userData?.about}
-          </Typography>
-        </Section>
-
-        
-
-        {/* Skills Section */}
-        <Section title="Skills">
-          {userData?.skills.length > 0? (
-            <Typography
+        {/* Quick Glance Section */}
+        <Section title="Quick Glance">
+          <Typography
             sx={{
               fontFamily: "Poppins",
               color: "#24252C",
               fontSize: "14px",
               mt: 2,
-              mb: 2,
             }}
           >
-            {userData?.skills?.join(", ")}
-          </Typography>):(
-              <Typography
+            Years of Experience: {userData?.experience}
+          </Typography>
+          <Typography
+            sx={{
+              fontFamily: "Poppins",
+              color: "#24252C",
+              fontSize: "14px",
+              mt: 0.5,
+            }}
+          >
+            Current Company: {userData?.currentCompany}
+          </Typography>
+          <Typography
+            sx={{
+              fontFamily: "Poppins",
+              color: "#24252C",
+              fontSize: "14px",
+              mt: 0.5,
+            }}
+          >
+            Designation: {userData?.currentDesignation}
+          </Typography>
+          <Typography
+            sx={{
+              fontFamily: "Poppins",
+              color: "#24252C",
+              fontSize: "14px",
+              mt: 0.5,
+            }}
+          >
+            About: {userData?.about}
+          </Typography>
+        </Section>
+
+        {/* Skills Section */}
+        <Section title="Skills">
+          {userData?.skills.length > 0 ? (
+            <Typography
+              sx={{
+                fontFamily: "Poppins",
+                color: "#24252C",
+                fontSize: "14px",
+                mt: 2,
+                mb: 2,
+              }}
+            >
+              {userData?.skills?.join(", ")}
+            </Typography>
+          ) : (
+            <Typography
               sx={{
                 fontFamily: "Poppins",
                 color: "#24252C",
@@ -205,101 +257,149 @@ const ViewProfile = () => {
 
         {/* Work Experience Section */}
         <Section title="Work Experience">
-          {userData?.workExperience?.length > 0 ? (<List sx={{ mt: 2, mb: 1 }}>
-            {userData?.workExperience?.map((job, index) => (
-              <React.Fragment key={index}>
-                <ListItem divider button onClick={() => handleToggle(index)}>
-                  <ListItemText
-                    primary={
-                      <Typography
-                        sx={{
-                          color: "#24252C",
-                          fontFamily: "Poppins",
-                          fontWeight: 600,
-                          fontSize: "16px",
-                        }}
-                      >
-                        {job?.jobTitle}
-                      </Typography>
-                    }
-                    secondary={
-                      <Typography>
-                        <span
-                          style={{
+          {userData?.workExperience?.length > 0 ? (
+            <List sx={{ mt: 2, mb: 1 }}>
+              {userData?.workExperience?.map((job, index) => (
+                <React.Fragment key={index}>
+                  <ListItem divider button onClick={() => handleToggle(index)}>
+                    <ListItemText
+                      primary={
+                        <Typography
+                          sx={{
                             color: "#24252C",
                             fontFamily: "Poppins",
-                            fontSize: "14px",
-                          }}
-                        >
-                          {job?.companyName}
-                        </span>{" "}
-                        |{" "}
-                        <span
-                          style={{
-                            color: "#808195",
-                            fontFamily: "Satoshi",
+                            fontWeight: 600,
                             fontSize: "16px",
                           }}
                         >
-                          {job?.duration}
-                        </span>
-                      </Typography>
-                    }
-                  />
-                  <IconButton>
-                    {expanded[index] ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-                  </IconButton>
-                </ListItem>
+                          {job?.jobTitle}
+                        </Typography>
+                      }
+                      secondary={
+                        <Typography>
+                          <span
+                            style={{
+                              color: "#24252C",
+                              fontFamily: "Poppins",
+                              fontSize: "14px",
+                            }}
+                          >
+                            {job?.companyName}
+                          </span>{" "}
+                          |{" "}
+                          <span
+                            style={{
+                              color: "#808195",
+                              fontFamily: "Satoshi",
+                              fontSize: "16px",
+                            }}
+                          >
+                            {job?.duration}
+                          </span>
+                        </Typography>
+                      }
+                    />
+                    <IconButton>
+                      {expanded[index] ? (
+                        <ExpandLessIcon />
+                      ) : (
+                        <ExpandMoreIcon />
+                      )}
+                    </IconButton>
+                  </ListItem>
 
-                {expanded[index] && (
-                  <List sx={{ mt: 1, pl: 4 }}>
-                    {job?.responsibilities?.map((resp, idx) => (
-                      <ListItem key={idx}>
-                        <ListItemText primary={`- ${resp}`} />
-                      </ListItem>
-                    ))}
-                  </List>
-                )}
-              </React.Fragment>
-            ))}
-          </List>):(
-             <Typography
-             sx={{
-               fontFamily: "Poppins",
-               color: "#24252C",
-               fontSize: "14px",
-               mt: 2,
-               mb: 2,
-             }}
-           >
-             Work Experience not updated
-           </Typography>
+                  {expanded[index] && (
+                    <List sx={{ mt: 1, pl: 4 }}>
+                      {job?.responsibilities?.map((resp, idx) => (
+                        <ListItem key={idx}>
+                          <ListItemText primary={`- ${resp}`} />
+                        </ListItem>
+                      ))}
+                    </List>
+                  )}
+                </React.Fragment>
+              ))}
+            </List>
+          ) : (
+            <Typography
+              sx={{
+                fontFamily: "Poppins",
+                color: "#24252C",
+                fontSize: "14px",
+                mt: 2,
+                mb: 2,
+              }}
+            >
+              Work Experience not updated
+            </Typography>
           )}
         </Section>
 
-        {/* Download Resume */}
-        <Button
-          fullWidth
-          variant="contained"
+        <Box
           sx={{
-            bgcolor: "#3C7EFC",
-            borderRadius: 16,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "flex-start",
+            gap: 2,
+            mt: 4,
             mb: 8,
-            textTransform: "none",
-            fontFamily: "Satoshi",
-            fontWeight: 700,
-            mt:4
-          }}
-          onClick={() => {
-            if (userData?.cvUrl) {
-              window.open(userData.cvUrl, "_blank");
-            } else {
-              alert("Resume link not available...");
-            }
+            width: { md: "80%", lg: "80%", sm: "100%", xs: "100%" },
           }}
         >
-          View Resume
-        </Button>
+          {/* Download Resume */}
+          <Button
+            fullWidth
+            variant="contained"
+            sx={{
+              bgcolor: "#3C7EFC",
+              borderRadius: 16,
+              textTransform: "none",
+              fontFamily: "Satoshi",
+              fontWeight: 700,
+            }}
+            onClick={() => {
+              if (userData?.cvUrl) {
+                window.open(userData.cvUrl, "_blank");
+              } else {
+                alert("Resume link not available...");
+              }
+            }}
+          >
+            View Resume
+          </Button>
+          {/* Action / Hired Button */}
+          {currentStatus === "Hired" ? (
+            <Button
+              fullWidth
+              variant="contained"
+              disabled
+              sx={{
+                bgcolor: "#808080",
+                borderRadius: 16,
+                textTransform: "none",
+                fontFamily: "Satoshi",
+                fontWeight: 700,
+              }}
+            >
+              Hired
+            </Button>
+          ) : (
+            <Button
+              fullWidth
+              variant="contained"
+              sx={{
+                bgcolor: "green",
+                borderRadius: 16,
+                textTransform: "none",
+                fontFamily: "Satoshi",
+                fontWeight: 700,
+              }}
+              onClick={handleStatusUpdate}
+            >
+              {nextAction}
+            </Button>
+          )}
+        </Box>
       </Container>
     </Box>
   );

@@ -333,10 +333,25 @@ const JobApplications = () => {
                         }}
                         size="small"
                         onClick={async () => {
-                          await markAsViewed(app._id); // Mark the application as viewed
-                          navigate("/view-profile", {
-                            state: { applicant: app.applicant },
-                          }); // Then navigate
+                          if (app.status === "Applied") {
+                            try {
+                              // Mark the application as viewed
+                              await markAsViewed(app._id);
+                        
+                              // Navigate to the profile view
+                              navigate("/view-profile", {
+                                state: { applicant: app.applicant, status: app.status, applicationId: app._id },
+                              });
+                            } catch (error) {
+                              console.error("Error marking application as viewed:", error);
+                              alert("An error occurred while marking the application as viewed.");
+                            }
+                          } else {
+                            // If the status is not 'Applied', just navigate
+                            navigate("/view-profile", {
+                              state: { applicant: app.applicant, status: app.status, applicationId: app._id },
+                            });
+                          }
                         }}
                       >
                         View Profile
