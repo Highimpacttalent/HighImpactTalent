@@ -34,6 +34,7 @@ const applicationSchema = new Schema({
         type: String,
         enum: [
           "Applied",
+          "Application Viewed",
           "Shortlisted",
           "Interviewing",
           "Hired",
