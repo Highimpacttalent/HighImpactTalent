@@ -194,7 +194,7 @@ export const getApplicationsWithJobs = async (req, res) => {
 
 // controller: updateApplicationStatus
 export const ApplicationStatusUpdate = async (req, res) => {
-  const { status } = req.body;
+  const { status,applicationId } = req.body;
 
   const allowedStatuses = [
     "Applied",
@@ -213,7 +213,7 @@ export const ApplicationStatusUpdate = async (req, res) => {
   }
 
   try {
-    const application = await Application.findById(req.body);
+    const application = await Application.findById(applicationId);
 
     if (!application) {
       return res.status(404).json({ message: "Application not found" });
