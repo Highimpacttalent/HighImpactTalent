@@ -192,3 +192,55 @@ export const getApplicationsWithJobs = async (req, res) => {
   }
 };
 
+// controller: updateApplicationStatus
+export const ApplicationStatusUpdate = async (req, res) => {
+  const { status } = req.body;
+
+  const allowedStatuses = [
+    "Applied",
+    "Application Viewed",
+    "Shortlisted",
+    "Interviewing",
+    "Hired",
+    "Not Progressing",
+  ];
+
+  if (!allowedStatuses.includes(status)) {
+    return res.status(400).json({
+      success: false,
+      message: "Invalid status provided",
+    });
+  }
+
+  try {
+    const application = await Application.findById(req.body);
+
+    if (!application) {
+      return res.status(404).json({ message: "Application not found" });
+    }
+
+    // Update current status (unless it's just "Application Viewed")
+    if (status !== "Application Viewed") {
+      application.status = status;
+    }
+
+    // Always update status history
+    application.statusHistory.push({
+      status,
+      changedAt: new Date(),
+    });
+
+    await application.save();
+
+    res.status(200).json({
+      success: true,
+      message: `Application status updated to '${status}'`,
+      application,
+    });
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send("Server error");
+  }
+};
+
+
