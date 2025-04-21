@@ -157,10 +157,18 @@ export const getJobPosts = async (req, res, next) => {
     const { search, query, sort, location, searchLocation, exp, workType, workMode, salary, datePosted } = req.query;
     const { skills } = req.body;
     let userId = null;
-    if (req.body.user?.id) {
-      userId = req.body.user.id;
-    } 
-    console.log("User ID:", userId);
+    const authHeader = req.headers.authorization;
+    
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      try {
+        const token = authHeader.substring(7); // Remove 'Bearer ' prefix
+        const jwt = require('jsonwebtoken');
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        userId = decoded.userId || decoded.id || decoded._id;
+      } catch (err) {
+        console.log("Token validation error:", err.message);
+      }
+    }
     
     let queryObject = {};
 
