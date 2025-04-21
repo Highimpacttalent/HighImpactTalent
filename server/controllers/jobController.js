@@ -3,6 +3,7 @@ import Jobs from "../models/jobsModel.js";
 import Companies from "../models/companiesModel.js";
 import { application } from "express";
 import Application from "../models/ApplicationModel.js";
+import  calculateJobMatch  from "../utils/jobMatchCalculator.js";
 
 // create a job
 export const createJob = async (req, res, next) => {
@@ -390,12 +391,28 @@ export const getJobsBySalaryDesc = async (req, res, next) => {
     const totalJobs = await Jobs.countDocuments({});
     const numOfPage = Math.ceil(totalJobs / limit);
 
+    let enhancedJobs = jobs;
+    if (userId) {
+      const userPrefs = await User.findById(userId)
+        .select('skills preferredLocations preferredWorkTypes preferredWorkModes expectedMinSalary')
+        .lean();
+
+      if (userPrefs) {
+        enhancedJobs = jobs.map(job => ({
+          ...job,
+          ...calculateJobMatch(userPrefs, job)
+        }));
+      }
+    }
+
     res.status(200).json({
       success: true,
       totalJobs,
       data: jobs,
+      jobs: enhancedJobs,
       page,
       numOfPage,
+      userLoggedIn: !!userId
     });
   } catch (error) {
     console.log(error);
