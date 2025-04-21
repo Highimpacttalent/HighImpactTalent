@@ -158,6 +158,7 @@ export const getJobPosts = async (req, res, next) => {
     const { skills } = req.body;
     let userId = null;
     const authHeader = req.headers.authorization;
+    console.log("Auth Header:", authHeader);
     
     if (authHeader && authHeader.startsWith('Bearer ')) {
       try {
@@ -169,6 +170,7 @@ export const getJobPosts = async (req, res, next) => {
         console.log("Token validation error:", err.message);
       }
     }
+    console.log("User ID:", userId);
     
     let queryObject = {};
 
