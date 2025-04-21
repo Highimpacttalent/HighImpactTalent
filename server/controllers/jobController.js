@@ -160,6 +160,7 @@ export const getJobPosts = async (req, res, next) => {
     if (req.body.user?.id) {
       userId = req.body.user.id;
     } 
+    console.log("User ID:", userId);
     
     let queryObject = {};
 
@@ -355,10 +356,7 @@ export const getJobPosts = async (req, res, next) => {
         .select('skills preferredLocations preferredWorkTypes preferredWorkModes expectedMinSalary experience')
         .lean();
       
-      if (userPrefs) {
-        // Import the calculateJobMatch function
-        const calculateJobMatch = require('../utils/jobMatchCalculator').default;
-        
+      if (userPrefs) {  
         // Map over jobs and add match percentage
         jobs = jobs.map(job => {
           // Convert Mongoose document to plain object if needed
