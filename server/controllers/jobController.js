@@ -5,6 +5,8 @@ import { application } from "express";
 import Application from "../models/ApplicationModel.js";
 import calculateJobMatch  from "../utils/jobMatchCalculator.js";
 import jwt from 'jsonwebtoken';
+import dotenv from 'dotenv';
+dotenv.config();
 
 // create a job
 export const createJob = async (req, res, next) => {
@@ -164,7 +166,7 @@ export const getJobPosts = async (req, res, next) => {
     if (authHeader && authHeader.startsWith('Bearer ')) {
       try {
         const token = authHeader.substring(7); // Remove 'Bearer ' prefix
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
         userId = decoded.userId || decoded.id || decoded._id;
       } catch (err) {
         console.log("Token validation error:", err.message);
