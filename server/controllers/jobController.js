@@ -155,8 +155,11 @@ export const updateJob = async (req, res, next) => {
 export const getJobPosts = async (req, res, next) => {
   try {
     const { search, query, sort, location, searchLocation, exp, workType, workMode, salary, datePosted } = req.query;
-    const { skills, user } = req.body;
-    const userId = user?.id;
+    const { skills } = req.body;
+    let userId = null;
+    if (req.body.user?.id) {
+      userId = req.body.user.id;
+    } 
     
     let queryObject = {};
 
