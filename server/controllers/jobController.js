@@ -4,6 +4,7 @@ import Companies from "../models/companiesModel.js";
 import { application } from "express";
 import Application from "../models/ApplicationModel.js";
 import calculateJobMatch  from "../utils/jobMatchCalculator.js";
+import jwt from 'jsonwebtoken';
 
 // create a job
 export const createJob = async (req, res, next) => {
@@ -163,7 +164,6 @@ export const getJobPosts = async (req, res, next) => {
     if (authHeader && authHeader.startsWith('Bearer ')) {
       try {
         const token = authHeader.substring(7); // Remove 'Bearer ' prefix
-        const jwt = require('jsonwebtoken');
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
         userId = decoded.userId || decoded.id || decoded._id;
       } catch (err) {
