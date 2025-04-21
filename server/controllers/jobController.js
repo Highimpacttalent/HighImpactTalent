@@ -3,7 +3,7 @@ import Jobs from "../models/jobsModel.js";
 import Companies from "../models/companiesModel.js";
 import { application } from "express";
 import Application from "../models/ApplicationModel.js";
-import  calculateJobMatch  from "../utils/jobMatchCalculator.js";
+import calculateJobMatch  from "../utils/jobMatchCalculator.js";
 
 // create a job
 export const createJob = async (req, res, next) => {
@@ -347,13 +347,45 @@ export const getJobPosts = async (req, res, next) => {
 
     // Execute query
     let jobs = await queryResult;
-    // Send response
+    if (userId) {
+      const userPrefs = await User.findById(userId)
+        .select('skills preferredLocations preferredWorkTypes preferredWorkModes expectedMinSalary experience')
+        .lean();
+      
+      if (userPrefs) {
+        // Import the calculateJobMatch function
+        const calculateJobMatch = require('../utils/jobMatchCalculator').default;
+        
+        // Map over jobs and add match percentage
+        jobs = jobs.map(job => {
+          // Convert Mongoose document to plain object if needed
+          const jobData = job.toObject ? job.toObject() : job;
+          
+          // Calculate match data
+          const matchData = calculateJobMatch(userPrefs, jobData);
+          
+          // Add match data to job object
+          return {
+            ...jobData,
+            matchPercentage: matchData.matchPercentage,
+            matchDetails: matchData.matchDetails
+          };
+        });
+      }
+    } else {
+      // For non-logged in users, convert Mongoose documents to plain objects
+      // but don't add match data
+      jobs = jobs.map(job => job.toObject ? job.toObject() : job);
+    }
+    
+    // Send response with a flag indicating if the user is logged in
     res.status(200).json({
       success: true,
       totalJobs,
       data: jobs,
       page,
-      numOfPage
+      numOfPage,
+      userLoggedIn: !!userId
     });  
   } catch (error) {
     console.error("Error in getJobPosts:", error);
@@ -363,6 +395,7 @@ export const getJobPosts = async (req, res, next) => {
     });
   }
 };
+
 
 // Get jobs sorted by salary (High to Low)
 export const getJobsBySalaryDesc = async (req, res, next) => {
@@ -391,28 +424,12 @@ export const getJobsBySalaryDesc = async (req, res, next) => {
     const totalJobs = await Jobs.countDocuments({});
     const numOfPage = Math.ceil(totalJobs / limit);
 
-    let enhancedJobs = jobs;
-    if (userId) {
-      const userPrefs = await User.findById(userId)
-        .select('skills preferredLocations preferredWorkTypes preferredWorkModes expectedMinSalary')
-        .lean();
-
-      if (userPrefs) {
-        enhancedJobs = jobs.map(job => ({
-          ...job,
-          ...calculateJobMatch(userPrefs, job)
-        }));
-      }
-    }
-
     res.status(200).json({
       success: true,
       totalJobs,
       data: jobs,
-      jobs: enhancedJobs,
       page,
       numOfPage,
-      userLoggedIn: !!userId
     });
   } catch (error) {
     console.log(error);
