@@ -4,7 +4,7 @@ import Companies from "../models/companiesModel.js";
 import { application } from "express";
 import Application from "../models/ApplicationModel.js";
 import calculateJobMatch  from "../utils/jobMatchCalculator.js";
-import User from "../models/userModel.js";
+import Users from "../models/userModel.js";
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
 dotenv.config();
@@ -365,7 +365,7 @@ export const getJobPosts = async (req, res, next) => {
     // Execute query
     let jobs = await queryResult;
     if (userId) {
-      const userPrefs = await User.findById(userId)
+      const userPrefs = await Users.findById(userId)
         .select('skills preferredLocations preferredWorkTypes preferredWorkModes expectedMinSalary experience')
         .lean();
       
