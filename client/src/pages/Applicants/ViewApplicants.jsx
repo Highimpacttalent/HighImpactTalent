@@ -11,16 +11,153 @@ import {
   Typography,
   IconButton,
   InputBase,
+  CardHeader,
+  Chip,
+  CardContent,
+  CardActions,
+  LinearProgress,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Divider,
 } from "@mui/material";
 import { styled } from "@mui/system";
 import ViewAnalytics from "../AnalyticApplicant";
 import { AiOutlineSearch } from "react-icons/ai";
 import { apiRequest } from "../../utils";
 import StatusJob from "./StatusJob";
-import axios from "axios"
+import axios from "axios";
 import { AiOutlineClose } from "react-icons/ai";
 import { LinkedIn } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
+
+const computeMatchScore = (job, applicant) => {
+  // Weights
+  const weights = {
+    exp: 25,
+    skills: 40,
+    loc: 10,
+    type: 10,
+    mode: 10,
+    sal: 5,
+  };
+
+  // Sub‑scores
+  let expScore = 0,
+    skillsScore = 0,
+    locScore = 0,
+    typeScore = 0,
+    modeScore = 0,
+    salScore = 0;
+
+  // 1) Experience
+  if (job.experience) {
+    const ratio = Math.min(applicant.experience / job.experience, 1);
+    expScore = ratio * weights.exp;
+  } else {
+    expScore = weights.exp;
+  }
+
+  // 2) Skills Match (40%)
+  if (Array.isArray(job.skills) && job.skills.length > 0) {
+    // primary: match against job.skills
+    const matches = job.skills.filter((js) =>
+      (applicant.skills || []).some(
+        (ast) => ast.toLowerCase() === js.toLowerCase()
+      )
+    );
+    skillsScore = (matches.length / job.skills.length) * weights.skills;
+  } else {
+    // no skills *or* requirements specified → full marks
+    skillsScore = weights.skills;
+  }
+
+  // 3) Location / Relocate
+  if (job.jobLocation) {
+    if (
+      applicant.currentLocation?.toLowerCase() ===
+        job.jobLocation.toLowerCase() ||
+      applicant.openToRelocate?.toLowerCase() === "yes"
+    ) {
+      locScore = weights.loc;
+    }
+  } else {
+    locScore = weights.loc;
+  }
+
+  // 4) Work Type
+  if (job.workType) {
+    if ((applicant.preferredWorkTypes || []).includes(job.workType)) {
+      typeScore = weights.type;
+    }
+  } else {
+    typeScore = weights.type;
+  }
+
+  // 5) Work Mode
+  if (job.workMode) {
+    if ((applicant.preferredWorkModes || []).includes(job.workMode)) {
+      modeScore = weights.mode;
+    }
+  } else {
+    modeScore = weights.mode;
+  }
+
+  // 6) Salary Expectation
+  if (job.salary) {
+    if (
+      !applicant.expectedMinSalary ||
+      parseInt(applicant.expectedMinSalary, 10) <= parseInt(job.salary, 10)
+    ) {
+      salScore = weights.sal;
+    }
+  } else {
+    salScore = weights.sal;
+  }
+
+  const totalScore = Math.round(
+    expScore + skillsScore + locScore + typeScore + modeScore + salScore
+  );
+
+  // Detailed console.log for analysis
+  const breakdown = `
+Candidate: ${applicant.firstName} ${applicant.lastName}
+Job Criteria:
+  • Required Exp: ${job.experience ?? "[none specified]"}
+  • Skills: ${job.skills?.length ? job.skills.join(", ") : "Not Provided"}
+  • Location: ${job.jobLocation ?? "[none specified]"}
+  • Work Type: ${job.workType || "[none specified]"}
+  • Work Mode: ${job.workMode || "[none specified]"}
+  • Salary: ${job.salary ?? "[none specified]"}
+
+Applicant Profile:
+  • Exp: ${applicant.experience}
+  • Skills: ${(applicant.skills || []).join(", ") || "[none]"}
+  • Current Location: ${applicant.currentLocation}
+  • Open to Relocate: ${applicant.openToRelocate}
+  • Preferred Work Types: ${
+    (applicant.preferredWorkTypes || []).join(", ") || "[none]"
+  }
+  • Preferred Work Modes: ${
+    (applicant.preferredWorkModes || []).join(", ") || "[none]"
+  }
+  • Expected Min Salary: ${applicant.expectedMinSalary || "[none]"}
+
+Score by Category:
+  • Experience: ${expScore.toFixed(1)} / ${weights.exp}
+  • Skills:     ${skillsScore.toFixed(1)} / ${weights.skills}
+  • Location:   ${locScore.toFixed(1)} / ${weights.loc}
+  • Work Type:  ${typeScore.toFixed(1)} / ${weights.type}
+  • Work Mode:  ${modeScore.toFixed(1)} / ${weights.mode}
+  • Salary:     ${salScore.toFixed(1)} / ${weights.sal}
+
+→ Total Match Score: ${totalScore}%
+`;
+
+  return { totalScore, breakdown };
+};
 
 const JobApplications = () => {
   const steps = [
@@ -37,9 +174,13 @@ const JobApplications = () => {
   const [error, setError] = useState(null);
   const [activeStep, setActiveStep] = useState(0); // Default first step
   const [searchKeyword, setSearchKeyword] = useState("");
+  const [showBreakdowns, setShowBreakdowns] = useState(false);
   const navigate = useNavigate();
   const [resumeLinks, setResumeLinks] = useState({});
   const [showAnalytics, setShowAnalytics] = useState(false);
+  const [openBreakdownId, setOpenBreakdownId] = useState(null);
+  const [breakdownDialogOpen, setBreakdownDialogOpen] = useState(false);
+  const [selectedBreakdown, setSelectedBreakdown] = useState("");
 
   useEffect(() => {
     const fetchApplications = async () => {
@@ -53,8 +194,23 @@ const JobApplications = () => {
           throw new Error(response.message || "Failed to fetch applications");
         }
 
-        setApplications(response.applications);
-        setAllApplications(response.applications);
+        // enrich each application with matchScore
+        const enriched = response.applications.map((app) => {
+          // invoke computeMatchScore here
+          const { totalScore, breakdown } = computeMatchScore(
+            app.job,
+            app.applicant
+          );
+
+          return {
+            ...app,
+            matchScore: totalScore,
+            matchBreakdown: breakdown.trim(),
+          };
+        });
+
+        setAllApplications(enriched);
+        setApplications(enriched);
       } catch (err) {
         setError(err.message);
       } finally {
@@ -101,8 +257,6 @@ const JobApplications = () => {
       const data = await response.json();
 
       if (response.ok && data?.matchedCandidates) {
-        console.log(applications);
-        console.log(data);
         const matchedIds = data.matchedCandidates.map((c) => c.userId);
 
         const matchedApp = applications.filter((app) =>
@@ -128,12 +282,15 @@ const JobApplications = () => {
   };
 
   const markAsViewed = async (applicationId) => {
-    console.log(applicationId)
+    console.log(applicationId);
     try {
-      await axios.post("https://highimpacttalent.onrender.com/api-v1/application/update-status", {
-        applicationId,
-        status: "Application Viewed",
-      });
+      await axios.post(
+        "https://highimpacttalent.onrender.com/api-v1/application/update-status",
+        {
+          applicationId,
+          status: "Application Viewed",
+        }
+      );
     } catch (err) {
       console.error("Error marking application as viewed:", err);
     }
@@ -255,72 +412,141 @@ const JobApplications = () => {
             <StatusJob activeStep={activeStep} onStepClick={handleStepClick} />
           </Box>
           {!loading && !error && applications.length > 0 && (
-            <Grid
-              container
-              sx={{ gap: { sm: 1, xs: 1, md: 0, lg: 0 }, columnGap: 2 }}
-            >
-              {applications.map((app, index) => (
+            <Grid container spacing={2}>
+              {applications.map((app) => (
                 <Grid item xs={12} sm={6} md={3} key={app._id}>
                   <Card
                     sx={{
-                      border: "1px solid grey",
-                      borderRadius: 4,
-                      p: 2,
-                      height: "350px",
-                      width: "320px",
                       display: "flex",
                       flexDirection: "column",
-                      justifyContent: "space-evenly",
+                      height: "100%",
+                      borderRadius: 2,
+                      boxShadow: 3,
                     }}
                   >
-                    <Box
-                      display="flex"
-                      flexDirection="column"
-                      alignItems="center"
-                      gap={2}
-                      mb={2}
-                    >
-                      <Avatar
-                        src={app.applicant?.profileUrl}
-                        sx={{ width: 90, height: 90 }}
-                      />
-                      <Box>
-                        <Typography fontWeight="bold">
+                    {/* Header: Avatar, Name, Match Chip + Donut */}
+                    <CardHeader
+                      avatar={
+                        <Avatar
+                          src={app.applicant.profileUrl}
+                          sx={{ width: 56, height: 56 }}
+                        />
+                      }
+                      title={
+                        <Typography variant="subtitle1" fontWeight="600">
                           {app.applicant.firstName} {app.applicant.lastName}
                         </Typography>
-                      </Box>
-                    </Box>
+                      }
+                      subheader={
+                        <Box
+                          sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                        >
+                          {/* Donut */}
+                          <Box position="relative" display="inline-flex">
+                            <CircularProgress
+                              variant="determinate"
+                              value={app.matchScore}
+                              size={40}
+                              thickness={4}
+                              sx={{
+                                color:
+                                  app.matchScore > 75
+                                    ? "success.main"
+                                    : app.matchScore > 50
+                                    ? "warning.main"
+                                    : "error.main",
+                              }}
+                            />
+                            <Box
+                              top={0}
+                              left={0}
+                              bottom={0}
+                              right={0}
+                              position="absolute"
+                              display="flex"
+                              alignItems="center"
+                              justifyContent="center"
+                            >
+                              <Typography variant="caption" fontWeight="700">
+                                {app.matchScore}%
+                              </Typography>
+                            </Box>
+                          </Box>
 
-                    <Box sx={{ display: "flex", justifyContent: "center" }}>
-                      <Box sx={{ width: "78%" }}>
-                        <Typography variant="body2" mb={0.5}>
-                          <strong>Experience:</strong>{" "}
-                          {app.applicant.experience} years
-                        </Typography>
-                        <Typography variant="body2" mb={0.5}>
-                          <strong>Join Consulting:</strong>{" "}
-                          {app.applicant.joinConsulting}
-                        </Typography>
-                        <Typography variant="body2">
-                          <strong>Open to Relocate:</strong>{" "}
-                          {app.applicant.openToRelocate}
-                        </Typography>
-                        <Typography variant="body2" mb={1}>
-                          <strong>Social:</strong>
-                          <Button href={app.applicant.linkedinLink}>
-                            <LinkedIn />
-                          </Button>
-                        </Typography>
-                      </Box>
-                    </Box>
-                    <Box
-                      mt={2}
-                      display="flex"
-                      gap={1}
-                      flexWrap="wrap"
-                      justifyContent="center"
-                    >
-                      <Button
+                          {/* Chip */}
+                          <Chip
+                            label={
+                              app.matchScore > 75
+                                ? "Excellent Fit"
+                                : app.matchScore > 50
+                                ? "Good Fit"
+                                : "Fair Fit"
+                            }
+                            size="small"
+                            sx={{
+                              bgcolor:
+                                app.matchScore > 75
+                                  ? "success.light"
+                                  : app.matchScore > 50
+                                  ? "warning.light"
+                                  : "error.light",
+                              color:
+                                app.matchScore > 75
+                                  ? "success.dark"
+                                  : app.matchScore > 50
+                                  ? "warning.dark"
+                                  : "error.dark",
+                              fontWeight: 600,
+                            }}
+                          />
+                        </Box>
+                      }
+                      action={
+                        <IconButton
+                          aria-label="Match breakdown"
+                          onClick={() => {
+                            setSelectedBreakdown(app.matchBreakdown);
+                            setBreakdownDialogOpen(true);
+                          }}
+                        >
+                          <InfoOutlinedIcon />
+                        </IconButton>
+                      }
+                    />
+
+                    {/* Body: Key Details */}
+                    <CardContent sx={{ flexGrow: 1, pt: 0 }}>
+                      <Typography variant="body2" gutterBottom>
+                        <strong>Experience:</strong> {app.applicant.experience}{" "}
+                        yrs
+                      </Typography>
+                      <Typography variant="body2" gutterBottom>
+                        <strong>Relocate:</strong>{" "}
+                        {app.applicant.openToRelocate}
+                      </Typography>
+                      <Typography variant="body2" gutterBottom>
+                        <strong>Join Consulting:</strong>{" "}
+                        {app.applicant.joinConsulting}
+                      </Typography>
+                      <Typography
+                        variant="body2"
+                        display="flex"
+                        alignItems="center"
+                      >
+                        <strong>LinkedIn:</strong>
+                        <IconButton
+                          size="small"
+                          href={app.applicant.linkedinLink}
+                          sx={{ ml: 0.5 }}
+                        >
+                          <LinkedIn fontSize="small" />
+                        </IconButton>
+                      </Typography>
+                    </CardContent>
+
+                    {/* Actions */}
+                    <CardActions sx={{ justifyContent: "center", pb: 2 }}>
+                    <Button
                         variant="contained"
                         role="link"
                         color="primary"
@@ -375,12 +601,53 @@ const JobApplications = () => {
                       >
                         View Resume
                       </Button>
-                    </Box>
+                    </CardActions>
+                    {/* 3) Per-card breakdown */}
+                    {openBreakdownId === app._id && (
+                      <Box sx={{ px: 2, pb: 2 }}>
+                        <Typography
+                          component="pre"
+                          variant="caption"
+                          sx={{
+                            whiteSpace: "pre-wrap",
+                            fontFamily: "monospace",
+                          }}
+                        >
+                          {app.matchBreakdown}
+                        </Typography>
+                      </Box>
+                    )}
                   </Card>
                 </Grid>
               ))}
             </Grid>
           )}
+          {/* Breakdown Dialog */}
+          <Dialog
+            open={breakdownDialogOpen}
+            onClose={() => setBreakdownDialogOpen(false)}
+            maxWidth="sm"
+            fullWidth
+          >
+            <DialogTitle>Match Score Breakdown</DialogTitle>
+            <DialogContent dividers>
+              <Typography
+                component="pre"
+                variant="body2"
+                sx={{
+                  whiteSpace: "pre-wrap",
+                  fontFamily: "monospace",
+                }}
+              >
+                {selectedBreakdown}
+              </Typography>
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={() => setBreakdownDialogOpen(false)}>
+                Close
+              </Button>
+            </DialogActions>
+          </Dialog>
         </>
       )}
     </Box>

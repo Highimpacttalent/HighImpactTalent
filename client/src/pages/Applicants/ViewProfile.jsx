@@ -97,9 +97,9 @@ const ViewProfile = () => {
         >
           <Avatar
             sx={{ bgcolor: "#D9D9D9", width: 80, height: 80, margin: "0 auto" }}
-          >
-            {userData?.firstName?.charAt(0)}
-          </Avatar>
+            src={userData?.profileUrl }
+            alt= {userData?.firstName?.charAt(0)}
+          />
           <Typography
             sx={{
               color: "#24252C",

@@ -103,6 +103,7 @@ const Navbar = () => {
             open={Boolean(menuAnchor)}
             onClose={handleMenuClose}
           >
+           {user?.accountType === "seeker" && (
             <MenuItem
               component={Link}
               to="/user-profile"
@@ -110,6 +111,17 @@ const Navbar = () => {
             >
               <AccountCircle sx={{ mr: 1 }} /> User Profile
             </MenuItem>
+            )} 
+           
+           {user?.accountType !== "seeker" && (
+            <MenuItem
+              component={Link}
+              to="/rec-profile"
+              onClick={handleMenuClose}
+            >
+              <AccountCircle sx={{ mr: 1 }} /> User Profile
+            </MenuItem>
+            )} 
             <MenuItem component={Link} to="/password" onClick={handleMenuClose}>
               <LockReset sx={{ mr: 1 }} /> Change Password
             </MenuItem>

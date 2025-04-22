@@ -13,7 +13,7 @@ import ContactUsPage from "./pages/ContactUs/view";
 import View from "./pages/JobPost/components/ViewDetails/View.jsx";
 import TermsAndConditions from "./components/terms";
 import JobPosted from "./pages/JobPost/view.jsx";
-
+import RecuiterProfile from "./pages/RecruiterProfile/view.jsx";
 import Landing2 from "./pages/Landing/Landing2/view";
 import RefundPolicy from "./components/Refund";
 import ApplicationStatus from "./pages/ApplicationStatus";
@@ -75,6 +75,7 @@ function App() {
           <Route path="/applicant/:jobId" element={<JobApplications />}/>
           <Route path='/companies' element={<Companies />} />
           <Route path={"/user-profile"} element={<ProfileSection />} />
+          <Route path={"/rec-profile"} element={<RecuiterProfile/>} />
           {/* <Route path={"/company-profile"} element={<CompaniesProfile />} />
           <Route path={"/company-profile/:id"} element={<CompaniesProfile />} />
           <Route path={"/company-profile/job-detail/:id"} element={<CompaniesProfile />} /> */}
