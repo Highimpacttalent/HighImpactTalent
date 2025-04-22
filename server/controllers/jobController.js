@@ -3,6 +3,11 @@ import Jobs from "../models/jobsModel.js";
 import Companies from "../models/companiesModel.js";
 import { application } from "express";
 import Application from "../models/ApplicationModel.js";
+import calculateJobMatch  from "../utils/jobMatchCalculator.js";
+import Users from "../models/userModel.js";
+import jwt from 'jsonwebtoken';
+import dotenv from 'dotenv';
+dotenv.config();
 
 // create a job
 export const createJob = async (req, res, next) => {
@@ -154,8 +159,21 @@ export const updateJob = async (req, res, next) => {
 export const getJobPosts = async (req, res, next) => {
   try {
     const { search, query, sort, location, searchLocation, exp, workType, workMode, salary, datePosted } = req.query;
-    const { skills, user } = req.body;
-    const userId = user?.id;
+    const { skills } = req.body;
+    let userId = null;
+    const authHeader = req.headers.authorization;
+    //console.log("Auth Header:", authHeader);
+    
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      try {
+        const token = authHeader.substring(7); // Remove 'Bearer ' prefix
+        const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
+        userId = decoded.userId || decoded.id || decoded._id;
+      } catch (err) {
+        console.log("Token validation error:", err.message);
+      }
+    }
+    //console.log("User ID:", userId);
     
     let queryObject = {};
 
@@ -346,151 +364,42 @@ export const getJobPosts = async (req, res, next) => {
 
     // Execute query
     let jobs = await queryResult;
-
-    // Get user preferences if userId is provided
-    let userPreferences = null;
     if (userId) {
-      userPreferences = await User.findById(userId).select(
-        'preferredLocations preferredWorkTypes preferredWorkModes expectedMinSalary skills'
-      );
-    }
-
-    // Calculate match percentage if user preferences are available
-    if (userPreferences) {
-      // Convert Mongoose documents to plain objects
-      jobs = jobs.map(job => {
-        const plainJob = job.toObject ? job.toObject() : job;
-        
-        // Initialize match metrics
-        let totalMatches = 0;
-        let totalPossibleMatches = 0;
-        const matchDetails = {};
-
-        // 1. Match Skills (highest weight: 35%)
-        if (userPreferences.skills && Array.isArray(userPreferences.skills) && plainJob.skills && Array.isArray(plainJob.skills)) {
-          const userSkillsLower = userPreferences.skills.map(skill => skill.toLowerCase());
-          const jobSkillsLower = plainJob.skills.map(skill => skill.toLowerCase());
+      const userPrefs = await Users.findById(userId)
+        .select('skills preferredLocations preferredWorkTypes preferredWorkModes expectedMinSalary experience')
+        .lean();
+      
+      if (userPrefs) {  
+        // Map over jobs and add match percentage
+        jobs = jobs.map(job => {
+          // Convert Mongoose document to plain object if needed
+          const jobData = job.toObject ? job.toObject() : job;
           
-          const matchingSkills = jobSkillsLower.filter(skill => 
-            userSkillsLower.includes(skill)
-          );
+          // Calculate match data
+          const matchData = calculateJobMatch(userPrefs, jobData);
           
-          const skillWeight = 35;
-          const skillScore = jobSkillsLower.length > 0 ? 
-            (matchingSkills.length / jobSkillsLower.length) * skillWeight : 0;
-          
-          totalMatches += skillScore;
-          totalPossibleMatches += skillWeight;
-          matchDetails.skills = {
-            score: skillScore,
-            maxScore: skillWeight,
-            percentage: Math.round((skillScore / skillWeight) * 100)
+          // Add match data to job object
+          return {
+            ...jobData,
+            matchPercentage: matchData.matchPercentage,
+            matchDetails: matchData.matchDetails
           };
-        }
-
-        // 2. Match Location (weight: 25%)
-        if (userPreferences.preferredLocations && Array.isArray(userPreferences.preferredLocations) && plainJob.jobLocation) {
-          const userLocationsLower = userPreferences.preferredLocations.map(loc => loc.toLowerCase());
-          const jobLocationLower = plainJob.jobLocation.toLowerCase();
-          
-          const locationMatches = userLocationsLower.some(loc => 
-            jobLocationLower.includes(loc) || loc.includes(jobLocationLower)
-          );
-          
-          const locationWeight = 25;
-          const locationScore = locationMatches ? locationWeight : 0;
-          
-          totalMatches += locationScore;
-          totalPossibleMatches += locationWeight;
-          matchDetails.location = {
-            score: locationScore,
-            maxScore: locationWeight,
-            percentage: locationMatches ? 100 : 0
-          };
-        }
-
-        // 3. Match Work Type (weight: 15%)
-        if (userPreferences.preferredWorkTypes && Array.isArray(userPreferences.preferredWorkTypes) && plainJob.workType) {
-          const workTypeMatches = userPreferences.preferredWorkTypes.some(type => 
-            plainJob.workType.includes(type)
-          );
-          
-          const workTypeWeight = 15;
-          const workTypeScore = workTypeMatches ? workTypeWeight : 0;
-          
-          totalMatches += workTypeScore;
-          totalPossibleMatches += workTypeWeight;
-          matchDetails.workType = {
-            score: workTypeScore,
-            maxScore: workTypeWeight,
-            percentage: workTypeMatches ? 100 : 0
-          };
-        }
-
-        // 4. Match Work Mode (weight: 15%)
-        if (userPreferences.preferredWorkModes && Array.isArray(userPreferences.preferredWorkModes) && plainJob.workMode) {
-          const workModeMatches = userPreferences.preferredWorkModes.some(mode => 
-            plainJob.workMode.includes(mode)
-          );
-          
-          const workModeWeight = 15;
-          const workModeScore = workModeMatches ? workModeWeight : 0;
-          
-          totalMatches += workModeScore;
-          totalPossibleMatches += workModeWeight;
-          matchDetails.workMode = {
-            score: workModeScore,
-            maxScore: workModeWeight,
-            percentage: workModeMatches ? 100 : 0
-          };
-        }
-
-        // 5. Match Salary (weight: 10%)
-        if (userPreferences.expectedMinSalary && plainJob.salary) {
-          const userMinSalary = Number(userPreferences.expectedMinSalary) * 100000;
-          const jobSalary = Number(plainJob.salary);
-          
-          const salaryMatches = !isNaN(userMinSalary) && !isNaN(jobSalary) && jobSalary >= userMinSalary;
-          
-          const salaryWeight = 10;
-          const salaryScore = salaryMatches ? salaryWeight : 0;
-          
-          totalMatches += salaryScore;
-          totalPossibleMatches += salaryWeight;
-          matchDetails.salary = {
-            score: salaryScore,
-            maxScore: salaryWeight,
-            percentage: salaryMatches ? 100 : 0
-          };
-        }
-
-        // Calculate overall match percentage
-        const matchPercentage = totalPossibleMatches > 0 ? 
-          Math.round((totalMatches / totalPossibleMatches) * 100) : 0;
-
-        return {
-          ...plainJob,
-          matchPercentage,
-          matchDetails
-        };
-      });
-
-      // Sort by match percentage if requested
-      const sortByMatch = req.query.sortByMatch === 'true';
-      if (sortByMatch) {
-        jobs = jobs.sort((a, b) => b.matchPercentage - a.matchPercentage);
+        });
       }
+    } else {
+      // For non-logged in users, convert Mongoose documents to plain objects
+      // but don't add match data
+      jobs = jobs.map(job => job.toObject ? job.toObject() : job);
     }
-
-    // Send response
+    
+    // Send response with a flag indicating if the user is logged in
     res.status(200).json({
       success: true,
       totalJobs,
       data: jobs,
       page,
       numOfPage,
-      userLoggedIn: !!userId,  // Flag to indicate if user is logged in
-      profileComplete: userPreferences ? true : false  // Indicates if user has preferences
+      userLoggedIn: !!userId
     });  
   } catch (error) {
     console.error("Error in getJobPosts:", error);
@@ -500,6 +409,7 @@ export const getJobPosts = async (req, res, next) => {
     });
   }
 };
+
 
 // Get jobs sorted by salary (High to Low)
 export const getJobsBySalaryDesc = async (req, res, next) => {
