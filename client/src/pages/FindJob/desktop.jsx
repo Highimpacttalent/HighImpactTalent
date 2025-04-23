@@ -195,10 +195,14 @@ const DesktopView = () => {
       salary: salaryRangeFilter,
       datePosted: datePostedFilter,
     });
+    const token = user?.token || localStorage.getItem("authToken");
+    console.log("Token:", token);
+    console.log("Authorization header being sent:", token ? `Bearer ${token}` : "");
     try {
       const res = await apiRequest({
         url: "/jobs" + newURL,
         method: "POST",
+        token: token,
         data: { skills: user?.skills || [] },
       });
 

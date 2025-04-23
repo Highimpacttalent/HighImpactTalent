@@ -17,6 +17,7 @@ import {
   Paper,
   useMediaQuery,
   useTheme,
+  LinearProgress,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import {
@@ -41,11 +42,10 @@ const JobCard = ({ job, flag = false, enable = false }) => {
   const { user } = useSelector((state) => state.user);
   const [like, setLike] = useState(false);
   const navigate = useNavigate();
-  const experience = user.experience;
+  const experience = user?.experience;
   let noteligible = false;
-  console.log(job?.experience, typeof job?.experience, typeof user.experience);
+  
   if (job?.experience && job?.experience > experience) {
-    console.log("Ho");
     noteligible = true;
   }
 
@@ -75,6 +75,52 @@ const JobCard = ({ job, flag = false, enable = false }) => {
     }
   };
 
+  // Match percentage display for desktop and mobile
+  const renderMatchPercentage = () => {
+    // Only show if user is logged in and matchPercentage exists
+    if (!user?.token || job.matchPercentage === undefined) return null;
+    
+    const matchValue = job.matchPercentage || 0;
+    
+    return (
+      <Box sx={{
+        position: 'absolute',
+        top: 8,
+        right: 8,
+        display: 'flex',
+        alignItems: 'center',
+        gap: 1,
+        backgroundColor: 'rgba(255, 255, 255, 0.8)',
+        padding: '2px 8px',
+        borderRadius: 1
+      }}>
+        <Typography variant="caption" fontWeight="bold" color={
+          matchValue > 75 ? 'success.main' : 
+          matchValue > 50 ? 'primary.main' : 
+          matchValue > 25 ? 'warning.main' : 'text.secondary'
+        }>
+          {matchValue}% Match
+        </Typography>
+        <LinearProgress
+          variant="determinate"
+          value={matchValue}
+          sx={{
+            width: 60,
+            height: 6,
+            borderRadius: 3,
+            '& .MuiLinearProgress-bar': {
+              borderRadius: 3,
+              backgroundColor: 
+                matchValue > 75 ? 'success.main' : 
+                matchValue > 50 ? 'primary.main' : 
+                matchValue > 25 ? 'warning.main' : 'text.secondary'
+            }
+          }}
+        />
+      </Box>
+    );
+  };
+
   const mobileView = (
     <Card
       sx={{
@@ -84,9 +130,13 @@ const JobCard = ({ job, flag = false, enable = false }) => {
         height: "100%",
         boxShadow: "0px 0px 4px 0px #00000040",
         borderRadius: 2,
+        position: 'relative', // Add this for match percentage positioning
       }}
       onClick={() => navigate(`/job-detail/${job?._id}`)}
     >
+      {/* Add match percentage to mobile view */}
+      {renderMatchPercentage()}
+      
       <CardContent
         sx={{ flexGrow: 1, display: "flex", flexDirection: "column" }}
       >
@@ -137,24 +187,16 @@ const JobCard = ({ job, flag = false, enable = false }) => {
             />
           </Box>
           <Chip
-  icon={<CurrencyRupee sx={{ color: "#474E68" }} />}
-  label={
-    job.salaryConfidential
-      ? "Confidential"
-      : `${Number(job.salary).toLocaleString('en-IN')} (${job.salaryCategory})`
-  }
-  variant="contained"
-  sx={{ color: "#474E68", fontWeight: "400" }}
-/>
+            icon={<CurrencyRupee sx={{ color: "#474E68" }} />}
+            label={
+              job.salaryConfidential
+                ? "Confidential"
+                : `${Number(job.salary).toLocaleString('en-IN')} (${job.salaryCategory})`
+            }
+            variant="contained"
+            sx={{ color: "#474E68", fontWeight: "400" }}
+          />
         </Box>
-
-        {/* Job Description */}
-        {/* <Typography 
-          variant="body2" 
-          color="#474E68" 
-          sx={{ flexGrow: 1, overflow: "hidden", textOverflow: "ellipsis", height: 40 }}>
-          {job.jobDescription !== "- " ? job?.jobDescription : "No description Provided"}
-        </Typography> */}
       </CardContent>
 
       {/* Fixed Bottom Section */}
@@ -185,8 +227,12 @@ const JobCard = ({ job, flag = false, enable = false }) => {
         boxShadow: "0px 0px 4px 0px #00000040",
         borderRadius: 2,
         p: 0.5,
+        position: 'relative', // Needed for absolute positioning of match percentage
       }}
     >
+      {/* Match percentage bar (top right) */}
+      {renderMatchPercentage()}
+
       <CardContent
         sx={{ flexGrow: 1, display: "flex", flexDirection: "column" }}
       >
@@ -213,7 +259,7 @@ const JobCard = ({ job, flag = false, enable = false }) => {
               sx={{
                 display: "flex",
                 alignItems: "center",
-                color: like ? "primary.main" : "text.secondary", // Changes color dynamically
+                color: like ? "primary.main" : "text.secondary",
               }}
             >
               {like ? (
@@ -280,24 +326,6 @@ const JobCard = ({ job, flag = false, enable = false }) => {
             />
           </Stack>
         </Box>
-
-        {/* Job Description */}
-        {/* <Typography
-          variant="body2"
-          color="#474E68"
-          sx={{
-            flexGrow: 1,
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-            display: "-webkit-box",
-            WebkitLineClamp: 2, // Adjust line limit
-            WebkitBoxOrient: "vertical",
-          }}
-        >
-          {job.jobDescription && job.jobDescription !== "- "
-            ? job.jobDescription.split(" ").slice(0, 150).join(" ") + "..."
-            : "No description provided"}
-        </Typography> */}
       </CardContent>
 
       {/* Fixed Bottom Section */}
@@ -305,7 +333,7 @@ const JobCard = ({ job, flag = false, enable = false }) => {
         sx={{
           mt: "auto",
           display: "flex",
-          justifyContent: "flex-start", // Aligns buttons to the right
+          justifyContent: "flex-start",
           gap: 1,
         }}
       >
@@ -339,11 +367,6 @@ const JobCard = ({ job, flag = false, enable = false }) => {
               if (job?.applicationLink && job?.applicationLink.trim() !== "") {
                 window.open(job.applicationLink, "_blank");
               } else {
-                if (!job || !user || !job?.company) {
-                  console.error("Missing required data for navigation.");
-                  return;
-                }
-
                 navigate("screening-questions", {
                   state: {
                     questions: job?.screeningQuestions ?? [],
