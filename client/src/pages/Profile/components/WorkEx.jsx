@@ -282,7 +282,7 @@ const ExperienceHistory = ({ userId, experienceHistory, about }) => {
                     fontSize: "12px",
                   }}
                 >
-                  {exp.from}
+                  {exp.from ? new Date(exp.from).toLocaleDateString("en-US", { month: "short", year: "numeric" }) : ""}
                 </Typography>
               </Box>
               <Box
@@ -309,7 +309,7 @@ const ExperienceHistory = ({ userId, experienceHistory, about }) => {
                     fontSize: "12px",
                   }}
                 >
-                  {exp.to}
+                  {exp.to ? new Date(exp.from).toLocaleDateString("en-US", { month: "short", year: "numeric" }) : ""} 
                 </Typography>
               </Box>
             </Box>

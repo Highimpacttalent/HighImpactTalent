@@ -443,9 +443,6 @@ const UserInfoCard = () => {
                   }
                 }}
                 InputProps={{
-                  startAdornment: (
-                    <Typography sx={{ pr: 1, color: "#555" }}>+91</Typography>
-                  ),
                   inputMode: "numeric",
                 }}
                 inputProps={{
@@ -468,7 +465,7 @@ const UserInfoCard = () => {
                 color="#404258"
                 fontWeight="400"
               >
-                <FiPhoneCall /> +91 {updatedUserInfo.contactNumber}
+                <FiPhoneCall /> {updatedUserInfo.contactNumber}
               </Typography>
             )}
 

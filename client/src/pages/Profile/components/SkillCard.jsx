@@ -104,8 +104,8 @@ const SkillCard = ({ userInfo }) => {
         </IconButton>
       </Box>
 
-      {/* Dropdown when editing */}
-      {isEditing && (
+       {/* Editing View */}
+       {isEditing ? (
         <Box sx={{ display: "flex", flexDirection: "column", mb: 2 }}>
           <Box sx={{ mb: 2 }}>
             <Select
@@ -127,38 +127,46 @@ const SkillCard = ({ userInfo }) => {
             <IconButton
               onClick={handleSaveSkills}
               disabled={isSaving}
-              sx={{ 
-                bgcolor: isSaving ? "grey.400" : "#3C7EFC", 
-                color: "white", 
-                borderRadius: "50%", 
-                width: 40, 
-                height: 40, 
-                "&:hover": { bgcolor: "#3361cb" } 
+              sx={{
+                bgcolor: isSaving ? "grey.400" : "#3C7EFC",
+                color: "white",
+                borderRadius: "50%",
+                width: 40,
+                height: 40,
+                "&:hover": { bgcolor: "#3361cb" },
               }}
             >
               <SaveIcon />
             </IconButton>
           </Box>
         </Box>
+      ) : (
+        // Read-only Chip View
+        <Card
+          variant="outlined"
+          sx={{ p: 2, borderRadius: 2, border: "1px solid #00000040" }}
+        >
+          <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
+            {skills.length > 0 ? (
+              skills.map((skill, index) => (
+                <Chip
+                  key={index}
+                  label={skill}
+                  sx={{
+                    backgroundColor: "#E3EDFF",
+                    color: "#474E68",
+                    fontFamily: "Poppins",
+                  }}
+                />
+              ))
+            ) : (
+              <Typography variant="body2" sx={{ color: "#404258" }}>
+                No skills added yet. Please add your skills.
+              </Typography>
+            )}
+          </Box>
+        </Card>
       )}
-
-      {/* Skills Section */}
-      <Card variant="outlined" sx={{ p: 2, borderRadius: 2, border: "1px solid #00000040" }}>
-        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
-          {skills.length > 0 ? (
-            skills.map((skill, index) => (
-              <Chip
-                key={index}
-                label={skill}
-                sx={{ backgroundColor: "#E3EDFF", color: "#474E68", fontFamily: "Poppins" }}
-                onDelete={isEditing ? () => handleRemoveSkill(skill) : undefined}
-              />
-            ))
-          ) : (
-            <Typography variant="body2" sx={{ color: "#404258" }}>No skills added yet. Please add your skills.</Typography>
-          )}
-        </Box>
-      </Card>
     </Box>
   );
 };

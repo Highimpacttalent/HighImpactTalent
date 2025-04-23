@@ -65,7 +65,7 @@ const Landing2 = () => {
   
   return (
     <Box display="flex" flexDirection="column" bgcolor="white">
-      <Loader isLoading={loader} />
+      <Loader isLoading={true} />
       <Box
         sx={{
           mt: 8,
