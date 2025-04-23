@@ -231,7 +231,7 @@ const JobCard = ({ job, flag = false, enable = false }) => {
       }}
     >
       {/* Match percentage bar (top right) */}
-      {renderMatchPercentage()}
+      {/* {renderMatchPercentage()} */}
 
       <CardContent
         sx={{ flexGrow: 1, display: "flex", flexDirection: "column" }}
