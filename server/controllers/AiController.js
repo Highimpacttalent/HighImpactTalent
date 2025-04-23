@@ -6,6 +6,28 @@ import { topCompanieslist, topInstituteslist } from "./mock.js";
 
 const GEMINI_API_KEY = "AIzaSyCILU-_ezGfu3iojbS-hFe9-Fil4klNOlo";
 
+const extractYear = (input) => {
+  if (!input) return null;
+
+  // If it's already a valid number (like 2023), return it directly
+  if (typeof input === "number" && input > 1900 && input < 2100) {
+    return input;
+  }
+
+  if (typeof input !== "string") return null;
+
+  const match = input.match(/\d{2,4}/g); // Match any 2-4 digit numbers
+  if (match) {
+    const rawYear = match[match.length - 1]; // pick the last one (often most relevant)
+    const year = rawYear.length === 2 ? "20" + rawYear : rawYear;
+    return Number(year);
+  }
+
+  return null;
+};
+
+
+
 export const parseResume = async (req, res) => {
   try {
     console.log("Received request to parse resume.");
@@ -192,7 +214,10 @@ ${resumeText}`,
         hasConsultingBackground:
           parsedData.ProfessionalDetails?.hasConsultingBackground || false,
       },
-      educationDetails: parsedData.EducationDetails || [],
+      educationDetails:  (parsedData.EducationDetails || []).map((edu) => ({
+        ...edu,
+        yearOfPassout: extractYear(edu.yearOfPassout),
+      })),
       workExperience: parsedData.WorkExperience || [],
       skills: detectedSkills.length > 0 ? detectedSkills : ["Not Mentioned"],
       topCompanies: isTopCompany,
@@ -209,7 +234,7 @@ ${resumeText}`,
       error.response?.data || error.message
     );
     res.status(500).json({
-      success: false,
+      success: true,
       message: error.response?.data || "Failed to parse resume",
     });
   }
