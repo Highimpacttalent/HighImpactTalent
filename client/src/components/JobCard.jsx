@@ -17,6 +17,7 @@ import {
   Paper,
   useMediaQuery,
   useTheme,
+  CircularProgress,
   LinearProgress,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
@@ -41,6 +42,7 @@ const JobCard = ({ job, flag = false, enable = false }) => {
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const { user } = useSelector((state) => state.user);
   const [like, setLike] = useState(false);
+  const [saving, setSaving] = useState(false);
   const navigate = useNavigate();
   const experience = user?.experience;
   let noteligible = false;
@@ -55,6 +57,7 @@ const JobCard = ({ job, flag = false, enable = false }) => {
 
   const handleLikeClick = async (e, jobId) => {
     e.stopPropagation();
+    setSaving(true);
     try {
       const response = await axios.post(
         "https://highimpacttalent.onrender.com/api-v1/user/togglelike",
@@ -72,9 +75,24 @@ const JobCard = ({ job, flag = false, enable = false }) => {
       }
     } catch (error) {
       console.error("Error toggling like:", error);
+    } finally {
+      setSaving(false); // Reset loading state after API call is complete
     }
   };
 
+
+  const renderLikeButton = () => {
+    if (saving) {
+      return <CircularProgress size={24} />; // Show circular progress while loading
+    }
+
+    return like ? (
+      <Bookmark color="primary" />
+    ) : (
+      <BookmarkBorder color="action" />
+    );
+  };
+  
   // Match percentage display for desktop and mobile
   const renderMatchPercentage = () => {
     // Only show if user is logged in and matchPercentage exists
@@ -207,11 +225,7 @@ const JobCard = ({ job, flag = false, enable = false }) => {
           Posted {moment(job?.createdAt).fromNow()}
         </Typography>
         <IconButton onClick={(e) => handleLikeClick(e, job._id)}>
-          {like ? (
-            <Bookmark color="primary" />
-          ) : (
-            <BookmarkBorder color="action" />
-          )}
+          {renderLikeButton()}
           <Typography gap={1}>Save</Typography>
         </IconButton>
       </CardActions>
@@ -254,7 +268,7 @@ const JobCard = ({ job, flag = false, enable = false }) => {
           </Typography>
 
           <Box sx={{ display: "flex", alignItems: "center" }}>
-            <IconButton
+          <IconButton
               onClick={(e) => handleLikeClick(e, job._id)}
               sx={{
                 display: "flex",
@@ -262,11 +276,7 @@ const JobCard = ({ job, flag = false, enable = false }) => {
                 color: like ? "primary.main" : "text.secondary",
               }}
             >
-              {like ? (
-                <Bookmark color="primary" />
-              ) : (
-                <BookmarkBorder color="action" />
-              )}
+              {renderLikeButton()}
             </IconButton>
 
             <Typography variant="caption" color="#808195" fontSize={14}>
