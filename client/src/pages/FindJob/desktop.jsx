@@ -226,6 +226,7 @@ const DesktopView = () => {
     } catch (error) {
       console.error("Error fetching jobs:", error);
     } finally {
+      window.scrollTo(0, 0); 
       setIsFetching(false);
     }
   };
