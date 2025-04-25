@@ -11,17 +11,19 @@ import {
   Tab,
   CircularProgress,
 } from "@mui/material";
+import dayjs from "dayjs";
 import EditIcon from "@mui/icons-material/Edit";
 import SaveIcon from "@mui/icons-material/Save";
 import { Delete, Add } from "@mui/icons-material";
 import AlertModal from "../../../components/Alerts/view";
-import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import InputMask from "react-input-mask";
 import { VisibilityOff, Visibility } from "@mui/icons-material";
 import axios from "axios";
 import { useDispatch } from "react-redux";
-import { UpdateUser } from "../../../redux/userSlice";
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 
 const ExperienceHistory = ({ userId, experienceHistory, about }) => {
   const dispatch = useDispatch();
@@ -140,7 +142,22 @@ const ExperienceHistory = ({ userId, experienceHistory, about }) => {
     }));
   };
 
+  const handleFromChange = (newValue) => {
+    setNewExperience((prev) => ({
+      ...prev,
+      from: newValue ? newValue.toISOString() : null,
+    }));
+  };
+
+  const handleToChange = (newValue) => {
+    setNewExperience((prev) => ({
+      ...prev,
+      to: newValue ? newValue.toISOString() : null,
+    }));
+  };
+
   return (
+    <LocalizationProvider dateAdapter={AdapterDayjs}>
     <Box p={2}>
       <Box sx={{ mb: 2, display: "flex", justifyContent: "space-between" }}>
         <AlertModal
@@ -309,7 +326,7 @@ const ExperienceHistory = ({ userId, experienceHistory, about }) => {
                     fontSize: "12px",
                   }}
                 >
-                  {exp.to ? new Date(exp.from).toLocaleDateString("en-US", { month: "short", year: "numeric" }) : ""} 
+                  {exp.to ? new Date(exp.to).toLocaleDateString("en-US", { month: "short", year: "numeric" }) : ""} 
                 </Typography>
               </Box>
             </Box>
@@ -369,29 +386,51 @@ const ExperienceHistory = ({ userId, experienceHistory, about }) => {
             />
           </Grid>
           <Grid item xs={6}>
-        <label className="date-label" style={{marginRight:"10px"}}>From:</label>
+        <label className="date-label" >From:</label>
         <DatePicker
-          selected={newExperience.from}
-          onChange={(date) => handleChange(date, "from")}
-          dateFormat="MM/yyyy"
-          showMonthYearPicker
-          maxDate={new Date()}
-          placeholderText="MM/YYYY"
-          className="custom-datepicker-input"
-        />
+            views={['year', 'month']}
+            value={newExperience.from ? dayjs(newExperience.from) : null}
+            onChange={handleFromChange}
+            maxDate={dayjs()}
+            slotProps={{
+              textField: {
+                size: 'small',
+                sx: {
+                  width: '100%',
+                  '& .MuiInputBase-input': {
+                    fontFamily: 'Poppins',
+                    fontSize: '12px',
+                    textAlign: 'center',
+                    color: '#808195',
+                  },
+                },
+              },
+            }}
+          />
       </Grid>
 
       <Grid item xs={6}>
-      <label className="date-label" style={{marginRight:"10px",marginLeft:"5px"}}>To:</label>
-        <DatePicker
-          selected={newExperience.to}
-          onChange={(date) => handleChange(date, "to")}
-          dateFormat="MM/yyyy"
-          showMonthYearPicker
-          maxDate={new Date()}
-          placeholderText="MM/YYYY"
-          className="custom-datepicker-input"
-        />
+      <label className="date-label" >To:</label>
+      <DatePicker
+            views={['year', 'month']}
+            value={newExperience.to ? dayjs(newExperience.to) : null}
+            onChange={handleToChange}
+            maxDate={dayjs()}
+            slotProps={{
+              textField: {
+                size: 'small',
+                sx: {
+                  width: '100%',
+                  '& .MuiInputBase-input': {
+                    fontFamily: 'Poppins',
+                    fontSize: '12px',
+                    textAlign: 'center',
+                    color: '#808195',
+                  },
+                },
+              },
+            }}
+          />
       </Grid>
           <Grid item xs={12}>
             <TextField
@@ -423,6 +462,7 @@ const ExperienceHistory = ({ userId, experienceHistory, about }) => {
         </Typography>
       </Box>
     </Box>
+    </LocalizationProvider>
   );
 };
 
