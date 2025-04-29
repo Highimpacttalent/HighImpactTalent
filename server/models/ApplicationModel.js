@@ -4,17 +4,17 @@ import bcrypt from "bcryptjs";
 import JWT from "jsonwebtoken";
 
 const applicationSchema = new Schema({
-  job:{
-    type:mongoose.Schema.Types.ObjectId,
-    ref:'Jobs'
+  job: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Jobs'
   },
-  company:{
-    type:mongoose.Schema.Types.ObjectId,
-    ref:'Companies'
+  company: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Companies'
   },
-  applicant:{
-    type:mongoose.Schema.Types.ObjectId,
-    ref:'Users'
+  applicant: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Users'
   },
   status: {
     type: String,
@@ -48,7 +48,21 @@ const applicationSchema = new Schema({
       },
     },
   ],
-  
+  screeningAnswers: [
+    {
+      questionId: {
+        type: mongoose.Schema.Types.ObjectId
+      },
+      question: {
+        type: String,
+        required: true
+      },
+      answer: {
+        type: String,
+        required: true
+      }
+    }
+  ]
 });
 
 const Application = mongoose.model("Application", applicationSchema);
