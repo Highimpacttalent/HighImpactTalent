@@ -11,6 +11,7 @@ import Socials from "./components/Social";
 import ExperienceHistory from "./components/WorkEx";
 import Experience from "./components/Experience";
 import AboutSection from "./components/About";
+import PreferencesCard from "./components/PreferencesCard";
 
 const ProfileSection = () => {
   const { user } = useSelector((state) => state.user);
@@ -97,6 +98,9 @@ const ProfileSection = () => {
           </Box>
           <Box sx={{ width: { xs: "100%", md: "40%" } }}>
             <Socials userInfo={userInfo} />
+            <Box sx={{ mt: 3 }}>
+              <PreferencesCard userInfo={userInfo} />
+            </Box>
           </Box>
         </Box>
 
