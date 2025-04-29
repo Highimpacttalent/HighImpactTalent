@@ -60,35 +60,58 @@ const ScreeningView = () => {
   };
 
   const applyHandler = async () => {
-    const allQuestionsAnswered = formData.answers.every(answer => answer.trim() !== "");
+    // Filter out empty questions
+    const filteredQuestions = state?.questions?.filter(
+      (question) => question.question.trim() !== ""
+    );
+    
+    // Check if all required questions are answered
+    if (filteredQuestions && filteredQuestions.length > 0) {
+      const mandatoryQuestions = filteredQuestions.filter(q => q.isMandatory);
+      
+      // Check if all mandatory questions are answered
+      const allMandatoryAnswered = mandatoryQuestions.every((question, idx) => {
+        const questionIndex = filteredQuestions.indexOf(question);
+        return formData.answers[questionIndex] && formData.answers[questionIndex].trim() !== "";
+      });
+      
+      if (!allMandatoryAnswered) {
+        setSnackbar({
+          open: true,
+          message: "Please answer all mandatory screening questions before submitting.",
+          severity: "error",
+        });
+        return;
+      }
+    }
 
-  if(filteredQuestions.length > 0){
-  if (!allQuestionsAnswered) {
-    setSnackbar({
-      open: true,
-      message: "Please answer all screening questions before submitting.",
-      severity: "error",
-    });
-    return;
-  }
-}
     if (!applied) {
       try {
+        // Prepare the screening answers in the expected format
+        const screeningAnswers = filteredQuestions ? 
+          filteredQuestions.map((question, index) => ({
+            questionId: question._id, // Make sure question objects have _id
+            question: question.question,
+            answer: formData.answers[index] || ""
+          })) : [];
+
         const res = await axios.post(
           "https://highimpacttalent.onrender.com/api-v1/application/create",
           {
             job: state?.jobid,
             company: state?.companyid,
             applicant: state?.userid,
+            screeningAnswers: screeningAnswers
           }
         );
+        
         if (res) {
           setApplied(true);
-          console.log(res)
+          console.log(res);
           dispatch(UpdateUser(res.data.user));
           setSnackbar({
             open: true,
-            message: res.message,
+            message: res.data.message || "Application submitted successfully!",
             severity: "success",
           });
         }
@@ -335,6 +358,9 @@ const ScreeningView = () => {
                     }}
                   >
                     Question {index + 1}: {question.question}
+                    {question.isMandatory && (
+                      <span style={{ color: "red", marginLeft: "4px" }}>*</span>
+                    )}
                   </Typography>
                   <TextField
                     fullWidth
@@ -349,6 +375,7 @@ const ScreeningView = () => {
                     }}
                     value={formData.answers[index] || ""}
                     onChange={(e) => handleAnswerChange(index, e.target.value)}
+                    required={question.isMandatory}
                   />
                 </Box>
               ))}
