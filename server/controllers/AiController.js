@@ -3,6 +3,12 @@ import axios from "axios";
 import { skillsList } from "./mock.js";
 import ResumePool from "../models/ResumePool.js";
 import { topCompanieslist, topInstituteslist } from "./mock.js";
+import fs from "fs";
+import path from "path";
+import xlsx from "xlsx";
+import FormData from "form-data";
+import { Readable } from "stream";
+import { uploadJsonAsCsvToS3 } from "../utils/UploadChecker.js";
 
 const GEMINI_API_KEY = "AIzaSyCILU-_ezGfu3iojbS-hFe9-Fil4klNOlo";
 
@@ -555,3 +561,75 @@ Respond with only the JSON array, no extra commentary.
     });
   }
 };
+
+  export const uploadAndShortlist = async (req, res, next) => {
+    try {
+      const { recruiterQuery } = req.body;
+
+      if (!recruiterQuery) {
+        return res.status(400).json({ error: "Recruiter query missing" });
+      }
+
+      // 1. Fetch all user data
+      const users = await ResumePool.find().lean();
+      console.log("Fetched", users.length, "users");
+
+      const csvUrl = await uploadJsonAsCsvToS3(users, "resumes/csv");
+      console.log("CSV uploaded to S3 at", csvUrl);
+
+      // 2. Build a prompt that asks for cvUrl values
+    const prompt = `
+    You are an intelligent assistant helping a recruiter identify the most relevant candidates from a CSV file.
+    
+    The CSV contains a list of user profiles. Each profile includes a field called "cvUrl" which is a downloadable link to the candidate's resume. Other fields include name, experience, education, skills, companies, and roles. You will be provided a public URL to this CSV file.
+    
+    Recruiter's Query:
+    ${recruiterQuery}
+    
+    CSV File URL:
+    ${csvUrl}
+    
+    Instructions:
+    1. Download and parse the CSV file.
+    2. Analyze the profiles based on the recruiter's query.
+    3. Select only the most relevant candidates that match the query criteria.
+    4. Return ONLY a JSON array containing the "cvUrl" values of the shortlisted candidates.
+    5. Do NOT include any explanation, text, or metadata.
+    
+    Expected Response Format:
+    \`\`\`json
+    ["https://s3.amazonaws.com/path-to-resume1.pdf", "https://s3.amazonaws.com/path-to-resume2.pdf"]
+    \`\`\`
+    
+    Only return the JSON array as shown above.
+    `;
+    
+        // 4. Call Gemini
+        const geminiResponse = await axios.post(
+          `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`,
+          { contents: [{ role: "user", parts: [{ text: prompt }] }] },
+          { headers: { "Content-Type": "application/json" } }
+        );
+    
+        const rawText =
+          geminiResponse.data?.candidates?.[0]?.content?.parts?.[0]?.text || "";
+    
+        // 5. Extract the JSON array from the fenced code block
+        const match = rawText.match(/```json\n([\s\S]*?)\n```/);
+        const cvUrls = match ? JSON.parse(match[1]) : [];
+    
+        // 6. Return the result
+        return res.status(200).json({
+          success: true,
+          rawText: rawText,
+          shortlistedCvUrls: cvUrls,
+          totalShortlisted: cvUrls.length,
+        });
+      } catch (err) {
+        console.error("Error in uploadAndShortlist:", err.response?.data || err);
+        return res.status(500).json({
+          success: "failed",
+          message: err.message || err.toString(),
+        });
+      }
+    };
