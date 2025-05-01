@@ -197,6 +197,9 @@ export const updateUser = async (req, res, next) => {
     joinConsulting,
     dateOfBirth,
     skills,
+    highestQualification,
+    lastConsultingCompany,
+    totalYearsInConsulting,
   } = req.body;
 
   try {
@@ -229,6 +232,14 @@ export const updateUser = async (req, res, next) => {
       experience,
       skills: Array.isArray(skills) ? skills : [],
     };
+
+    if (highestQualification) updateUser.highestQualification = highestQualification;
+    if (lastConsultingCompany) updateUser.lastConsultingCompany = lastConsultingCompany;
+    if (typeof totalYearsInConsulting === "number") updateUser.totalYearsInConsulting = totalYearsInConsulting;
+    if (!isNaN(Number(totalYearsInConsulting))) {
+      updateUser.totalYearsInConsulting = Number(totalYearsInConsulting);
+    }
+    
 
     const user = await Users.findByIdAndUpdate(id, updateUser, { new: true });
 

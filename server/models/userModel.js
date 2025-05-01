@@ -40,15 +40,10 @@ const userSchema = new mongoose.Schema(
     contactNumber: { type: String },
     profileUrl: { type: String },
     cvUrl: { type: String },
-    // currentJobRole: { type: String,default:"" },
     currentSalary: {
       type: String,
       default: "",
     },
-    // currentConsultingCompany: {
-    //   type: String,
-    //   default: "",
-    // },
     currentCompany: {
       type: String,
       default: "",
@@ -74,7 +69,7 @@ const userSchema = new mongoose.Schema(
     },
     joinConsulting: {
       type: String,
-      enum: ["Out of campus", "Lateral"],
+      enum: ["Out of campus", "Lateral","no"],
       default: "Out of campus",
     },
     about: { type: String },
@@ -144,6 +139,19 @@ const userSchema = new mongoose.Schema(
         }
       }
     ],
+    highestQualification: {
+      type: String,
+      enum: ["MBA", "Masters", "Bachelors", "CA"],
+      default: "Bachelors"
+    },
+    lastConsultingCompany: {
+      type: String,
+      default: ""
+    },
+    totalYearsInConsulting: {
+      type: Number,
+      default: 0
+    },
   },
   { timestamps: true }
 );
