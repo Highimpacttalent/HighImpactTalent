@@ -28,8 +28,8 @@ const UserInfoForm = () => {
     defaultValues?.PersonalInformation?.contactNumber || ""
   );
   const [error, setError] = useState("");
-  const [profilePic, setProfilePic] = useState(user?.profileUrl||"");
-  const [profilePicUrl, setProfilePicUrl] = useState(user?.profileUrl||"");
+  const [profilePic, setProfilePic] = useState(user?.profileUrl || "");
+  const [profilePicUrl, setProfilePicUrl] = useState(user?.profileUrl || "");
   const [cities, setCities] = useState([]);
   const [selectedCity, setSelectedCity] = useState(null);
   const [inputValue, setInputValue] = useState("");
@@ -54,15 +54,19 @@ const UserInfoForm = () => {
     contactNumber: defaultValues?.PersonalInformation?.contactNumber || "",
     location: defaultValues?.PersonalInformation?.location || "",
     openToRelocate: "Yes",
-    isItConsultingCompany:"Yes",
+    isItConsultingCompany: "Yes",
     joinConsulting: "",
     dateOfBirth: defaultValues?.PersonalInformation?.dateOfBirth || "",
     profilePic: defaultValues?.PersonalInformation?.profilePic || "",
     skills: filters.skills,
     expectedMinSalary: "",
     preferredLocations: [],
-    preferredWorkTypes: ["Full-Time"], 
-    preferredWorkModes: ["Remote"], 
+    preferredWorkTypes: ["Full-Time"],
+    preferredWorkModes: ["Remote"],
+    highestQualification: ["Bachelors"],
+    lastConsultingCompany: "",
+    lastConsultingCustomCompany: "",
+    totalYearsInConsulting: "",
   });
 
   // Fetch cities from CSV
@@ -147,6 +151,25 @@ const UserInfoForm = () => {
   };
 
   // Handle company dropdown change
+  const handlelastCompanyChange = (e) => {
+    const { value } = e.target;
+    setFormData((prevState) => ({
+      ...prevState,
+      lastConsultingCompany: value,
+      // Reset custom company when selecting a new option
+      customCompany: "",
+    }));
+  };
+  // Handle custom company input
+  const handlelastCustomCompanyChange = (e) => {
+    const { value } = e.target;
+    setFormData((prevState) => ({
+      ...prevState,
+      lastConsultingCustomCompany: value,
+    }));
+  };
+
+  // Handle company dropdown change
   const handleCompanyChange = (e) => {
     const { value } = e.target;
     setFormData((prevState) => ({
@@ -213,8 +236,15 @@ const UserInfoForm = () => {
     e.preventDefault();
 
     // Prepare form data for submission
-    const finalCurrentCompany = 
-      formData.currentCompany === "Other" ? formData.customCompany : formData.currentCompany;
+    const finalCurrentCompany =
+      formData.currentCompany === "Other"
+        ? formData.customCompany
+        : formData.currentCompany;
+    
+    const ConsultingCompany =
+      formData.lastConsultingCompany === "Other"
+        ? formData.lastConsultingCustomCompany
+        : formData.lastConsultingCompany;
 
     const updatedFormData = {
       ...formData,
@@ -227,6 +257,8 @@ const UserInfoForm = () => {
       preferredLocations: formData.preferredLocations,
       preferredWorkTypes: formData.preferredWorkTypes,
       preferredWorkModes: formData.preferredWorkModes,
+      lastConsultingCompany: ConsultingCompany,
+      highestQualification: ["Bachelors"],
     };
 
     // Remove the temporary customCompany field before submission
@@ -244,8 +276,8 @@ const UserInfoForm = () => {
 
       if (res) {
         alert("Profile updated successfully");
-        console.log("res",res)
-        dispatch(UpdateUser(res.user))
+        console.log("res", res);
+        dispatch(UpdateUser(res.user));
         navigate("/find-jobs");
       } else {
         throw new Error("Update failed");
@@ -262,7 +294,7 @@ const UserInfoForm = () => {
   const customStyles = {
     control: (provided, state) => ({
       ...provided,
-      padding: 10,
+      padding: 4,
       width: "100%",
       fontSize: "0.875rem",
       borderRadius: 50,
@@ -274,7 +306,6 @@ const UserInfoForm = () => {
     }),
     menu: (provided) => ({
       ...provided,
-      borderRadius: 50,
       boxShadow: "0 2px 10px rgba(0, 0, 0, 0.1)",
       border: "1px solid #d1d5db",
     }),
@@ -507,63 +538,6 @@ const UserInfoForm = () => {
                     ))}
                   </select>
                 </div>
-
-                <div className="mb-6">
-                  <label
-                    className="block mb-4 ml-2"
-                    style={{
-                      fontFamily: "Satoshi",
-                      fontWeight: 500,
-                      fontSize: "16px",
-                      color: "#24252C",
-                    }}
-                  >
-                    Is it a Consulting Company ?{" "}
-                    <span style={{ color: "red" }}>*</span>
-                  </label>
-                  {/* Radio Buttons */}
-                  <label className="flex items-center gap-2 ml-2 mb-2">
-                    <input
-                      type="radio"
-                      name="isItConsultingCompany"
-                      value="Yes"
-                      checked={formData.isItConsultingCompany === "Yes"}
-                      onChange={handleChange}
-                      className="accent-blue-500"
-                    />
-                    <span
-                      style={{
-                        color: "#24252C",
-                        fontFamily: "Satoshi",
-                        fontWeight: 500,
-                        fontSize: "16px",
-                      }}
-                    >
-                      Yes
-                    </span>
-                  </label>
-
-                  <label className="flex items-center gap-2 ml-2">
-                    <input
-                      type="radio"
-                      name="isItConsultingCompany"
-                      value="No"
-                      checked={formData.isItConsultingCompany === "No"}
-                      onChange={handleChange}
-                      className="accent-blue-500"
-                    />
-                    <span
-                      style={{
-                        color: "#24252C",
-                        fontFamily: "Satoshi",
-                        fontWeight: 500,
-                        fontSize: "16px",
-                      }}
-                    >
-                      No
-                    </span>
-                  </label>
-                </div>
                 <div className="mb-6">
                   <label
                     className="block mb-4 ml-2"
@@ -589,6 +563,50 @@ const UserInfoForm = () => {
                     onChange={handleSkillsChange}
                     styles={customStyles}
                     placeholder="Select or type skills..."
+                  />
+                </div>
+                {/* Preferred Work Mode (Multi-select) */}
+                <div className="mb-6">
+                  <label
+                    className="block mb-4 ml-2"
+                    style={{
+                      fontFamily: "Satoshi",
+                      fontWeight: 500,
+                      fontSize: "16px",
+                      color: "#24252C",
+                    }}
+                  >
+                    Educational Qualifications <span style={{ color: "red" }}>*</span>
+                  </label>
+                  <Select
+                    isMulti
+                    options={[
+                      { value: "Bachelor's", label: "Bachelor's" },
+                      { value: "Master", label: "Master" },
+                      { value: "MBA", label: "MBA" },
+                      { value: "CA", label: "CA" }
+                    ]
+                    }
+                    value={formData.highestQualification.map((mode) => ({
+                      value: mode,
+                      label: mode,
+                    }))}
+                    onChange={(selectedOptions, { action, option }) => {
+                      const workModes = selectedOptions.map(
+                        (option) => option.value
+                      );
+                      setFormData((prev) => ({
+                        ...prev,
+                        highestQualification: workModes,
+                      }));
+
+                      // Close dropdown after selection
+                      document.activeElement.blur();
+                    }}
+                    styles={customStyles}
+                    placeholder="Select qualifications..."
+                    closeMenuOnSelect={true}
+                    required
                   />
                 </div>
               </Box>
@@ -699,62 +717,6 @@ const UserInfoForm = () => {
                     </span>
                   </label>
                 </div>
-                <div className="mb-6">
-                  <label
-                    className="block mb-4 ml-2"
-                    style={{
-                      fontFamily: "Satoshi",
-                      fontWeight: 500,
-                      fontSize: "16px",
-                      color: "#24252C",
-                    }}
-                  >
-                    When did you first join Consulting ?{" "}
-                    <span style={{ color: "red" }}>*</span>
-                  </label>
-                  {/* Radio Buttons */}
-                  <label className="flex items-center gap-2 ml-2 mb-2">
-                    <input
-                      type="radio"
-                      name="joinConsulting"
-                      value="Lateral"
-                      checked={formData.joinConsulting === "Lateral"}
-                      onChange={handleChange}
-                      className="accent-blue-500"
-                    />
-                    <span
-                      style={{
-                        color: "#24252C",
-                        fontFamily: "Satoshi",
-                        fontWeight: 500,
-                        fontSize: "16px",
-                      }}
-                    >
-                      Lateral
-                    </span>
-                  </label>
-
-                  <label className="flex items-center gap-2 ml-2">
-                    <input
-                      type="radio"
-                      name="joinConsulting"
-                      value="Out of campus"
-                      checked={formData.joinConsulting === "Out of campus"}
-                      onChange={handleChange}
-                      className="accent-blue-500"
-                    />
-                    <span
-                      style={{
-                        color: "#24252C",
-                        fontFamily: "Satoshi",
-                        fontWeight: 500,
-                        fontSize: "16px",
-                      }}
-                    >
-                      Out of Campus
-                    </span>
-                  </label>
-                </div>
               </Box>
             </Box>
           </Box>
@@ -851,7 +813,10 @@ const UserInfoForm = () => {
                       color: "#24252C",
                     }}
                   >
-                    LinkedIn Profile Link <span style={{color:"grey"}}>(link starting with https)</span>
+                    LinkedIn Profile Link{" "}
+                    <span style={{ color: "grey" }}>
+                      (link starting with https)
+                    </span>
                     <span style={{ color: "red" }}>*</span>
                   </label>
                   <input
@@ -1070,211 +1035,507 @@ const UserInfoForm = () => {
             </Box>
           </Box>
         </Box>
-{/* Add this after the Personal Details section */}
-<Box
-  sx={{
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    width: "100%",
-    mt: 4,
-  }}
->
-  <Box
-    sx={{
-      display: "flex",
-      border: "1px solid #0000004D",
-      borderRadius: 4,
-      width: { xs: "100%", sm: "100%", lg: "80%", md: "80%" },
-      flexDirection: "column",
-    }}
-  >
-    <Typography
-      sx={{
-        color: "#24252C",
-        fontFamily: "Satoshi",
-        fontWeight: 700,
-        p: 2,
-        fontSize: "20px",
-      }}
-    >
-      Preferences
-    </Typography>
-    <Box
+        {/* Add this after the Personal Details section */}
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            width: "100%",
+            mt: 4,
+          }}
+        >
+          <Box
+            sx={{
+              display: "flex",
+              border: "1px solid #0000004D",
+              borderRadius: 4,
+              width: { xs: "100%", sm: "100%", lg: "80%", md: "80%" },
+              flexDirection: "column",
+            }}
+          >
+            <Typography
+              sx={{
+                color: "#24252C",
+                fontFamily: "Satoshi",
+                fontWeight: 700,
+                p: 2,
+                fontSize: "20px",
+              }}
+            >
+              Preferences
+            </Typography>
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: {
+                  xs: "center",
+                  sm: "center",
+                  lg: "space-between",
+                  md: "space-between",
+                },
+                flexDirection: {
+                  xs: "column",
+                  sm: "column",
+                  lg: "row",
+                  md: "row",
+                },
+                width: "100%",
+              }}
+            >
+              <Box
+                sx={{
+                  width: { xs: "100%", sm: "100%", md: "50%", lg: "50%" },
+                  p: 2,
+                }}
+              >
+                {/* Expected Minimum Salary */}
+                <div className="mb-6">
+                  <label
+                    className="block mb-4 ml-2"
+                    style={{
+                      fontFamily: "Satoshi",
+                      fontWeight: 500,
+                      fontSize: "16px",
+                      color: "#24252C",
+                    }}
+                  >
+                    Expected Minimum Salary (INR Lakhs){" "}
+                    <span style={{ color: "red" }}>*</span>
+                  </label>
+                  <input
+                    type="number"
+                    name="expectedMinSalary"
+                    value={formData.expectedMinSalary}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    style={{ borderRadius: 50, border: "1px solid #24252C" }}
+                    required
+                  />
+                </div>
+
+                {/* Preferred Work Types (Multi-select) */}
+                <div className="mb-6">
+                  <label
+                    className="block mb-4 ml-2"
+                    style={{
+                      fontFamily: "Satoshi",
+                      fontWeight: 500,
+                      fontSize: "16px",
+                      color: "#24252C",
+                    }}
+                  >
+                    Preferred Work Type <span style={{ color: "red" }}>*</span>
+                  </label>
+                  <Select
+                    isMulti
+                    options={[
+                      { value: "Full-Time", label: "Full-Time" },
+                      { value: "Part-Time", label: "Part-Time" },
+                      { value: "Contract", label: "Contract" },
+                      { value: "Temporary", label: "Temporary" },
+                    ]}
+                    value={formData.preferredWorkTypes.map((type) => ({
+                      value: type,
+                      label: type,
+                    }))}
+                    onChange={(selectedOptions, { action, option }) => {
+                      const workTypes = selectedOptions.map(
+                        (option) => option.value
+                      );
+                      setFormData((prev) => ({
+                        ...prev,
+                        preferredWorkTypes: workTypes,
+                      }));
+
+                      // Close dropdown after selection
+                      document.activeElement.blur();
+                    }}
+                    styles={customStyles}
+                    placeholder="Select work type..."
+                    closeMenuOnSelect={true}
+                    required
+                  />
+                </div>
+              </Box>
+
+              <Box
+                sx={{
+                  width: { xs: "100%", sm: "100%", md: "50%", lg: "50%" },
+                  p: 2,
+                }}
+              >
+                {/* Preferred Locations (Multi-select with exactly 5) */}
+                <div className="mb-6">
+                  <label
+                    className="block mb-4 ml-2"
+                    style={{
+                      fontFamily: "Satoshi",
+                      fontWeight: 500,
+                      fontSize: "16px",
+                      color: "#24252C",
+                    }}
+                  >
+                    Preferred Locations (Select exactly 5){" "}
+                    <span style={{ color: "red" }}>*</span>
+                  </label>
+                  <Select
+                    isMulti
+                    options={cities.map((city) => ({
+                      value: city,
+                      label: city,
+                    }))}
+                    value={formData.preferredLocations.map((loc) => ({
+                      value: loc,
+                      label: loc,
+                    }))}
+                    onChange={(selectedOptions, { action, option }) => {
+                      // Check if user is trying to add a 6th option
+                      if (selectedOptions.length > 5) {
+                        // Show error message only when attempting to exceed limit
+                        alert("You can select a maximum of 5 locations");
+
+                        // Keep only the first 5 selections
+                        const limitedOptions = selectedOptions.slice(0, 5);
+                        setFormData((prev) => ({
+                          ...prev,
+                          preferredLocations: limitedOptions.map(
+                            (option) => option.value
+                          ),
+                        }));
+                      } else {
+                        // Update normally if within limit
+                        const locations = selectedOptions.map(
+                          (option) => option.value
+                        );
+                        setFormData((prev) => ({
+                          ...prev,
+                          preferredLocations: locations,
+                        }));
+                      }
+
+                      // Close dropdown after selection
+                      document.activeElement.blur();
+                    }}
+                    styles={customStyles}
+                    placeholder="Select preferred locations..."
+                    closeMenuOnSelect={true}
+                    required
+                    isOptionDisabled={() =>
+                      formData.preferredLocations.length >= 5
+                    }
+                  />
+                </div>
+
+                {/* Preferred Work Mode (Multi-select) */}
+                <div className="mb-6">
+                  <label
+                    className="block mb-4 ml-2"
+                    style={{
+                      fontFamily: "Satoshi",
+                      fontWeight: 500,
+                      fontSize: "16px",
+                      color: "#24252C",
+                    }}
+                  >
+                    Preferred Work Mode <span style={{ color: "red" }}>*</span>
+                  </label>
+                  <Select
+                    isMulti
+                    options={[
+                      { value: "Remote", label: "Remote" },
+                      { value: "Hybrid", label: "Hybrid" },
+                      { value: "Work From Office", label: "Work From Office" },
+                    ]}
+                    value={formData.preferredWorkModes.map((mode) => ({
+                      value: mode,
+                      label: mode,
+                    }))}
+                    onChange={(selectedOptions, { action, option }) => {
+                      const workModes = selectedOptions.map(
+                        (option) => option.value
+                      );
+                      setFormData((prev) => ({
+                        ...prev,
+                        preferredWorkModes: workModes,
+                      }));
+
+                      // Close dropdown after selection
+                      document.activeElement.blur();
+                    }}
+                    styles={customStyles}
+                    placeholder="Select work mode..."
+                    closeMenuOnSelect={true}
+                    required
+                  />
+                </div>
+              </Box>
+            </Box>
+          </Box>
+        </Box>
+
+        {/* Consulting Questions */}
+
+        <Box
       sx={{
         display: "flex",
-        justifyContent: {
-          xs: "center",
-          sm: "center",
-          lg: "space-between",
-          md: "space-between",
-        },
-        flexDirection: {
-          xs: "column",
-          sm: "column",
-          lg: "row",
-          md: "row",
-        },
+        justifyContent: "center",
+        alignItems: "center",
         width: "100%",
+        mt: 4,
       }}
     >
       <Box
         sx={{
-          width: { xs: "100%", sm: "100%", md: "50%", lg: "50%" },
-          p: 2,
+          display: "flex",
+          border: "1px solid #0000004D",
+          borderRadius: 4,
+          width: { xs: "100%", sm: "100%", lg: "80%", md: "80%" },
+          flexDirection: "column",
         }}
       >
-        {/* Expected Minimum Salary */}
-        <div className="mb-6">
-          <label
-            className="block mb-4 ml-2"
-            style={{
-              fontFamily: "Satoshi",
-              fontWeight: 500,
-              fontSize: "16px",
-              color: "#24252C",
+        <Typography
+          sx={{
+            color: "#24252C",
+            fontFamily: "Satoshi",
+            fontWeight: 700,
+            p: 2,
+            fontSize: "20px",
+          }}
+        >
+          Consulting Background
+        </Typography>
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: {
+              xs: "center",
+              sm: "center",
+              lg: "space-between",
+              md: "space-between",
+            },
+            flexDirection: {
+              xs: "column",
+              sm: "column",
+              lg: "row",
+              md: "row",
+            },
+            width: "100%",
+          }}
+        >
+          <Box
+            sx={{
+              width: { xs: "100%", sm: "100%", md: "50%", lg: "50%" },
+              p: 2,
             }}
           >
-            Expected Minimum Salary (INR Lakhs) <span style={{ color: "red" }}>*</span>
-          </label>
-          <input
-            type="number"
-            name="expectedMinSalary"
-            value={formData.expectedMinSalary}
-            onChange={handleChange}
-            className="w-full px-4 py-3 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            style={{ borderRadius: 50, border: "1px solid #24252C" }}
-            required
-          />
-        </div>
+            <div className="mb-6">
+              <label
+                className="block mb-4 ml-2"
+                style={{
+                  fontFamily: "Satoshi",
+                  fontWeight: 500,
+                  fontSize: "16px",
+                  color: "#24252C",
+                }}
+              >
+                Do you have a Consulting Background?{" "}
+                <span style={{ color: "red" }}>*</span>
+              </label>
+              {/* Radio Buttons */}
+              <label className="flex items-center gap-2 ml-2 mb-2">
+                <input
+                  type="radio"
+                  name="hasConsultingBackground"
+                  value="Yes"
+                  checked={formData.hasConsultingBackground === "Yes"}
+                  onChange={handleChange}
+                  className="accent-blue-500"
+                />
+                <span
+                  style={{
+                    color: "#24252C",
+                    fontFamily: "Satoshi",
+                    fontWeight: 500,
+                    fontSize: "16px",
+                  }}
+                >
+                  Yes
+                </span>
+              </label>
 
-        {/* Preferred Work Types (Multi-select) */}
-        <div className="mb-6">
-          <label
-            className="block mb-4 ml-2"
-            style={{
-              fontFamily: "Satoshi",
-              fontWeight: 500,
-              fontSize: "16px",
-              color: "#24252C",
-            }}
-          >
-            Preferred Work Type <span style={{ color: "red" }}>*</span>
-          </label>
-          <Select
-            isMulti
-            options={[
-              { value: "Full-Time", label: "Full-Time" },
-              { value: "Part-Time", label: "Part-Time" },
-              { value: "Contract", label: "Contract" },
-              { value: "Temporary", label: "Temporary" }
-            ]}
-            value={formData.preferredWorkTypes.map(type => ({ value: type, label: type }))}
-            onChange={(selectedOptions, { action, option }) => {
-              const workTypes = selectedOptions.map(option => option.value);
-              setFormData(prev => ({ ...prev, preferredWorkTypes: workTypes }));
+              <label className="flex items-center gap-2 ml-2">
+                <input
+                  type="radio"
+                  name="hasConsultingBackground"
+                  value="No"
+                  checked={formData.hasConsultingBackground === "No"}
+                  onChange={handleChange}
+                  className="accent-blue-500"
+                />
+                <span
+                  style={{
+                    color: "#24252C",
+                    fontFamily: "Satoshi",
+                    fontWeight: 500,
+                    fontSize: "16px",
+                  }}
+                >
+                  No
+                </span>
+              </label>
               
-              // Close dropdown after selection
-              document.activeElement.blur();
-            }}
-            styles={customStyles}
-            placeholder="Select work type..."
-            closeMenuOnSelect={true}
-            required
-          />
-        </div>
-      </Box>
+            </div>
+            {formData.hasConsultingBackground === "Yes" && (
+            <div className="mb-6">
+                  <label
+                    className="block mb-4 ml-2"
+                    style={{
+                      fontFamily: "Satoshi",
+                      fontWeight: 500,
+                      fontSize: "16px",
+                      color: "#24252C",
+                    }}
+                  >
+                    When did you first join Consulting?{" "}
+                  </label>
+                  <select
+                    name="joinConsulting"
+                    value={formData.joinConsulting}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 pr-12 text-sm border rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none"
+                    style={{ borderRadius: 50, border: "1px solid #24252C" }}
+                    required
+                  >
+                    <option value="">Select an option</option>
+                    <option value="Lateral">Lateral</option>
+                    <option value="Out of campus">Out of Campus</option>
+                  </select>
+                </div>)}
+                </Box>
 
-      <Box
-        sx={{
-          width: { xs: "100%", sm: "100%", md: "50%", lg: "50%" },
-          p: 2,
-        }}
-      >
-        {/* Preferred Locations (Multi-select with exactly 5) */}
-        <div className="mb-6">
-          <label
-            className="block mb-4 ml-2"
-            style={{
-              fontFamily: "Satoshi",
-              fontWeight: 500,
-              fontSize: "16px",
-              color: "#24252C",
+                <Box
+            sx={{
+              width: { xs: "100%", sm: "100%", md: "50%", lg: "50%" },
+              p: 2,
             }}
           >
-            Preferred Locations (Select exactly 5) <span style={{ color: "red" }}>*</span>
-          </label>
-          <Select
-            isMulti
-            options={cities.map(city => ({ value: city, label: city }))}
-            value={formData.preferredLocations.map(loc => ({ value: loc, label: loc }))}
-            onChange={(selectedOptions, { action, option }) => {
-              // Check if user is trying to add a 6th option
-              if (selectedOptions.length > 5) {
-                // Show error message only when attempting to exceed limit
-                alert("You can select a maximum of 5 locations");
-                
-                // Keep only the first 5 selections
-                const limitedOptions = selectedOptions.slice(0, 5);
-                setFormData(prev => ({ 
-                  ...prev, 
-                  preferredLocations: limitedOptions.map(option => option.value) 
-                }));
-              } else {
-                // Update normally if within limit
-                const locations = selectedOptions.map(option => option.value);
-                setFormData(prev => ({ ...prev, preferredLocations: locations }));
-              }
-              
-              // Close dropdown after selection
-              document.activeElement.blur();
-            }}
-            styles={customStyles}
-            placeholder="Select preferred locations..."
-            closeMenuOnSelect={true}
-            required
-            isOptionDisabled={() => formData.preferredLocations.length >= 5}
-          />
-        </div>
 
-        {/* Preferred Work Mode (Multi-select) */}
-        <div className="mb-6">
-          <label
-            className="block mb-4 ml-2"
-            style={{
-              fontFamily: "Satoshi",
-              fontWeight: 500,
-              fontSize: "16px",
-              color: "#24252C",
-            }}
-          >
-            Preferred Work Mode <span style={{ color: "red" }}>*</span>
-          </label>
-          <Select
-            isMulti
-            options={[
-              { value: "Remote", label: "Remote" },
-              { value: "Hybrid", label: "Hybrid" },
-              { value: "Work From Office", label: "Work From Office" }
-            ]}
-            value={formData.preferredWorkModes.map(mode => ({ value: mode, label: mode }))}
-            onChange={(selectedOptions, { action, option }) => {
-              const workModes = selectedOptions.map(option => option.value);
-              setFormData(prev => ({ ...prev, preferredWorkModes: workModes }));
-              
-              // Close dropdown after selection
-              document.activeElement.blur();
-            }}
-            styles={customStyles}
-            placeholder="Select work mode..."
-            closeMenuOnSelect={true}
-            required
-          />
-        </div>
+            {formData.hasConsultingBackground === "Yes" && (
+              <>  
+                <div className="mb-6">
+                  <label
+                    className="block mb-4 ml-2"
+                    style={{
+                      fontFamily: "Satoshi",
+                      fontWeight: 500,
+                      fontSize: "16px",
+                      color: "#24252C",
+                    }}
+                  >
+                    Last/Current Consulting Company{" "}
+                  </label>
+                  <select
+                    name="lastConsultingCompany"
+                    value={formData.lastConsultingCompany}
+                    onChange={handlelastCompanyChange}
+                    className="w-full px-4 py-3 pr-12 text-sm border rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none"
+                    style={{ borderRadius: 50, border: "1px solid #24252C" }}
+                  >
+                    <option value="">Select your Company</option>
+                    <option value="McKinsey & Company">
+                      McKinsey & Company
+                    </option>
+                    <option value="Boston Consulting Group">
+                      Boston Consulting Group
+                    </option>
+                    <option value="Bain & Company">Bain & Company</option>
+                    <option value="Deloitte">Deloitte</option>
+                    <option value="Accenture">Accenture</option>
+                    <option value="Kearney">Kearney</option>
+                    <option value="EY">EY</option>
+                    <option value="PwC">PwC</option>
+                    <option value="KPMG">KPMG</option>
+                    <option value="TSMG">TSMG</option>
+                    <option value="Strategy&">Strategy&</option>
+                    <option value="Oliver Wyman">Oliver Wyman</option>
+                    <option value="IBM">IBM</option>
+                    <option value="Capgemini E.L.I.T.E.">
+                      Capgemini E.L.I.T.E.
+                    </option>
+                    <option value="ZS Associates">ZS Associates</option>
+                    <option value="Roland Berger">Roland Berger</option>
+                    <option value="Alvarez & Marsal">Alvarez & Marsal</option>
+                    <option value="Parthenon Group">Parthenon Group</option>
+                    <option value="Siemens Management Consulting">
+                      Siemens Management Consulting
+                    </option>
+                    <option value="Arthur D. Little">Arthur D. Little</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+
+                {formData.lastConsultingCompany === "Other" && (
+                  <div className="mb-6">
+                    <label
+                      className="block text-gray-700 text-sm font-semibold mb-4 ml-2"
+                      style={{
+                        fontFamily: "Satoshi",
+                        fontWeight: 500,
+                        fontSize: "16px",
+                        color: "#24252C",
+                      }}
+                    >
+                      Other Company Name
+                    </label>
+                    <input
+                      type="text"
+                      name="lastConsultingCompany"
+                      value={formData.lastConsultingCustomCompany}
+                      onChange={handlelastCustomCompanyChange}
+                      placeholder="Please Specify Company name...."
+                      className="w-full px-4 py-3 text-sm border focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      style={{ borderRadius: 50, border: "1px solid #24252C" }}
+                    />
+                  </div>
+                )}
+
+                <div className="mb-6 mt-9">
+                  <label
+                    className="block mb-4 ml-2"
+                    style={{
+                      fontFamily: "Satoshi",
+                      fontWeight: 500,
+                      fontSize: "16px",
+                      color: "#24252C",
+                      
+                    }}
+                  >
+                    Total Experience in Consulting{" "}
+                  </label>
+                  <select
+                    name="totalExperience"
+                    value={formData.totalYearsInConsulting}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 pr-12 text-sm border rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none"
+                    style={{ borderRadius: 50, border: "1px solid #24252C" }}
+                    required
+                  >
+                    <option value="">Select experience</option>
+                    {Array.from({ length: 15 }, (_, i) => (
+                      <option key={i + 1} value={(i + 1).toString()}>{`${
+                        i + 1
+                      } year${i === 0 ? "" : "s"}`}</option>
+                    ))}
+                  </select>
+                </div>
+              </>
+            )}
+          </Box>
+        </Box>
       </Box>
     </Box>
-  </Box>
-</Box>
+
         <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
           <Box
             sx={{

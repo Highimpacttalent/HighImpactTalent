@@ -86,14 +86,21 @@ const PreferencesCard = ({ userInfo }) => {
   }, [userInfo]);
 
   const customStyles = {
-    control: (provided) => ({
+    control: (provided, state) => ({
       ...provided,
       padding: 4,
       width: "100%",
       fontSize: "0.875rem",
+      //borderRadius: 50,
+      //border: "1px solid #24252C",
+      //boxShadow: state.isFocused ? "0 0 0 2px #3b82f6" : "none",
+      //"&:hover": {
+      //borderColor: "#d1d5db",
+      //},
     }),
     menu: (provided) => ({
       ...provided,
+      //borderRadius: 50,
       boxShadow: "0 2px 10px rgba(0, 0, 0, 0.1)",
       border: "1px solid #d1d5db",
     }),
@@ -424,6 +431,7 @@ const PreferencesCard = ({ userInfo }) => {
                 onChange={(selected) => handleSelectChange("jobType", selected)}
                 styles={customStyles}
                 placeholder="Select job types..."
+                menuPosition="fixed"
               />
             </Grid>
 
@@ -443,6 +451,9 @@ const PreferencesCard = ({ userInfo }) => {
                 isSearchable
                 closeMenuOnSelect={false}
                 noOptionsMessage={() => "No matching locations found"}
+                menuPortalTarget={document.body} 
+                menuPosition="fixed"
+                menuPlacement="bottom"
               />
               {selectedLocations.some((loc) => loc.value === "Other") && (
                 <TextField
