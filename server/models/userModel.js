@@ -70,7 +70,7 @@ const userSchema = new mongoose.Schema(
     joinConsulting: {
       type: String,
       enum: ["Out of campus", "Lateral","no"],
-      default: "Out of campus",
+      default: "no",
     },
     about: { type: String },
     skills: {
@@ -140,9 +140,8 @@ const userSchema = new mongoose.Schema(
       }
     ],
     highestQualification: {
-      type: String,
-      enum: ["MBA", "Masters", "Bachelors", "CA"],
-      default: "Bachelors"
+      type: [String],
+      enum: ["MBA", "Masters", "Bachelors", "CA"]
     },
     lastConsultingCompany: {
       type: String,

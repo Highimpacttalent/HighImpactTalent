@@ -606,7 +606,7 @@ Respond with only the JSON array, no extra commentary.
     
         // 4. Call Gemini
         const geminiResponse = await axios.post(
-          `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`,
+          `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`,
           { contents: [{ role: "user", parts: [{ text: prompt }] }] },
           { headers: { "Content-Type": "application/json" } }
         );
