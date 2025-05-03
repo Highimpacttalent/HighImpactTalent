@@ -34,7 +34,7 @@ const DesktopView = () => {
   const { user } = useSelector((state) => state.user);
   const Statelocation = useLocation();
   const { searchKeywordProp, searchLocationProp } = Statelocation.state || {};
-  
+
   const [sort, setSort] = useState("Newest");
   const [page, setPage] = useState(1);
   const [numPage, setNumPage] = useState(1);
@@ -42,13 +42,17 @@ const DesktopView = () => {
   const [isFetching, setIsFetching] = useState(false);
   const [selectedTab, setSelectedTab] = useState(0);
   const [filteredJobs, setFilteredJobs] = useState([]);
-  
+
   // Search states - separate tracking states from actual query states
   const [searchKeyword, setSearchKeyword] = useState(searchKeywordProp || "");
-  const [searchLocation, setSearchLocation] = useState(searchLocationProp || "");
+  const [searchLocation, setSearchLocation] = useState(
+    searchLocationProp || ""
+  );
   // These will only update when the search button is clicked
-  const [searchQuery, setSearchQuery] = useState(searchKeywordProp || ""); 
-  const [searchLocationQuery, setSearchLocationQuery] = useState(searchLocationProp || "");
+  const [searchQuery, setSearchQuery] = useState(searchKeywordProp || "");
+  const [searchLocationQuery, setSearchLocationQuery] = useState(
+    searchLocationProp || ""
+  );
 
   const [experienceFilter, setExperienceFilter] = useState([]);
   const [workModeFilter, setWorkModeFilter] = useState([]);
@@ -62,14 +66,32 @@ const DesktopView = () => {
 
   const handleClick = (event) => setAnchorEl(event.currentTarget);
   const handleClose = () => setAnchorEl(null);
+
   const handleSelect = (value) => {
-    console.log("value", value);
-    if (value == "Recommended") {
-      setSelectedTab(1);
-    } else {
-      setSelectedTab(0);
-    }
     handleClose();
+    switch (value) {
+      case "All Jobs":
+        setSort("All Jobs");
+        setSelectedTab(0);
+        break;
+      case "Recommended":
+        setSort("Recommended");
+        setSelectedTab(1);
+        break;
+      case "Newest":             // ← handle “Newest” explicitly
+        setSort("Newest");
+        setSelectedTab(0);
+        break;
+      case "Saved":
+        setSort("Saved");
+        setSelectedTab(2);
+        break;
+      case "Salary (High to Low)":
+        setSort("Salary (High to Low)");
+        setSelectedTab(3);
+        break;
+    }
+    setPage(1);
   };
 
   const [expandedAccordions, setExpandedAccordions] = useState({
@@ -99,25 +121,25 @@ const DesktopView = () => {
   // Frontend: Update experienceOptions to ensure proper ranges
   const experienceOptions = [
     { value: "0-2", label: "0-2 years" },
-    { value: "2-5", label: "2-5 years" },  
+    { value: "2-5", label: "2-5 years" },
     { value: "5-8", label: "5-8 years" },
     { value: "8-11", label: "8-11 years" },
-    { value: "11-100", label: "Over 11 years" }  
+    { value: "11-100", label: "Over 11 years" },
   ];
 
   const workModeOptions = ["Remote", "Hybrid", "Work From Office"];
   const workTypeOptions = ["Full-Time", "Part-Time", "Contract", "Temporary"];
   const salaryRangeOptions = [
-    "0-5",       
-    "5-10",      
-    "10-15",     
-    "15-20",     
-    "20-30",     
-    "30-50",     
-    "50-80",     
-    "80-120",   
+    "0-5",
+    "5-10",
+    "10-15",
+    "15-20",
+    "20-30",
+    "30-50",
+    "50-80",
+    "80-120",
     "120-150",
-    "150-1000"
+    "150-1000",
   ];
   const datePostedOptions = [
     "Last 24 hours",
@@ -224,7 +246,7 @@ const DesktopView = () => {
     } catch (error) {
       console.error("Error fetching jobs:", error);
     } finally {
-      window.scrollTo(0, 0); 
+      window.scrollTo(0, 0);
       setIsFetching(false);
     }
   };
@@ -253,7 +275,7 @@ const DesktopView = () => {
 
   // Handle search on Enter key press for both inputs
   const handleKeyPress = (e) => {
-    if (e.key === 'Enter') {
+    if (e.key === "Enter") {
       handleSearchClick();
     }
   };
@@ -447,11 +469,20 @@ const DesktopView = () => {
             </Button>
 
             <Menu anchorEl={anchorEl} open={open} onClose={handleClose}>
+              <MenuItem onClick={() => handleSelect("All Jobs")}>
+                All Jobs
+              </MenuItem>
               <MenuItem onClick={() => handleSelect("Recommended")}>
                 Recommended
               </MenuItem>
               <MenuItem onClick={() => handleSelect("Newest")}>
                 Newest First
+              </MenuItem>
+              <MenuItem onClick={() => handleSelect("Salary (High to Low)")}>
+                Salary (High to Low)
+              </MenuItem>
+              <MenuItem onClick={() => handleSelect("Saved")}>
+                Saved Jobs
               </MenuItem>
             </Menu>
           </Box>
@@ -638,49 +669,50 @@ const DesktopView = () => {
                 fontFamily="Satoshi, sans-serif"
               >
                 Salary Range{" "}
-                {salaryRangeFilter.length > 0 && `(${salaryRangeFilter.length})`}
+                {salaryRangeFilter.length > 0 &&
+                  `(${salaryRangeFilter.length})`}
               </Typography>
             </AccordionSummary>
             <AccordionDetails>
-                <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-                  {salaryRangeOptions.map((range) => {
-                    const [min, max] = range.split('-').map(Number);
-                    let displayText;
-                    
-                    if (min === 0 && max === 5) {
-                      displayText = "0-5 Lakhs";
-                    } else if (min === 5 && max === 10) {
-                      displayText = "5-10 Lakhs";
-                    } else if (min === 10 && max === 15) {
-                      displayText = "10-15 Lakhs";
-                    } else if (min === 15 && max === 20) {
-                      displayText = "15-20 Lakhs";
-                    } else if (min === 20 && max === 30) {
-                      displayText = "20-30 Lakhs";
-                    } else if (min === 30 && max === 50) {
-                      displayText = "30-50 Lakhs";
-                    } else if (min === 50 && max === 80) {
-                      displayText = "50-80 Lakhs";
-                    } else if (min === 80 && max === 120) {
-                      displayText = "80 Lakhs - 1.2 Crore";
-                    } else if (min === 120 && max === 150) {
-                      displayText = "1.2 - 1.5 Crore";
-                    } else if (min === 150 && max === 1000) {
-                      displayText = "1.5 Crore & Above";
-                    }
+              <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+                {salaryRangeOptions.map((range) => {
+                  const [min, max] = range.split("-").map(Number);
+                  let displayText;
 
-                    return (
-                      <FilterOption
-                        key={range}
-                        label={displayText}
-                        value={range}
-                        state={salaryRangeFilter}
-                        setState={setSalaryRangeFilter}
-                      />
-                    );
-                  })}
-                </Box>
-              </AccordionDetails>
+                  if (min === 0 && max === 5) {
+                    displayText = "0-5 Lakhs";
+                  } else if (min === 5 && max === 10) {
+                    displayText = "5-10 Lakhs";
+                  } else if (min === 10 && max === 15) {
+                    displayText = "10-15 Lakhs";
+                  } else if (min === 15 && max === 20) {
+                    displayText = "15-20 Lakhs";
+                  } else if (min === 20 && max === 30) {
+                    displayText = "20-30 Lakhs";
+                  } else if (min === 30 && max === 50) {
+                    displayText = "30-50 Lakhs";
+                  } else if (min === 50 && max === 80) {
+                    displayText = "50-80 Lakhs";
+                  } else if (min === 80 && max === 120) {
+                    displayText = "80 Lakhs - 1.2 Crore";
+                  } else if (min === 120 && max === 150) {
+                    displayText = "1.2 - 1.5 Crore";
+                  } else if (min === 150 && max === 1000) {
+                    displayText = "1.5 Crore & Above";
+                  }
+
+                  return (
+                    <FilterOption
+                      key={range}
+                      label={displayText}
+                      value={range}
+                      state={salaryRangeFilter}
+                      setState={setSalaryRangeFilter}
+                    />
+                  );
+                })}
+              </Box>
+            </AccordionDetails>
           </Accordion>
 
           {/* Date Posted Filter */}

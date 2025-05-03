@@ -6,7 +6,13 @@ import FilterListIcon from "@mui/icons-material/FilterList";
 //import { FaSortAmountDown } from "react-icons/fa";
 import { Grid } from "@mui/material";
 
-import { Box, InputBase, Typography, IconButton } from "@mui/material";
+import {
+  Box,
+  InputBase,
+  Typography,
+  IconButton,
+  Pagination,
+} from "@mui/material";
 import { MdLocationOn } from "react-icons/md";
 import Accordion from "@mui/material/Accordion";
 import AccordionSummary from "@mui/material/AccordionSummary";
@@ -54,14 +60,18 @@ const mobileView = () => {
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const Statelocation = useLocation();
   const { searchKeywordProp, searchLocationProp } = Statelocation.state || {};
-  
+
   // Changed to match desktop implementation - separate input tracking from actual query states
   const [searchKeyword, setSearchKeyword] = useState(searchKeywordProp || "");
-  const [searchLocation, setSearchLocation] = useState(searchLocationProp || "");
+  const [searchLocation, setSearchLocation] = useState(
+    searchLocationProp || ""
+  );
   // These will only update when search button is clicked
   const [searchQuery, setSearchQuery] = useState(searchKeywordProp || "");
-  const [searchLocationQuery, setSearchLocationQuery] = useState(searchLocationProp || "");
-  
+  const [searchLocationQuery, setSearchLocationQuery] = useState(
+    searchLocationProp || ""
+  );
+
   const [selectedTab, setSelectedTab] = useState(0);
   const [experienceFilter, setExperienceFilter] = useState([]);
   const [locationFilter, setLocationFilter] = useState([]);
@@ -237,7 +247,7 @@ const mobileView = () => {
 
   // Handle search on Enter key press for both inputs
   const handleKeyPress = (e) => {
-    if (e.key === 'Enter') {
+    if (e.key === "Enter") {
       handleSearchClick();
     }
   };
@@ -462,8 +472,8 @@ const mobileView = () => {
                     Newest First
                   </MenuItem>
                   {/* <MenuItem onClick={() => handleSelect("Alphabetical")}>Salary</MenuItem> */}
-                {/* </Menu> */}
-              {/* </Box> */} 
+              {/* </Menu> */}
+              {/* </Box> */}
             </Box>
           </Box>
 
@@ -756,16 +766,36 @@ const mobileView = () => {
               )}
             </Box>
 
-            {/* Load More Button */}
-            {numPage > page && !isFetching && (
-              <div className="flex items-center justify-center pt-10">
-                <CustomButton
-                  title="Load More"
-                  containerStyles="py-3 px-8 text-lg font-semibold text-blue-600 border border-blue-600 rounded-full hover:bg-blue-700 hover:text-white transition"
-                  onClick={() => setPage((prevPage) => prevPage + 1)}
-                />
-              </div>
-            )}
+            {/* Pagination */}
+            <Box display="flex" justifyContent="center" mt={4}>
+              <Pagination
+                count={numPage}
+                page={page}
+                onChange={(_, value) => setPage(value)}
+                color="primary"
+                size="large"
+                shape="rounded"
+                sx={{
+                  "& .MuiPaginationItem-root": {
+                    borderRadius: "50%",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontWeight: "bold",
+                    color: "#404258",
+                    "&:hover": {
+                      backgroundColor: "rgba(60, 126, 252, 1)",
+                    },
+                  },
+                  "& .Mui-selected": {
+                    backgroundColor: "rgba(60, 126, 252, 1) !important",
+                    color: "white !important",
+                    boxShadow: "0px 3px 6px rgba(0, 0, 0, 0.2)",
+                  },
+                  mb:4
+                }}
+              />
+            </Box>
           </div>
         </Box>
       </Box>
