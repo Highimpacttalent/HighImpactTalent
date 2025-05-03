@@ -803,7 +803,10 @@ const mobileView = () => {
               <Pagination
                 count={numPage}
                 page={page}
-                onChange={(_, value) => setPage(value)}
+                onChange={(_, value) => {
+                  setPage(value)
+                  window.scrollTo({ top: 0, behavior: "smooth" }); 
+                }}
                 color="primary"
                 size="large"
                 shape="rounded"
