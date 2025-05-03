@@ -24,9 +24,12 @@ import { useDispatch } from "react-redux";
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { UpdateUser } from "../../../redux/userSlice";
+import { useSelector } from "react-redux";
 
 const ExperienceHistory = ({ userId, experienceHistory, about }) => {
   const dispatch = useDispatch();
+  const user = useSelector((state) => state.user); 
   const [experiences, setExperiences] = useState(experienceHistory || []);
   const [desc, setDesc] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -109,7 +112,7 @@ const ExperienceHistory = ({ userId, experienceHistory, about }) => {
 
       // Check if API call succeeded
       if (res.data?.success) {
-        dispatch(UpdateUser({ experienceHistory: experiences }));
+        dispatch(UpdateUser(res.data?.user));
         setAlert({
           open: true,
           type: "success",
