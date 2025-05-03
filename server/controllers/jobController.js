@@ -334,6 +334,48 @@ export const getJobPosts = async (req, res, next) => {
       select: "-password",
     });
 
+    // Handle pagination
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    // Get total count before applying limit
+    const totalJobs = await Jobs.countDocuments(queryObject);
+    const numOfPage = Math.ceil(totalJobs / limit);
+
+    // Apply pagination
+    queryResult = queryResult.skip(skip).limit(limit);
+
+    // Execute query
+    let jobs = await queryResult;
+    if (userId) {
+      const userPrefs = await Users.findById(userId)
+        .select('skills preferredLocations preferredWorkTypes preferredWorkModes expectedMinSalary experience')
+        .lean();
+      
+      if (userPrefs) {  
+        // Map over jobs and add match percentage
+        jobs = jobs.map(job => {
+          // Convert Mongoose document to plain object if needed
+          const jobData = job.toObject ? job.toObject() : job;
+          
+          // Calculate match data
+          const matchData = calculateJobMatch(userPrefs, jobData);
+          
+          // Add match data to job object
+          return {
+            ...jobData,
+            matchPercentage: matchData.matchPercentage,
+            matchDetails: matchData.matchDetails
+          };
+        });
+      }
+    } else {
+      // For non-logged in users, convert Mongoose documents to plain objects
+      // but don't add match data
+      jobs = jobs.map(job => job.toObject ? job.toObject() : job);
+    }
+
     if (sort === "Saved") {
       if (!userId) {
         return res
@@ -394,47 +436,6 @@ export const getJobPosts = async (req, res, next) => {
         .lean();
     }
 
-    // Handle pagination
-    const page = Number(req.query.page) || 1;
-    const limit = Number(req.query.limit) || 10;
-    const skip = (page - 1) * limit;
-
-    // Get total count before applying limit
-    const totalJobs = await Jobs.countDocuments(queryObject);
-    const numOfPage = Math.ceil(totalJobs / limit);
-
-    // Apply pagination
-    queryResult = queryResult.skip(skip).limit(limit);
-
-    // Execute query
-    let jobs = await queryResult;
-    if (userId) {
-      const userPrefs = await Users.findById(userId)
-        .select('skills preferredLocations preferredWorkTypes preferredWorkModes expectedMinSalary experience')
-        .lean();
-      
-      if (userPrefs) {  
-        // Map over jobs and add match percentage
-        jobs = jobs.map(job => {
-          // Convert Mongoose document to plain object if needed
-          const jobData = job.toObject ? job.toObject() : job;
-          
-          // Calculate match data
-          const matchData = calculateJobMatch(userPrefs, jobData);
-          
-          // Add match data to job object
-          return {
-            ...jobData,
-            matchPercentage: matchData.matchPercentage,
-            matchDetails: matchData.matchDetails
-          };
-        });
-      }
-    } else {
-      // For non-logged in users, convert Mongoose documents to plain objects
-      // but don't add match data
-      jobs = jobs.map(job => job.toObject ? job.toObject() : job);
-    }
     
     // Send response with a flag indicating if the user is logged in
     res.status(200).json({
