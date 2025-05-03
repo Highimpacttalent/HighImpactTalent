@@ -1514,7 +1514,7 @@ const UserInfoForm = () => {
                     Total Experience in Consulting{" "}
                   </label>
                   <select
-                    name="totalExperience"
+                    name="totalYearsInConsulting"
                     value={formData.totalYearsInConsulting}
                     onChange={handleChange}
                     className="w-full px-4 py-3 pr-12 text-sm border rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none"
