@@ -334,20 +334,64 @@ export const getJobPosts = async (req, res, next) => {
       select: "-password",
     });
 
-    if (sort === "Newest") {
-      queryResult = queryResult.sort("-createdAt");
-    } else if (sort === "Oldest") {
-      queryResult = queryResult.sort("createdAt");
-    } else if (sort === "A-Z") {
-      queryResult = queryResult.sort("jobTitle");
-    } else if (sort === "Z-A") {
-      queryResult = queryResult.sort("-jobTitle");
-    } else if (sort === "Salary (High to Low)") {
-      queryResult = queryResult.sort("-salary");
-    } else if (sort === "Salary (Low to High)") {
-      queryResult = queryResult.sort("salary");
-    } else {
-      queryResult = queryResult.sort("-createdAt");
+    if (sort === "Saved") {
+      if (!userId) {
+        return res
+          .status(401)
+          .json({ success: false, message: "Login required for Saved Jobs" });
+      }
+      // fetch user's likedJobs
+      const user = await Users.findById(userId)
+        .populate({ path: "likedJobs", model: "Jobs", populate: { path: "company", select: "-password" } })
+        .lean();
+
+      if (!user) {
+        return res
+          .status(404)
+          .json({ success: false, message: "User not found" });
+      }
+
+      const saved = user.likedJobs || [];
+      return res.status(200).json({
+        success: true,
+        totalJobs: saved.length,
+        data: saved,
+        page: 1,
+        numOfPage: 1,
+        userLoggedIn: true,
+      });
+    }
+
+    if (sort === "Recommended") {
+      const calcScore = (jobSkills = [], requiredSkills = []) => {
+        const matchCount = jobSkills.filter((s) => requiredSkills.includes(s)).length;
+        if (matchCount === requiredSkills.length) return 3;
+        if (matchCount > 0) return 2;
+        return 1;
+      };
+
+      jobs = jobs
+        .map((job) => ({
+          ...job,
+          matchScore: calcScore(job.skills, skills),
+        }))
+        .sort((a, b) => b.matchScore - a.matchScore);
+    }
+    else {
+      // 3) Otherwise apply your existing DB‐level sorts
+      const sortMap = {
+        Newest: { createdAt: -1 },
+        Oldest: { createdAt: 1 },
+        "A-Z": { jobTitle: 1 },
+        "Z-A": { jobTitle: -1 },
+        "Salary (High to Low)": { salary: -1 },
+        "Salary (Low to High)": { salary: 1 },
+      };
+      const order = sortMap[sort] || { createdAt: -1 };
+      jobs = await Jobs.find(queryObject)
+        .sort(order)
+        .populate({ path: "company", select: "-password" })
+        .lean();
     }
 
     // Handle pagination
