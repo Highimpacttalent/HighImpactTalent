@@ -93,7 +93,7 @@ const PasswordChange = () => {
   };
 
   return (
-    <Box sx={{  display: "flex",flexDirection:"column",alignItems:"center", justifyContent: "center", bgcolor: "#fff" }}>
+    <Box sx={{  display: "flex",flexDirection:"column",alignItems:"center", justifyContent: "center", bgcolor: "#fff",p:2 }}>
       <Typography textAlign="center" gutterBottom color="#24252C" fontWeight={700} fontFamily={"Satoshi"} fontSize={"24px"} mt={8}>
         {step === 1 ? "Change Your Password" : step === 2 ? "Enter OTP" : "Set New Password"}
       </Typography>
