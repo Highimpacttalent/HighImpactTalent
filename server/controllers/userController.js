@@ -873,7 +873,83 @@ export const updateAbout = async (req, res) => {
   }
 };
 
+export const updateJobPreferences = async (req, res) => {
+  try {
+    // 1. Destructure your new payload shape
+    const { user, jobPreferences } = req.body;
 
+    // 2. Validate presence of the userId wrapper
+    const userId = user?.userId;
+    if (!userId) {
+      return res.status(400).json({
+        success: false,
+        message: "Payload must include user.userId",
+      });
+    }
 
+    // 3. Validate that at least one preference block is present
+    if (!jobPreferences || typeof jobPreferences !== "object") {
+      return res.status(400).json({
+        success: false,
+        message: "Payload must include jobPreferences object",
+      });
+    }
 
+    // 4. Build an update object, mapping incoming keys → schema fields
+    const updateFields = {};
+    if (Array.isArray(jobPreferences.workMode)) {
+      updateFields.preferredWorkModes = jobPreferences.workMode;
+    }
+    if (Array.isArray(jobPreferences.jobType)) {
+      updateFields.preferredWorkTypes = jobPreferences.jobType;
+    }
+    if (Array.isArray(jobPreferences.preferredLocations)) {
+      updateFields.preferredLocations = jobPreferences.preferredLocations;
+    }
+    if (
+      jobPreferences.expectedSalary !== undefined &&
+      jobPreferences.expectedSalary !== null
+    ) {
+      // store as string if your schema expects a string
+      updateFields.expectedMinSalary = String(jobPreferences.expectedSalary);
+    }
 
+    // 5. If nothing valid was passed, bail out
+    if (Object.keys(updateFields).length === 0) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "No valid jobPreferences fields provided. Expect workMode, jobType, preferredLocations or expectedSalary.",
+      });
+    }
+
+    // 6. Perform the update
+    const updatedUser = await Users.findOneAndUpdate(
+      { _id: userId },
+      { $set: updateFields },
+      { new: true, runValidators: true }
+    );
+
+    // 7. If user not found
+    if (!updatedUser) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found!",
+      });
+    }
+
+    // 8. Success response
+    return res.status(200).json({
+      success: true,
+      message: "Job preferences updated successfully!",
+      user: updatedUser,
+    });
+  } catch (error) {
+    console.error("Error in updateJobPreferences:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error while updating job preferences.",
+      error: error.message,
+    });
+  }
+};
