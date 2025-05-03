@@ -84,7 +84,6 @@ const JobCard = ({ job,flag = false,enable = false }) => {
       boxShadow: "0px 0px 4px 0px #00000040", 
       borderRadius: 2, 
     }}
-    onClick={()=>navigate(`/job-detail/${job?._id}`)}
     >
       <CardContent sx={{ flexGrow: 1, display: "flex", flexDirection: "column" }}>
         {/* Job Title */}
@@ -139,64 +138,59 @@ const JobCard = ({ job,flag = false,enable = false }) => {
         </Typography> */}
       </CardContent>
 
-      {/* Fixed Bottom Section */}
-            <CardActions
-              sx={{
-                mt: "auto",
-                display: "flex",
-                justifyContent: "flex-start", // Aligns buttons to the right
-                gap: 1,
-              }}
-            >
-      
-              {/* View Button */}
-              {enable!== true ? (<Button
-                variant="contained"
-                color="primary"
-                component={Link}  
-                sx={{borderRadius:40,fontFamily:"Poppins"}}
-                to={`/job-detail/${job?._id}`}
-              >
-                View Details
-              </Button>) : user?.token == null ? (
-                    <Button
-                    variant="contained"
-                    color="primary"  
-                    sx={{borderRadius:40,fontFamily:"Poppins"}}
-                    onClick={() => navigate("/u-login")}
-                    >
-                      Login/Register To Apply
-                    </Button>
-                  ) : user?.accountType === "seeker" ? (
-                    <Button
-                    variant="contained"
-                    color="primary"
-                    disabled = {noteligible}
-                    sx={{borderRadius:40,fontFamily:"Poppins",px:4}}
-                      onClick={() => {
-                        if (job?.applicationLink && job?.applicationLink.trim() !== "") {
-                          window.open(job.applicationLink, "_blank"); 
-                        } else {
-                          if (!job || !user || !job?.company) {
-                            console.error("Missing required data for navigation.");
-                            return;
-                          }
-                  
-                          navigate("screening-questions", {
-                            state: {
-                              questions: job?.screeningQuestions ?? [],
-                              jobid: job?._id,
-                              companyid: job?.company?._id,
-                              userid: user?._id,
-                            },
-                          });
-                        }
-                      }}
-                    >
-                      Apply 
-                    </Button>
-                  ) : null}
-            </CardActions>
+       {/* Fixed Bottom Section */}
+       <CardActions
+        sx={{
+          mt: "auto",
+          display: "flex",
+          justifyContent: "flex-start",
+          gap: 1,
+        }}
+      >
+        {/* View Button */}
+        {enable !== true ? (
+          <Button
+            variant="contained"
+            color="primary"
+            component={Link}
+            sx={{ borderRadius: 40, fontFamily: "Poppins" }}
+            to={`/job-detail/${job?._id}`}
+          >
+            View Details
+          </Button>
+        ) : user?.token == null ? (
+          <Button
+            variant="contained"
+            color="primary"
+            sx={{ borderRadius: 40, fontFamily: "Poppins" }}
+            onClick={() => navigate("/u-login")}
+          >
+            Login/Register To Apply
+          </Button>
+        ) : user?.accountType === "seeker" ? (
+          <Button
+            variant="contained"
+            color="primary"
+            sx={{ borderRadius: 40, fontFamily: "Poppins" }}
+            onClick={() => {
+              if (job?.applicationLink && job?.applicationLink.trim() !== "") {
+                window.open(job.applicationLink, "_blank");
+              } else {
+                navigate("screening-questions", {
+                  state: {
+                    questions: job?.screeningQuestions ?? [],
+                    jobid: job?._id,
+                    companyid: job?.company?._id,
+                    userid: user?._id,
+                  },
+                });
+              }
+            }}
+          >
+            Apply Now
+          </Button>
+        ) : null}
+      </CardActions>
 
             {noteligible && (
                     <Box sx={{display:"flex",justifyContent:"flex-start",ml:2,mt:1}}>
