@@ -7,13 +7,22 @@ import { Link } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import { Fragment } from "react";
 import { WorkOutline, GroupAdd } from "@mui/icons-material";
-import landing from "../../../assets/Landing/Desktop.svg"
+import landing from "../../../assets/Landing/Desktop.svg";
 
 const DesktopLanding = () => {
   const { user } = useSelector((state) => state.user);
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
+
+  const handleClick = () => {
+    const userInfo = localStorage.getItem("userInfo");
+    if (userInfo) {
+      navigate("/find-jobs");
+    } else {
+      navigate("/u-login");
+    }
+  };
 
   useEffect(() => {
     if (!user || Object.keys(user).length === 0) {
@@ -74,15 +83,13 @@ const DesktopLanding = () => {
   return (
     <div className="overflow-x-hidden">
       {/* {LoginModal} */}
-      <Box
-        sx={{  display: "flex", flexDirection: "column" }}
-      >
+      <Box sx={{ display: "flex", flexDirection: "column" }}>
         <Box
           sx={{
-            px: { xs: 3, md: 15 }, 
+            px: { xs: 3, md: 15 },
             pb: { xs: 3, md: 15 },
-            pt: { xs: 5 }, 
-            minHeight: { md: "100vh" }, 
+            pt: { xs: 5 },
+            minHeight: { md: "100vh" },
             display: "flex",
             flexDirection: { xs: "column", md: "row" },
             alignItems: "center",
@@ -90,13 +97,12 @@ const DesktopLanding = () => {
             bgcolor: "white",
           }}
         >
-          <Box sx={{ flex: 1, textAlign: { xs: "center", md: "left" },
-            }}>
+          <Box sx={{ flex: 1, textAlign: { xs: "center", md: "left" } }}>
             <Typography
               fontWeight={700}
               gutterBottom
               sx={{
-                color:"#24252C",
+                color: "#24252C",
                 fontFamily: "Satoshi",
                 fontSize: "32px", // Smaller font on mobile
               }}
@@ -111,7 +117,7 @@ const DesktopLanding = () => {
               >
                 Impact
               </span>
-              . 
+              .
             </Typography>
 
             <Typography
@@ -133,8 +139,7 @@ const DesktopLanding = () => {
                 fontSize: { xs: "0.875rem", sm: "1rem" }, // Reduce font size for mobile
               }}
             >
-              Be part of the
-              elite network that gets there first.
+              Be part of the elite network that gets there first.
             </Typography>
 
             <Box
@@ -149,8 +154,7 @@ const DesktopLanding = () => {
             >
               <Button
                 variant="contained"
-                component={Link}
-                to="/u-login"
+                onClick={handleClick}
                 sx={{
                   bgcolor: "#3C7EFC",
                   borderRadius: 8,
@@ -174,26 +178,26 @@ const DesktopLanding = () => {
             </Box>
           </Box>
           <Box
-      sx={{
-        flex: 1,
-        display: "flex",
-        justifyContent: "center",
-        mt: { xs: 4, md: 0 },
-      }}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-    >
-      <img
-        src={landing}
-        alt="Professional"
-        style={{
-          width: "100%",
-          maxWidth: "400px",
-          borderRadius: "8px",
-          transition: "opacity 0.3s ease-in-out",
-        }}
-      />
-    </Box>
+            sx={{
+              flex: 1,
+              display: "flex",
+              justifyContent: "center",
+              mt: { xs: 4, md: 0 },
+            }}
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
+          >
+            <img
+              src={landing}
+              alt="Professional"
+              style={{
+                width: "100%",
+                maxWidth: "400px",
+                borderRadius: "8px",
+                transition: "opacity 0.3s ease-in-out",
+              }}
+            />
+          </Box>
         </Box>
       </Box>
     </div>
