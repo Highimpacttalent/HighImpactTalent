@@ -1,4 +1,4 @@
-import About from './About'
+import About from './About/view'
 import Companies from './Companies'
 import CompaniesProfile from './CompanyProfile'
 import FindJob from './FindJob'
