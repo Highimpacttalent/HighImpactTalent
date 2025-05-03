@@ -12,8 +12,11 @@ import {
   Typography,
   IconButton,
   Pagination,
+  Menu,
+  MenuItem
 } from "@mui/material";
 import { MdLocationOn } from "react-icons/md";
+import { FaSortAmountDown } from "react-icons/fa";
 import Accordion from "@mui/material/Accordion";
 import AccordionSummary from "@mui/material/AccordionSummary";
 import AccordionDetails from "@mui/material/AccordionDetails";
@@ -25,6 +28,7 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 //import SwapVertIcon from "@mui/icons-material/SwapVert";
 //import InfoIcon from "@mui/icons-material/Info";
 import { apiRequest } from "../../utils";
+import Loader from "../Landing/LandingMain/loader";
 import NoJobFound from "./NoJob";
 import { useSelector } from "react-redux";
 
@@ -36,13 +40,30 @@ const mobileView = () => {
   const handleClick = (event) => setAnchorEl(event.currentTarget);
   const handleClose = () => setAnchorEl(null);
   const handleSelect = (value) => {
-    console.log("value", value);
-    if (value == "Recommended") {
-      setSelectedTab(1);
-    } else {
-      setSelectedTab(0);
-    }
     handleClose();
+    switch (value) {
+      case "All Jobs":
+        setSort("All Jobs");
+        setSelectedTab(0);
+        break;
+      case "Recommended":
+        setSort("Recommended");
+        setSelectedTab(1);
+        break;
+      case "Newest":             // ← handle “Newest” explicitly
+        setSort("Newest");
+        setSelectedTab(0);
+        break;
+      case "Saved":
+        setSort("Saved");
+        setSelectedTab(2);
+        break;
+      case "Salary (High to Low)":
+        setSort("Salary (High to Low)");
+        setSelectedTab(3);
+        break;
+    }
+    setPage(1);
   };
 
   const [sort, setSort] = useState("Newest");
@@ -198,10 +219,12 @@ const mobileView = () => {
       salary: salaryRangeFilter,
       datePosted: datePostedFilter,
     });
+    const token = user?.token || localStorage.getItem("authToken");
     try {
       const res = await apiRequest({
         url: "/jobs" + newURL,
         method: "POST",
+        token: token,
         data: { skills: user?.skills || [] },
       });
 
@@ -257,7 +280,7 @@ const mobileView = () => {
     setSearchQuery(searchKeyword);
     setSearchLocationQuery(searchLocation);
     setPage(1);
-  };
+     };
 
   const handleResetFilters = () => {
     setExperienceFilter([]);
@@ -333,6 +356,7 @@ const mobileView = () => {
       className="bg-white min-h-screen border-red-200"
       style={{ padding: isMobile ? 10 : 40 }}
     >
+      <Loader isLoading={isFetching} />
       <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
         <Box>
           {/* Search Bar */}
@@ -450,7 +474,7 @@ const mobileView = () => {
                   Filters
                 </Typography>
               </Button>
-              {/* <Box sx={{ mt: 1 }}>
+               <Box sx={{ mt: 1 }}>
                 <Button
                   sx={{
                     color: "#404258",
@@ -465,15 +489,23 @@ const mobileView = () => {
                   </Typography>
                 </Button>
                 <Menu anchorEl={anchorEl} open={open} onClose={handleClose}>
-                  <MenuItem onClick={() => handleSelect("Recommended")}>
-                    Recommended
-                  </MenuItem>
-                  <MenuItem onClick={() => handleSelect("Newest")}>
-                    Newest First
-                  </MenuItem>
-                  {/* <MenuItem onClick={() => handleSelect("Alphabetical")}>Salary</MenuItem> */}
-              {/* </Menu> */}
-              {/* </Box> */}
+                <MenuItem onClick={() => handleSelect("All Jobs")}>
+                All Jobs
+              </MenuItem>
+              <MenuItem onClick={() => handleSelect("Recommended")}>
+                Recommended
+              </MenuItem>
+              <MenuItem onClick={() => handleSelect("Newest")}>
+                Newest First
+              </MenuItem>
+              <MenuItem onClick={() => handleSelect("Salary (High to Low)")}>
+                Salary (High to Low)
+              </MenuItem>
+              <MenuItem onClick={() => handleSelect("Saved")}>
+                Saved Jobs
+              </MenuItem> 
+               </Menu> 
+               </Box> 
             </Box>
           </Box>
 

@@ -153,7 +153,7 @@ const JobCard = ({ job, flag = false, enable = false }) => {
       onClick={() => navigate(`/job-detail/${job?._id}`)}
     >
       {/* Add match percentage to mobile view */}
-      {renderMatchPercentage()}
+      {/* {renderMatchPercentage()} */}
       
       <CardContent
         sx={{ flexGrow: 1, display: "flex", flexDirection: "column" }}
