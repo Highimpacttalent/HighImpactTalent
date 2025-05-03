@@ -146,7 +146,7 @@ const Navbar = () => {
         anchor="left"
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
-        sx={{ width: "100%", "& .MuiDrawer-paper": { width: "100%" } }}
+        sx={{ width: "80%", "& .MuiDrawer-paper": { width: "80%" } }}
       >
         {/* Logo, Company Name, and Close Icon in the Same Div */}
         <Box
