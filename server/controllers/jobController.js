@@ -430,10 +430,12 @@ export const getJobPosts = async (req, res, next) => {
         "Salary (Low to High)": { salary: 1 },
       };
       const order = sortMap[sort] || { createdAt: -1 };
-      jobs = await Jobs.find(queryObject)
-        .sort(order)
-        .populate({ path: "company", select: "-password" })
-        .lean();
+      const jobs = await Jobs.find(queryObject)
+     .sort(order)
+     .skip(skip)
+     .limit(limit)
+     .populate({ path: "company", select: "-password" })
+     .lean();
     }
 
     
