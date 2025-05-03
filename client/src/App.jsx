@@ -2,7 +2,8 @@ import { useState } from "react";
 import { Outlet, Navigate, Route, Routes, useLocation } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
-import { About, Companies, CompaniesProfile, JobDetails, FindJob} from "./pages/index";
+import {  Companies, CompaniesProfile, JobDetails, FindJob} from "./pages/index";
+import About from "./pages/About/view.jsx"
 import { useSelector } from "react-redux";
 import Dashboard from "./pages/DashBoard";
 import Contact from "./pages/Contact";

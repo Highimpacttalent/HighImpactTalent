@@ -1,8 +1,8 @@
 import React from 'react';
 import { Box, Typography, Stack } from '@mui/material';
-import about1 from "../assets/about1.svg";
-import about2 from "../assets/about2.svg";
-import Profile from "../assets/ProfileImg.jpg";
+import about1 from "../../assets/about1.svg";
+import about2 from "../../assets/about2.svg";
+import Profile from "../../assets/ProfileImg.jpg";
 
 const About = () => {
   return (
