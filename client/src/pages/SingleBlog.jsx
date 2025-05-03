@@ -64,7 +64,7 @@ const SingleBlog = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 py-10 px-4 flex justify-center">
+    <div className="min-h-screen bg-white py-10 px-4 flex justify-center">
       <div className="w-full max-w-5xl bg-white rounded-xl shadow-lg overflow-hidden p-6 md:p-10">
         {/* Blog Image */}
         <img
