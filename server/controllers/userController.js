@@ -829,4 +829,51 @@ export const updateExperienceHistory = async (req, res) => {
 
 
 
+export const updateAbout = async (req, res) => {
+  try {
+    const { userId, about } = req.body;
+
+    // Validate user ID
+    if (!userId) {
+      return res.status(400).json({
+        success: false,
+        message: "User ID is required!",
+      });
+    }
+
+    // Find and update user
+    const updatedUser = await Users.findOneAndUpdate(
+      { _id: userId },
+      { about: about },
+      { new: true } 
+    );
+
+    // Check if user exists
+    if (!updatedUser) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found!",
+      });
+    }
+
+    // Send response
+    res.status(200).json({
+      success: true,
+      message: "About updated successfully!",
+      user: updatedUser,
+    });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      success: false,
+      message: "Server error while updating About Section!",
+      error: error.message,
+    });
+  }
+};
+
+
+
+
 
