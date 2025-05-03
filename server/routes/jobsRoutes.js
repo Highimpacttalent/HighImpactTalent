@@ -43,7 +43,7 @@ router.delete("/delete-job/:id", userAuth, deleteJobPost);
 router.put("/update-status",updateJobStatus)
 
 //Saved Jobs
-router.get("/saved-jobs",getSavedJobs)
+router.post("/saved-jobs",getSavedJobs)
 
 export default router;
 
