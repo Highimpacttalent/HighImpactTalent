@@ -9,7 +9,8 @@ import {
   updateJob,
   getJobsBySalaryDesc,
   getJobsBySkills,
-  updateJobStatus
+  updateJobStatus,
+  getSavedJobs
 } from "../controllers/jobController.js";
 
 const router = express.Router();
@@ -40,6 +41,9 @@ router.delete("/delete-job/:id", userAuth, deleteJobPost);
 
 //Status Update 
 router.put("/update-status",updateJobStatus)
+
+//Saved Jobs
+router.put("/saved-jobs",getSavedJobs)
 
 export default router;
 

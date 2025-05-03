@@ -666,3 +666,35 @@ export const updateJobStatus = async (req, res, next) => {
     });
   }
 };
+
+export const getSavedJobs = async (req, res) => {
+  try {
+    const { userId } = req.body;
+    if (!userId) {
+      return res.status(400).json({ success: false, message: "userId is required" });
+    }
+
+    // find and populate likedJobs
+    const user = await Users.findById(userId)
+      .populate({
+        path: "likedJobs",
+        model: "Jobs",
+      });
+    
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    return res.status(200).json({
+      success: true,
+      savedJobs: user.likedJobs,  // now full job objects
+    });
+  } catch (error) {
+    console.error("Error fetching saved jobs:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error while fetching saved jobs",
+      error: error.message,
+    });
+  }
+}
