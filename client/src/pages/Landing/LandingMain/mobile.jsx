@@ -68,7 +68,7 @@ const MobileLanding = () => {
                 color: "#808195",
                 fontFamily: "Poppins",
                 mt: 2,
-                fontSize: "16px",
+                fontSize: "14px",
               }}
             >
               Top talent and high-impact opportunities move fast. Be part of the
