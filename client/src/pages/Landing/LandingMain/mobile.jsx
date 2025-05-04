@@ -89,7 +89,7 @@ const MobileLanding = () => {
               src={No1}
               alt="Professional"
               style={{
-                height: { xs: "250px", sm: "300px", md: "400px" }, // Responsive heights
+                height: { xs: "200px", sm: "200px", md: "400px" }, // Responsive heights
                 width: "auto",
                 borderRadius: "8px",
                 transition: "opacity 0.3s ease-in-out",
@@ -99,7 +99,7 @@ const MobileLanding = () => {
               src={No2}
               alt="Professional"
               style={{
-                height: { xs: "250px", sm: "300px", md: "400px" }, // Responsive heights
+                height: { xs: "200px", sm: "200px", md: "400px" }, 
                 width: "auto",
                 borderRadius: "8px",
                 transition: "opacity 0.3s ease-in-out",
@@ -118,7 +118,7 @@ const MobileLanding = () => {
               src={No3}
               alt="Professional"
               style={{
-                height: { xs: "250px", sm: "300px", md: "400px" }, // Responsive heights
+                height: { xs: "200px", sm: "200px", md: "400px" }, 
                 width: "auto",
                 borderRadius: "8px",
                 transition: "opacity 0.3s ease-in-out",
