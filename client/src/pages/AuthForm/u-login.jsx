@@ -195,7 +195,8 @@ function UserLoginForm() {
         display="flex"
         justifyContent="center"
         alignItems="center"
-        minHeight="100vh"
+        sx={{minHeight:{md:"100vh",xs:"80vh"}}}
+        
       >
         <Box sx={{ width: { xs: "90%", md: "50%" } }}>
           <Typography
