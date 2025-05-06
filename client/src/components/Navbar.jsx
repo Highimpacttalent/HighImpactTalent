@@ -296,10 +296,10 @@ const LoggedOutDrawer = ({ setDrawerOpen }) => (
     <ListItem
       button
       component={Link}
-      to="/hiring"
+      to="/contact-us"
       onClick={() => setDrawerOpen(false)}
     >
-      <ListItemText primary="Hiring" />
+      <ListItemText primary="Contact Us" />
     </ListItem>
     <ListItem
       button
@@ -312,10 +312,10 @@ const LoggedOutDrawer = ({ setDrawerOpen }) => (
     <ListItem
       button
       component={Link}
-      to="/contact-us"
+      to="/blog"
       onClick={() => setDrawerOpen(false)}
     >
-      <ListItemText primary="Contact Us" />
+      <ListItemText primary="Blog" />
     </ListItem>
   </List>
 );
@@ -332,6 +332,16 @@ const LoggedInDrawer = ({ user, handleLogout, setDrawerOpen }) => (
         primary={user?.accountType === "seeker" ? "Find Job" : "Job Posts"}
       />
     </ListItem>
+    {user?.accountType !== "seeker" && (
+      <ListItem
+        button
+        component={Link}
+        to="/resumesearch"
+        onClick={() => setDrawerOpen(false)}
+      >
+        <ListItemText primary="Resume Search" />
+      </ListItem>
+    )}
     {/* {user?.accountType === "seeker" && (
       <ListItem
         button
@@ -366,14 +376,26 @@ const LoggedInDrawer = ({ user, handleLogout, setDrawerOpen }) => (
     >
       <ListItemText primary="Blog" />
     </ListItem>
-    {user?.accountType == "seeker" && (<ListItem
-      button
-      component={Link}
-      to="/user-profile"
-      onClick={() => setDrawerOpen(false)}
-    >
-      <ListItemText primary="User Profile" />
-    </ListItem>)}
+    {user?.accountType === "seeker" && (
+      <ListItem
+        button
+        component={Link}
+        to="/user-profile"
+        onClick={() => setDrawerOpen(false)}
+      >
+        <ListItemText primary="User Profile" />
+      </ListItem>
+    )}
+    {user?.accountType !== "seeker" && (
+      <ListItem
+        button
+        component={Link}
+        to="/rec-profile"
+        onClick={() => setDrawerOpen(false)}
+      >
+        <ListItemText primary="User Profile" />
+      </ListItem>
+    )}
     <ListItem
       button
       component={Link}

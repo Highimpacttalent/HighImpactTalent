@@ -14,6 +14,7 @@ import {
   Radio,
   FormLabel,
   Button,
+  CircularProgress, // Added missing import
 } from "@mui/material";
 import { skillsList } from "../../assets/mock";
 import Select from "react-select";
@@ -39,7 +40,7 @@ const JobUploadPage = () => {
   ];
 
   const workTypeOptions = ["Full-Time", "Part-Time", "Contract", "Temporary"];
-  const workModeOptions = ["Work", "Remote", "Hybrid"];
+  const workModeOptions = ["Work From Office", "Remote", "Hybrid"];
   const [formData, setFormData] = useState({
     jobTitle: "",
     experience: "",
@@ -138,6 +139,14 @@ const JobUploadPage = () => {
     } else {
       setFormData({ ...formData, [name]: value });
     }
+  };
+
+  // Fixed handler for experience select
+  const handleExpChange = (selectedOption) => {
+    setFormData({
+      ...formData,
+      experience: selectedOption ? selectedOption.value : "",
+    });
   };
 
   const handleArrayChange = (index, e) => {
@@ -401,11 +410,15 @@ const JobUploadPage = () => {
           >
             Experience in years <span style={{ color: "red" }}>*</span>
           </Typography>
+          {/* Fixed experience dropdown */}
           <Select
-            name="experience"
-            value={formData.experience}
-            onChange={handleChange}
             options={experienceOptions}
+            value={
+              formData.experience
+                ? { value: formData.experience, label: `${formData.experience}+` }
+                : null
+            }
+            onChange={handleExpChange}
             placeholder="Select experience"
             isClearable
             styles={{
@@ -806,7 +819,7 @@ const JobUploadPage = () => {
             }}
             onClick={addScreeningQuestion}
           >
-            Add Qualification
+            Add Question
           </Typography>
         </div>
 
@@ -830,8 +843,7 @@ const JobUploadPage = () => {
             onChange={handleChange}
             fullWidth
             size="small"
-            required
-            variant="outlined"
+            variant="outlined" // Removed required prop
             sx={{
               "& .MuiOutlinedInput-root": {
                 borderRadius: 16,
