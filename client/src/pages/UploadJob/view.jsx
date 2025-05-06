@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { apiRequest } from "../../utils";
 import { useNavigate } from "react-router-dom";
+import DocumentScannerIcon from '@mui/icons-material/DocumentScanner';
 import { useSelector } from "react-redux";
 import {
   Box,
@@ -21,6 +22,7 @@ import Select from "react-select";
 
 const JobUploadPage = () => {
   const { user } = useSelector((state) => state.user);
+  const [analysing, setAnalysing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const [cities, setCities] = useState([]);
@@ -113,6 +115,43 @@ const JobUploadPage = () => {
       } else {
         setFormData({ ...formData, jobLocation: "" });
       }
+    }
+  };
+
+  //Call JD Analyser 
+  const handleAnalysis = async () => {
+    setAnalysing(true);
+    try {
+      const response = await fetch(
+        "https://highimpacttalent.onrender.com/api-v1/ai/analyse-jd",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ jobDescription: formData.jobDescription }),
+        }
+      );
+      const data = await response.json();
+
+      if (data.success) {
+        // overwrite your arrays so the form auto-fills
+        setFormData((f) => ({
+          ...f,
+          requirements: data.requirements,
+          qualifications: data.qualifications,
+          screeningQuestions: data.screeningQuestions.map((q) => ({
+            question: q,
+            mandatory: false,
+          })),
+        }));
+      } else {
+        console.error("Analysis failed:", data.message || data);
+      }
+    } catch (err) {
+      console.error("Error calling analyse-jd API:", err);
+    } finally {
+      setAnalysing(false);
     }
   };
 
@@ -415,7 +454,10 @@ const JobUploadPage = () => {
             options={experienceOptions}
             value={
               formData.experience
-                ? { value: formData.experience, label: `${formData.experience}+` }
+                ? {
+                    value: formData.experience,
+                    label: `${formData.experience}+`,
+                  }
                 : null
             }
             onChange={handleExpChange}
@@ -615,17 +657,42 @@ const JobUploadPage = () => {
         </div>
 
         <div className="mb-4">
-          <Typography
+          <Box
+            display="flex"
+            alignItems="center"
+            justifyContent="space-between"
+            mb={1}
+          >
+            <Typography
+              sx={{
+                fontSize: "16px",
+                fontWeight: 500,
+                fontFamily: "Satoshi",
+                color: "#404258",
+              }}
+            >
+              Job Description<span style={{ color: "red" }}>*</span>
+            </Typography>
+    {analysing ? (
+          <CircularProgress size={24} />
+        ) : (
+          <Button
+            variant="text"
+            size="small"
             sx={{
               fontSize: "16px",
               fontWeight: 500,
               fontFamily: "Satoshi",
-              color: "#404258",
-              mb: 2,
+              color: "blue",
+              textTransform: "none",
             }}
+            startIcon={<DocumentScannerIcon />}
+            onClick={handleAnalysis}
           >
-            Job Description<span style={{ color: "red" }}>*</span>
-          </Typography>
+            Analyse JD
+          </Button>
+        )}
+          </Box>
 
           <TextField
             name="jobDescription"
