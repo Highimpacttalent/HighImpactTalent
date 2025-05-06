@@ -677,6 +677,10 @@ export const analyseJobDescription = async (req, res) => {
     
     **Requirements Extraction Rules**  
     Extract each core skill, experience, or attribute from the JD and rewrite it as a professional sentence (e.g. “Candidate must have 5+ years of experience in…”).
+
+    **Screening Questions Rules**  
+    Based on the JD, craft **3–5** short, clear screening questions that you would ask a candidate to quickly gauge fit. Each question should be tailored to the key skills or experiences (e.g. “Can you describe a time you led a strategic initiative under ambiguity?”).
+
     
     **Output Format**  
     Respond with **only** this JSON structure:
@@ -687,6 +691,9 @@ export const analyseJobDescription = async (req, res) => {
       ],
       "requirements": [
         /* array of full-sentence requirements */
+      ],
+      "screeningQuestions": [
+       /* array of 3–5 screening questions as strings */
       ]
     }
     
@@ -708,6 +715,7 @@ export const analyseJobDescription = async (req, res) => {
       success: true,
       qualifications: parsed.qualifications,
       requirements: parsed.requirements,
+      screeningQuestions: parsed.screeningQuestions,
     });
   } catch (err) {
     console.error("Error in analyseJobDescription:", err);
