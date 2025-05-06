@@ -633,3 +633,87 @@ Respond with only the JSON array, no extra commentary.
         });
       }
     };
+
+
+//JD to requirement and qualification
+export const analyseJobDescription = async (req, res) => {
+  try {
+    const { jobDescription } = req.body;
+    if (!jobDescription || typeof jobDescription !== "string") {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid input: jobDescription (string) is required.",
+      });
+    }
+
+    // Allowed degrees for qualifications
+    const allowedDegrees = [
+      "Bachelors (any)",
+      "Bachelors engineering",
+      "PG any",
+      "PG engineering",
+      "MBA",
+      "CA",
+      "MBBS",
+      "CFA",
+      "PhD",
+    ];
+
+    // Build the HR-style prompt with degree filter
+    const prompt = `
+    You are a highly experienced HR specialist. Given this job description:
+    
+    """${jobDescription.trim()}"""
+    
+    And the pool of allowed educational credentials:
+    ${allowedDegrees.map(d => `- ${d}`).join("\n")}
+    
+    **Qualifications Extraction Rules**  
+    1. From that allowed list, select only the credentials that logically fit the role described above.  
+    2. If “MBA” is chosen, still mention a Bachelor’s (“Candidate should have completed a Bachelor’s degree in a relevant field”), but do not list “Bachelors (any)” separately.  
+    3. Only include “Bachelors engineering” or “PG engineering” if the JD explicitly requires an engineering or technical background.  
+    4. Do **not** include “PhD,” “MBBS,” “CA,” or “CFA” unless the JD clearly demands research/medical/finance specialization.  
+    5. Rewrite each selected credential as a full, professional sentence (e.g. “Candidate should hold an MBA to support strategic leadership.”).
+    
+    **Requirements Extraction Rules**  
+    Extract each core skill, experience, or attribute from the JD and rewrite it as a professional sentence (e.g. “Candidate must have 5+ years of experience in…”).
+    
+    **Output Format**  
+    Respond with **only** this JSON structure:
+    
+    {
+      "qualifications": [
+        /* array of full-sentence qualifications, using only allowed credentials */
+      ],
+      "requirements": [
+        /* array of full-sentence requirements */
+      ]
+    }
+    
+    —no extra commentary, no bullet lists outside the JSON, just the JSON object.  
+    `;
+    
+    // Call Gemini
+    const geminiResponse = await axios.post(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`,
+      { contents: [{ role: "user", parts: [{ text: prompt }] }] },
+      { headers: { "Content-Type": "application/json" } }
+    );
+
+    const raw = geminiResponse.data?.candidates?.[0]?.content?.parts?.[0]?.text || "";
+    const jsonText = raw.replace(/^```json\s*/, "").replace(/```$/, "").trim();
+    const parsed = JSON.parse(jsonText);
+
+    return res.status(200).json({
+      success: true,
+      qualifications: parsed.qualifications,
+      requirements: parsed.requirements,
+    });
+  } catch (err) {
+    console.error("Error in analyseJobDescription:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to analyse job description.",
+    });
+  }
+};
