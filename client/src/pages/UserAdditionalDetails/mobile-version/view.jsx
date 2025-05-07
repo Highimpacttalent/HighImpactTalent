@@ -1585,7 +1585,7 @@ const UserInfoForm = () => {
   };
 
   return (
-    <Box sx={{ padding: "2rem", bgcolor: "white", minHeight: "100vh" }}>
+    <Box sx={{ padding: "1rem", bgcolor: "white", minHeight: "100vh" }}>
       {" "}
       {/* Added minHeight */}
       {/* Header Section */}
