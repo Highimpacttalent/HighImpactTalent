@@ -441,7 +441,7 @@ const ScreeningView = () => {
           <DialogActions>
             <Button onClick={() => setOpenDialog(false)}>Cancel</Button>
             <Button onClick={confirmUpload} color="primary">
-              Upload New
+              Change Resume
             </Button>
           </DialogActions>
         </Dialog>

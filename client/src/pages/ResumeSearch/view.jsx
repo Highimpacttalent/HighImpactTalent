@@ -17,10 +17,15 @@ import {
   Pagination,
   LinearProgress,
   Autocomplete,
+  useMediaQuery,
+  IconButton,
+  Drawer,
+  useTheme,
   Checkbox,
   FormControlLabel,
 } from "@mui/material";
 import AIChatbot from "./AiChatbot/view";
+import FilterListIcon from "@mui/icons-material/FilterList";
 import ResumeCard from "./ResumeCard/view.jsx"
 import Chatbot from "./Chatbot/view";
 import { skillsList } from "../../assets/mock";
@@ -120,31 +125,21 @@ const ResumeSearch = () => {
   const endIndex = startIndex + recordsPerPage;
   const currentResumes = resumes.slice(startIndex, endIndex);
 
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const [drawerOpen, setDrawerOpen] = useState(false);
+
+  const toggleDrawer = (open) => () => {
+    setDrawerOpen(open);
+  };
+
   const handlePageChange = (event, page) => {
     setCurrentPage(page);
   };
   
-
-  return (
-    <Box
-      style={{
-        background: "#fff",
-        fontFamily: "Poppins, sans-serif",
-        padding: "20px",
-        borderRadius: "8px",
-        display: "flex",
-        gap: "20px",
-      }}
-    >
-      <Box
-        sx={{
-          background: "#f9f9f9",
-          padding: "20px",
-          borderRadius: "8px",
-          width: "30%",
-        }}
-      >
-        <Typography
+const filterComponents = (
+  <>
+  <Typography
           variant="h6"
           gutterBottom
           sx={{ fontWeight: "600", fontFamily: "Satoshi", fontSize: 24 }}
@@ -312,38 +307,92 @@ const ResumeSearch = () => {
             </Button>
           </Grid>
         </Grid>
-      </Box>
-      <Box sx={{ width: "80%" }}>
-        <Box sx={{display:"flex",justifyContent:"space-between",width:"60%"}}>
-        <Box sx={{display:'flex',alignItems:"flex-start",justifyContent:"flex-start",ml:2}}>
-          <Chatbot setFilters={setFilters} />
-          <Box sx={{ml:2}}>
-          <AIChatbot setFilters={setFilters} />
+  </>
+)
+
+  return (
+    <Box
+      sx={{
+        background: '#fff',
+        fontFamily: 'Poppins, sans-serif',
+        p: 2,
+        borderRadius: 2,
+        display: 'flex',
+        flexDirection: { xs: 'column', md: 'row' },
+        gap: 2,
+      }}
+    >
+      {/* Sidebar or Drawer trigger handled inside header */}
+      { !isMobile && (
+        <Box
+          sx={{
+            p: 2,
+            width: '24%',
+            minWidth: 240,
+            borderRight: '2px solid #E0E0E0',
+          }}
+        >
+          {filterComponents}
+        </Box>
+      )}
+
+      {/* Main content */}
+      <Box sx={{ flex: 1 }}>
+        {/* Header: filter icon, actions, title all in one line on mobile */}
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            mb: 2,
+            flexWrap: 'wrap',
+            gap: 1,
+          }}
+        >
+          {isMobile && (
+            <IconButton onClick={toggleDrawer(true)}>
+              <FilterListIcon />
+            </IconButton>
+          )}
+
+          <Typography
+            variant="h5"
+            sx={{
+              fontWeight: 600,
+              flexGrow: 1,
+              textAlign: isMobile ? 'center' : 'left',
+            }}
+          >
+            Resume Search
+          </Typography>
+
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Chatbot setFilters={setFilters} />
+            <AIChatbot setFilters={setFilters} />
           </Box>
         </Box>
-        <Typography
-          variant="h4"
-          gutterBottom
-          style={{ fontWeight: "600", textAlign: "center",ml:15 }}
-        >
-          Resume Search
-        </Typography>
-        </Box>
 
-        {loading && (
-          <LinearProgress color="primary" style={{ marginBottom: "10px" }} />
+        {/* Mobile Drawer */}
+        {isMobile && (
+          <Drawer anchor="left" open={drawerOpen} onClose={toggleDrawer(false)}>
+            <Box sx={{ width: 280, p: 2 }}>{filterComponents}</Box>
+          </Drawer>
         )}
-        <Box container spacing={3} marginTop={2}>
+
+        {loading && <LinearProgress color="primary" sx={{ mb: 1 }} />}
+
+        <Box container spacing={3} mt={2}>
           {currentResumes.map((resume) => (
-            <ResumeCard resume={resume}/>
+            <ResumeCard key={resume._id} resume={resume} />
           ))}
         </Box>
+
         <Pagination
           count={Math.ceil(resumes.length / recordsPerPage)}
           page={currentPage}
           onChange={handlePageChange}
           color="primary"
-          sx={{ marginTop: "20px", display: "flex", justifyContent: "center" }}
+          sx={{ mt: 2, display: 'flex', justifyContent: 'center' }}
         />
       </Box>
     </Box>
