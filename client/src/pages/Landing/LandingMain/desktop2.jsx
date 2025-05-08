@@ -16,7 +16,6 @@ import {
   useMediaQuery,
   CircularProgress // Added for suspense fallback
 } from '@mui/material';
-// Assuming Lucide Icons are installed: npm install lucide-react
 import { 
   Search, 
   School, // Example icon, not strictly used as is but good to have
@@ -24,12 +23,15 @@ import {
   CheckCircle, 
   SlidersHorizontal, // Using SlidersHorizontal for growth/process
   ChartLine,
-  BarChart2, // Using BarChart2 for ChartLine/Metrics
+  BarChart2,
+  Briefcase,
+  UserCog, // Using BarChart2 for ChartLine/Metrics
   Linkedin, // Example social icons
   Twitter,
   Star, // Example trust badge icon
   Shield // Example trust badge icon
 } from 'lucide-react';
+import Landing from "../../../assets/Landing/Desktop.svg";
 
 
 // ----------------------------------------------------------
@@ -394,52 +396,10 @@ const PlaceholderHeroVisual = () => {
         }}
       >
         {/* Replace this with your actual SVG/Image component */}
-        {/* Example: <ActualHeroSVG aria-hidden="true" /> */}
+        <img src={Landing} alt="Landing Illustration" aria-hidden="true" />
+
         {/* Placeholder Visual: A simple blue/green abstract shape */}
-        <Box
-          sx={{
-            width: '80%', // Occupy more space
-            maxWidth: 400, // Max size
-            height: '80%',
-            maxHeight: 400,
-            bgcolor: 'primary.main',
-            borderRadius: '20%', // Abstract shape
-            position: 'relative',
-            overflow: 'hidden',
-             boxShadow: '0 20px 50px rgba(0,0,0,0.1)', // Add shadow
-             display: 'flex',
-             alignItems: 'center',
-             justifyContent: 'center',
-          }}
-          aria-hidden="true" // Hide from screen readers as it's decorative
-        >
-             {/* Green blob */}
-             <Box sx={{
-                 position: 'absolute',
-                 bottom: -50,
-                 right: -50,
-                 width: 150,
-                 height: 150,
-                 bgcolor: 'secondary.main',
-                 borderRadius: '50%',
-                 opacity: 0.7,
-                 filter: 'blur(30px)'
-             }}></Box>
-             {/* Lighter Blue blob */}
-             <Box sx={{
-                 position: 'absolute',
-                 top: -50,
-                 left: -50,
-                 width: 150,
-                 height: 150,
-                 bgcolor: 'rgba(60, 126, 252, 0.5)',
-                 borderRadius: '50%',
-                 opacity: 0.7,
-                 filter: 'blur(30px)'
-             }}></Box>
-             {/* Central element/icon */}
-             <briefcase size={64} color="white" style={{ position: 'relative', zIndex: 1 }} />
-        </Box>
+        
       </div>
     </motion.div>
   );
@@ -452,7 +412,7 @@ const LazyHeroVisual = lazy(() => Promise.resolve({ default: PlaceholderHeroVisu
 
 
 // Candidate Card Component for Search Results
-const CandidateCard = ({ name, role, skills, match }) => (
+export const CandidateCard = ({ name, role, skills, match }) => (
   <motion.div
     variants={popIn} // Animate when appearing in the grid
     className="w-full bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100" // Tailwind classes for background, shape, shadow, border
@@ -611,7 +571,7 @@ const LandingPage = () => {
         {/* 2. Hero Section */}
         <Box
           sx={{
-            background: 'linear-gradient(135deg, rgba(60,126,252,0.1) 0%, rgba(255,255,255,0) 100%)', // Diagonal gradient overlay
+            background: 'white', // Diagonal gradient overlay
             pt: { xs: 8, md: 16 },
             pb: { xs: 10, md: 16 },
             position: 'relative',
@@ -749,7 +709,7 @@ const LandingPage = () => {
         </Box>
 
         {/* 3. Section: AI-Powered Job Match */}
-        <Box sx={{ bgcolor: '#F0F7FF', py: { xs: 8, md: 12 } }}>
+        <Box sx={{ bgcolor: 'white', py: { xs: 8, md: 12 } }}>
           <Container maxWidth="lg">
             {/* Title */}
             <motion.div
@@ -832,7 +792,8 @@ const LandingPage = () => {
         </Box>
 
         {/* 4. Section: Recruiter’s Best-Fit Candidates */}
-        <Box sx={{ py: { xs: 8, md: 12 } }}>
+       {/* 5. Section: Recruiter’s Best-Fit Candidates */}
+       <Box sx={{ py: { xs: 8, md: 12 }, bgcolor: 'background.default' }}>
           <Container maxWidth="lg">
             <Grid container spacing={6} alignItems="center" direction={isMobile ? 'column-reverse' : 'row'}>
               {/* Visual / Image */}
@@ -841,52 +802,59 @@ const LandingPage = () => {
                   initial="hidden"
                   whileInView="visible"
                   viewport={{ once: true, margin: "-100px 0px" }}
-                  variants={fadeIn} // Fade in the image/visual
+                  variants={slideFromLeft} // Slide in from left
                   className="bg-gradient-to-br from-blue-500 to-green-400 rounded-3xl p-1" // Border gradient effect
                 >
                   <Box
                     sx={{
                       bgcolor: 'white',
-                      borderRadius: 5,
-                      p: { xs: 2, md: 4 }, // Responsive padding
+                      borderRadius: 5, // Match outer border radius visually
+                      p: { xs: 3, md: 5 }, // Increased responsive padding
                       height: '100%',
-                       minHeight: { xs: 400, md: 500 }, // Minimum height
+                      minHeight: { xs: 400, md: 550 }, // Increased minimum height
                       display: 'flex',
                       flexDirection: 'column',
+                       boxShadow: '0px 15px 40px rgba(0, 0, 0, 0.08)', // Card-like shadow
                     }}
                   >
-                    {/* Placeholder for Recruiter Dashboard Visual */}
-                     <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 3 }}>Top Candidate Shortlist</Typography>
-                     <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
-                          <Typography variant="body2" sx={{ fontWeight: 600 }}>Search: Senior React Dev, Fintech, AWS</Typography>
-                         <Box sx={{ display: 'flex', gap: 1 }}>
-                             <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: '#FF6B6B' }}></Box>
-                             <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: '#FFD166' }}></Box>
-                             <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: '#06D6A0' }}></Box>
+                    {/* Placeholder for Recruiter Dashboard Visual - Enhanced */}
+                     <Typography variant="h5" sx={{ fontWeight: 700, mb: 3, color: 'text.primary' }}>Top Candidate Shortlist</Typography>
+
+                     <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3, flexWrap: 'wrap', gap: 1 }}>
+                          <Typography variant="body1" sx={{ fontWeight: 600, color: 'text.primary' }}>Search: Senior React Dev, Fintech, AWS</Typography>
+                         <Box sx={{ display: 'flex', gap: 0.5 }}>
+                             <Box sx={{ width: 10, height: 10, borderRadius: '50%', bgcolor: '#FF6B6B' }}></Box> {/* Slightly larger dots */}
+                             <Box sx={{ width: 10, height: 10, borderRadius: '50%', bgcolor: '#FFD166' }}></Box>
+                             <Box sx={{ width: 10, height: 10, borderRadius: '50%', bgcolor: '#06D6A0' }}></Box>
                          </Box>
                      </Box>
 
-                    <Box sx={{ mb: 3, p: 2, bgcolor: '#F8F9FB', borderRadius: 2, border: '1px solid #E0E7FF' }}>
-                         <Typography variant="subtitle2" sx={{ fontWeight: 'bold', mb: 1 }}>AI Match Analysis</Typography>
+                    <Box sx={{ mb: 3, p: { xs: 2, md: 3 }, bgcolor: theme.palette.background.light, borderRadius: 3, border: '1px solid #E0E7FF' }}> {/* Increased padding and radius */}
+                         <Typography variant="h6" sx={{ fontWeight: 700, mb: 1, color: 'text.primary' }}>AI Match Analysis</Typography>
                          <Typography variant="body2" sx={{ color: 'text.secondary', mb: 2 }}>
                              Showing 5 candidates with {">"}80% match score. Ranked by Skill Fit and Culture Fit.
                          </Typography>
                         {/* Match Score Progress Bar */}
-                         <Box sx={{ height: 8, bgcolor: '#E0E7FF', borderRadius: 3, mb: 1, overflow: 'hidden' }}>
-                             <Box sx={{
-                                 width: '85%', // Simulated average match score
-                                 height: '100%',
-                                 borderRadius: 3,
-                                 background: 'linear-gradient(90deg, #3C7EFC 0%, #00C48C 100%)'
-                             }}></Box>
+                         <Box sx={{ height: 10, bgcolor: theme.palette.grey[200], borderRadius: 5, mb: 1, overflow: 'hidden' }}> {/* Thicker bar, theme grey */}
+                             <motion.div
+                                 initial={{ width: 0 }}
+                                 whileInView={{ width: '85%' }} // Animate the bar
+                                 viewport={{ once: true }}
+                                 transition={{ duration: 1.5, ease: 'easeOut', delay: 0.5 }}
+                                 style={{
+                                     height: '100%',
+                                     borderRadius: 5,
+                                     background: 'linear-gradient(90deg, #3C7EFC 0%, #00C48C 100%)'
+                                 }}
+                             ></motion.div>
                          </Box>
-                         <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                             Overall Shortlist Match Confidence
+                         <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: '0.8rem' }}> {/* Slightly larger caption */}
+                             Overall Shortlist Match Confidence: 85%
                          </Typography>
                      </Box>
 
                      {/* Candidate List in Visual */}
-                     <Box sx={{ flexGrow: 1, overflowY: 'auto', pr: 1 }}> {/* Added flexGrow and overflow for potential scrolling */}
+                     <Box sx={{ flexGrow: 1, overflowY: 'auto', pr: 1 }}>
                          {[
                              { name: "Alex Morgan", match: "94%", skills: ["React", "AWS", "Fintech"] },
                              { name: "Riley Chen", match: "91%", skills: ["React", "Python", "ML"] },
@@ -899,28 +867,32 @@ const LandingPage = () => {
                                  sx={{
                                      display: 'flex',
                                      justifyContent: 'space-between',
-                                     alignItems: 'center', // Vertically align
-                                     p: 2,
-                                     mb: 2, // Spacing between items
+                                     alignItems: 'center',
+                                     p: { xs: 1.5, md: 2 }, // Responsive padding
+                                     mb: 2,
                                      borderRadius: 2,
-                                     bgcolor: idx === 0 ? '#F0F7FF' : 'transparent', // Highlight top match
+                                     bgcolor: idx === 0 ? theme.palette.background.light : 'transparent', // Highlight top match
                                      border: '1px solid',
                                      borderColor: idx === 0 ? '#E0E7FF' : 'transparent',
+                                     transition: 'all 0.3s ease', // Smooth hover effect
+                                     '&:hover': {
+                                         bgcolor: theme.palette.grey[100],
+                                     }
                                  }}
                              >
                                  <Box>
-                                     <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>{candidate.name}</Typography> {/* subtitle1 for names */}
+                                     <Typography variant="body1" sx={{ fontWeight: 600, color: 'text.primary' }}>{candidate.name}</Typography> {/* body1 for names */}
                                      <Box sx={{ display: 'flex', gap: 0.5, mt: 0.5, flexWrap: 'wrap' }}>
                                          {candidate.skills.map((skill, i) => (
                                              <Box
                                                  key={i}
                                                  sx={{
-                                                     bgcolor: '#E8F0FE', // Lighter blue tag
+                                                     bgcolor: '#E8F0FE',
                                                      color: 'primary.main',
-                                                     px: 0.8, // Smaller padding for tags
+                                                     px: 0.8,
                                                      py: 0.1,
                                                      borderRadius: 1,
-                                                     fontSize: '0.65rem', // Smaller font size
+                                                     fontSize: '0.65rem',
                                                      fontWeight: 500,
                                                  }}
                                              >
@@ -930,12 +902,12 @@ const LandingPage = () => {
                                      </Box>
                                  </Box>
                                  <Box sx={{
-                                     bgcolor: idx === 0 ? 'secondary.main' : '#E0E7FF', // Green for top match, gray for others
+                                     bgcolor: idx === 0 ? 'secondary.main' : theme.palette.grey[200], // Green for top match, grey for others
                                      color: idx === 0 ? 'white' : 'text.primary',
                                      px: 1.5,
                                      py: 0.5,
                                      borderRadius: 5,
-                                     fontSize: '0.9rem', // Slightly larger match percentage
+                                     fontSize: '0.9rem',
                                      fontWeight: 'bold',
                                      height: 'fit-content',
                                      minWidth: 60,
@@ -957,17 +929,16 @@ const LandingPage = () => {
                   initial="hidden"
                   whileInView="visible"
                   viewport={{ once: true, margin: "-100px 0px" }}
-                  variants={slideFromRight} // Slide in from right
+                  variants={slideFromRight}
                 >
                   <Typography
-                    variant="h3"
+                    variant="h2" // h2 for section title
                     sx={{
-                      mb: 2,
-                      fontWeight: 'bold',
-                       color: theme.typography.h3.color,
+                      mb: 3,
+                      color: theme.typography.h2.color,
                     }}
                   >
-                    AI-Driven Best-Fit Candidates
+                    Find Your Perfect Candidate in Seconds
                   </Typography>
                 </motion.div>
 
@@ -976,14 +947,14 @@ const LandingPage = () => {
                   initial="hidden"
                   whileInView="visible"
                   viewport={{ once: true, margin: "-100px 0px" }}
-                  variants={fadeIn} // Fade in
+                  variants={fadeIn}
                 >
                   <Typography
-                    variant="h6"
+                    variant="h5" // h5 for subheading
                     sx={{
                       mb: 4,
-                      fontWeight: 'normal',
-                      color: 'text.primary'
+                      fontWeight: 400,
+                      color: 'text.secondary' // Use secondary text for body copy
                     }}
                   >
                     Stop endless scrolling—our AI ranks talent by skill, cultural fit, and availability so you hire smarter, faster, fairer.
@@ -997,31 +968,52 @@ const LandingPage = () => {
                   viewport={{ once: true, margin: "-100px 0px" }}
                   variants={staggerContainer}
                 >
-                  <Grid container spacing={4}> {/* Increased spacing */}
+                  <Grid container spacing={4}>
                      {/* Feature 1: Skill Match Score */}
-                    <Grid item xs={12} sm={6} md={4}> {/* Adjusted grid for 3 items */}
+                    <Grid item xs={12} sm={6}> {/* Changed grid for 2 items per row on sm+ */}
                        <FeatureBlock
-                           icon={ChartLine} // Using ChartLine for Skill Match
-                           title="Skill Match Score"
-                           description="AI-powered analysis of candidate skills against job requirements for precise matching."
+                           icon={BarChart2} // BarChart2 for Skill Match
+                           title="Precise Skill Match"
+                           description="AI analyzes skills against requirements for the highest compatibility score."
+                           circleColor={theme.palette.secondary.main} // Green icon
+                           circleBg={theme.palette.secondary.light + '20'} // Very light green background
+                           circleShadow='0 5px 15px rgba(0, 196, 140, 0.2)' // Green shadow
                        />
                     </Grid>
 
                      {/* Feature 2: Culture-Fit Predictor */}
-                    <Grid item xs={12} sm={6} md={4}>
+                    <Grid item xs={12} sm={6}>
                       <FeatureBlock
-                        icon={MessageSquare} // Using MessageSquare for Culture Fit
-                        title="Culture-Fit Predictor"
-                        description="Evaluates candidate values and briefcase style preferences for team alignment."
+                        icon={MessageSquare} // MessageSquare for Culture Fit
+                        title="Cultural Alignment"
+                        description="Evaluates candidate values and preferences for seamless team integration."
+                         circleColor={theme.palette.primary.main}
+                         circleBg={theme.palette.primary.light + '20'} // Very light blue background
+                         circleShadow='0 5px 15px rgba(60, 126, 252, 0.2)' // Blue shadow
                       />
                     </Grid>
 
                      {/* Feature 3: Rapid Time-to-Hire */}
-                    <Grid item xs={12} sm={6} md={4}>
+                    <Grid item xs={12} sm={6}>
                       <FeatureBlock
-                        icon={SlidersHorizontal} // Using SlidersHorizontal for process/speed
-                        title="Rapid Time-to-Hire"
-                        description="Streamlined hiring process cuts average fill time significantly."
+                        icon={Briefcase} // Briefcase for hiring
+                        title="Optimized Workflow"
+                        description="Streamlined platform cuts average time-to-hire by up to 50%."
+                        circleColor={theme.palette.secondary.main} // Green icon
+                        circleBg={theme.palette.secondary.light + '20'}
+                        circleShadow='0 5px 15px rgba(0, 196, 140, 0.2)'
+                      />
+                    </Grid>
+
+                     {/* Feature 4: Transparent Data */}
+                    <Grid item xs={12} sm={6}>
+                      <FeatureBlock
+                        icon={UserCog} // UserCog for data control/insights
+                        title="Data-Driven Insights"
+                        description="Access transparent data on match reasons and candidate engagement."
+                         circleColor={theme.palette.primary.main}
+                         circleBg={theme.palette.primary.light + '20'}
+                         circleShadow='0 5px 15px rgba(60, 126, 252, 0.2)'
                       />
                     </Grid>
                   </Grid>
@@ -1175,7 +1167,6 @@ const LandingPage = () => {
             </AnimatePresence>
           </Container>
         </Box>
-
         {/* 6. Section: How It briefcases – Dual-Tab briefcaseflow */}
         <Box sx={{ py: { xs: 8, md: 12 } }}>
           <Container maxWidth="lg">

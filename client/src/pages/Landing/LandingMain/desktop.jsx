@@ -199,6 +199,7 @@ const DesktopLanding = () => {
             />
           </Box>
         </Box>
+        
       </Box>
     </div>
   );

@@ -70,6 +70,7 @@ function App() {
             path='/'
             element={<Navigate to='/find-jobs' replace={true} />}
           /> */}
+          <Route path="/Develop/1234" element={<HiringPlatformLanding/>} />
           <Route path="/" element={<LandingMain/>} />
           <Route path="/home" element={<Landing2/>} />
           <Route path='/find-jobs' element={<FindJob />} />
