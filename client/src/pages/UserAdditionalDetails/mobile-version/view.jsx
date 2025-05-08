@@ -215,24 +215,6 @@ const UserInfoForm = () => {
     }));
   };
 
-  // Handle custom company input for Current Company
-  const handleCustomCompanyChange = (e) => {
-    const { value } = e.target;
-    setFormData((prevState) => ({
-      ...prevState,
-      customCompany: value, // Store in customCompany
-    }));
-  };
-
-  // Handle company dropdown change for Current Company
-  const handleCompanyChange = (e) => {
-    const { value } = e.target;
-    setFormData((prevState) => ({
-      ...prevState,
-      currentCompany: value, // Store selected value in currentCompany
-      customCompany: value === "Other" ? formData.customCompany : "", // Keep customCompany if 'Other' is selected again
-    }));
-  };
 
   // Handle custom company input for Last Consulting Company
   const handlelastCustomCompanyChange = (e) => {
@@ -319,13 +301,6 @@ const UserInfoForm = () => {
          return;
      }
 
-
-    // Prepare final form data
-    const finalCurrentCompany =
-      formData.currentCompany === "Other"
-        ? formData.customCompany
-        : formData.currentCompany;
-
     const finalConsultingCompany =
        formData.hasConsultingBackground === "Yes" && formData.lastConsultingCompany === "Other"
         ? formData.lastConsultingCustomCompany
@@ -336,7 +311,6 @@ const UserInfoForm = () => {
 
     const updatedFormData = {
       ...formData,
-      currentCompany: finalCurrentCompany, // Use the custom company name if "Other" was selected
       lastConsultingCompany: finalConsultingCompany, // Use the custom consulting company name if "Other" was selected
       location: finalLocation, // Use custom location if 'Other' was selected
       experience: Number(formData.experience), // Convert experience to number
@@ -630,77 +604,22 @@ const UserInfoForm = () => {
                     style={{
                       fontFamily: "Satoshi",
                       fontWeight: 500,
-                      fontSize: "18px", // Reverted font size
+                      fontSize: "16px",
                       color: "#24252C",
                     }}
                   >
                     Current Company <span style={{ color: "red" }}>*</span>
                   </label>
-                  <select
+                  <input
+                    type="text"
                     name="currentCompany"
                     value={formData.currentCompany}
-                    onChange={handleCompanyChange}
-                    style={roundedInputStyles} // Apply rounded styles including appearance:none
-                    required // Required based on *
-                  >
-                    <option value="">Select your Company</option>
-                    {/* Company options */}
-                    <option value="McKinsey & Company">
-                      McKinsey & Company
-                    </option>
-                    <option value="Boston Consulting Group">
-                      Boston Consulting Group
-                    </option>
-                    <option value="Bain & Company">Bain & Company</option>
-                    <option value="Deloitte">Deloitte</option>
-                    <option value="Accenture">Accenture</option>
-                    <option value="Kearney">Kearney</option>
-                    <option value="EY">EY</option>
-                    <option value="PwC">PwC</option>
-                    <option value="KPMG">KPMG</option>
-                    <option value="TSMG">TSMG</option>
-                    <option value="Strategy&">Strategy&</option>
-                    <option value="Oliver Wyman">Oliver Wyman</option>
-                    <option value="IBM">IBM</option>
-                    <option value="Capgemini E.L.I.T.E.">
-                      Capgemini E.L.I.T.E.
-                    </option>
-                    <option value="ZS Associates">ZS Associates</option>
-                    <option value="Roland Berger">Roland Berger</option>
-                    <option value="Alvarez & Marsal">Alvarez & Marsal</option>
-                    <option value="Parthenon Group">Parthenon Group</option>
-                    <option value="Siemens Management Consulting">
-                      Siemens Management Consulting
-                    </option>
-                    <option value="Arthur D. Little">Arthur D. Little</option>
-                    <option value="Other">Other</option>
-                  </select>
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    style={{ borderRadius: 50, border: "1px solid #24252C" }}
+                    required
+                  />
                 </div>
-                {/* Custom Company input if "Other" is selected */}
-                {formData.currentCompany === "Other" && (
-                  <div className="mb-6">
-                    <label
-                      className="block text-gray-700 text-sm font-semibold mb-4 ml-2"
-                      style={{
-                        fontFamily: "Satoshi",
-                        fontWeight: 500,
-                        fontSize: "18px", // Reverted font size
-                        color: "#24252C",
-                      }}
-                    >
-                      Other Company Name <span style={{ color: "red" }}>*</span>
-                    </label>
-                    <input
-                      type="text"
-                      name="customCompany" // Note: Use customCompany state
-                      value={formData.customCompany}
-                      onChange={handleCustomCompanyChange}
-                      placeholder="Please Specify Company name...."
-                       style={roundedInputStyles} // Apply rounded styles
-                      required={formData.currentCompany === "Other"} // Required only if "Other" is selected
-                    />
-                  </div>
-                )}
                 {/* Experience */}
                 <div className="mb-6">
                   <label
@@ -846,10 +765,12 @@ const UserInfoForm = () => {
                     type="number"
                     name="salary"
                     value={formData.salary}
+                    min={1}
+                    max={1000}
                     onChange={handleChange}
-                    style={roundedInputStyles} // Apply rounded styles
-                    required // Required based on *
-                    min="0" // Keep min attribute
+                    className="w-full px-4 py-3 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    style={{ borderRadius: 50, border: "1px solid #24252C" }}
+                    required
                   />
                 </div>
                 {/* Open to Relocation */}
@@ -916,7 +837,223 @@ const UserInfoForm = () => {
           </Box>
         );
 
-      case 1: // Personal Details
+        case 1: // Consulting Background
+        return (
+          <Box sx={stageBoxStyles}>
+            <Typography sx={titleStyles}>Consulting Background</Typography>
+            <Box sx={innerRowStyles}>
+              <Box sx={columnStyles}>
+                {/* Do you have a Consulting Background? */}
+                <div className="mb-6">
+                  <label
+                    className="block mb-4 ml-2"
+                    style={{
+                      fontFamily: "Satoshi",
+                      fontWeight: 500,
+                      fontSize: "18px", // Reverted font size
+                      color: "#24252C",
+                    }}
+                  >
+                    Do you have a Consulting Background?{" "}
+                    <span style={{ color: "red" }}>*</span>
+                  </label>
+                  {/* Radio Buttons */}
+                  {/* Add 'required' to at least one radio button in the group */}
+                  <label className="flex items-center gap-2 ml-2 mb-2">
+                    <input
+                      type="radio"
+                      name="hasConsultingBackground"
+                      value="Yes"
+                      checked={formData.hasConsultingBackground === "Yes"}
+                      onChange={handleChange}
+                      className="accent-blue-500"
+                      required // Required based on *
+                    />
+                    <span
+                      style={{
+                        color: "#24252C",
+                        fontFamily: "Satoshi",
+                        fontWeight: 500,
+                        fontSize: "18px", // Reverted font size
+                      }}
+                    >
+                      Yes
+                    </span>
+                  </label>
+                  <label className="flex items-center gap-2 ml-2">
+                    <input
+                      type="radio"
+                      name="hasConsultingBackground"
+                      value="No"
+                      checked={formData.hasConsultingBackground === "No"}
+                      onChange={handleChange}
+                      className="accent-blue-500"
+                       // The 'required' attribute on one radio makes the group required
+                    />
+                    <span
+                      style={{
+                        color: "#24252C",
+                        fontFamily: "Satoshi",
+                        fontWeight: 500,
+                        fontSize: "18px", // Reverted font size
+                      }}
+                    >
+                      No
+                    </span>
+                  </label>
+                </div>
+
+                {/* When did you first join Consulting? (Conditional, NOT required) */}
+                {formData.hasConsultingBackground === "Yes" && (
+                  <div className="mb-6">
+                    <label
+                      className="block mb-4 ml-2"
+                      style={{
+                        fontFamily: "Satoshi",
+                        fontWeight: 500,
+                        fontSize: "18px", // Reverted font size
+                        color: "#24252C",
+                      }}
+                    >
+                      When did you first join Consulting? {/* No * */}
+                    </label>
+                    <select
+                      name="joinConsulting"
+                      value={formData.joinConsulting}
+                      onChange={handleChange}
+                      style={roundedInputStyles} // Apply rounded styles including appearance:none
+                       // Not required
+                    >
+                      <option value="">Select an option</option>
+                      <option value="Lateral">Lateral</option>
+                      <option value="Out of campus">Out of Campus</option>
+                    </select>
+                  </div>
+                )}
+              </Box>
+              <Box sx={columnStyles}>
+                {/* Last/Current Consulting Company (Conditional, NOT required) */}
+                {formData.hasConsultingBackground === "Yes" && (
+                  <>
+                    <div className="mb-6">
+                      <label
+                        className="block mb-4 ml-2"
+                        style={{
+                          fontFamily: "Satoshi",
+                          fontWeight: 500,
+                          fontSize: "18px", // Reverted font size
+                          color: "#24252C",
+                        }}
+                      >
+                        Last/Current Consulting Company{" "} {/* No * */}
+                      </label>
+                      <select
+                        name="lastConsultingCompany"
+                        value={formData.lastConsultingCompany}
+                        onChange={handlelastCompanyChange}
+                         style={roundedInputStyles} // Apply rounded styles including appearance:none
+                        // Not required
+                      >
+                        <option value="">Select your Company</option>
+                        {/* Consulting Company options */}
+                        <option value="McKinsey & Company">
+                          McKinsey & Company
+                        </option>
+                        <option value="Boston Consulting Group">
+                          Boston Consulting Group
+                        </option>
+                        <option value="Bain & Company">Bain & Company</option>
+                        <option value="Deloitte">Deloitte</option>
+                        <option value="Accenture">Accenture</option>
+                        <option value="Kearney">Kearney</option>
+                        <option value="EY">EY</option>
+                        <option value="PwC">PwC</option>
+                        <option value="KPMG">KPMG</option>
+                        <option value="TSMG">TSMG</option>
+                        <option value="Strategy&">Strategy&</option>
+                        <option value="Oliver Wyman">Oliver Wyman</option>
+                        <option value="IBM">IBM</option>
+                        <option value="Capgemini E.L.I.T.E.">
+                          Capgemini E.L.I.T.E.
+                        </option>
+                        <option value="ZS Associates">ZS Associates</option>
+                        <option value="Roland Berger">Roland Berger</option>
+                        <option value="Alvarez & Marsal">
+                          Alvarez & Marsal
+                        </option>
+                        <option value="Parthenon Group">Parthenon Group</option>
+                        <option value="Siemens Management Consulting">
+                          Siemens Management Consulting
+                        </option>
+                        <option value="Arthur D. Little">
+                          Arthur D. Little
+                        </option>
+                        <option value="Other">Other</option>
+                      </select>
+                    </div>
+                    {/* Custom Last Consulting Company input if "Other" is selected (Conditional, NOT required) */}
+                    {formData.lastConsultingCompany === "Other" && (
+                      <div className="mb-6">
+                        <label
+                          className="block text-gray-700 text-sm font-semibold mb-4 ml-2"
+                          style={{
+                            fontFamily: "Satoshi",
+                            fontWeight: 500,
+                            fontSize: "18px", // Reverted font size
+                            color: "#24252C",
+                          }}
+                        >
+                          Other Consulting Company Name {/* No * */}
+                        </label>
+                        <input
+                          type="text"
+                          name="lastConsultingCustomCompany" // Note: Use lastConsultingCustomCompany state
+                          value={formData.lastConsultingCustomCompany}
+                          onChange={handlelastCustomCompanyChange}
+                          placeholder="Please Specify Company name...."
+                           style={roundedInputStyles} // Apply rounded styles
+                          // Not required
+                        />
+                      </div>
+                    )}
+                    {/* Total Experience in Consulting (Conditional, NOT required) */}
+                    <div className="mb-6 mt-9">
+                      {" "}
+                      {/* Kept mt-9 for spacing */}
+                      <label
+                        className="block mb-4 ml-2"
+                        style={{
+                          fontFamily: "Satoshi",
+                          fontWeight: 500,
+                          fontSize: "18px", // Reverted font size
+                          color: "#24252C",
+                        }}
+                      >
+                        Total Experience in Consulting {/* No * */}
+                      </label>
+                      <select
+                        name="totalYearsInConsulting"
+                        value={formData.totalYearsInConsulting}
+                        onChange={handleChange}
+                         style={roundedInputStyles} // Apply rounded styles including appearance:none
+                        // Not required
+                      >
+                        <option value="">Select experience</option>
+                        {Array.from({ length: 15 }, (_, i) => (
+                          <option key={i + 1} value={(i + 1).toString()}>{`${
+                            i + 1
+                          } year${i === 0 ? "" : "s"}`}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </>
+                )}
+              </Box>
+            </Box>
+          </Box>
+        );
+
+      case 2: // Personal Details
         return (
           <Box sx={stageBoxStyles}>
             <Typography sx={titleStyles}>Personal Details</Typography>
@@ -1181,7 +1318,7 @@ const UserInfoForm = () => {
           </Box>
         );
 
-      case 2: // Preferences
+      case 3: // Preferences
         return (
           <Box sx={stageBoxStyles}>
             <Typography sx={titleStyles}>Preferences</Typography>
@@ -1363,221 +1500,6 @@ const UserInfoForm = () => {
           </Box>
         );
 
-      case 3: // Consulting Background
-        return (
-          <Box sx={stageBoxStyles}>
-            <Typography sx={titleStyles}>Consulting Background</Typography>
-            <Box sx={innerRowStyles}>
-              <Box sx={columnStyles}>
-                {/* Do you have a Consulting Background? */}
-                <div className="mb-6">
-                  <label
-                    className="block mb-4 ml-2"
-                    style={{
-                      fontFamily: "Satoshi",
-                      fontWeight: 500,
-                      fontSize: "18px", // Reverted font size
-                      color: "#24252C",
-                    }}
-                  >
-                    Do you have a Consulting Background?{" "}
-                    <span style={{ color: "red" }}>*</span>
-                  </label>
-                  {/* Radio Buttons */}
-                  {/* Add 'required' to at least one radio button in the group */}
-                  <label className="flex items-center gap-2 ml-2 mb-2">
-                    <input
-                      type="radio"
-                      name="hasConsultingBackground"
-                      value="Yes"
-                      checked={formData.hasConsultingBackground === "Yes"}
-                      onChange={handleChange}
-                      className="accent-blue-500"
-                      required // Required based on *
-                    />
-                    <span
-                      style={{
-                        color: "#24252C",
-                        fontFamily: "Satoshi",
-                        fontWeight: 500,
-                        fontSize: "18px", // Reverted font size
-                      }}
-                    >
-                      Yes
-                    </span>
-                  </label>
-                  <label className="flex items-center gap-2 ml-2">
-                    <input
-                      type="radio"
-                      name="hasConsultingBackground"
-                      value="No"
-                      checked={formData.hasConsultingBackground === "No"}
-                      onChange={handleChange}
-                      className="accent-blue-500"
-                       // The 'required' attribute on one radio makes the group required
-                    />
-                    <span
-                      style={{
-                        color: "#24252C",
-                        fontFamily: "Satoshi",
-                        fontWeight: 500,
-                        fontSize: "18px", // Reverted font size
-                      }}
-                    >
-                      No
-                    </span>
-                  </label>
-                </div>
-
-                {/* When did you first join Consulting? (Conditional, NOT required) */}
-                {formData.hasConsultingBackground === "Yes" && (
-                  <div className="mb-6">
-                    <label
-                      className="block mb-4 ml-2"
-                      style={{
-                        fontFamily: "Satoshi",
-                        fontWeight: 500,
-                        fontSize: "18px", // Reverted font size
-                        color: "#24252C",
-                      }}
-                    >
-                      When did you first join Consulting? {/* No * */}
-                    </label>
-                    <select
-                      name="joinConsulting"
-                      value={formData.joinConsulting}
-                      onChange={handleChange}
-                      style={roundedInputStyles} // Apply rounded styles including appearance:none
-                       // Not required
-                    >
-                      <option value="">Select an option</option>
-                      <option value="Lateral">Lateral</option>
-                      <option value="Out of campus">Out of Campus</option>
-                    </select>
-                  </div>
-                )}
-              </Box>
-              <Box sx={columnStyles}>
-                {/* Last/Current Consulting Company (Conditional, NOT required) */}
-                {formData.hasConsultingBackground === "Yes" && (
-                  <>
-                    <div className="mb-6">
-                      <label
-                        className="block mb-4 ml-2"
-                        style={{
-                          fontFamily: "Satoshi",
-                          fontWeight: 500,
-                          fontSize: "18px", // Reverted font size
-                          color: "#24252C",
-                        }}
-                      >
-                        Last/Current Consulting Company{" "} {/* No * */}
-                      </label>
-                      <select
-                        name="lastConsultingCompany"
-                        value={formData.lastConsultingCompany}
-                        onChange={handlelastCompanyChange}
-                         style={roundedInputStyles} // Apply rounded styles including appearance:none
-                        // Not required
-                      >
-                        <option value="">Select your Company</option>
-                        {/* Consulting Company options */}
-                        <option value="McKinsey & Company">
-                          McKinsey & Company
-                        </option>
-                        <option value="Boston Consulting Group">
-                          Boston Consulting Group
-                        </option>
-                        <option value="Bain & Company">Bain & Company</option>
-                        <option value="Deloitte">Deloitte</option>
-                        <option value="Accenture">Accenture</option>
-                        <option value="Kearney">Kearney</option>
-                        <option value="EY">EY</option>
-                        <option value="PwC">PwC</option>
-                        <option value="KPMG">KPMG</option>
-                        <option value="TSMG">TSMG</option>
-                        <option value="Strategy&">Strategy&</option>
-                        <option value="Oliver Wyman">Oliver Wyman</option>
-                        <option value="IBM">IBM</option>
-                        <option value="Capgemini E.L.I.T.E.">
-                          Capgemini E.L.I.T.E.
-                        </option>
-                        <option value="ZS Associates">ZS Associates</option>
-                        <option value="Roland Berger">Roland Berger</option>
-                        <option value="Alvarez & Marsal">
-                          Alvarez & Marsal
-                        </option>
-                        <option value="Parthenon Group">Parthenon Group</option>
-                        <option value="Siemens Management Consulting">
-                          Siemens Management Consulting
-                        </option>
-                        <option value="Arthur D. Little">
-                          Arthur D. Little
-                        </option>
-                        <option value="Other">Other</option>
-                      </select>
-                    </div>
-                    {/* Custom Last Consulting Company input if "Other" is selected (Conditional, NOT required) */}
-                    {formData.lastConsultingCompany === "Other" && (
-                      <div className="mb-6">
-                        <label
-                          className="block text-gray-700 text-sm font-semibold mb-4 ml-2"
-                          style={{
-                            fontFamily: "Satoshi",
-                            fontWeight: 500,
-                            fontSize: "18px", // Reverted font size
-                            color: "#24252C",
-                          }}
-                        >
-                          Other Consulting Company Name {/* No * */}
-                        </label>
-                        <input
-                          type="text"
-                          name="lastConsultingCustomCompany" // Note: Use lastConsultingCustomCompany state
-                          value={formData.lastConsultingCustomCompany}
-                          onChange={handlelastCustomCompanyChange}
-                          placeholder="Please Specify Company name...."
-                           style={roundedInputStyles} // Apply rounded styles
-                          // Not required
-                        />
-                      </div>
-                    )}
-                    {/* Total Experience in Consulting (Conditional, NOT required) */}
-                    <div className="mb-6 mt-9">
-                      {" "}
-                      {/* Kept mt-9 for spacing */}
-                      <label
-                        className="block mb-4 ml-2"
-                        style={{
-                          fontFamily: "Satoshi",
-                          fontWeight: 500,
-                          fontSize: "18px", // Reverted font size
-                          color: "#24252C",
-                        }}
-                      >
-                        Total Experience in Consulting {/* No * */}
-                      </label>
-                      <select
-                        name="totalYearsInConsulting"
-                        value={formData.totalYearsInConsulting}
-                        onChange={handleChange}
-                         style={roundedInputStyles} // Apply rounded styles including appearance:none
-                        // Not required
-                      >
-                        <option value="">Select experience</option>
-                        {Array.from({ length: 15 }, (_, i) => (
-                          <option key={i + 1} value={(i + 1).toString()}>{`${
-                            i + 1
-                          } year${i === 0 ? "" : "s"}`}</option>
-                        ))}
-                      </select>
-                    </div>
-                  </>
-                )}
-              </Box>
-            </Box>
-          </Box>
-        );
 
       default:
         return null; // Should not happen

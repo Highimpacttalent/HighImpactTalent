@@ -21,6 +21,7 @@ import ApplicationStatus from "./pages/ApplicationStatus";
 import PasswordChange from "./pages/Password";
 import ScreeningView from "./pages/Screening/view";
 import FloatingChatAssistant from "./components/Chat/FloatingChat";
+import HiringPlatformLanding from "./pages/Landing/LandingMain/desktop2.jsx";
 import UserInfoForm from "./pages/UserAdditionalDetails/main.jsx";
 import ViewProfile from "./pages/Applicants/ViewProfile.jsx";
 import JobUploadPage from "./pages/UploadJob/view.jsx";
@@ -69,8 +70,8 @@ function App() {
             path='/'
             element={<Navigate to='/find-jobs' replace={true} />}
           /> */}
-          <Route path="/" element={<LandingMain/>}></Route>
-          <Route path="/home" element={<Landing2/>}></Route>
+          <Route path="/" element={<LandingMain/>} />
+          <Route path="/home" element={<Landing2/>} />
           <Route path='/find-jobs' element={<FindJob />} />
           <Route path='/view-jobs' element={<JobPosted />} />
           <Route path="/applicant/:jobId" element={<JobApplications />}/>
