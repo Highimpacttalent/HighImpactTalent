@@ -1517,54 +1517,31 @@ const UserInfoForm = () => {
         <Typography
           sx={{
             fontFamily: "Satoshi",
-            fontSize: "28px",
+            fontSize: "26px",
             fontWeight: 600,
             color: "#24252C",
             textAlign: "center",
             mt: 4,
+            px:1
           }}
         >
-          You're Now Part of an{" "}
+          Power up your{" "}
           <span
             style={{
               fontFamily: "Satoshi",
-              fontSize: "28px",
+              fontSize: "26px",
               fontWeight: 600,
               color: "#3C7EFC",
             }}
           >
-            Exclusive Talent
-          </span>{" "}
-          Network
+            Talent Profile
+          </span>
         </Typography>
-        <Box
-          sx={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            mt: 2,
-          }}
-        >
-          <Typography
-            sx={{
-              fontFamily: "Poppins",
-              fontSize: "16px",
-              fontWeight: 400,
-              color: "#808195",
-              width: { sx: "100%", xs: "100%", lg: "70%", md: "70%" },
-              textAlign: "center",
-            }}
-          >
-            Save Time, Land Faster! Fill a few details to get more personalized
-            recommendations
-          </Typography>
-        </Box>
       </Box>
       {/* Progress Bar */}
       <Box
         sx={{
-          width: { xs: "95%", sm: "90%", lg: "80%", md: "80%" },
+          width: { xs: "92%", sm: "90%", lg: "80%", md: "80%" },
           mx: "auto",
           mt: 4,
           mb: 4,

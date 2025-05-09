@@ -18,6 +18,7 @@ import { Visibility, VisibilityOff } from "@mui/icons-material";
 import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
 import GoogleIcon from "@mui/icons-material/Google";
 import LinkedInIcon from "@mui/icons-material/LinkedIn";
+import { useLocation } from "react-router-dom";
 
 const generateRandomState = () => {
   const array = new Uint32Array(16);
@@ -32,6 +33,9 @@ const LINKEDIN_CONFIG = {
 };
 
 function UserLoginForm() {
+  const location = useLocation();
+  const refer = location.state?.refer  || "/find-jobs";
+  console.log("refer", refer);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -61,7 +65,7 @@ function UserLoginForm() {
         const userData = { token: res?.token, ...res?.user };
         dispatch(Login(userData));
         localStorage.setItem("userInfo", JSON.stringify(userData));
-        navigate("/find-jobs");
+        navigate(refer);
       }
     } catch (error) {
       setErrMsg("Something went wrong. Please try again.");
