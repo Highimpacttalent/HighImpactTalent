@@ -125,6 +125,7 @@ export const updateJob = async (req, res, next) => {
       jobLocation,
       salaryConfidential,
       salary,
+      requirements,
       qualifications,
       experience,
       skills,
