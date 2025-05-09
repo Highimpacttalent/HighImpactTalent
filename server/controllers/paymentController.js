@@ -12,7 +12,7 @@ const PAYU_MERCHANT_SALT = process.env.PAYU_MERCHANT_SALT;
 const PAYU_BASE_URL = process.env.PAYU_BASE_URL;
 
 // Fixed payment amount
-const STANDARD_AMOUNT = "1.00"; // Ensure it's a valid float
+const STANDARD_AMOUNT = "19999.00"; // Ensure it's a valid float
 
 // Initialize payment
 export const initializePayment = async (req, res) => {
