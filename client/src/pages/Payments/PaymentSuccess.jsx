@@ -20,7 +20,7 @@ const PaymentSuccess = () => {
             <Box sx={{display:'flex',justifyContent: "center",flexDirection:'column',alignItems:'center', p:2}}>
                 <Box sx={{border: '1px solid rgba(0, 0, 0, 0.25)',p:4,borderRadius:2}}>
                     <Typography sx={{color:"rgba(64, 66, 88, 1)"}}>Transaction number: {txnid}</Typography>
-                    <Typography sx={{color:"rgba(64, 66, 88, 1)",mt:1}}>Amount Paid: Rs.1</Typography>
+                    <Typography sx={{color:"rgba(64, 66, 88, 1)",mt:1}}>Amount Paid: Rs.19999</Typography>
                 </Box>
             </Box>
             <Box sx={{display:'flex',justifyContent: "center",flexDirection:'column',alignItems:'center', p:2}}>
