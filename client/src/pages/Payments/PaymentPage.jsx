@@ -83,7 +83,7 @@ const PaymentPage = () => {
       </Box>
 
       <Box>
-        <Typography sx={{textAlign:'center',mt:10,fontSize:'18px',fontWeight:'400',fontFamily:'Poppins',color:'#474E68'}}>Subscribe now only <span style={{fontSize:'22px',fontWeight:'600',fontFamily:'Poppins',color:'#474E68'}}>@1/-</span></Typography>
+        <Typography sx={{textAlign:'center',mt:10,fontSize:'18px',fontWeight:'400',fontFamily:'Poppins',color:'#474E68'}}>Subscribe now only <span style={{fontSize:'22px',fontWeight:'600',fontFamily:'Poppins',color:'#474E68'}}>@19999/-</span></Typography>
       </Box>
       <Box sx={{display:"flex",alignItems:'center',justifyContent:'center'}}>
       <Button 
