@@ -30,6 +30,7 @@ const AIChatbot = ({ setFilters }) => {
     
     const userMessage = { text: input, sender: "user" };
     setMessages((prev) => [...prev, userMessage]);
+    setInput("");
     setLoading(true);
     
     try {
