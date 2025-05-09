@@ -18,8 +18,11 @@ import hiringAnimation from "../../assets/hiring.json";
 import AlertModal from "../../components/Alerts/view.jsx";
 import { useNavigate } from "react-router-dom";
 import BackupIcon from '@mui/icons-material/Backup';
+import { useLocation } from "react-router-dom";
 
 const ResumeUpload = () => {
+  const location = useLocation();
+  const refer = location.state?.refer;
   const { user } = useSelector((state) => state.user);
   const [fileUrl, setFileUrl] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -135,7 +138,7 @@ const ResumeUpload = () => {
       });
 
       setTimeout(() => {
-        navigate("/user-additional-details", { state: { parsedData } });
+        navigate("/user-additional-details", { state: { parsedData,refer } });
       }, 2000);
     } catch (error) {
       console.error("Resume submission error:", error);

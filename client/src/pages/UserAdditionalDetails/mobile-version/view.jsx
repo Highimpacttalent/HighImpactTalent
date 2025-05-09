@@ -19,7 +19,8 @@ const UserInfoForm = () => {
   const { user } = useSelector((state) => state.user);
   const dispatch = useDispatch();
   const location = useLocation();
-  const defaultValues = location.state?.parsedData?.data || {}; // Default values for editing
+  const defaultValues = location.state?.parsedData?.data || {};
+  const refer = location.state?.refer || "/find-jobs"; // Default values for editing
 
   const navigate = useNavigate();
 
@@ -350,7 +351,7 @@ const UserInfoForm = () => {
         alert("Profile updated successfully");
         console.log("res", res);
         dispatch(UpdateUser(res.user)); // Assuming the response contains the updated user object
-        navigate("/find-jobs"); // Navigate after successful update
+        navigate(refer); // Navigate after successful update
       } else {
         // Handle backend validation errors or specific messages
         const errorMessage = res?.message || "Update failed. Please try again.";
