@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState,useEffect } from "react";
 import {
   Box,
   Stack,
@@ -15,20 +15,22 @@ import {
   CurrencyRupee,
 } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
+import { useCallback } from "react";
 import { Edit } from "@mui/icons-material";
-
-function JobCardRecriter({ job }) {
+import { apiRequest } from "../../../utils";
+function JobCardRecriter({ jobId }) {
   const navigate = useNavigate();
   const [isEditing, setIsEditing] = useState(false);
+  const [job, setJob] = useState(null);
   const [isFetching, setIsFetching] = useState(false);
   console.log(job)
   const [jobDetails, setJobDetails] = useState({
-    jobTitle: job.jobTitle || "",
-    location: job.jobLocation || "",
-    salary: job.salary || "",
-    salaryCategory: job.salaryCategory || "",
-    experience: job.experience || "",
-    salaryConfidential: job.salaryConfidential || false,
+    jobTitle: "",
+    location: "",
+    salary:  "",
+    salaryCategory: "",
+    experience:"",
+    salaryConfidential: false,
   });
 
   const handleChange = (field) => (e) => {
@@ -36,6 +38,37 @@ function JobCardRecriter({ job }) {
       field === "salaryConfidential" ? e.target.checked : e.target.value;
     setJobDetails((prev) => ({ ...prev, [field]: value }));
   };
+
+  const fetchJobDetails = useCallback(async () => {
+    setIsFetching(true);
+    try {
+      const res = await apiRequest({
+        url: `/jobs/get-job-detail/${jobId}`,
+        method: "GET",
+      });
+      if (res?.data) {
+        setJob(res.data);
+        // seed the form fields
+        setJobDetails({
+          jobTitle: res.data.jobTitle || "",
+          location: res.data.jobLocation || "",
+          salary: res.data.salary || "",
+          salaryCategory: res.data.salaryCategory || "",
+          experience: res.data.experience || "",
+          salaryConfidential: res.data.salaryConfidential || false,
+        });
+      }
+    } catch (error) {
+      console.error("Error fetching job details:", error);
+    } finally {
+      setIsFetching(false);
+    }
+  }, [jobId]);
+
+  useEffect(() => {
+    if (jobId) fetchJobDetails();
+  }, [jobId, fetchJobDetails]);
+
 
   const handleSaveClick = async () => {
     if (isEditing) {
@@ -51,24 +84,25 @@ function JobCardRecriter({ job }) {
             },
             body: JSON.stringify({
               jobTitle: jobDetails.jobTitle,
-              workType: job.workType,
-              workMode: job.workMode,
+              workType: job?.workType,
+              workMode: job?.workMode,
               jobLocation: jobDetails.location,
               salary: jobDetails.salary,
               experience: jobDetails.experience,
-              jobDescription: job.jobDescription,
-              skills: job.skills,
-              requirements: job.requirements,
-              maxApplicants: job.maxApplicants,
-              screeningQuestions: job.screeningQuestions,
-              applicationLink: job.applicationLink,
-              jobId: job._id,
+              jobDescription: job?.jobDescription,
+              skills: job?.skills,
+              requirements: job?.requirements,
+              maxApplicants: job?.maxApplicants,
+              screeningQuestions: job?.screeningQuestions,
+              applicationLink: job?.applicationLink,
+              jobId: jobId,
             }),
           }
         );
 
         const result = await response.json();
         console.log("Updated successfully:", result);
+        await fetchJobDetails();
       } catch (err) {
         console.error("Error updating job:", err);
       } finally {
@@ -260,7 +294,7 @@ function JobCardRecriter({ job }) {
               )}
             </Box>
             <Box sx={{ display: "flex", flexWrap: "wrap", mt: 2 }} gap={1}>
-              {job.skills && job.skills.length > 0 ? (
+              {job?.skills && job.skills.length > 0 ? (
                 job.skills.map((skill, index) => (
                   <Box key={index} sx={{ display: "flex" }} gap={0.5}>
                     <Chip
@@ -297,7 +331,7 @@ function JobCardRecriter({ job }) {
               <Typography
                 sx={{ color: "#474E68", fontFamily: "Poppins", mt: 2 }}
               >
-                Total Applicants: {job.totalApplications}
+                Total Applicants: {job?.totalApplications}
               </Typography>
               <Typography
                 onClick={isEditing ? handleSaveClick : () => setIsEditing(true)}
