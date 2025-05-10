@@ -38,12 +38,12 @@ export const uploadResume = async (req, res) => {
     }
 
     // Generate unique filename
-    const filename = `resumes/${userId}/${Date.now()}-${file.originalname}`;
+    const filename = `resumes/${Date.now()}-${file.originalname}`;
 
     // Upload to S3
     const s3Response = await uploadFileToS3(file.buffer, filename, file.mimetype);
 
-    // Update user's cvUrl in database
+    //Update user's cvUrl in database
     const updatedUser = await Users.findByIdAndUpdate(
       userId,
       { cvUrl: s3Response.Location },
