@@ -94,28 +94,7 @@ const JobDetail = () => {
               </Typography>
               <Typography sx={{ color: "#474E68", fontFamily: "sans-serif" }}>
                 {" "}
-                <ReactMarkdown
-                  components={{
-                    p: ({ node, ...props }) => (
-                      <Typography
-                        sx={{
-                          color: "#474E68",
-                          fontFamily: "sans-serif",
-                        }}
-                        {...props}
-                      />
-                    ),
-                    li: ({ node, ...props }) => (
-                      <li
-                        style={{
-                          fontFamily: "sans-serif",
-                          color: "#474E68",
-                        }}
-                        {...props}
-                      />
-                    ),
-                  }}
-                >
+                <ReactMarkdown>
                   {
                     (job?.jobDescription || "")
                       .replace(/\\n/g, "\n") // Replace escaped newlines with actual line breaks
@@ -147,7 +126,7 @@ const JobDetail = () => {
                           <Typography
                             sx={{ color: "#474E68", fontFamily: "sans-serif" }}
                           >
-                            {index + 1}. {req}
+                             &#8226; {req}
                           </Typography>
                         ))
                     ) : (
@@ -182,7 +161,7 @@ const JobDetail = () => {
                           <Typography
                             sx={{ color: "#474E68", fontFamily: "sans-serif" }}
                           >
-                            {index + 1}. {qual}
+                            &#8226;  {qual}
                           </Typography>
                         )
                     )}

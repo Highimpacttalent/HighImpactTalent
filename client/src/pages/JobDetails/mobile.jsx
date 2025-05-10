@@ -150,7 +150,7 @@ const JobDetail = () => {
                           <Typography
                             sx={{ color: "#474E68", fontFamily: "sans-serif" }}
                           >
-                            {index + 1}. {req}
+                            &#8226; {req}
                           </Typography>
                         ))
                     ) : (
@@ -185,7 +185,7 @@ const JobDetail = () => {
                           <Typography
                             sx={{ color: "#474E68", fontFamily: "sans-serif" }}
                           >
-                            {index + 1}. {qual}
+                            &#8226; {qual}
                           </Typography>
                         )
                     )}
