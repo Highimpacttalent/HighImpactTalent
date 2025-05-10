@@ -23,7 +23,7 @@ router.post("/change-password",changePassword)
 
 router.delete("/delete",userAuth,deleteUser);
 
-router.post("/upload-resume",uploadAuth,uploadResumeMiddleware,uploadResume)
+router.post("/upload-resume",uploadResumeMiddleware,uploadResume)
 router.post("/upload-image",uploadAuth,uploadimageMiddleware,uploadImage)
 router.post("/upload-company-logo",uploadimageMiddleware,uploadCompanyLogo)
 router.post('/togglelike',userAuth,toggleJobLike)
