@@ -20,7 +20,8 @@ const UserInfoForm = () => {
   const location = useLocation();
   const defaultValues = location.state?.parsedData?.data || {};
   const navigate = useNavigate();
-
+  const refer = location.state?.refer || "/find-jobs";
+  
   // State variables
   const [loading, setLoading] = useState(false);
   const [uploadingProfilePic, setUploadingProfilePic] = useState(false);
@@ -250,7 +251,7 @@ const UserInfoForm = () => {
         alert("Profile updated successfully");
         console.log("res", res);
         dispatch(UpdateUser(res.user));
-        navigate("/find-jobs");
+        navigate(refer);
       } else {
         throw new Error("Update failed");
       }

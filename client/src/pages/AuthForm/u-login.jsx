@@ -18,6 +18,7 @@ import { Visibility, VisibilityOff } from "@mui/icons-material";
 import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
 import GoogleIcon from "@mui/icons-material/Google";
 import LinkedInIcon from "@mui/icons-material/LinkedIn";
+import { useLocation } from "react-router-dom";
 
 const generateRandomState = () => {
   const array = new Uint32Array(16);
@@ -32,6 +33,9 @@ const LINKEDIN_CONFIG = {
 };
 
 function UserLoginForm() {
+  const location = useLocation();
+  const refer = location.state?.refer || "/find-jobs";
+  console.log("refer", refer);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -61,7 +65,7 @@ function UserLoginForm() {
         const userData = { token: res?.token, ...res?.user };
         dispatch(Login(userData));
         localStorage.setItem("userInfo", JSON.stringify(userData));
-        navigate("/find-jobs");
+        navigate(refer);
       }
     } catch (error) {
       setErrMsg("Something went wrong. Please try again.");
@@ -100,7 +104,9 @@ function UserLoginForm() {
 
       dispatch(Login(userData));
       localStorage.setItem("userInfo", JSON.stringify(userData));
-      navigate(userData.isNewUser ? "/userinformation" : "/find-jobs");
+      navigate(userData.isNewUser ? "/userinformation" : "/find-jobs", {
+        state: { refer },
+      });
     } catch (error) {
       setErrMsg(error.message || "Google authentication failed");
     } finally {
@@ -157,7 +163,7 @@ function UserLoginForm() {
         borderColor: "rgba(64, 66, 88, 0.23)",
         backgroundColor: "rgba(255, 255, 255, 1)",
         boxShadow: "0px 1px 3px rgba(0, 0, 0, 0.08)",
-        height: { xs: "44px", sm: "44px", md: "44px" }, 
+        height: { xs: "44px", sm: "44px", md: "44px" },
         width: "100%",
         padding: "6px 16px",
         "&:hover": {
@@ -195,8 +201,7 @@ function UserLoginForm() {
         display="flex"
         justifyContent="center"
         alignItems="center"
-        sx={{minHeight:{md:"100vh",xs:"80vh"}}}
-        
+        sx={{ minHeight: { md: "100vh", xs: "80vh" } }}
       >
         <Box sx={{ width: { xs: "90%", md: "50%" } }}>
           <Typography
@@ -224,8 +229,10 @@ function UserLoginForm() {
                   onSuccess={handleGoogleSuccess}
                   onError={handleGoogleError}
                   useOneTap={false}
-                  cookiePolicy={'single_host_origin'}
-                  render={renderProps => <CustomGoogleButton onClick={renderProps.onClick} />}
+                  cookiePolicy={"single_host_origin"}
+                  render={(renderProps) => (
+                    <CustomGoogleButton onClick={renderProps.onClick} />
+                  )}
                 />
               </GoogleOAuthProvider>
             </Grid>
@@ -376,6 +383,7 @@ function UserLoginForm() {
               Don't have an account?{" "}
               <Link
                 to="/u-authform"
+                state={{ refer }} 
                 style={{
                   color: "rgba(60, 126, 252, 1)",
                   textDecoration: "none",

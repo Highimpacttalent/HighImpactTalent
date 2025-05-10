@@ -529,6 +529,7 @@ const JobUploadPage = () => {
             size="small"
             required
             variant="outlined"
+            inputProps={{ max: 1000 }}
             sx={{
               "& .MuiOutlinedInput-root": {
                 borderRadius: 16,

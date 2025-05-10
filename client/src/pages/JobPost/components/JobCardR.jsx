@@ -174,7 +174,7 @@ function JobCardRecriter({ job,fetchJobs }) {
                   }}
                   onClick={() => navigate("/view-job-post", { state: { job } })}
                 >
-                  Job Details
+                  Edit Job
                 </Button>
                 
                 {(job.status === 'live' || job.status === 'paused' ) && (

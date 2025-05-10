@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState,useEffect } from "react";
+import { useCallback } from "react";
 import {
   Box,
   Typography,
@@ -12,16 +13,61 @@ import {
   WorkOutlineOutlined,
   CurrencyRupee,
 } from "@mui/icons-material";
+import { apiRequest } from "../../../utils";
 
-function JobDesc({ job }) {
+function JobDesc({ jobId }) {
   const [isEditing, setIsEditing] = useState(false);
   const [isFetching, setIsFetching] = useState(false);
-  const [jobDetails, setJobDetails] = useState({
-    jobDescription: job.jobDescription || "",
-    requirements: job.requirements.length ? job.requirements : [""],
-    qualifications: job.qualifications.length ? job.qualifications : [""],
-    skills: job.skills.length ? job.skills : [""],
+  const [job, setJob] = useState({
+    jobTitle: "",
+    workType: "",
+    workMode: "",
+    jobLocation: "",
+    salary: 0,
+    experience: 0,
+    jobDescription: "",
+    requirements: [],
+    qualifications: [],
+    skills: [],
+    screeningQuestions: [],
+    applicationLink: "",
+    _id: "",
   });
+  const [jobDetails, setJobDetails] = useState({
+    jobDescription: "",
+    requirements: [""],
+    qualifications: [""],
+    skills: [""],
+  });
+   const fetchJobDetails = useCallback(async () => {
+      setIsFetching(true);
+      try {
+        const res = await apiRequest({
+          url: `/jobs/get-job-detail/${jobId}`,
+          method: "GET",
+        });
+        if (res?.data) {
+          setJob(res.data);
+          // seed the form fields
+          setJobDetails({
+            jobDescription: res.data.jobDescription || "",
+            requirements: res.data.requirements || [""],
+            qualifications: res.data.qualifications || [""],
+            skills: res.data.skills || [""],
+          });
+        }
+      } catch (error) {
+        console.error("Error fetching job details:", error);
+      } finally {
+        setIsFetching(false);
+      }
+    }, [jobId]);
+  
+    useEffect(() => {
+      if (jobId) fetchJobDetails();
+    }, [jobId, fetchJobDetails]);
+
+
 
   const handleChange =
     (field, index = null) =>
@@ -81,6 +127,7 @@ function JobDesc({ job }) {
 
         const result = await response.json();
         console.log("Updated successfully:", result);
+        await fetchJobDetails();
       } catch (err) {
         console.error("Error updating job:", err);
       } finally {
@@ -90,6 +137,15 @@ function JobDesc({ job }) {
 
     setIsEditing(!isEditing);
   };
+
+  if (isFetching && !job._id) {
+    return (
+      <Box textAlign="center" mt={4}>
+        <CircularProgress />
+      </Box>
+    );
+  }
+
 
   return (
     <Box
@@ -124,7 +180,7 @@ function JobDesc({ job }) {
             />
           ) : (
             <Typography sx={{ mt: 1, color: "#474E68", fontFamily: "Satoshi" }}>
-              {jobDetails.jobDescription}
+              {jobDetails?.jobDescription}
             </Typography>
           )}
 
@@ -141,7 +197,7 @@ function JobDesc({ job }) {
               </Typography>
               {isEditing ? (
                 <>
-                  {jobDetails[field].map((item, index) => (
+                  {jobDetails[field]?.map((item, index) => (
                     <Box key={index} sx={{ display: "flex", gap: 1, mt: 1 }}>
                       <TextField
                         fullWidth

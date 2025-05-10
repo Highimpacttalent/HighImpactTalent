@@ -10,10 +10,10 @@ function View() {
   return (
     <Box sx={{bgcolor:"white",p:4}}>
         <Box sx={{mt:4}}>
-        <Jobcardview job={job}></Jobcardview>
+        <Jobcardview jobId={job._id}></Jobcardview>
         </Box>
         <Box sx={{mt:4}}>
-        <JobDesc job={job}></JobDesc>
+        <JobDesc jobId={job._id}></JobDesc>
         </Box>
     </Box>
   )

@@ -363,7 +363,7 @@ const JobCard = ({ job, flag = false, enable = false }) => {
             variant="contained"
             color="primary"
             sx={{ borderRadius: 40, fontFamily: "Poppins" }}
-            onClick={() => navigate("/u-login")}
+            onClick={() => navigate("/u-login", { state: { refer: `/job-detail/${job._id}` } })} 
           >
             Login/Register To Apply
           </Button>
