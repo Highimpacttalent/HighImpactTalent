@@ -16,6 +16,7 @@ import {
   CircularProgress,
 } from "@mui/material";
 import { AiOutlineSafetyCertificate } from "react-icons/ai";
+import ReactMarkdown from "react-markdown";
 
 const JobDetail = () => {
   const { id } = useParams();
@@ -53,72 +54,164 @@ const JobDetail = () => {
       <CircularProgress sx={{ display: "block", mx: "auto", mt: 5, mb: 5 }} />
     );
   }
-  
 
   return (
-    <Box sx={{  mx: "auto", p: 3, bgcolor: "#fff" }}>
+    <Box sx={{ mx: "auto", p: 3, bgcolor: "#fff" }}>
       <Grid container spacing={2}>
-        <Grid item xs={12} md={8} >
-        <Box sx={{mt:2,mb:2}}>
-        <JobCard job={job} enable={true}/>
-        </Box>
-          <Box sx={{ p: 1.5  }}>
-
-            <Typography variant="h6" sx={{ fontWeight: "bold",fontFamily:"Poppins",color:"#404258",ml:1.5 }}>
-             About the Job
+        <Grid item xs={12} md={8}>
+          <Box sx={{ mt: 2, mb: 2 }}>
+            <JobCard job={job} enable={true} />
+          </Box>
+          <Box sx={{ p: 1.5 }}>
+            <Typography
+              variant="h6"
+              sx={{
+                fontWeight: "bold",
+                fontFamily: "Poppins",
+                color: "#404258",
+                ml: 1.5,
+              }}
+            >
+              About the Job
             </Typography>
-            <Box sx={{borderRadius:2.5,p:2.5,mt:2,boxShadow:"0px 0px 4px 0px #00000040"}}>
-            <Typography sx={{fontWeight:"700",color:"#404258",mb:2,fontFamily:"Poppins"}}>Job Description:</Typography>
-            <Typography sx={{color:"#474E68",fontFamily:"sans-serif"}}>{job?.jobDescription}</Typography>
+            <Box
+              sx={{
+                borderRadius: 2.5,
+                p: 2.5,
+                mt: 2,
+                boxShadow: "0px 0px 4px 0px #00000040",
+              }}
+            >
+              <Typography
+                sx={{
+                  fontWeight: "700",
+                  color: "#404258",
+                  mb: 2,
+                  fontFamily: "Poppins",
+                }}
+              >
+                Job Description:
+              </Typography>
+              <Typography sx={{ color: "#474E68", fontFamily: "sans-serif" }}>
+                {" "}
+                <ReactMarkdown
+                  components={{
+                    p: ({ node, ...props }) => (
+                      <Typography
+                        sx={{
+                          color: "#474E68",
+                          fontFamily: "sans-serif",
+                        }}
+                        {...props}
+                      />
+                    ),
+                    li: ({ node, ...props }) => (
+                      <li
+                        style={{
+                          fontFamily: "sans-serif",
+                          color: "#474E68",
+                        }}
+                        {...props}
+                      />
+                    ),
+                  }}
+                >
+                  {
+                    (job?.jobDescription || "")
+                      .replace(/\\n/g, "\n") // Replace escaped newlines with actual line breaks
+                      .split("\n") // Split the string into lines
+                      .map((line) => `- ${line}`) // Prepend each line with a bullet point
+                      .join("\n") // Join back as a markdown string
+                  }
+                </ReactMarkdown>
+              </Typography>
 
-            {job?.requirements?.length > 0 && (
-              <Box mt={2}>
-                <Typography sx={{fontWeight:"700",color:"#404258",mb:2,fontFamily:"Poppins"}}>Requirements:</Typography>
-                <ul>
-                  {job.requirements.length > 0 &&
-                  job.requirements.some((req) => req.trim() !== "") ? (
-                    job.requirements
-                      .filter((req) => req.trim() !== "")
-                      .map((req, index) => <Typography sx={{color:"#474E68",fontFamily:"sans-serif"}}>{index + 1}.{" "}{req}</Typography>)
-                  ) : (
-                    <Stack>
-                    <Typography sx={{color:"#474E68",fontFamily:"sans-serif"}}>No requirement mentioned by the company.</Typography>
-                    </Stack>
-                  )}
-                </ul>
-              </Box>
-            )}
-
-            {job?.qualifications?.some((qual) => qual.trim() !== "") ? (
-              <Box mt={2}>
-                <Typography sx={{fontWeight:"700",color:"#404258",mb:2,fontFamily:"Poppins"}}>Qualifications:</Typography>
-                <ol>
-                  {job.qualifications.map(
-                    (qual, index) =>
-                      qual.trim() && (
-                        <Typography sx={{color:"#474E68",fontFamily:"sans-serif"}}>
-                          {index + 1}. {qual}
+              {job?.requirements?.length > 0 && (
+                <Box mt={2}>
+                  <Typography
+                    sx={{
+                      fontWeight: "700",
+                      color: "#404258",
+                      mb: 2,
+                      fontFamily: "Poppins",
+                    }}
+                  >
+                    Requirements:
+                  </Typography>
+                  <ul>
+                    {job.requirements.length > 0 &&
+                    job.requirements.some((req) => req.trim() !== "") ? (
+                      job.requirements
+                        .filter((req) => req.trim() !== "")
+                        .map((req, index) => (
+                          <Typography
+                            sx={{ color: "#474E68", fontFamily: "sans-serif" }}
+                          >
+                            {index + 1}. {req}
+                          </Typography>
+                        ))
+                    ) : (
+                      <Stack>
+                        <Typography
+                          sx={{ color: "#474E68", fontFamily: "sans-serif" }}
+                        >
+                          No requirement mentioned by the company.
                         </Typography>
-                      )
-                  )}
-                </ol>
-              </Box>
-            ) : (
-              <>
-                <Typography sx={{fontWeight:"700",color:"#404258",mb:2,fontFamily:"Poppins"}}>
-                  Qualifications:
-                </Typography>
-                <Typography sx={{color:"#474E68",fontFamily:"sans-serif"}}>
-                  No qualification mentioned by company.
-                </Typography>
-              </>
-            )}
-            </Box>
+                      </Stack>
+                    )}
+                  </ul>
+                </Box>
+              )}
 
+              {job?.qualifications?.some((qual) => qual.trim() !== "") ? (
+                <Box mt={2}>
+                  <Typography
+                    sx={{
+                      fontWeight: "700",
+                      color: "#404258",
+                      mb: 2,
+                      fontFamily: "Poppins",
+                    }}
+                  >
+                    Qualifications:
+                  </Typography>
+                  <ol>
+                    {job.qualifications.map(
+                      (qual, index) =>
+                        qual.trim() && (
+                          <Typography
+                            sx={{ color: "#474E68", fontFamily: "sans-serif" }}
+                          >
+                            {index + 1}. {qual}
+                          </Typography>
+                        )
+                    )}
+                  </ol>
+                </Box>
+              ) : (
+                <>
+                  <Typography
+                    sx={{
+                      fontWeight: "700",
+                      color: "#404258",
+                      mb: 2,
+                      fontFamily: "Poppins",
+                    }}
+                  >
+                    Qualifications:
+                  </Typography>
+                  <Typography
+                    sx={{ color: "#474E68", fontFamily: "sans-serif" }}
+                  >
+                    No qualification mentioned by company.
+                  </Typography>
+                </>
+              )}
+            </Box>
           </Box>
         </Grid>
 
-        <Grid item xs={12} md={4} sx={{mt:2.5}}>
+        <Grid item xs={12} md={4} sx={{ mt: 2.5 }}>
           <Typography
             variant="h6"
             color="textSecondary"
