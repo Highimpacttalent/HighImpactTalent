@@ -44,18 +44,18 @@ export const uploadResume = async (req, res) => {
     const s3Response = await uploadFileToS3(file.buffer, filename, file.mimetype);
 
     // Update user's cvUrl in database
-    const updatedUser = await Users.findByIdAndUpdate(
-      //userId,
-      { cvUrl: s3Response.Location },
-      { new: true }
-    );
+    // const updatedUser = await Users.findByIdAndUpdate(
+    //   //userId,
+    //   { cvUrl: s3Response.Location },
+    //   { new: true }
+    // );
 
-    if (!updatedUser) {
-      return res.status(404).json({
-        success: false,
-        message: "User not found",
-      });
-    }
+    // if (!updatedUser) {
+    //   return res.status(404).json({
+    //     success: false,
+    //     message: "User not found",
+    //   });
+    // }
 
     res.status(200).json({
       success: true,
