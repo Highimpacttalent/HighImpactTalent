@@ -27,7 +27,7 @@ export const uploadResume = async (req, res) => {
     }
 
     const file = req.file;
-    //const userId = req.uploaderId; 
+    const userId = req.uploaderId; 
 
     // Validate file type
     if (file.mimetype !== "application/pdf") {
@@ -43,25 +43,25 @@ export const uploadResume = async (req, res) => {
     // Upload to S3
     const s3Response = await uploadFileToS3(file.buffer, filename, file.mimetype);
 
-    // Update user's cvUrl in database
-    // const updatedUser = await Users.findByIdAndUpdate(
-    //   //userId,
-    //   { cvUrl: s3Response.Location },
-    //   { new: true }
-    // );
+    //Update user's cvUrl in database
+    const updatedUser = await Users.findByIdAndUpdate(
+      userId,
+      { cvUrl: s3Response.Location },
+      { new: true }
+    );
 
-    // if (!updatedUser) {
-    //   return res.status(404).json({
-    //     success: false,
-    //     message: "User not found",
-    //   });
-    // }
+    if (!updatedUser) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
 
     res.status(200).json({
       success: true,
       message: "Resume uploaded successfully",
       url: s3Response.Location,
-      //user: updatedUser,
+      user: updatedUser,
     });
   } catch (error) {
     console.error("Error uploading resume:", error);
