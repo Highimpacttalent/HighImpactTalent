@@ -61,7 +61,7 @@ export const uploadResume = async (req, res) => {
       success: true,
       message: "Resume uploaded successfully",
       url: s3Response.Location,
-      user: updatedUser,
+      //user: updatedUser,
     });
   } catch (error) {
     console.error("Error uploading resume:", error);
