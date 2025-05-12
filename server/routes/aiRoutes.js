@@ -1,6 +1,7 @@
 import express from "express";
 import multer from "multer";
-import { parseResume,resumepool,AIana, filterResumesByPrompt,uploadAndShortlist,analyseJobDescription } from "../controllers/AiController.js";
+import { parseResume,resumepool,AIana, filterResumesByPrompt,uploadAndShortlist,analyseJobDescription, analyseIdealCandidate } from "../controllers/AiController.js";
+
 
 const router = express.Router();
 const storage = multer.memoryStorage();
@@ -19,5 +20,7 @@ router.post("/filter-resume", filterResumesByPrompt)
 router.post("/upload-resume", uploadAndShortlist)
 
 router.post("/analyse-jd", analyseJobDescription)
+
+router.post("/shortlisting", analyseIdealCandidate)
 
 export default router;

@@ -3,14 +3,18 @@ import axios from "axios";
 import { skillsList } from "./mock.js";
 import ResumePool from "../models/ResumePool.js";
 import { topCompanieslist, topInstituteslist } from "./mock.js";
-import fs from "fs";
+import fs from "fs/promises";
 import path from "path";
 import xlsx from "xlsx";
 import FormData from "form-data";
 import { Readable } from "stream";
 import { uploadJsonAsCsvToS3 } from "../utils/UploadChecker.js";
+import filterAndRankCandidates from "../utils/filterRank.js"
+import { fileURLToPath } from 'url';
 
 const GEMINI_API_KEY = "AIzaSyCILU-_ezGfu3iojbS-hFe9-Fil4klNOlo";
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const extractYear = (input) => {
   if (!input) return null;
@@ -199,39 +203,60 @@ ${resumeText}`,
 
     parsedData = { ...defaultFields, ...parsedData };
 
-    // Store in MongoDB
-    const resume = await ResumePool.create({
-      personalInformation: {
-        name: parsedData.PersonalInformation?.name || "",
-        email: parsedData.PersonalInformation?.email || "",
-        contactNumber: parsedData.PersonalInformation?.contactNumber || "",
-        linkedinLink: parsedData.PersonalInformation?.linkedinLink || "",
-        dateOfBirth: parsedData.PersonalInformation?.dateOfBirth || "",
-        location: parsedData.PersonalInformation?.location || "India",
-      },
-      professionalDetails: {
-        noOfYearsExperience:
-          Number(parsedData.ProfessionalDetails?.noOfYearsExperience) || 1,
-        currentCompany: parsedData.ProfessionalDetails?.currentCompany || "",
-        currentDesignation:
-          parsedData.ProfessionalDetails?.currentDesignation || "",
-        salary: parsedData.ProfessionalDetails?.salary || "",
-        about: parsedData.ProfessionalDetails?.about || "",
-        hasConsultingBackground:
-          parsedData.ProfessionalDetails?.hasConsultingBackground || false,
-      },
-      educationDetails:  (parsedData.EducationDetails || []).map((edu) => ({
-        ...edu,
-        yearOfPassout: extractYear(edu.yearOfPassout),
-      })),
-      workExperience: parsedData.WorkExperience || [],
-      skills: detectedSkills.length > 0 ? detectedSkills : ["Not Mentioned"],
-      topCompanies: isTopCompany,
-      topInstitutes: isTopInstitute,
-      companiesWorkedAt: parsedData.OtherDetails?.companiesWorkedAt || [],
-      jobRoles: parsedData.OtherDetails?.jobRoles || [],
-      cvUrl: req.body.cvurl || "",
-    });
+   const email = fullData.PersonalInformation.email;
+    if (email) {
+    const existing = await ResumePool.findOne({ 'personalInformation.email': email });
+
+    if (existing) {
+      // Update existing record
+      await ResumePool.updateOne(
+        { _id: existing._id },
+        {
+          personalInformation: fullData.PersonalInformation,
+          professionalDetails: {
+            noOfYearsExperience: Number(fullData.ProfessionalDetails.noOfYearsExperience) || 0,
+            currentCompany: fullData.ProfessionalDetails.currentCompany,
+            currentDesignation: fullData.ProfessionalDetails.currentDesignation,
+            salary: fullData.ProfessionalDetails.salary,
+            about: fullData.ProfessionalDetails.about,
+            hasConsultingBackground: fullData.ProfessionalDetails.hasConsultingBackground,
+          },
+          educationDetails: fullData.EducationDetails,
+          workExperience: fullData.WorkExperience,
+          skills: fullData.skills,
+          topCompanies: fullData.topCompanies,
+          topInstitutes: fullData.topInstitutes,
+          companiesWorkedAt: fullData.OtherDetails.companiesWorkedAt,
+          jobRoles: fullData.OtherDetails.jobRoles,
+          cvUrl: req.body.cvurl || existing.cvUrl,
+        }
+      );
+      console.log(`Updated existing resume for email: ${email}`);
+    } else {
+      // Create new record
+      await ResumePool.create({
+        personalInformation: fullData.PersonalInformation,
+        professionalDetails: {
+          noOfYearsExperience: Number(fullData.ProfessionalDetails.noOfYearsExperience) || 0,
+          currentCompany: fullData.ProfessionalDetails.currentCompany,
+          currentDesignation: fullData.ProfessionalDetails.currentDesignation,
+          salary: fullData.ProfessionalDetails.salary,
+          about: fullData.ProfessionalDetails.about,
+          hasConsultingBackground: fullData.ProfessionalDetails.hasConsultingBackground,
+        },
+        educationDetails: fullData.EducationDetails,
+        workExperience: fullData.WorkExperience,
+        skills: fullData.skills,
+        topCompanies: fullData.topCompanies,
+        topInstitutes: fullData.topInstitutes,
+        companiesWorkedAt: fullData.OtherDetails.companiesWorkedAt,
+        jobRoles: fullData.OtherDetails.jobRoles,
+        cvUrl: req.body.cvurl || '',
+      });
+      console.log(`Created new resume for email: ${email}`);
+    }
+  }
+
 
     res.status(200).json({ success: true, data: parsedData });
   } catch (error) {
@@ -635,6 +660,9 @@ Respond with only the JSON array, no extra commentary.
     };
 
 
+
+
+
 //JD to requirement and qualification
 export const analyseJobDescription = async (req, res) => {
   try {
@@ -722,6 +750,288 @@ export const analyseJobDescription = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Failed to analyse job description.",
+    });
+  }
+};
+
+let skillEmbeddingsData = null; // Cache for loaded embeddings
+
+const loadSkillEmbeddings = async () => {
+    if (skillEmbeddingsData) {
+        return skillEmbeddingsData; // Return cached data if already loaded
+    }
+    // Using __dirname is safer than relative paths like './'
+    // Ensure the path correctly points to where you saved skill_embeddings.json
+    // Example: If AiController.js is in server/controllers, this assumes
+    // skill_embeddings.json is also directly in server/controllers.
+    const embeddingsFilePath = path.join(__dirname, 'skill_embeddings_gemini.json');
+    // OR if it's in the server root: const embeddingsFilePath = path.join(__dirname, '../../skill_embeddings.json');
+
+    try {
+        console.log(`Loading skill embeddings from ${embeddingsFilePath}...`);
+        // CORRECTED: Pass 'utf8' as the second argument
+        const data = await fs.readFile(embeddingsFilePath, { encoding: 'utf8' });
+        skillEmbeddingsData = JSON.parse(data);
+        console.log(`Loaded ${skillEmbeddingsData.length} skill embeddings.`);
+        return skillEmbeddingsData;
+    } catch (error) {
+        console.error(`Error loading skill embeddings file ${embeddingsFilePath}:`, error);
+        // Log more specific error if possible, e.g., file not found
+        if (error.code === 'ENOENT') {
+            console.error(`File not found: ${embeddingsFilePath}`);
+        }
+        skillEmbeddingsData = []; // Set to empty array on error to prevent repeated attempts
+        return []; // Return empty array on error
+    }
+};
+// --- End Skill Embedding Loading ---
+
+
+// --- Helper function for Cosine Similarity ---
+function cosineSimilarity(vecA, vecB) {
+  if (vecA.length !== vecB.length) {
+    throw new Error("Vectors must be of the same length");
+  }
+
+  let dotProduct = 0;
+  let normA = 0;
+  let normB = 0;
+
+  for (let i = 0; i < vecA.length; i++) {
+    dotProduct += vecA[i] * vecB[i];
+    normA += vecA[i] * vecA[i];
+    normB += vecB[i] * vecB[i];
+  }
+
+  normA = Math.sqrt(normA);
+  normB = Math.sqrt(normB);
+
+  if (normA === 0 || normB === 0) {
+    return 0; // Avoid division by zero
+  }
+
+  return dotProduct / (normA * normB);
+}
+// --- End Cosine Similarity Helper ---
+
+
+// AI Based resume filtering - Now includes Skill Matching
+export const analyseIdealCandidate = async (req, res) => {
+  try {
+    const { jobDescription, skills: bodySkills = [] } = req.body;
+
+    if (!jobDescription || typeof jobDescription !== "string") {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid input: 'jobDescription' (string) is required in the request body.",
+      });
+    }
+
+    // validate that bodySkills is an array of strings
+    if (!Array.isArray(bodySkills) || !bodySkills.every(s => typeof s === 'string')) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid input: 'skills' must be an array of strings.",
+      });
+    }
+
+    // --- STEP 1: Get Structured Filters using Gemini ---
+
+    // Define the structure of the data we want to extract
+     const outputStructureDescription = {
+      minimumYearsExperience: "number | null (minimum years of professional experience required. If a range is given, use the lower bound. Use null if no specific minimum number is mentioned.)",
+      isTopCompaniesRequired: "boolean (true if the JD explicitly requires or strongly prefers candidates from 'top-tier', 'tier-1', 'leading', 'renowned', or generally recognized 'top' companies/organizations, OR requires experience specifically gained at such top-tier *types* of organizations like 'Tier-1 consulting firm'. False otherwise.)",
+      isTopInstitutesRequired: "boolean (true if the JD explicitly requires or strongly prefers candidates from 'top-tier', 'tier-1', 'leading', 'renowned', or generally recognized 'top' academic institutions. False otherwise.)",
+      requiresConsultingBackground: "boolean (true if the JD explicitly requires or strongly prefers candidates with a background in consulting, management consulting, strategy consulting, etc. False otherwise.)",
+      requiredLocation: "string | null (The primary required location for the role (e.g., 'New York, NY', 'Remote', 'India', 'USA'). Use null if the location is not specified or is highly flexible/global.)",
+      requiredCompanies: "string[] (An array of specific company names explicitly required or strongly preferred by the JD as work experience. Empty array if none are explicitly listed as requirements.)",
+      requiredInstitutes: "string[] (An array of specific academic institution names explicitly required or strongly preferred by the JD as education. Empty array if none are explicitly listed as requirements.)",
+    };
+
+     const filterPrompt = `
+    You are an expert recruitment AI focused on extracting specific, structured candidate filtering criteria from job descriptions. Your task is to analyze the job description and identify boolean or numerical filtering values, as well as lists of required names, that correspond to common fields in a candidate database.
+
+    Analyze the following job description:
+
+    """${jobDescription.trim()}"""
+
+    Based on this job description, extract the criteria required for initial candidate screening. Ensure the output strictly adheres to the JSON structure described below.
+
+    **Output Keys and Value Types:**
+    ${Object.entries(outputStructureDescription).map(([key, desc]) => `- "${key}": ${desc}`).join("\n")}
+
+    **Extraction Rules:**
+    1.  **minimumYearsExperience**: Identify the minimum number of years of *professional* work experience required. If a range is specified (e.g., "6-8 years"), use the lower number (e.g., 6). If the JD mentions experience without a specific minimum number (e.g., "relevant experience", "experience is a plus") or doesn't mention experience minimums at all, set this value to \`null\`.
+    2.  **isTopCompaniesRequired**: Set to \`true\` only if the JD uses terms like "top-tier", "Tier-1", "leading", "renowned", "top", or similar phrasing indicating a requirement for candidates coming from highly regarded *companies* or *organizations*. This is also \`true\` if the JD requires experience specifically gained at a top-tier *type* of organization (e.g., "experience at a Tier-1 investment bank", "Tier-1 consulting background"). Otherwise, set to \`false\`.
+    3.  **isTopInstitutesRequired**: Set to \`true\` only if the JD explicitly states a preference for or requirement of candidates who attended "top-tier", "Tier-1", "leading", "renowned", "top", or similar phrasing indicating a requirement for high-status academic institutions (universities, colleges, business schools). Otherwise, set to \`false\`.
+    4.  **requiresConsultingBackground**: Set to \`true\` only if the JD explicitly mentions that a background in management consulting, strategy consulting, or similar consulting roles is required or strongly preferred. Otherwise, set to \`false\`.
+    5.  **requiredLocation**: Extract the primary geographical location mentioned for the role (e.g., city, state, country, "Remote", "Hybrid"). If no specific location is stated, or if the role is explicitly location-flexible or global without a primary hub, set this value to \`null\`.
+    6.  **requiredCompanies**: Extract and list as strings in an array any *specific* company names that the JD explicitly states candidates *must* have experience from or are *strongly preferred* to have experience from. Look for phrasing like "experience at X or Y", "must have worked at Z". If no specific companies are explicitly named as requirements, return an empty array \`[]\`.
+    7.  **requiredInstitutes**: Extract and list as strings in an array any *specific* academic institution names that the JD explicitly states candidates *must* have degrees from or are *strongly preferred* to have degrees from. Look for phrasing like "degree from X or Y", "MBA from Z". If no specific institutes are explicitly named as requirements, return an empty array \`[]\`.
+    8.  **Distinction Clarification**: The 'isTopCompaniesRequired' and 'isTopInstitutesRequired' booleans are about the general prestige tier, while 'requiredCompanies' and 'requiredInstitutes' are *only* about specific names listed. Prioritize extracting specific names into the arrays if they are present. A JD might require both (e.g., "MBA from a top-tier school like Harvard or Stanford"). In this case, isTopInstitutesRequired should be true, and requiredInstitutes should be \`["Harvard", "Stanford"]\`. If it just says "MBA from a top-tier school" without naming them, isTopInstitutesRequire should be true, and requiredInstitutes should be \`[]\`.
+    9.  **Do NOT** extract a list of general skills (like "communication", "leadership") or specific job titles beyond identifying the overall role type if relevant to other filters.
+    10. **Output STRICTLY and ONLY** the JSON object. No additional text, comments, or markdown formatting outside the JSON object.
+
+    **Output Format:**
+    {
+      "minimumYearsExperience": null | number,
+      "isTopCompaniesRequired": boolean,
+      "isTopInstitutesRequired": boolean,
+      "requiresConsultingBackground": boolean,
+      "requiredLocation": null | string,
+      "requiredCompanies": string[],
+      "requiredInstitutes": string[]
+    }
+    `;
+
+    let parsedFilters = null;
+    try {
+      const geminiFilterResponse = await axios.post(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`,
+        { contents: [{ role: "user", parts: [{ text: filterPrompt }] }] },
+        { headers: { "Content-Type": "application/json" } }
+      );
+
+      const rawFilterText = geminiFilterResponse.data?.candidates?.[0]?.content?.parts?.[0]?.text || "";
+      const jsonFilterText = rawFilterText.replace(/^```json\s*/, "").replace(/\s*```$/, "").trim();
+
+      // Basic validation and parsing for filters
+      parsedFilters = JSON.parse(jsonFilterText);
+      const expectedKeys = [
+          'minimumYearsExperience', 'isTopCompaniesRequired',
+          'isTopInstitutesRequired', 'requiresConsultingBackground',
+          'requiredLocation', 'requiredCompanies', 'requiredInstitutes'
+      ];
+      const hasAllExpectedKeys = expectedKeys.every(key => key in parsedFilters);
+
+      if (parsedFilters === null || typeof parsedFilters !== 'object' || !hasAllExpectedKeys) {
+         console.error("Gemini returned non-matching JSON for filters:", jsonFilterText);
+         // If parsing fails but doesn't throw, set filters to a default structure
+         parsedFilters = {
+           minimumYearsExperience: null,
+            isTopCompaniesRequired: false,
+            isTopInstitutesRequired: false,
+            requiresConsultingBackground: false,
+            requiredLocation: null,
+            requiredCompanies: [], // Default empty array
+            requiredInstitutes: [] // Default empty array
+         };
+      }
+
+    } catch (filterErr) {
+        console.error("Error getting structured filters from Gemini:", filterErr.message);
+        // If API call fails, return default filter values
+        parsedFilters = {
+           minimumYearsExperience: null,
+           isTopCompaniesRequired: false,
+           isTopInstitutesRequired: false,
+           requiresConsultingBackground: false,
+           requiredLocation: null
+        };
+    }
+
+
+    // --- STEP 2: Find Relevant Skills using Embeddings ---
+
+    let relevantSkills = []; // Array to store the matching skills
+    const SIMILARITY_THRESHOLD = 0.6; // You can adjust this threshold
+    const TOP_N_SKILLS = 30; // Number of top skills to consider before thresholding
+
+    try {
+        const skillEmbeddings = await loadSkillEmbeddings();
+
+        if (skillEmbeddings.length > 0) {
+            // Generate embedding for the Job Description using Gemini's embedding model
+            const embeddingModelName = 'embedding-001'; // Or 'text-embedding-004'
+            const jdEmbeddingResponse = await axios.post(
+              `https://generativelanguage.googleapis.com/v1beta/models/${embeddingModelName}:embedContent?key=${GEMINI_API_KEY}`,
+              {
+                model: embeddingModelName,
+                content: { parts: [{ text: jobDescription.trim() }] }
+              },
+              { headers: { "Content-Type": "application/json" } }
+            );
+
+            const jdEmbedding = jdEmbeddingResponse.data?.embedding?.values;
+            if (!jdEmbedding || jdEmbedding.length === 0) {
+              console.error("Failed to generate embedding for job description.");
+            } else {
+              const skillScores = [];
+
+              // Calculate similarity with each skill embedding
+              for (const skillData of skillEmbeddings) {
+                  const skillEmbedding = skillData.embedding;
+                  if (skillEmbedding && skillEmbedding.length === jdEmbedding.length) { // Ensure dimensions match
+                      const score = cosineSimilarity(jdEmbedding, skillEmbedding);
+                      skillScores.push({ skill: skillData.skill, score: score });
+                  }
+              }
+
+              // Sort by score descending and filter by threshold
+              relevantSkills = skillScores
+                  .sort((a, b) => b.score - a.score)
+                  .slice(0, TOP_N_SKILLS) // Optional: Take top N before applying threshold
+                  .filter(item => item.score >= SIMILARITY_THRESHOLD)
+                  .map(item => item.skill); // Extract just the skill name
+            }
+        } else {
+            console.warn("Skill embeddings not loaded or empty. Skipping skill matching.");
+        }
+
+    } catch (skillMatchingError) {
+        console.error("Error during skill matching:", skillMatchingError.message);
+        // Continue without relevantSkills if matching fails
+    }
+
+    // Remove duplicates by using a Set
+    const combinedSkills = Array.from(new Set([
+      ...relevantSkills,
+      ...bodySkills.map(s => s.trim()).filter(s => s.length > 0)
+    ]));
+
+    // --- STEP 3: Filter and Rank Candidates using the Utility Function ---
+    let recommendedCandidates = [];
+    try {
+        // Pass the obtained filters and relevantSkills to the utility function
+        recommendedCandidates = await filterAndRankCandidates(parsedFilters, combinedSkills);
+        console.log(`Successfully filtered and ranked ${recommendedCandidates.length} candidates.`);
+
+    } catch (candidateFilteringError) {
+        console.error("Error during candidate filtering and ranking:", candidateFilteringError);
+        // Return an empty array or an error response if filtering fails
+        return res.status(500).json({
+          success: false,
+          message: "Failed to filter and rank candidates.",
+          error: candidateFilteringError.message
+        });
+    }
+
+    // --- STEP 3: Combine and Return Results ---
+
+    // --- STEP 4: Return the Filtered and Ranked Candidates ---
+    return res.status(200).json({
+      success: true,
+      filters: parsedFilters, // Still return the extracted filters for context
+      relevantSkills: relevantSkills, // Still return the matched skills for context
+      recommendedCandidates: recommendedCandidates // The final list of candidates
+    });
+
+  } catch (err) {
+    // Catch-all for unexpected errors
+    console.error("Unexpected error in analyseIdealCandidate:", err.message);
+    if (err.response) {
+        console.error("API error response data:", err.response.data);
+        console.error("API error response status:", err.response.status);
+    } else if (err.request) {
+        console.error("API request error:", err.request);
+    } else {
+        console.error("Other error details:", err);
+    }
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to analyse job description.",
+      error: err.message
     });
   }
 };
