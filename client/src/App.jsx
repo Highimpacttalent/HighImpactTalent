@@ -13,6 +13,7 @@ import PrivacyPolicy from "./pages/PrivacyPolicy";
 import ContactUsPage from "./pages/ContactUs/view";
 import View from "./pages/JobPost/components/ViewDetails/View.jsx";
 import TermsAndConditions from "./components/terms";
+import AiResumeSearch from "./pages/AiResumeSearch/view.jsx";
 import JobPosted from "./pages/JobPost/view.jsx";
 import RecuiterProfile from "./pages/RecruiterProfile/view.jsx";
 import Landing2 from "./pages/Landing/Landing2/view";
@@ -97,6 +98,7 @@ function App() {
           <Route path={"/payment-success"} element={<PaymentSuccess />} />
           <Route path={"/payment-failure"} element={<PaymentFailure />} />
           <Route path={"/view-profile"} element={<ViewProfile />} />
+          <Route path={"/ai-resume"} element={<AiResumeSearch />} />
           
         </Route>
         <Route path="/r-authform" element={<RecruiterSignup/>}></Route>
