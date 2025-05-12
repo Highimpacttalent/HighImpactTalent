@@ -203,7 +203,7 @@ ${resumeText}`,
 
     parsedData = { ...defaultFields, ...parsedData };
 
-   const email = fullData.PersonalInformation.email;
+   const email = parsedData.PersonalInformation?.email;
     if (email) {
     const existing = await ResumePool.findOne({ 'personalInformation.email': email });
 
@@ -212,46 +212,72 @@ ${resumeText}`,
       await ResumePool.updateOne(
         { _id: existing._id },
         {
-          personalInformation: fullData.PersonalInformation,
-          professionalDetails: {
-            noOfYearsExperience: Number(fullData.ProfessionalDetails.noOfYearsExperience) || 0,
-            currentCompany: fullData.ProfessionalDetails.currentCompany,
-            currentDesignation: fullData.ProfessionalDetails.currentDesignation,
-            salary: fullData.ProfessionalDetails.salary,
-            about: fullData.ProfessionalDetails.about,
-            hasConsultingBackground: fullData.ProfessionalDetails.hasConsultingBackground,
-          },
-          educationDetails: fullData.EducationDetails,
-          workExperience: fullData.WorkExperience,
-          skills: fullData.skills,
-          topCompanies: fullData.topCompanies,
-          topInstitutes: fullData.topInstitutes,
-          companiesWorkedAt: fullData.OtherDetails.companiesWorkedAt,
-          jobRoles: fullData.OtherDetails.jobRoles,
-          cvUrl: req.body.cvurl || existing.cvUrl,
+          personalInformation: {
+        name: parsedData.PersonalInformation?.name || "",
+        email: parsedData.PersonalInformation?.email || "",
+        contactNumber: parsedData.PersonalInformation?.contactNumber || "",
+        linkedinLink: parsedData.PersonalInformation?.linkedinLink || "",
+        dateOfBirth: parsedData.PersonalInformation?.dateOfBirth || "",
+        location: parsedData.PersonalInformation?.location || "India",
+      },
+      professionalDetails: {
+        noOfYearsExperience:
+          Number(parsedData.ProfessionalDetails?.noOfYearsExperience) || 1,
+        currentCompany: parsedData.ProfessionalDetails?.currentCompany || "",
+        currentDesignation:
+          parsedData.ProfessionalDetails?.currentDesignation || "",
+        salary: parsedData.ProfessionalDetails?.salary || "",
+        about: parsedData.ProfessionalDetails?.about || "",
+        hasConsultingBackground:
+          parsedData.ProfessionalDetails?.hasConsultingBackground || false,
+      },
+      educationDetails:  (parsedData.EducationDetails || []).map((edu) => ({
+        ...edu,
+        yearOfPassout: extractYear(edu.yearOfPassout),
+      })),
+      workExperience: parsedData.WorkExperience || [],
+      skills: detectedSkills.length > 0 ? detectedSkills : ["Not Mentioned"],
+      topCompanies: isTopCompany,
+      topInstitutes: isTopInstitute,
+      companiesWorkedAt: parsedData.OtherDetails?.companiesWorkedAt || [],
+      jobRoles: parsedData.OtherDetails?.jobRoles || [],
+      cvUrl: req.body.cvurl || "",
         }
       );
       console.log(`Updated existing resume for email: ${email}`);
     } else {
       // Create new record
       await ResumePool.create({
-        personalInformation: fullData.PersonalInformation,
-        professionalDetails: {
-          noOfYearsExperience: Number(fullData.ProfessionalDetails.noOfYearsExperience) || 0,
-          currentCompany: fullData.ProfessionalDetails.currentCompany,
-          currentDesignation: fullData.ProfessionalDetails.currentDesignation,
-          salary: fullData.ProfessionalDetails.salary,
-          about: fullData.ProfessionalDetails.about,
-          hasConsultingBackground: fullData.ProfessionalDetails.hasConsultingBackground,
-        },
-        educationDetails: fullData.EducationDetails,
-        workExperience: fullData.WorkExperience,
-        skills: fullData.skills,
-        topCompanies: fullData.topCompanies,
-        topInstitutes: fullData.topInstitutes,
-        companiesWorkedAt: fullData.OtherDetails.companiesWorkedAt,
-        jobRoles: fullData.OtherDetails.jobRoles,
-        cvUrl: req.body.cvurl || '',
+        personalInformation: {
+        name: parsedData.PersonalInformation?.name || "",
+        email: parsedData.PersonalInformation?.email || "",
+        contactNumber: parsedData.PersonalInformation?.contactNumber || "",
+        linkedinLink: parsedData.PersonalInformation?.linkedinLink || "",
+        dateOfBirth: parsedData.PersonalInformation?.dateOfBirth || "",
+        location: parsedData.PersonalInformation?.location || "India",
+      },
+      professionalDetails: {
+        noOfYearsExperience:
+          Number(parsedData.ProfessionalDetails?.noOfYearsExperience) || 1,
+        currentCompany: parsedData.ProfessionalDetails?.currentCompany || "",
+        currentDesignation:
+          parsedData.ProfessionalDetails?.currentDesignation || "",
+        salary: parsedData.ProfessionalDetails?.salary || "",
+        about: parsedData.ProfessionalDetails?.about || "",
+        hasConsultingBackground:
+          parsedData.ProfessionalDetails?.hasConsultingBackground || false,
+      },
+      educationDetails:  (parsedData.EducationDetails || []).map((edu) => ({
+        ...edu,
+        yearOfPassout: extractYear(edu.yearOfPassout),
+      })),
+      workExperience: parsedData.WorkExperience || [],
+      skills: detectedSkills.length > 0 ? detectedSkills : ["Not Mentioned"],
+      topCompanies: isTopCompany,
+      topInstitutes: isTopInstitute,
+      companiesWorkedAt: parsedData.OtherDetails?.companiesWorkedAt || [],
+      jobRoles: parsedData.OtherDetails?.jobRoles || [],
+      cvUrl: req.body.cvurl || "",
       });
       console.log(`Created new resume for email: ${email}`);
     }
