@@ -21,9 +21,13 @@ import {
   DialogContent,
   DialogActions,
   Divider,
+  Select,
+  MenuItem,
+  TextField,
+  FormControl,
+  InputLabel,
 } from "@mui/material";
 import { styled } from "@mui/system";
-import ViewAnalytics from "../AnalyticApplicant";
 import { AiOutlineSearch } from "react-icons/ai";
 import { apiRequest } from "../../utils";
 import StatusJob from "./StatusJob";
@@ -170,17 +174,23 @@ const JobApplications = () => {
   const { jobId } = useParams();
   const [applications, setApplications] = useState([]);
   const [allApplications, setAllApplications] = useState([]);
+  const [filteredApps, setFilteredApps] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeStep, setActiveStep] = useState(0); // Default first step
   const [searchKeyword, setSearchKeyword] = useState("");
-  const [showBreakdowns, setShowBreakdowns] = useState(false);
   const navigate = useNavigate();
-  const [resumeLinks, setResumeLinks] = useState({});
-  const [showAnalytics, setShowAnalytics] = useState(false);
   const [openBreakdownId, setOpenBreakdownId] = useState(null);
   const [breakdownDialogOpen, setBreakdownDialogOpen] = useState(false);
   const [selectedBreakdown, setSelectedBreakdown] = useState("");
+  
+  // Filter states (moved from ViewAnalytics)
+  const [filters, setFilters] = useState({
+    experience: "",
+    currentJob: "",
+    joinConsulting: "",
+    openToRelocate: "",
+  });
 
   useEffect(() => {
     const fetchApplications = async () => {
@@ -211,6 +221,7 @@ const JobApplications = () => {
 
         setAllApplications(enriched);
         setApplications(enriched);
+        setFilteredApps(enriched);
       } catch (err) {
         setError(err.message);
       } finally {
@@ -229,6 +240,7 @@ const JobApplications = () => {
     const status = steps[activeStep];
     const filtered = allApplications.filter((app) => app.status === status);
     setApplications(filtered);
+    setFilteredApps(filtered); // Also update filteredApps when switching steps
   }, [activeStep, allApplications]);
 
   const handleSearchClick = async () => {
@@ -264,9 +276,9 @@ const JobApplications = () => {
         );
 
         if (matchedApp) {
-          setApplications(matchedApp); // Replace all with only filtered one
+          setFilteredApps(matchedApp); // Use filteredApps instead
         } else {
-          setApplications([]); // No match found
+          setFilteredApps([]); // No match found
         }
       } else {
         alert(data.message || "Something went wrong with resume filtering");
@@ -277,12 +289,12 @@ const JobApplications = () => {
     }
   };
 
-  const restore = async () => {
-    setApplications(allApplications);
+  const restoreSearch = async () => {
+    setFilteredApps(applications);
+    setSearchKeyword("");
   };
 
   const markAsViewed = async (applicationId) => {
-    console.log(applicationId);
     try {
       await axios.post(
         "https://highimpacttalent.onrender.com/api-v1/application/update-status",
@@ -294,6 +306,50 @@ const JobApplications = () => {
     } catch (err) {
       console.error("Error marking application as viewed:", err);
     }
+  };
+
+  // Handle filter changes (from ViewAnalytics)
+  const handleFilterChange = (e) => {
+    const { name, value } = e.target;
+    setFilters({ ...filters, [name]: value });
+  };
+
+  // Apply filters (from ViewAnalytics)
+  const applyFilters = () => {
+    let filtered = applications;
+    if (filters.experience) {
+      filtered = filtered.filter(
+        (app) => app.applicant.experience >= filters.experience
+      );
+    }
+    if (filters.currentJob) {
+      filtered = filtered.filter((app) =>
+        app.applicant.currentJobRole
+          ?.toLowerCase()
+          .includes(filters.currentJob.toLowerCase())
+      );
+    }
+    if (filters.joinConsulting) {
+      filtered = filtered.filter(
+        (app) => app.applicant.joinConsulting === filters.joinConsulting
+      );
+    }
+    if (filters.openToRelocate) {
+      filtered = filtered.filter(
+        (app) => app.applicant.openToRelocate === filters.openToRelocate
+      );
+    }
+    setFilteredApps(filtered);
+  };
+
+  const clearFilters = () => {
+    setFilters({
+      experience: "",
+      currentJob: "",
+      joinConsulting: "",
+      openToRelocate: "",
+    });
+    setFilteredApps(applications);
   };
 
   return (
@@ -311,110 +367,166 @@ const JobApplications = () => {
       >
         Job Applications
       </Typography>
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          mb: 3,
-        }}
-      >
-        <Button
-          variant="contained"
-          sx={{
-            bgcolor: "#3C7EFC",
-            py: 2,
-            px: 4,
-            borderRadius: 50,
-            fontFamily: "Satoshi",
-            fontWeight: 700,
-            fontSize: "16px",
-            textTransform: "none",
-            mb: 4,
-          }}
-          onClick={() => setShowAnalytics(!showAnalytics)}
-        >
-          {showAnalytics ? "Close Analytics" : "View Analytics"}
-        </Button>
+
+      {loading && (
+        <CircularProgress sx={{ display: "block", margin: "20px auto" }} />
+      )}
+      {error && (
+        <Typography color="error" align="center">
+          {error}
+        </Typography>
+      )}
+      {!loading && !error && applications.length === 0 && (
+        <Typography align="center">
+          No applications found for this job.
+        </Typography>
+      )}
+
+      <Box sx={{ p: 0 }}>
+        <StatusJob activeStep={activeStep} onStepClick={handleStepClick} />
       </Box>
 
-      {showAnalytics ? (
-        <ViewAnalytics jobId={jobId} />
-      ) : (
-        <>
-          {loading && (
-            <CircularProgress sx={{ display: "block", margin: "20px auto" }} />
-          )}
-          {error && (
-            <Typography color="error" align="center">
-              {error}
-            </Typography>
-          )}
-          {!loading && !error && applications.length === 0 && (
-            <Typography align="center">
-              No applications found for this job.
-            </Typography>
-          )}
-          {/* Search Bar */}
-          <Box sx={{ mx: "auto", mt: 3, px: 2, mb: 3 }}>
-            <Paper
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                p: 1,
-                borderRadius: "50px",
-                boxShadow: 3,
-                width: "100%",
-                maxWidth: 1000,
-                mx: "auto",
-              }}
+      {/* Main content */}
+      <Box sx={{ display: "flex", mt: 4 }}>
+        {/* Left side - Filters */}
+        <Box sx={{ width: "25%", pr: 2 }}>
+          <Paper sx={{ padding: 3, boxShadow: 3, borderRadius: 2 }}>
+            <Typography
+              variant="h6"
+              sx={{ fontWeight: "bold", marginBottom: 2 }}
             >
-              <IconButton sx={{ color: "gray" }}>
-                <AiOutlineSearch fontSize="24px" />
-              </IconButton>
-              <InputBase
-                sx={{ flex: 1, fontSize: "1.1rem", ml: 1 }}
-                placeholder="Tell us what kind of candidate you're searching for and our AI powered search will find the best match..."
-                value={searchKeyword}
-                onChange={(e) => setSearchKeyword(e.target.value)}
+              Filters
+            </Typography>
+
+            <FormControl fullWidth sx={{ marginBottom: 2 }}>
+              <TextField
+                label="Current Job"
+                name="currentJob"
+                value={filters.currentJob}
+                onChange={handleFilterChange}
+                placeholder="Enter job title..."
               />
-              {/* Cross icon appears only if search is active */}
-              {searchKeyword && (
-                <IconButton
-                  onClick={() => {
-                    restore();
-                    setSearchKeyword("");
-                  }}
-                >
-                  <AiOutlineClose fontSize="20px" />
-                </IconButton>
-              )}
+            </FormControl>
+
+            <FormControl fullWidth sx={{ marginBottom: 2 }}>
+              <InputLabel>Experience</InputLabel>
+              <Select
+                name="experience"
+                value={filters.experience}
+                onChange={handleFilterChange}
+                label="Experience"
+              >
+                <MenuItem value="">All</MenuItem>
+                <MenuItem value={1}>1+ years</MenuItem>
+                <MenuItem value={3}>3+ years</MenuItem>
+                <MenuItem value={5}>5+ years</MenuItem>
+              </Select>
+            </FormControl>
+
+            <FormControl fullWidth sx={{ marginBottom: 2 }}>
+              <InputLabel>Join Consulting</InputLabel>
+              <Select
+                name="joinConsulting"
+                value={filters.joinConsulting}
+                onChange={handleFilterChange}
+                label="Join Consulting"
+              >
+                <MenuItem value="">All</MenuItem>
+                <MenuItem value={"Lateral"}>Lateral</MenuItem>
+                <MenuItem value={"Out of Campus"}>Out of Campus</MenuItem>
+              </Select>
+            </FormControl>
+
+            <FormControl fullWidth sx={{ marginBottom: 2 }}>
+              <InputLabel>Open to Relocate</InputLabel>
+              <Select
+                name="openToRelocate"
+                value={filters.openToRelocate}
+                onChange={handleFilterChange}
+                label="Open to Relocate"
+              >
+                <MenuItem value="">All</MenuItem>
+                <MenuItem value={"yes"}>Yes</MenuItem>
+                <MenuItem value={"no"}>No</MenuItem>
+              </Select>
+            </FormControl>
+
+            <Box sx={{ display: "flex", gap: 2 }}>
               <Button
                 variant="contained"
-                sx={{
-                  borderRadius: "50px",
-                  backgroundColor: "#1A73E8",
-                  color: "white",
-                  px: 3,
-                  ml: 1,
-                  textTransform: "none",
-                  fontSize: "1rem",
-                  fontWeight: "bold",
-                  "&:hover": { backgroundColor: "#1669D8" },
-                }}
-                onClick={handleSearchClick}
+                color="primary"
+                fullWidth
+                onClick={applyFilters}
               >
-                Search
+                Apply Filters
               </Button>
-            </Paper>
-          </Box>
-          <Box sx={{ p: 4 }}>
-            <StatusJob activeStep={activeStep} onStepClick={handleStepClick} />
-          </Box>
+              <Button
+                variant="outlined"
+                color="primary"
+                fullWidth
+                onClick={clearFilters}
+              >
+                Clear
+              </Button>
+            </Box>
+          </Paper>
+        </Box>
+
+        {/* Right side - Search & Applications */}
+        <Box sx={{ width: "75%" }}>
+          {/* Search Bar */}
+          <Paper
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              p: 1,
+              borderRadius: "50px",
+              boxShadow: 3,
+              width: "100%",
+              mb: 3,
+            }}
+          >
+            <IconButton sx={{ color: "gray" }}>
+              <AiOutlineSearch fontSize="24px" />
+            </IconButton>
+            <InputBase
+              sx={{ flex: 1, fontSize: "1.1rem", ml: 1 }}
+              placeholder="Tell us what kind of candidate you're searching for and our AI powered search will find the best match..."
+              value={searchKeyword}
+              onChange={(e) => setSearchKeyword(e.target.value)}
+            />
+            {/* Cross icon appears only if search is active */}
+            {searchKeyword && (
+              <IconButton
+                onClick={restoreSearch}
+              >
+                <AiOutlineClose fontSize="20px" />
+              </IconButton>
+            )}
+            <Button
+              variant="contained"
+              sx={{
+                borderRadius: "50px",
+                backgroundColor: "#1A73E8",
+                color: "white",
+                px: 3,
+                ml: 1,
+                textTransform: "none",
+                fontSize: "1rem",
+                fontWeight: "bold",
+                "&:hover": { backgroundColor: "#1669D8" },
+              }}
+              onClick={handleSearchClick}
+            >
+              Search
+            </Button>
+          </Paper>
+
+          {/* Applications Grid */}
           {!loading && !error && applications.length > 0 && (
             <Grid container spacing={2}>
-              {applications.map((app) => (
-                <Grid item xs={12} sm={6} md={3} key={app._id}>
+              {filteredApps.map((app) => (
+                <Grid item xs={12} sm={6} md={4} key={app._id}>
                   <Card
                     sx={{
                       display: "flex",
@@ -537,6 +649,7 @@ const JobApplications = () => {
                         <IconButton
                           size="small"
                           href={app.applicant.linkedinLink}
+                          target="_blank"
                           sx={{ ml: 0.5 }}
                         >
                           <LinkedIn fontSize="small" />
@@ -546,7 +659,7 @@ const JobApplications = () => {
 
                     {/* Actions */}
                     <CardActions sx={{ justifyContent: "center", pb: 2 }}>
-                    <Button
+                      <Button
                         variant="contained"
                         role="link"
                         color="primary"
@@ -602,54 +715,58 @@ const JobApplications = () => {
                         View Resume
                       </Button>
                     </CardActions>
-                    {/* 3) Per-card breakdown */}
-                    {openBreakdownId === app._id && (
-                      <Box sx={{ px: 2, pb: 2 }}>
-                        <Typography
-                          component="pre"
-                          variant="caption"
-                          sx={{
-                            whiteSpace: "pre-wrap",
-                            fontFamily: "monospace",
-                          }}
-                        >
-                          {app.matchBreakdown}
-                        </Typography>
-                      </Box>
-                    )}
                   </Card>
                 </Grid>
               ))}
             </Grid>
           )}
-          {/* Breakdown Dialog */}
-          <Dialog
-            open={breakdownDialogOpen}
-            onClose={() => setBreakdownDialogOpen(false)}
-            maxWidth="sm"
-            fullWidth
-          >
-            <DialogTitle>Match Score Breakdown</DialogTitle>
-            <DialogContent dividers>
-              <Typography
-                component="pre"
-                variant="body2"
-                sx={{
-                  whiteSpace: "pre-wrap",
-                  fontFamily: "monospace",
-                }}
-              >
-                {selectedBreakdown}
+          
+          {/* Show message when no results after filtering */}
+          {!loading && !error && filteredApps.length === 0 && applications.length > 0 && (
+            <Box sx={{ textAlign: "center", mt: 4, p: 3, bgcolor: "#f5f5f5", borderRadius: 2 }}>
+              <Typography variant="h6">No matching applications found</Typography>
+              <Typography variant="body2" color="textSecondary" sx={{ mt: 1 }}>
+                Try adjusting your filters or search criteria
               </Typography>
-            </DialogContent>
-            <DialogActions>
-              <Button onClick={() => setBreakdownDialogOpen(false)}>
-                Close
+              <Button 
+                variant="outlined" 
+                color="primary" 
+                sx={{ mt: 2 }}
+                onClick={clearFilters}
+              >
+                Clear All Filters
               </Button>
-            </DialogActions>
-          </Dialog>
-        </>
-      )}
+            </Box>
+          )}
+        </Box>
+      </Box>
+
+      {/* Breakdown Dialog */}
+      <Dialog
+        open={breakdownDialogOpen}
+        onClose={() => setBreakdownDialogOpen(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>Match Score Breakdown</DialogTitle>
+        <DialogContent dividers>
+          <Typography
+            component="pre"
+            variant="body2"
+            sx={{
+              whiteSpace: "pre-wrap",
+              fontFamily: "monospace",
+            }}
+          >
+            {selectedBreakdown}
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setBreakdownDialogOpen(false)}>
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };
