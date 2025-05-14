@@ -45,6 +45,7 @@ import PaymentSuccess from "./pages/Payments/PaymentSuccess";
 import PaymentFailure from "./pages/Payments/PaymentFailure";
 import LinkedInCallback from "./pages/AuthForm/LinkedInCallback";
 import PaymentProtectedRoute from "./pages/Payments/PaymentProtectedRoute.jsx";
+import JobRecommendationsComponent from "./pages/Match/view.jsx";
 
 function Layout() {
   const { user } = useSelector((state) => state.user);
@@ -89,8 +90,8 @@ function App() {
           <Route path={'/recruiterSchedule'} element={<RecruiterSchedule/>}></Route>
           <Route element={<PaymentProtectedRoute />}>
           <Route path={'/resumesearch'} element={<ResumeSearch/>}></Route>
-          <Route path="/resumesearch/viewresume/:resumeId" element={<ViewResumeProfile />} />
-          </Route>
+          <Route path="/resumesearch/viewresume/:resumeId" element={<ViewResumeProfile />} /></Route>
+          <Route path="/matches" element={<JobRecommendationsComponent/>}/>
           <Route path={'/userinformation'} element={<ResumeUpload/>}></Route>
           <Route path={'/password'} element={<PasswordChange/>}></Route>
           <Route path={'/view-job-post'} element={<View/>}></Route>

@@ -34,7 +34,6 @@ const LINKEDIN_CONFIG = {
   STATE: generateRandomState(),
 };
 
-
 const UserSignUp = () => {
   const location = useLocation();
   const refer = location.state?.refer || "/find-jobs";
@@ -46,8 +45,15 @@ const UserSignUp = () => {
   const [passwordStrength, setPasswordStrength] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-    const [googleLoading, setGoogleLoading] = useState(false);
-    const [linkedinLoading, setLinkedinLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
+  const [linkedinLoading, setLinkedinLoading] = useState(false);
+  
+  // Email verification states
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [otp, setOtp] = useState("");
+  const [otpError, setOtpError] = useState("");
+  const [generatedOtp, setGeneratedOtp] = useState("");
+  const [otpSending, setOtpSending] = useState(false);
 
   const [form, setForm] = useState({
     firstName: "",
@@ -110,20 +116,68 @@ const UserSignUp = () => {
     }
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
+  const handleOtpChange = (e) => {
+    setOtp(e.target.value);
+    if (otpError) setOtpError("");
+  };
 
+  // Function to validate email with OTP
+  const validateEmail = async (e) => {
+    e.preventDefault();
+    
+    // Basic validation checks before proceeding
     if (form.password.length < 5) {
       alert("Password must be at least 5 characters long.");
-      setLoading(false);
       return;
     }
     if (form.password !== form.confirmPassword) {
       alert("Passwords do not match");
-      setLoading(false);
       return;
     }
+    
+    try {
+      setOtpSending(true);
+      
+      // Generate a random 4-digit OTP
+      const randomOtp = Math.floor(1000 + Math.random() * 9000);
+      setGeneratedOtp(randomOtp.toString());
+      
+      // Call the email verification API
+      const res = await apiRequest({
+        url: "/sendmail/password",
+        method: "POST",
+        data: {
+          email: form.email,
+          otp: randomOtp
+        },
+      });
+
+      if (res.success) {
+        setIsVerifying(true);
+        setErrMsg("");
+      } else {
+        setErrMsg(res.message || "Failed to send verification code. Please try again.");
+      }
+    } catch (error) {
+      console.error("Email verification error:", error);
+      setErrMsg("An error occurred while sending verification code. Please try again.");
+    } finally {
+      setOtpSending(false);
+    }
+  };
+
+  // Function to verify OTP and proceed with account creation
+  const verifyOtp = () => {
+    if (otp === generatedOtp) {
+      handleSubmit();
+    } else {
+      setOtpError("Invalid verification code. Please try again.");
+    }
+  };
+
+  // Function to create account after OTP verification
+  const handleSubmit = async () => {
+    setLoading(true);
 
     try {
       const res = await apiRequest({
@@ -137,8 +191,8 @@ const UserSignUp = () => {
         dispatch(Login(userData));
         localStorage.setItem("userInfo", JSON.stringify(userData));
         navigate("/userinformation", {
-        state: { refer },
-      });
+          state: { refer },
+        });
       } else {
         alert(res.message || "Error while registering");
       }
@@ -150,80 +204,80 @@ const UserSignUp = () => {
     }
   };
 
-   const handleGoogleSuccess = async (credentialResponse) => {
-      try {
-        setGoogleLoading(true);
-        setErrMsg("");
-  
-        const { credential } = credentialResponse;
-        if (!credential) {
-          throw new Error("No credential received");
-        }
-  
-        const res = await apiRequest({
-          url: "auth/google",
-          method: "POST",
-          data: { token: credential },
-        });
-  
-        if (!res?.token) {
-          throw new Error(
-            res?.message || "Authentication failed - no token received"
-          );
-        }
-  
-        const userData = {
-          token: res.token,
-          ...res.user,
-          isNewUser: res.isNewUser ?? false,
-        };
-  
-        dispatch(Login(userData));
-        localStorage.setItem("userInfo", JSON.stringify(userData));
-        navigate(userData.isNewUser ? "/userinformation" : "/find-jobs", {
+  const handleGoogleSuccess = async (credentialResponse) => {
+    try {
+      setGoogleLoading(true);
+      setErrMsg("");
+
+      const { credential } = credentialResponse;
+      if (!credential) {
+        throw new Error("No credential received");
+      }
+
+      const res = await apiRequest({
+        url: "auth/google",
+        method: "POST",
+        data: { token: credential },
+      });
+
+      if (!res?.token) {
+        throw new Error(
+          res?.message || "Authentication failed - no token received"
+        );
+      }
+
+      const userData = {
+        token: res.token,
+        ...res.user,
+        isNewUser: res.isNewUser ?? false,
+      };
+
+      dispatch(Login(userData));
+      localStorage.setItem("userInfo", JSON.stringify(userData));
+      navigate(userData.isNewUser ? "/userinformation" : "/find-jobs", {
         state: { refer },
       });
-      } catch (error) {
-        setErrMsg(error.message || "Google authentication failed");
-      } finally {
-        setGoogleLoading(false);
-      }
-    };
-  
-    const handleLinkedInLogin = () => {
-      try {
-        setLinkedinLoading(true);
-        setErrMsg("");
-  
-        // Generate a state parameter and store it
-        const state = generateRandomState();
-        localStorage.setItem("linkedin_oauth_state", state);
-  
-        // Create the authorization URL with proper encoding
-        const params = new URLSearchParams({
-          response_type: "code",
-          client_id: "86a6w4yf01ndrx",
-          redirect_uri: `${window.location.origin}/linkedin-callback`,
-          scope: "openid profile email",
-          state: state,
-        });
-  
-        // Log the URL to debug
-        const authUrl = `https://www.linkedin.com/oauth/v2/authorization?${params.toString()}`;
-        console.log("LinkedIn Auth URL:", authUrl);
-  
-        // Redirect to LinkedIn
-        window.location.href = authUrl;
-      } catch (error) {
-        console.error("LinkedIn auth error:", error);
-        setErrMsg("Failed to initiate LinkedIn login");
-        setLinkedinLoading(false);
-      }
-    };
-  
-    const handleGoogleError = () => {
-      setErrMsg("Google authentication failed");
-    };
+    } catch (error) {
+      setErrMsg(error.message || "Google authentication failed");
+    } finally {
+      setGoogleLoading(false);
+    }
+  };
+
+  const handleLinkedInLogin = () => {
+    try {
+      setLinkedinLoading(true);
+      setErrMsg("");
+
+      // Generate a state parameter and store it
+      const state = generateRandomState();
+      localStorage.setItem("linkedin_oauth_state", state);
+
+      // Create the authorization URL with proper encoding
+      const params = new URLSearchParams({
+        response_type: "code",
+        client_id: "86a6w4yf01ndrx",
+        redirect_uri: `${window.location.origin}/linkedin-callback`,
+        scope: "openid profile email",
+        state: state,
+      });
+
+      // Log the URL to debug
+      const authUrl = `https://www.linkedin.com/oauth/v2/authorization?${params.toString()}`;
+      console.log("LinkedIn Auth URL:", authUrl);
+
+      // Redirect to LinkedIn
+      window.location.href = authUrl;
+    } catch (error) {
+      console.error("LinkedIn auth error:", error);
+      setErrMsg("Failed to initiate LinkedIn login");
+      setLinkedinLoading(false);
+    }
+  };
+
+  const handleGoogleError = () => {
+    setErrMsg("Google authentication failed");
+  };
 
   return (
     <Box
@@ -254,104 +308,119 @@ const UserSignUp = () => {
               color: "#3C7EFC",
             }}
           >
-            Game-Changing{" "}
+            Game-Changing{" "} 
           </span>{" "}
-          Opportunity!
-        </Typography>
+          Opportunity! 
+        </Typography> 
         <Box>
-          {errMsg && (
-                      <Typography color="error" textAlign="center" mb={2}>
-                        {errMsg}
-                      </Typography>
-                    )}
-          
-                    <Grid container spacing={2} sx={{ mb: 3 }}>
-                      <Grid item xs={6}>
-                        <GoogleOAuthProvider clientId="390148996153-usdltgirc8gk0mor929tnibamu7a6tad.apps.googleusercontent.com">
-                          <GoogleLogin
-                            onSuccess={handleGoogleSuccess}
-                            onError={handleGoogleError}
-                            size="large"
-                            shape="pill"
-                            text="continue_with"
-                          />
-                        </GoogleOAuthProvider>
-                      </Grid>
-                      <Grid item xs={6}>
-                        <Button
-                          fullWidth
-                          variant="outlined"
-                          onClick={handleLinkedInLogin}
-                          disabled={linkedinLoading}
-                          sx={{
-                            display: "flex", // ✅ Ensures flex behavior
-                            alignItems: "center", // ✅ Centers items properly
-                            justifyContent: "center", // ✅ Centers icon + text dynamically
-                            gap: 1, // ✅ Spacing between icon and text
-                            borderRadius: 16,
-                            textTransform: "none",
-                            fontSize: { xs: "0.8rem", sm: "0.9rem" }, // ✅ Responsive font size
-                            fontWeight: 600,
-                            color: "rgba(64, 66, 88, 1)",
-                            borderColor: "rgba(64, 66, 88, 0.23)",
-                            backgroundColor: "rgba(255, 255, 255, 1)",
-                            boxShadow: "0px 1px 3px rgba(0, 0, 0, 0.08)",
-                            height: { xs: "40px", sm: "40px", md: "42px" }, // ✅ Responsive height
-                            "&:hover": {
-                              backgroundColor: "rgba(249, 250, 251, 1)",
-                              borderColor: "rgba(64, 66, 88, 0.35)",
-                            },
-                          }}
-                          startIcon={
-                            linkedinLoading ? (
-                              <CircularProgress size={20} />
-                            ) : (
-                              <LinkedInIcon sx={{ color: "#0077B5" }} />
-                            )
-                          }
-                        >
-                          <Typography
-                            sx={{
-                              flexGrow: 1, // ✅ Allows text to expand dynamically
-                              textAlign: "center", // ✅ Keeps text centered
-                              fontFamily: "Arial",
-                              fontSize: "0.9rem",
-                              textOverflow: "ellipsis",
-                              whiteSpace: "nowrap",
-                              overflow: "hidden",
-                            }}
-                          >
-                            Continue with LinkedIn
-                          </Typography>
-                        </Button>
-                      </Grid>
-                    </Grid>
-          
-                    <Divider sx={{ my: 3 }}>
-                      <Typography variant="body2" color="text.secondary">
-                        OR LOGIN WITH EMAIL
-                      </Typography>
-                    </Divider>
-          <Box component="form" onSubmit={handleSubmit} sx={{width: {md:"90%",lg:"90%",xs:"100%",sm:"100%"} }}>
-            <Typography
-              sx={{
-                fontFamily: "Satoshi",  
-                fontSize: "16px",
-                color: "#24252C",
-                fontWeight: "500",
-                mb: 1,
-              }}
-            >
-              Name
+          {errMsg && ( 
+            <Typography color="error" textAlign="center" mb={2}>
+              {errMsg} 
             </Typography>
-            <Box sx={{ display: "flex", gap: 2 }}>
+          )}
+
+          <Grid container spacing={2} sx={{ mb: 3 }}>
+            <Grid item xs={6}>
+              <GoogleOAuthProvider clientId="390148996153-usdltgirc8gk0mor929tnibamu7a6tad.apps.googleusercontent.com">
+                <GoogleLogin
+                  onSuccess={handleGoogleSuccess}
+                  onError={handleGoogleError}
+                  size="large"
+                  shape="pill"
+                  text="continue_with"
+                />
+              </GoogleOAuthProvider>
+            </Grid>
+            <Grid item xs={6}>
+              <Button
+                fullWidth
+                variant="outlined"
+                onClick={handleLinkedInLogin}
+                disabled={linkedinLoading}
+                sx={{
+                  display: "flex", // ✅ Ensures flex behavior
+                  alignItems: "center", // ✅ Centers items properly
+                  justifyContent: "center", // ✅ Centers icon + text dynamically
+                  gap: 1, // ✅ Spacing between icon and text
+                  borderRadius: 16,
+                  textTransform: "none",
+                  fontSize: { xs: "0.8rem", sm: "0.9rem" }, // ✅ Responsive font size
+                  fontWeight: 600,
+                  color: "rgba(64, 66, 88, 1)",
+                  borderColor: "rgba(64, 66, 88, 0.23)",
+                  backgroundColor: "rgba(255, 255, 255, 1)",
+                  boxShadow: "0px 1px 3px rgba(0, 0, 0, 0.08)",
+                  height: { xs: "40px", sm: "40px", md: "42px" }, // ✅ Responsive height
+                  "&:hover": {
+                    backgroundColor: "rgba(249, 250, 251, 1)",
+                    borderColor: "rgba(64, 66, 88, 0.35)",
+                  },
+                }}
+                startIcon={
+                  linkedinLoading ? (
+                    <CircularProgress size={20} />
+                  ) : (
+                    <LinkedInIcon sx={{ color: "#0077B5" }} />
+                  )
+                }
+              >
+                <Typography
+                  sx={{
+                    flexGrow: 1, // ✅ Allows text to expand dynamically
+                    textAlign: "center", // ✅ Keeps text centered
+                    fontFamily: "Arial",
+                    fontSize: "0.9rem",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
+                    overflow: "hidden",
+                  }}
+                >
+                  Continue with LinkedIn
+                </Typography>
+              </Button>
+            </Grid>
+          </Grid>
+
+          <Divider sx={{ my: 3 }}>
+            <Typography variant="body2" color="text.secondary">
+              OR LOGIN WITH EMAIL
+            </Typography>
+          </Divider>
+          
+          {isVerifying ? (
+            // OTP Verification Form
+            <Box sx={{width: {md:"90%",lg:"90%",xs:"100%",sm:"100%"} }}>
+              <Typography
+                sx={{
+                  fontFamily: "Satoshi",
+                  fontSize: "16px",
+                  color: "#24252C",
+                  fontWeight: "500",
+                  mb: 1,
+                }}
+              >
+                Verify Your Email
+              </Typography>
+              <Typography
+                sx={{
+                  fontFamily: "Satoshi",
+                  fontSize: "14px",
+                  color: "#808195",
+                  mb: 2,
+                }}
+              >
+                We've sent a verification code to {form.email}
+              </Typography>
               <TextField
                 fullWidth
-                name="firstName"
-                placeholder="First name"
-                value={form.firstName}
-                onChange={handleChange}
+                type="text"
+                name="otp"
+                placeholder="Enter verification code"
+                value={otp}
+                onChange={handleOtpChange}
                 required
+                error={!!otpError}
+                helperText={otpError}
                 sx={{
                   "& .MuiOutlinedInput-root": {
                     borderRadius: 16,
@@ -359,170 +428,241 @@ const UserSignUp = () => {
                   },
                 }}
               />
-              <TextField
+              <Button
+                variant="contained"
                 fullWidth
-                name="lastName"
-                placeholder="Last name"
-                value={form.lastName}
-                onChange={handleChange}
-                required
+                onClick={verifyOtp}
                 sx={{
-                  "& .MuiOutlinedInput-root": {
-                    borderRadius: 16,
-                    height: 50,
-                  },
+                  mt: 2,
+                  py: 1.5,
+                  fontSize: "16px",
+                  background: "#2575fc",
+                  "&:hover": { background: "#1e5dd9" },
+                  borderRadius: 16,
+                  textTransform: "none",
+                  fontFamily: "Satoshi",
+                  fontWeight: "700",
                 }}
-              />
+                disabled={loading}
+              >
+                {loading ? <CircularProgress size={24} /> : "Verify & Create Account"}
+              </Button>
+              <Typography
+                align="center"
+                sx={{
+                  mt: 2,
+                  fontFamily: "Satoshi",
+                  fontWeight: "700",
+                  color: "#808195",
+                }}
+              >
+                Didn't receive the code?{" "}
+                <Link 
+                  href="#" 
+                  underline="hover" 
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setIsVerifying(false);
+                  }}
+                >
+                  Try again
+                </Link>
+              </Typography>
             </Box>
-            <Typography
-              sx={{
-                fontFamily: "Satoshi",
-                fontSize: "16px",
-                color: "#24252C",
-                fontWeight: "500",
-                mb: 1,
-                mt: 3,
-              }}
-            >
-              Email Address
-            </Typography>
-            <TextField
-              fullWidth
-              type="email"
-              name="email"
-              placeholder="Enter your email here"
-              value={form.email}
-              onChange={handleChange}
-              required
-              error={!!emailError}
-              helperText={emailError}
-              sx={{
-                "& .MuiOutlinedInput-root": {
+          ) : (
+            // Registration Form
+            <Box component="form" onSubmit={validateEmail} sx={{width: {md:"90%",lg:"90%",xs:"100%",sm:"100%"} }}>
+              <Typography
+                sx={{
+                  fontFamily: "Satoshi",  
+                  fontSize: "16px",
+                  color: "#24252C",
+                  fontWeight: "500",
+                  mb: 1,
+                }}
+              >
+                Name
+              </Typography>
+              <Box sx={{ display: "flex", gap: 2 }}>
+                <TextField
+                  fullWidth
+                  name="firstName"
+                  placeholder="First name"
+                  value={form.firstName}
+                  onChange={handleChange}
+                  required
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      borderRadius: 16,
+                      height: 50,
+                    },
+                  }}
+                />
+                <TextField
+                  fullWidth
+                  name="lastName"
+                  placeholder="Last name"
+                  value={form.lastName}
+                  onChange={handleChange}
+                  required
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      borderRadius: 16,
+                      height: 50,
+                    },
+                  }}
+                />
+              </Box>
+              <Typography
+                sx={{
+                  fontFamily: "Satoshi",
+                  fontSize: "16px",
+                  color: "#24252C",
+                  fontWeight: "500",
+                  mb: 1,
+                  mt: 3,
+                }}
+              >
+                Email Address
+              </Typography>
+              <TextField
+                fullWidth
+                type="email"
+                name="email"
+                placeholder="Enter your email here"
+                value={form.email}
+                onChange={handleChange}
+                required
+                error={!!emailError}
+                helperText={emailError}
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    borderRadius: 16,
+                    height: 50,
+                  },
+                }}
+              />
+              <Typography
+                sx={{
+                  fontFamily: "Satoshi",
+                  fontSize: "16px",
+                  color: "#24252C",
+                  fontWeight: "500",
+                  mt: 2,
+                }}
+              >
+                Password
+              </Typography>
+              <TextField
+                fullWidth
+                type={showPassword ? "text" : "password"}
+                name="password"
+                value={form.password}
+                placeholder="Enter your password here"
+                onChange={handleChange}
+                margin="normal"
+                required
+                error={!!passwordError}
+                helperText={passwordError || passwordStrength}
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    borderRadius: 16,
+                    height: 50,
+                  },
+                }}
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton
+                        onClick={() => setShowPassword(!showPassword)}
+                        edge="end"
+                      >
+                        {showPassword ? <Visibility /> : <VisibilityOff />}
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                }}
+              />
+              <TextField
+                fullWidth
+                type={showPassword ? "text" : "password"}
+                placeholder="Confirm Password"
+                name="confirmPassword"
+                value={form.confirmPassword}
+                onChange={handleChange}
+                margin="normal"
+                required
+                error={!!passwordError}
+                helperText={passwordError}
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    borderRadius: 16,
+                    height: 50,
+                  },
+                }}
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton
+                        onClick={() => setShowPassword(!showPassword)}
+                        edge="end"
+                      >
+                        {showPassword ? <Visibility /> : <VisibilityOff />}
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                }}
+              />
+              <Typography
+                sx={{
+                  fontFamily: "Satoshi",
+                  color: "#808195",
+                  fontWeight: "500",
+                  fontSize: "14px",
+                  px: 2,
+                  py: 1,
+                }}
+              >
+                By creating account, you agree to the{" "}
+                <Link href="/t&c">Terms & Conditions</Link> and
+                <Link href="/privacy-policy"> Privacy Policy</Link> of High Impact
+                Talent
+              </Typography>
+              <Button
+                type="submit"
+                variant="contained"
+                fullWidth
+                sx={{
+                  mt: 2,
+                  py: 1.5,
+                  fontSize: "16px",
+                  background: "#2575fc",
+                  "&:hover": { background: "#1e5dd9" },
                   borderRadius: 16,
-                  height: 50,
-                },
-              }}
-            />
-            <Typography
-              sx={{
-                fontFamily: "Satoshi",
-                fontSize: "16px",
-                color: "#24252C",
-                fontWeight: "500",
-                mt: 2,
-              }}
-            >
-              Password
-            </Typography>
-            <TextField
-              fullWidth
-              type={showPassword ? "text" : "password"}
-              name="password"
-              value={form.password}
-              placeholder="Enter your password here"
-              onChange={handleChange}
-              margin="normal"
-              required
-              error={!!passwordError}
-              helperText={passwordError || passwordStrength}
-              sx={{
-                "& .MuiOutlinedInput-root": {
-                  borderRadius: 16,
-                  height: 50,
-                },
-              }}
-              InputProps={{
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <IconButton
-                      onClick={() => setShowPassword(!showPassword)}
-                      edge="end"
-                    >
-                      {showPassword ? <Visibility /> : <VisibilityOff />}
-                    </IconButton>
-                  </InputAdornment>
-                ),
-              }}
-            />
-            <TextField
-              fullWidth
-              type={showPassword ? "text" : "password"}
-              placeholder="Confirm Password"
-              name="confirmPassword"
-              value={form.confirmPassword}
-              onChange={handleChange}
-              margin="normal"
-              required
-              error={!!passwordError}
-              helperText={passwordError}
-              sx={{
-                "& .MuiOutlinedInput-root": {
-                  borderRadius: 16,
-                  height: 50,
-                },
-              }}
-              InputProps={{
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <IconButton
-                      onClick={() => setShowPassword(!showPassword)}
-                      edge="end"
-                    >
-                      {showPassword ? <Visibility /> : <VisibilityOff />}
-                    </IconButton>
-                  </InputAdornment>
-                ),
-              }}
-            />
-            <Typography
-              sx={{
-                fontFamily: "Satoshi",
-                color: "#808195",
-                fontWeight: "500",
-                fontSize: "14px",
-                px: 2,
-                py: 1,
-              }}
-            >
-              By creating account, you agree to the{" "}
-              <Link href="/t&c">Terms & Conditions</Link> and
-              <Link href="/privacy-policy"> Privacy Policy</Link> of High Impact
-              Talent
-            </Typography>
-            <Button
-              type="submit"
-              variant="contained"
-              fullWidth
-              sx={{
-                mt: 2,
-                py: 1.5,
-                fontSize: "16px",
-                background: "#2575fc",
-                "&:hover": { background: "#1e5dd9" },
-                borderRadius: 16,
-                textTransform: "none",
-                fontFamily: "Satoshi",
-                fontWeight: "700",
-              }}
-              disabled={loading}
-            >
-              {loading ? "Creating Account..." : "Create Account"}
-            </Button>
-            <Typography
-              align="center"
-              sx={{
-                mt: 2,
-                fontFamily: "Satoshi",
-                fontWeight: "700",
-                color: "#808195",
-              }}
-            >
-              Have an account?{" "}
-              <Link href="/u-login" underline="hover">
-                Login
-              </Link>
-            </Typography>
-          </Box>
+                  textTransform: "none",
+                  fontFamily: "Satoshi",
+                  fontWeight: "700",
+                }}
+                disabled={otpSending}
+              >
+                {otpSending ? <CircularProgress size={24} /> : "Create Account"}
+              </Button>
+              <Typography
+                align="center"
+                sx={{
+                  mt: 2,
+                  fontFamily: "Satoshi",
+                  fontWeight: "700",
+                  color: "#808195",
+                }}
+              >
+                Have an account?{" "}
+                <Link href="/u-login" underline="hover">
+                  Login
+                </Link>
+              </Typography>
+            </Box>
+          )}
         </Box>
       </Box>
       <Box sx={{display:{md:"flex",lg:"flex",xs:"none",sm:"none"}}}>
