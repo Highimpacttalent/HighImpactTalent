@@ -47,7 +47,7 @@ router.put("/update-status",updateJobStatus)
 router.post("/saved-jobs",getSavedJobs)
 
 //Match Jobs
-router.post("/match-jobs",userAuth,MatchJobs)
+router.get("/match-jobs",userAuth,MatchJobs)
 
 export default router;
 
