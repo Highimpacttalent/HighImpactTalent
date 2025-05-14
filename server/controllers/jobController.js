@@ -857,7 +857,7 @@ export const MatchJobs = async (req, res, next) => {
 
     const ids = recommendations.map(r => r._id);
     const scoreMap = recommendations.reduce((map, r) => { map[r._id.toString()] = r.totalScore; return map; }, {});
-    const jobs = await Jobs.find({ _id: { $in: ids } }).lean();
+    const jobs = await Jobs.find({ _id: { $in: ids } }).populate('company').lean();
     const jobMap = jobs.reduce((map, j) => { map[j._id.toString()] = j; return map; }, {});
 
     const finalResponse = ids
