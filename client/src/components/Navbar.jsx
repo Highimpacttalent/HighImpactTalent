@@ -125,7 +125,7 @@ const Navbar = () => {
             <MenuItem component={Link} to="/password" onClick={handleMenuClose}>
               <LockReset sx={{ mr: 1 }} /> Change Password
             </MenuItem>
-            {user?.accountType === "seeker" && (
+            {/* {user?.accountType === "seeker" && (
               <MenuItem
                 component={Link}
                 to="/application-tracking"
@@ -133,7 +133,7 @@ const Navbar = () => {
               >
                 <Assignment sx={{ mr: 1 }} /> Application Status
               </MenuItem>
-            )}
+            )} */}
             <MenuItem onClick={handleLogout} sx={{ color: "red" }}>
               <Logout sx={{ mr: 1 }} /> Log Out
             </MenuItem>
@@ -197,6 +197,16 @@ const LoggedInMenu = ({ user, handleMenuOpen }) => (
     >
       {user?.accountType === "seeker" ? "Jobs" : "Job Posts"}
     </Button>
+    {user?.accountType === "seeker" && (
+      <Button
+        color="inherit"
+        component={Link}
+        to="/application-tracking"
+        sx={{textTransform:"none",fontFamily:"Poppins",fontWeight:"500",fontSize:"18px",color:"#24252C"}}
+      >
+        Job Tracker
+      </Button>
+    )}
     {user?.accountType !== "seeker" && (
       <Button
         color="inherit"
