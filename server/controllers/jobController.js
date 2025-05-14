@@ -750,105 +750,127 @@ export const getSavedJobs = async (req, res) => {
 
 export const MatchJobs = async (req, res, next) => {
   try {
-    const userId = req.user.userId;
-    const user = await Users.findById(userId).lean();
+    const userId = req.body.user.userId;
+   const user = await Users.findById(userId).lean();
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    // Extract user preferences
-    const userSkills = user.skills || [];
-    const userExp    = user.experience || 0;
+    // Extract user preferences safely
+    const userSkills = Array.isArray(user.skills) ? user.skills : [];
+    const userExp    = typeof user.experience === 'number' ? user.experience : 0;
     const userMinSal = parseInt(user.expectedMinSalary || '0', 10);
-    const prefLocs   = user.preferredLocations || [];
-    const prefModes  = user.preferredWorkModes || [];
-    const prefTypes  = user.preferredWorkTypes || [];
-    const currentLoc = user.currentLocation;
-    const openReloc  = user.openToRelocate === 'Yes';
+    const prefLocs   = Array.isArray(user.preferredLocations) ? user.preferredLocations : [];
+    const prefModes  = Array.isArray(user.preferredWorkModes) ? user.preferredWorkModes : [];
+    const prefTypes  = Array.isArray(user.preferredWorkTypes) ? user.preferredWorkTypes : [];
+    const currentLoc = user.currentLocation || '';
+    const openReloc  = (user.openToRelocate || '').toLowerCase() === 'yes';
 
-    // Aggregation pipeline
     const recommendations = await Jobs.aggregate([
-      // Only live jobs
+      // Only active/live jobs
       { $match: { status: 'live' } },
 
-      // Hard filters: experience and salary
-      { $addFields: { jobMinSal: { $toInt: '$salary' } } },
+      // Ensure salary is int (default 0)
+      { $addFields: {
+        jobMinSal: { $toInt: { $ifNull: ['$salary', '0'] } }
+      } },
+
+      // Filter by hard requirements
       { $match: {
         experience: { $lte: userExp },
         jobMinSal:  { $gte: userMinSal }
-      }},
+      } },
 
-      // Compute intersections and flags
+      // Safely handle missing skills array
       { $addFields: {
-        matchedSkillsCount: { $size: { $setIntersection: [userSkills, '$skills'] } },
-        reqSkillsCount:     { $size: '$skills' },
+        skillsArr: { $ifNull: ['$skills', []] }
+      } },
+
+      // Compute counts and flags
+      { $addFields: {
+        matchedSkillsCount: { $size: { $setIntersection: [userSkills, '$skillsArr'] } },
+        reqSkillsCount:     { $size: '$skillsArr' },
         isWorkModeOk:       { $in: ['$workMode', prefModes] },
         isWorkTypeOk:       { $in: ['$workType', prefTypes] },
         isPrefLoc:          { $in: ['$jobLocation', prefLocs] },
         isCurrentLoc:       { $eq: ['$jobLocation', currentLoc] }
-      }},
+      } },
 
-      // Sub-scores
+      // Compute sub-scores with zero-division guards
       { $addFields: {
         skillScore: {
-          $cond: [
-            { $gte: [ { $divide: ['$matchedSkillsCount', '$reqSkillsCount'] }, 0.5 ] },
-            1,
-            { $cond: [ { $gt: ['$reqSkillsCount', 0] },
-              { $divide: ['$matchedSkillsCount', '$reqSkillsCount'] },
-              0
-            ] }
-          ]
-        },
-        modeScore:    { $cond: [ '$isWorkModeOk', 1, 0 ] },
-        typeScore:    { $cond: [ '$isWorkTypeOk', 1, 0 ] },
-        locScore: {
           $switch: {
             branches: [
-              { case: '$isCurrentLoc', then: 1 },
-              { case: openReloc, then: 0.5 }
+              {
+                case: {
+                  $and: [
+                    { $gt: ['$reqSkillsCount', 0] },
+                    { $gte: [ { $divide: ['$matchedSkillsCount', '$reqSkillsCount'] }, 0.5 ] }
+                  ]
+                }, then: 1
+              },
+              {
+                case: { $gt: ['$reqSkillsCount', 0] },
+                then: { $divide: ['$matchedSkillsCount', '$reqSkillsCount'] }
+              }
             ],
             default: 0
           }
         },
+        modeScore:    { $cond: [ '$isWorkModeOk', 1, 0 ] },
+        typeScore:    { $cond: [ '$isWorkTypeOk', 1, 0 ] },
+        locScore:     { $cond: [ '$isCurrentLoc', 1, (openReloc ? 0.5 : 0) ] },
         prefLocScore: { $cond: [ '$isPrefLoc', 0.75, 0 ] }
-      }},
+      } },
 
       // Total weighted score
       { $addFields: {
         totalScore: {
           $add: [
-            { $multiply: ['$skillScore',     0.20] },  // skills
-            { $multiply: ['$modeScore',      0.15] },  // workMode
-            { $multiply: ['$typeScore',      0.10] },  // workType
-            { $multiply: ['$locScore',       0.25] },  // current/relocate
-            { $multiply: ['$prefLocScore',   0.30] }   // preferred loc
+            { $multiply: ['$skillScore',   0.20] },
+            { $multiply: ['$modeScore',    0.15] },
+            { $multiply: ['$typeScore',    0.10] },
+            { $multiply: ['$locScore',     0.25] },
+            { $multiply: ['$prefLocScore', 0.30] }
           ]
         }
-      }},
+      } },
 
-      // Sort by score, then newest first
-      { $sort: { totalScore: -1, poastingDate: -1 } },
+      // Sort: by score desc, salary desc, then newest
+      { $sort: { totalScore: -1, jobMinSal: -1, poastingDate: -1 } },
 
-      // Limit top 10
+      // Limit to top 10
       { $limit: 10 },
 
-      // Project fields
+      // Shape final output
       { $project: {
-        _id:        1,
-        jobTitle:   1,
-        jobLocation:1,
-        salary:     1,
-        workMode:   1,
-        workType:   1,
-        totalScore: 1,
+        _id:          1,
+        jobTitle:     1,
+        jobLocation:  1,
+        salary:       1,
+        workMode:     1,
+        workType:     1,
+        totalScore:   1,
         poastingDate: 1
-      }}
+      } }
     ]);
 
-    return res.json({ recommendations });
+    const ids = recommendations.map(r => r._id);
+    const scoreMap = recommendations.reduce((map, r) => { map[r._id.toString()] = r.totalScore; return map; }, {});
+    const jobs = await Jobs.find({ _id: { $in: ids } }).lean();
+    const jobMap = jobs.reduce((map, j) => { map[j._id.toString()] = j; return map; }, {});
+
+    const finalResponse = ids
+      .map(id => {
+        const job = jobMap[id.toString()];
+        if (job) job.totalScore = scoreMap[id.toString()];
+        return job;
+      })
+      .filter(Boolean);
+
+    return res.json({ finalResponse });
   } catch (err) {
     console.error(err);
     return res.status(500).json({ message: 'Server error' });
   }
-};
+}
