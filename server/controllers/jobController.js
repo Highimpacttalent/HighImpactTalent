@@ -746,3 +746,109 @@ export const getSavedJobs = async (req, res) => {
     });
   }
 }
+
+
+export const MatchJobs = async (req, res, next) => {
+  try {
+    const userId = req.user.userId;
+    const user = await Users.findById(userId).lean();
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Extract user preferences
+    const userSkills = user.skills || [];
+    const userExp    = user.experience || 0;
+    const userMinSal = parseInt(user.expectedMinSalary || '0', 10);
+    const prefLocs   = user.preferredLocations || [];
+    const prefModes  = user.preferredWorkModes || [];
+    const prefTypes  = user.preferredWorkTypes || [];
+    const currentLoc = user.currentLocation;
+    const openReloc  = user.openToRelocate === 'Yes';
+
+    // Aggregation pipeline
+    const recommendations = await Jobs.aggregate([
+      // Only live jobs
+      { $match: { status: 'live' } },
+
+      // Hard filters: experience and salary
+      { $addFields: { jobMinSal: { $toInt: '$salary' } } },
+      { $match: {
+        experience: { $lte: userExp },
+        jobMinSal:  { $gte: userMinSal }
+      }},
+
+      // Compute intersections and flags
+      { $addFields: {
+        matchedSkillsCount: { $size: { $setIntersection: [userSkills, '$skills'] } },
+        reqSkillsCount:     { $size: '$skills' },
+        isWorkModeOk:       { $in: ['$workMode', prefModes] },
+        isWorkTypeOk:       { $in: ['$workType', prefTypes] },
+        isPrefLoc:          { $in: ['$jobLocation', prefLocs] },
+        isCurrentLoc:       { $eq: ['$jobLocation', currentLoc] }
+      }},
+
+      // Sub-scores
+      { $addFields: {
+        skillScore: {
+          $cond: [
+            { $gte: [ { $divide: ['$matchedSkillsCount', '$reqSkillsCount'] }, 0.5 ] },
+            1,
+            { $cond: [ { $gt: ['$reqSkillsCount', 0] },
+              { $divide: ['$matchedSkillsCount', '$reqSkillsCount'] },
+              0
+            ] }
+          ]
+        },
+        modeScore:    { $cond: [ '$isWorkModeOk', 1, 0 ] },
+        typeScore:    { $cond: [ '$isWorkTypeOk', 1, 0 ] },
+        locScore: {
+          $switch: {
+            branches: [
+              { case: '$isCurrentLoc', then: 1 },
+              { case: openReloc, then: 0.5 }
+            ],
+            default: 0
+          }
+        },
+        prefLocScore: { $cond: [ '$isPrefLoc', 0.75, 0 ] }
+      }},
+
+      // Total weighted score
+      { $addFields: {
+        totalScore: {
+          $add: [
+            { $multiply: ['$skillScore',     0.20] },  // skills
+            { $multiply: ['$modeScore',      0.15] },  // workMode
+            { $multiply: ['$typeScore',      0.10] },  // workType
+            { $multiply: ['$locScore',       0.25] },  // current/relocate
+            { $multiply: ['$prefLocScore',   0.30] }   // preferred loc
+          ]
+        }
+      }},
+
+      // Sort by score, then newest first
+      { $sort: { totalScore: -1, poastingDate: -1 } },
+
+      // Limit top 10
+      { $limit: 10 },
+
+      // Project fields
+      { $project: {
+        _id:        1,
+        jobTitle:   1,
+        jobLocation:1,
+        salary:     1,
+        workMode:   1,
+        workType:   1,
+        totalScore: 1,
+        poastingDate: 1
+      }}
+    ]);
+
+    return res.json({ recommendations });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: 'Server error' });
+  }
+};

@@ -10,7 +10,8 @@ import {
   getJobsBySalaryDesc,
   getJobsBySkills,
   updateJobStatus,
-  getSavedJobs
+  getSavedJobs,
+  MatchJobs
 } from "../controllers/jobController.js";
 
 const router = express.Router();
@@ -44,6 +45,9 @@ router.put("/update-status",updateJobStatus)
 
 //Saved Jobs
 router.post("/saved-jobs",getSavedJobs)
+
+//Match Jobs
+router.post("/match-jobs",userAuth,MatchJobs)
 
 export default router;
 
