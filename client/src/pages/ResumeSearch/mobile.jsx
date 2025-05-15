@@ -787,11 +787,11 @@ const ResumeSearch = () => {
           sx={{
             bgcolor:"#00A6ED",
             fontFamily: "Poppins",
-            fontSize: "18px",
+            fontSize: "16px",
             textTransform: "none",
             borderRadius: 12,
-            px: 4,
-            py: 1,
+            px: 2,
+            py: 0.5,
             mb: 2
           }}
         >
