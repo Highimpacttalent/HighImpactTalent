@@ -4,7 +4,8 @@ import dotenv from "dotenv";
 dotenv.config();
 
 export const sendRecruiterQuery = async (req, res, next) => {
-  const { name, email, role, pay, additionalInfo, sendText, date, time } = req.body;
+  const { name, email, role, pay, additionalInfo, sendText, date, time } =
+    req.body;
 
   if (!name || !email || !date || !time) {
     return next("Name, Email, Date, and Time are required");
@@ -21,7 +22,7 @@ export const sendRecruiterQuery = async (req, res, next) => {
 
     const mailOptions = {
       from: "developerhighimpact@gmail.com",
-      to: "recruitersupport@highimpacttalent.com", 
+      to: "recruitersupport@highimpacttalent.com",
       subject: "New Recruiter Query",
       text: `
         A new recruiter query has been scheduled.
@@ -43,16 +44,22 @@ export const sendRecruiterQuery = async (req, res, next) => {
     };
 
     await transporter.sendMail(mailOptions);
-    res.status(200).json({ success: true, message: "Email sent successfully!" });
+    res
+      .status(200)
+      .json({ success: true, message: "Email sent successfully!" });
   } catch (error) {
     console.error("Error sending email:", error);
-    res.status(500).json({ success: false, message: "Failed to send email", details: error.message });
+    res.status(500).json({
+      success: false,
+      message: "Failed to send email",
+      details: error.message,
+    });
   }
 };
 
-
 export const sendRecruiterQueryEmail = async (req, res, next) => {
-  const { email, companyName, password, recruiterName, mobileNumber } = req.body;
+  const { email, companyName, password, recruiterName, mobileNumber } =
+    req.body;
 
   if (!email || !companyName || !password) {
     return next("Email, Company Name, and Password are required");
@@ -86,10 +93,16 @@ export const sendRecruiterQueryEmail = async (req, res, next) => {
     };
 
     await transporter.sendMail(mailOptions);
-    res.status(200).json({ success: true, message: "Email sent successfully!" });
+    res
+      .status(200)
+      .json({ success: true, message: "Email sent successfully!" });
   } catch (error) {
     console.error("Error sending email:", error);
-    res.status(500).json({ success: false, message: "Failed to send email", details: error.message });
+    res.status(500).json({
+      success: false,
+      message: "Failed to send email",
+      details: error.message,
+    });
   }
 };
 
@@ -128,10 +141,16 @@ export const sendContactQuery = async (req, res, next) => {
     };
 
     await transporter.sendMail(mailOptions);
-    res.status(200).json({ success: true, message: "Email sent successfully!" });
+    res
+      .status(200)
+      .json({ success: true, message: "Email sent successfully!" });
   } catch (error) {
     console.error("Error sending email:", error);
-    res.status(500).json({ success: false, message: "Failed to send email", details: error.message });
+    res.status(500).json({
+      success: false,
+      message: "Failed to send email",
+      details: error.message,
+    });
   }
 };
 
@@ -146,8 +165,8 @@ export const sendPasswordResetOTP = async (req, res, next) => {
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
-        user: "developerhighimpact@gmail.com", 
-        pass: "lpyu zhks kpne qrsc", 
+        user: "developerhighimpact@gmail.com",
+        pass: "lpyu zhks kpne qrsc",
       },
     });
 
@@ -156,12 +175,24 @@ export const sendPasswordResetOTP = async (req, res, next) => {
       to: email,
       subject: "Change Password Request",
       text: `
-        You have requested to reset your password. 
-        Use the following OTP to verify your request:
-        
-        OTP: ${otp}
+        Hello,
 
-        This OTP will expire in 10 minutes. If you did not request this, please ignore this email.
+As part of your recent request at High Impact Talent, please use the one-time code below to complete your verification:
+
+OTP: ${otp}
+
+This code is valid for 10 minutes. After that time, it will expire and you’ll need to request a new one.
+
+If you did not initiate this request, no further action is required—simply disregard this message.
+
+At High Impact Talent, we’re dedicated to connecting professionals with their ideal roles—twice as fast.
+
+Kind regards,
+
+Koustubh
+Senior Talent Consultant
+High Impact Talent
+www.highimpacttalent.com
       `,
     };
 
@@ -169,7 +200,10 @@ export const sendPasswordResetOTP = async (req, res, next) => {
     res.status(200).json({ success: true, message: "OTP sent successfully!" });
   } catch (error) {
     console.error("Error sending OTP email:", error);
-    res.status(500).json({ success: false, message: "Failed to send OTP email", details: error.message });
+    res.status(500).json({
+      success: false,
+      message: "Failed to send OTP email",
+      details: error.message,
+    });
   }
 };
-
