@@ -174,26 +174,32 @@ export const sendPasswordResetOTP = async (req, res, next) => {
       from: "developerhighimpact@gmail.com",
       to: email,
       subject: "Change Password Request",
-      text: `
-        Hello,
-
-As part of your recent request at High Impact Talent, please use the one-time code below to complete your verification:
-
-OTP: ${otp}
-
-This code is valid for 10 minutes. After that time, it will expire and you’ll need to request a new one.
-
-If you did not initiate this request, no further action is required—simply disregard this message.
-
-At High Impact Talent, we’re dedicated to connecting professionals with their ideal roles—twice as fast.
-
-Kind regards,
-
-Koustubh
-Senior Talent Consultant
-High Impact Talent
-www.highimpacttalent.com
-      `,
+      html: `
+    <div style="font-family: Arial, sans-serif; color: #333; line-height: 1.5; max-width: 600px; margin: auto;">
+      <h2 style="color: #2E86DE; margin-bottom: 0.5em;">Your Verification Code</h2>
+      <p>Hello,</p>
+      <p>
+        As part of your recent request at <strong style="color: #2E86DE;">High Impact Talent</strong>, please use the one-time code below to complete your verification:
+      </p>
+      <p style="font-size: 1.25em; font-weight: bold; background: #F0F4FF; padding: 0.5em 1em; border-radius: 4px; display: inline-block;">
+        ${otp}
+      </p>
+      <p style="margin-top: 1em;">
+        <em>This code is valid for <strong>10 minutes</strong>.</em> After that time, it will expire and you’ll need to request a new one.
+      </p>
+      <p>If you did not initiate this request, simply disregard this email—no further action is required.</p>
+      <hr style="border: none; border-top: 1px solid #EEE; margin: 2em 0;">
+      <p style="font-size: 0.9em; color: #555;">
+        At <strong>High Impact Talent</strong>, we’re dedicated to connecting professionals with their ideal roles—<strong>twice as fast</strong>.
+      </p>
+      <p style="margin-top: 2em;">
+        Kind regards,<br>
+        <strong>Koustubh</strong><br>
+        Senior Talent Consultant<br>
+        <a href="https://www.highimpacttalent.com" style="color: #2E86DE; text-decoration: none;">www.highimpacttalent.com</a>
+      </p>
+    </div>
+  `,
     };
 
     await transporter.sendMail(mailOptions);
