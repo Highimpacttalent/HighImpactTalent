@@ -195,7 +195,7 @@ export const sendPasswordResetOTP = async (req, res, next) => {
       <p style="margin-top: 2em;">
         Kind regards,<br>
         <strong>Koustubh</strong><br>
-        Senior Talent Consultant<br>
+         Cofounder<br>
         <a href="https://www.highimpacttalent.com" style="color: #2E86DE; text-decoration: none;">www.highimpacttalent.com</a>
       </p>
     </div>
