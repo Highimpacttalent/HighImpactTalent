@@ -19,6 +19,7 @@ import AlertModal from "../../components/Alerts/view.jsx";
 import { useNavigate } from "react-router-dom";
 import BackupIcon from '@mui/icons-material/Backup';
 import { useLocation } from "react-router-dom";
+import { Document, Page } from 'react-pdf';
 
 const ResumeUpload = () => {
   const location = useLocation();
@@ -364,17 +365,19 @@ const ResumeUpload = () => {
             Resume Preview
           </Typography>
           </Box>
-            <iframe
-              src={fileUrl}
-              width="100%"
-              height="100%"
-              style={{
-                border: "none",
-                borderRadius: "10px",
-                boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.1)",
-              }}
-              title="Resume Preview"
-            ></iframe>
+            <Document
+        file={fileUrl}
+        loading={<CircularProgress sx={{ mt: 4 }} />}
+        onLoadError={(e) => console.error('PDF load error:', e)}
+      >
+        {/* render first page only; adjust or loop for more */}
+        <Page
+          pageNumber={1}
+          width={isSmallScreen ? 300 : 400}
+          renderTextLayer={false}
+          renderAnnotationLayer={false}
+        />
+      </Document>
           </Box>
         </motion.div>
       )}
