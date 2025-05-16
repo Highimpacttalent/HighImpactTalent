@@ -173,7 +173,7 @@ export const sendPasswordResetOTP = async (req, res, next) => {
     const mailOptions = {
       from: "developerhighimpact@gmail.com",
       to: email,
-      subject: "Change Password Request",
+      subject: "OTP Verification",
       html: `
     <div style="font-family: Arial, sans-serif; color: #333; line-height: 1.5; max-width: 600px; margin: auto;">
       <h2 style="color: #2E86DE; margin-bottom: 0.5em;">Your Verification Code</h2>
@@ -195,7 +195,7 @@ export const sendPasswordResetOTP = async (req, res, next) => {
       <p style="margin-top: 2em;">
         Kind regards,<br>
         <strong>Koustubh</strong><br>
-         Cofounder<br>
+         Co-founder & CEO<br>
         <a href="https://www.highimpacttalent.com" style="color: #2E86DE; text-decoration: none;">www.highimpacttalent.com</a>
       </p>
     </div>
