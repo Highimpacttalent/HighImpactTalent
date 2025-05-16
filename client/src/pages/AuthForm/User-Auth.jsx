@@ -406,11 +406,21 @@ const UserSignUp = () => {
                   fontFamily: "Satoshi",
                   fontSize: "14px",
                   color: "#808195",
-                  mb: 2,
                 }}
               >
                 We've sent a verification code to {form.email}
               </Typography>
+              <Typography
+              sx={{
+                fontFamily: "Satoshi",
+                color: "#FF6B6B",
+                fontSize: "12px",
+                fontStyle: "italic",
+                mb:3,mt:0.5
+              }}
+            >
+              Note: Please check your junk or spam folder if you don’t see the email in your inbox.
+            </Typography>
               <TextField
                 fullWidth
                 type="text"
@@ -465,7 +475,7 @@ const UserSignUp = () => {
                     setIsVerifying(false);
                   }}
                 >
-                  Try again
+                  Resend OTP
                 </Link>
               </Typography>
             </Box>

@@ -152,6 +152,18 @@ const PasswordChange = () => {
           <Typography textAlign="center" sx={{fontFamily:"Satoshi",color:"#808195",fontWeight:"500",}}>
            We have sent The OTP to  {email}. Please check and enter the otp below to verify your account
           </Typography>
+          <Typography
+              textAlign="center"
+              sx={{
+                fontFamily: "Satoshi",
+                color: "#FF6B6B",
+                fontSize: "12px",
+                fontStyle: "italic",
+                mt: 1,
+              }}
+            >
+              Note: Please check your junk or spam folder if you don’t see the email in your inbox.
+            </Typography>
           <TextField
             fullWidth
             placeholder="please enter the otp here"
