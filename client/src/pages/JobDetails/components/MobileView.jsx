@@ -171,6 +171,7 @@ const JobCard = ({ job,flag = false,enable = false }) => {
           <Button
             variant="contained"
             color="primary"
+            disabled={noteligible}
             sx={{ borderRadius: 40, fontFamily: "Poppins" }}
             onClick={() => {
               if (job?.applicationLink && job?.applicationLink.trim() !== "") {
