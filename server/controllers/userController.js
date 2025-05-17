@@ -953,3 +953,23 @@ export const updateJobPreferences = async (req, res) => {
     });
   }
 };
+
+
+export const checkEmail = async (req, res) => {
+  const { email } = req.body;
+  if (!email) {
+    return res
+      .status(400)
+      .json({ success: false, message: "Email is required" });
+  }
+
+  try {
+    const user = await Users.findOne({ email: email.toLowerCase().trim() });
+    return res.json({ success: true, exists: Boolean(user) });
+  } catch (err) {
+    console.error("Error checking email existence:", err);
+    return res
+      .status(500)
+      .json({ success: false, message: "Server error" });
+  }
+};
