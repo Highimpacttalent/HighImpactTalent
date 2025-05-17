@@ -13,6 +13,7 @@ import {
 } from "@mui/material";
 import dayjs from "dayjs";
 import EditIcon from "@mui/icons-material/Edit";
+import WorkIcon from '@mui/icons-material/Work';
 import SaveIcon from "@mui/icons-material/Save";
 import { Delete, Add } from "@mui/icons-material";
 import AlertModal from "../../../components/Alerts/view";
@@ -209,8 +210,44 @@ const ExperienceHistory = ({ userId, experienceHistory, about }) => {
         )}
       </Box>
 
-      {/* Existing Experiences */}
-      {experiences.map((exp, index) => (
+     {/* Existing Experiences */}
+           {experiences.length === 0 ? (
+              <Paper
+         sx={{
+           p: 2,
+           mb: 2,
+           textAlign: "center",
+           border: "1px solid #00000040", borderRadius: 4
+         }}
+       >
+         <WorkIcon
+           sx={{ fontSize: 48, color: "#00000040", mb: 1 }}
+         />
+         <Typography
+           variant="h6"
+           sx={{
+             fontFamily: "Poppins",
+             fontWeight: 550,
+     
+             mb: 1,
+             color: "#24252C",
+           }}
+         >
+           No work experience added yet
+         </Typography>
+         <Typography
+           variant="body1"
+           sx={{
+             fontFamily: "Poppins",
+             color: "#555770",
+             mb: 2,
+           }}
+         >
+           Please add your work experience here to make your profile shine—and
+           help recruiters see all your achievements!
+         </Typography>
+       </Paper>
+           ) : (experiences.map((exp, index) => (
         <Paper
           key={index}
           sx={{ p: 2, mb: 2, border: "1px solid #00000040", borderRadius: 4 }}
@@ -355,7 +392,8 @@ const ExperienceHistory = ({ userId, experienceHistory, about }) => {
             </Typography>
           </Box>
         </Paper>
-      ))}
+      ))
+     )}
 
       {/* Add New Experience */}
       <Box

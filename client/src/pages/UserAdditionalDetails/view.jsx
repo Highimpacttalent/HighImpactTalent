@@ -6,6 +6,7 @@ import PhoneInput from "react-phone-number-input";
 import { Loading } from "../../components";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import AlertModal from "../../components/Alerts/view";
 import { useLocation } from "react-router-dom";
 import Select from "react-select";
 import { UpdateUser } from "../../redux/userSlice";
@@ -21,7 +22,7 @@ const UserInfoForm = () => {
   const defaultValues = location.state?.parsedData?.data || {};
   const navigate = useNavigate();
   const refer = location.state?.refer || "/find-jobs";
-  
+
   // State variables
   const [loading, setLoading] = useState(false);
   const [uploadingProfilePic, setUploadingProfilePic] = useState(false);
@@ -29,6 +30,12 @@ const UserInfoForm = () => {
     defaultValues?.PersonalInformation?.contactNumber || ""
   );
   const [error, setError] = useState("");
+  const [SalErr, setSalErr] = useState({
+    salary: "",
+  });
+  const [MSalErr, setMSalErr] = useState({
+    salary: "",
+  });
   const [profilePic, setProfilePic] = useState(user?.profileUrl || "");
   const [profilePicUrl, setProfilePicUrl] = useState(user?.profileUrl || "");
   const [cities, setCities] = useState([]);
@@ -38,6 +45,12 @@ const UserInfoForm = () => {
   const [customCity, setCustomCity] = useState("");
   const [filters, setFilters] = useState({
     skills: defaultValues.skills || [],
+  });
+  const [alert, setAlert] = useState({
+      open: false,
+      type: "success",
+      title: "",
+      message: "",
   });
 
   // Form data state
@@ -52,7 +65,7 @@ const UserInfoForm = () => {
     about: defaultValues?.ProfessionalDetails?.about || "",
     salary: "",
     contactNumber: defaultValues?.PersonalInformation?.contactNumber || "",
-    location: defaultValues?.PersonalInformation?.location || "",
+    location: "",
     openToRelocate: "Yes",
     isItConsultingCompany: "Yes",
     joinConsulting: "",
@@ -73,16 +86,31 @@ const UserInfoForm = () => {
   useEffect(() => {
     const fetchCities = async () => {
       try {
-        const response = await fetch("/cities.csv");
-        const text = await response.text();
+        // Use axios or fetch relative to the public directory
+        const response = await axios.get("/cities.csv");
+        const text = response.data;
         const rows = text.split("\n");
         const cityList = rows
-          .slice(1)
+          .slice(1) // Skip header row
           .map((row) => row.trim())
-          .filter(Boolean)
-          .sort();
-        setCities([...new Set(cityList)]);
-      } catch (error) {
+          .filter(Boolean) // Remove empty rows
+          .sort(); // Sort alphabetically
+        const uniqueCities = [...new Set(cityList)];
+      setCities(uniqueCities);
+
+      // now that we have cities, validate the default location
+      const defaultLoc =
+        location.state?.parsedData?.data?.PersonalInformation?.location;
+      if (defaultLoc && uniqueCities.includes(defaultLoc)) {
+        setFormData((prev) => ({ ...prev, location: defaultLoc }));
+        setSelectedCity(defaultLoc);
+        setIsOtherSelected(false);
+      } else {
+        // leave it blank
+        setFormData((prev) => ({ ...prev, location: "" }));
+        setSelectedCity(null);
+        setIsOtherSelected(false);
+      } } catch (error) {
         console.error("Error loading cities:", error);
         setCities([]);
       }
@@ -135,10 +163,42 @@ const UserInfoForm = () => {
   // Handle form field changes
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prevState) => ({
-      ...prevState,
-      [name]: value,
-    }));
+
+    // update the data
+    setFormData((prev) => ({ ...prev, [name]: value }));
+
+    // only validate salary here
+    if (name === "salary") {
+      if (value === "") {
+        setSalErr((prev) => ({ ...prev, salary: "Salary is required." }));
+      } else {
+        const num = Number(value);
+        if (isNaN(num)) {
+          setSalErr((prev) => ({ ...prev, salary: "Must be a number." }));
+        } else if (num < 1) {
+          setSalErr((prev) => ({ ...prev, salary: "Minimum is 1." }));
+        } else if (num > 1000) {
+          setSalErr((prev) => ({ ...prev, salary: "Cannot exceed 1000." }));
+        } else {
+          setSalErr((prev) => ({ ...prev, salary: "" }));
+        }
+      }
+    }
+    if (name === "expectedMinSalary") {
+      if (value === "") {
+      } else {
+        const num = Number(value);
+        if (isNaN(num)) {
+          setMSalErr((prev) => ({ ...prev, salary: "Must be a number." }));
+        } else if (num < 1) {
+          setMSalErr((prev) => ({ ...prev, salary: "Minimum is 1." }));
+        } else if (num > 1000) {
+          setMSalErr((prev) => ({ ...prev, salary: "Cannot exceed 1000." }));
+        } else {
+          setMSalErr((prev) => ({ ...prev, salary: "" }));
+        }
+      }
+    }
   };
 
   // Handle company dropdown change
@@ -167,13 +227,23 @@ const UserInfoForm = () => {
 
     // Validate file type
     if (!file.type.match(/image\/(jpeg|jpg|png)$/)) {
-      alert("Please upload an image file (JPEG, JPG, or PNG)");
+     setAlert({
+        open: true,
+        type: "warning",
+        title: "Warning",
+        message: "Please upload an image file (JPEG, JPG, or PNG)!",
+      });
       return;
     }
 
     // Validate file size (max 2MB)
     if (file.size > 2 * 1024 * 1024) {
-      alert("Image size should be less than 2MB");
+      setAlert({
+        open: true,
+        type: "warning",
+        title: "Warning",
+        message: "Image size should be less than 2MB",
+      });
       return;
     }
 
@@ -205,7 +275,12 @@ const UserInfoForm = () => {
       }
     } catch (error) {
       console.error("Profile picture upload error:", error);
-      alert("Failed to upload profile picture. Please try again.");
+      setAlert({
+        open: true,
+        type: "error",
+        title: "Error",
+        message: "Failed to upload profile picture. Please try again.",
+      });
     } finally {
       setUploadingProfilePic(false);
     }
@@ -248,7 +323,12 @@ const UserInfoForm = () => {
       });
 
       if (res) {
-        alert("Profile updated successfully");
+        setAlert({
+        open: true,
+        type: "success",
+        title: "Success",
+        message: "Profile updated successfully",
+      });
         console.log("res", res);
         dispatch(UpdateUser(res.user));
         navigate(refer);
@@ -257,7 +337,12 @@ const UserInfoForm = () => {
       }
     } catch (error) {
       console.error("Form submission error:", error);
-      alert("Failed to update profile. Please try again.");
+     setAlert({
+        open: true,
+        type: "error",
+        title: "Error",
+        message: "Failed to upload profile picture. Please try again.",
+      });
     } finally {
       setLoading(false);
     }
@@ -273,15 +358,34 @@ const UserInfoForm = () => {
       borderRadius: 50,
       border: "1px solid #24252C",
       boxShadow: state.isFocused ? "0 0 0 2px #3b82f6" : "none",
-      "&:hover": {
-        borderColor: "#d1d5db",
-      },
+
+      // let the control grow vertically if needed, but cap it
+      minHeight: "48px",
+      maxHeight: "120px", // max height of the entire control
+      overflowY: "auto", // scroll if too many chips
     }),
+
+    valueContainer: (provided) => ({
+      ...provided,
+      display: "flex",
+      flexWrap: "wrap", // allow chips to wrap onto new lines
+      gap: "4px",
+      overflowY: "auto", // scroll if wrapped lines exceed space
+      maxHeight: "80px", // cap wrapping area
+      padding: "4px 8px", // inner padding
+    }),
+
+    multiValue: (provided) => ({
+      ...provided,
+      margin: "2px", // tighten up chip margins
+    }),
+
     menu: (provided) => ({
       ...provided,
       boxShadow: "0 2px 10px rgba(0, 0, 0, 0.1)",
       border: "1px solid #d1d5db",
     }),
+
     option: (provided, state) => ({
       ...provided,
       backgroundColor: state.isSelected ? "#3b82f6" : "white",
@@ -302,6 +406,13 @@ const UserInfoForm = () => {
 
   return (
     <Box sx={{ padding: "2rem", bgcolor: "white" }}>
+      <AlertModal
+              open={alert.open}
+              onClose={() => setAlert({ ...alert, open: false })}
+              type={alert.type}
+              title={alert.title}
+              message={alert.message}
+            />
       <Box
         sx={{ display: "flex", flexDirection: "column", alignItems: "center" }}
       >
@@ -496,7 +607,8 @@ const UserInfoForm = () => {
                       color: "#24252C",
                     }}
                   >
-                    Educational Qualifications <span style={{ color: "red" }}>*</span>
+                    Educational Qualifications{" "}
+                    <span style={{ color: "red" }}>*</span>
                   </label>
                   <Select
                     isMulti
@@ -504,9 +616,8 @@ const UserInfoForm = () => {
                       { value: "Bachelor's", label: "Bachelor's" },
                       { value: "Master", label: "Master" },
                       { value: "MBA", label: "MBA" },
-                      { value: "CA", label: "CA" }
-                    ]
-                    }
+                      { value: "CA", label: "CA" },
+                    ]}
                     value={formData.highestQualification.map((mode) => ({
                       value: mode,
                       label: mode,
@@ -582,6 +693,12 @@ const UserInfoForm = () => {
                     style={{ borderRadius: 50, border: "1px solid #24252C" }}
                     required
                   />
+
+                  {SalErr.salary && (
+                    <p className="mt-1 ml-1 text-sm text-red-600" role="alert">
+                      {SalErr.salary}
+                    </p>
+                  )}
                 </div>
                 <div className="mb-6">
                   <label
@@ -646,152 +763,58 @@ const UserInfoForm = () => {
         {/* Consulting Questions */}
 
         <Box
-      sx={{
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        width: "100%",
-        mt: 4,
-      }}
-    >
-      <Box
-        sx={{
-          display: "flex",
-          border: "1px solid #0000004D",
-          borderRadius: 4,
-          width: { xs: "100%", sm: "100%", lg: "80%", md: "80%" },
-          flexDirection: "column",
-        }}
-      >
-        <Typography
-          sx={{
-            color: "#24252C",
-            fontFamily: "Satoshi",
-            fontWeight: 700,
-            p: 2,
-            fontSize: "20px",
-          }}
-        >
-          Consulting Background
-        </Typography>
-        <Box
           sx={{
             display: "flex",
-            justifyContent: {
-              xs: "center",
-              sm: "center",
-              lg: "space-between",
-              md: "space-between",
-            },
-            flexDirection: {
-              xs: "column",
-              sm: "column",
-              lg: "row",
-              md: "row",
-            },
+            justifyContent: "center",
+            alignItems: "center",
             width: "100%",
+            mt: 4,
           }}
         >
           <Box
             sx={{
-              width: { xs: "100%", sm: "100%", md: "50%", lg: "50%" },
-              p: 2,
+              display: "flex",
+              border: "1px solid #0000004D",
+              borderRadius: 4,
+              width: { xs: "100%", sm: "100%", lg: "80%", md: "80%" },
+              flexDirection: "column",
             }}
           >
-            <div className="mb-6">
-              <label
-                className="block mb-4 ml-2"
-                style={{
-                  fontFamily: "Satoshi",
-                  fontWeight: 500,
-                  fontSize: "16px",
-                  color: "#24252C",
+            <Typography
+              sx={{
+                color: "#24252C",
+                fontFamily: "Satoshi",
+                fontWeight: 700,
+                p: 2,
+                fontSize: "20px",
+              }}
+            >
+              Consulting Background
+            </Typography>
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: {
+                  xs: "center",
+                  sm: "center",
+                  lg: "space-between",
+                  md: "space-between",
+                },
+                flexDirection: {
+                  xs: "column",
+                  sm: "column",
+                  lg: "row",
+                  md: "row",
+                },
+                width: "100%",
+              }}
+            >
+              <Box
+                sx={{
+                  width: { xs: "100%", sm: "100%", md: "50%", lg: "50%" },
+                  p: 2,
                 }}
               >
-                Do you have a Consulting Background?{" "}
-                <span style={{ color: "red" }}>*</span>
-              </label>
-              {/* Radio Buttons */}
-              <label className="flex items-center gap-2 ml-2 mb-2">
-                <input
-                  type="radio"
-                  name="hasConsultingBackground"
-                  value="Yes"
-                  checked={formData.hasConsultingBackground === "Yes"}
-                  onChange={handleChange}
-                  className="accent-blue-500"
-                />
-                <span
-                  style={{
-                    color: "#24252C",
-                    fontFamily: "Satoshi",
-                    fontWeight: 500,
-                    fontSize: "16px",
-                  }}
-                >
-                  Yes
-                </span>
-              </label>
-
-              <label className="flex items-center gap-2 ml-2">
-                <input
-                  type="radio"
-                  name="hasConsultingBackground"
-                  value="No"
-                  checked={formData.hasConsultingBackground === "No"}
-                  onChange={handleChange}
-                  className="accent-blue-500"
-                />
-                <span
-                  style={{
-                    color: "#24252C",
-                    fontFamily: "Satoshi",
-                    fontWeight: 500,
-                    fontSize: "16px",
-                  }}
-                >
-                  No
-                </span>
-              </label>
-              
-            </div>
-            {formData.hasConsultingBackground === "Yes" && (
-            <div className="mb-6">
-                  <label
-                    className="block mb-4 ml-2"
-                    style={{
-                      fontFamily: "Satoshi",
-                      fontWeight: 500,
-                      fontSize: "16px",
-                      color: "#24252C",
-                    }}
-                  >
-                    When did you first join Consulting?{" "}
-                  </label>
-                  <select
-                    name="joinConsulting"
-                    value={formData.joinConsulting}
-                    onChange={handleChange}
-                    className="w-full px-4 py-3 pr-12 text-sm border rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none"
-                    style={{ borderRadius: 50, border: "1px solid #24252C" }}
-                    required
-                  >
-                    <option value="">Select an option</option>
-                    <option value="Lateral">Lateral</option>
-                    <option value="Out of campus">Out of Campus</option>
-                  </select>
-                </div>)}
-                </Box>
-
-                <Box
-            sx={{
-              width: { xs: "100%", sm: "100%", md: "50%", lg: "50%" },
-              p: 2,
-            }}
-          >
-
-            {formData.hasConsultingBackground === "Yes" && (
-              <>  
                 <div className="mb-6">
                   <label
                     className="block mb-4 ml-2"
@@ -802,52 +825,56 @@ const UserInfoForm = () => {
                       color: "#24252C",
                     }}
                   >
-                    Last/Current Consulting Company{" "}
+                    Do you have a Consulting Background?{" "}
+                    <span style={{ color: "red" }}>*</span>
                   </label>
-                  <select
-                    name="lastConsultingCompany"
-                    value={formData.lastConsultingCompany}
-                    onChange={handlelastCompanyChange}
-                    className="w-full px-4 py-3 pr-12 text-sm border rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none"
-                    style={{ borderRadius: 50, border: "1px solid #24252C" }}
-                  >
-                    <option value="">Select your Company</option>
-                    <option value="McKinsey & Company">
-                      McKinsey & Company
-                    </option>
-                    <option value="Boston Consulting Group">
-                      Boston Consulting Group
-                    </option>
-                    <option value="Bain & Company">Bain & Company</option>
-                    <option value="Deloitte">Deloitte</option>
-                    <option value="Accenture">Accenture</option>
-                    <option value="Kearney">Kearney</option>
-                    <option value="EY">EY</option>
-                    <option value="PwC">PwC</option>
-                    <option value="KPMG">KPMG</option>
-                    <option value="TSMG">TSMG</option>
-                    <option value="Strategy&">Strategy&</option>
-                    <option value="Oliver Wyman">Oliver Wyman</option>
-                    <option value="IBM">IBM</option>
-                    <option value="Capgemini E.L.I.T.E.">
-                      Capgemini E.L.I.T.E.
-                    </option>
-                    <option value="ZS Associates">ZS Associates</option>
-                    <option value="Roland Berger">Roland Berger</option>
-                    <option value="Alvarez & Marsal">Alvarez & Marsal</option>
-                    <option value="Parthenon Group">Parthenon Group</option>
-                    <option value="Siemens Management Consulting">
-                      Siemens Management Consulting
-                    </option>
-                    <option value="Arthur D. Little">Arthur D. Little</option>
-                    <option value="Other">Other</option>
-                  </select>
-                </div>
+                  {/* Radio Buttons */}
+                  <label className="flex items-center gap-2 ml-2 mb-2">
+                    <input
+                      type="radio"
+                      name="hasConsultingBackground"
+                      value="Yes"
+                      checked={formData.hasConsultingBackground === "Yes"}
+                      onChange={handleChange}
+                      className="accent-blue-500"
+                    />
+                    <span
+                      style={{
+                        color: "#24252C",
+                        fontFamily: "Satoshi",
+                        fontWeight: 500,
+                        fontSize: "16px",
+                      }}
+                    >
+                      Yes
+                    </span>
+                  </label>
 
-                {formData.lastConsultingCompany === "Other" && (
+                  <label className="flex items-center gap-2 ml-2">
+                    <input
+                      type="radio"
+                      name="hasConsultingBackground"
+                      value="No"
+                      checked={formData.hasConsultingBackground === "No"}
+                      onChange={handleChange}
+                      className="accent-blue-500"
+                    />
+                    <span
+                      style={{
+                        color: "#24252C",
+                        fontFamily: "Satoshi",
+                        fontWeight: 500,
+                        fontSize: "16px",
+                      }}
+                    >
+                      No
+                    </span>
+                  </label>
+                </div>
+                {formData.hasConsultingBackground === "Yes" && (
                   <div className="mb-6">
                     <label
-                      className="block text-gray-700 text-sm font-semibold mb-4 ml-2"
+                      className="block mb-4 ml-2"
                       style={{
                         fontFamily: "Satoshi",
                         fontWeight: 500,
@@ -855,55 +882,156 @@ const UserInfoForm = () => {
                         color: "#24252C",
                       }}
                     >
-                      Other Company Name
+                      When did you first join Consulting?{" "}
                     </label>
-                    <input
-                      type="text"
-                      name="lastConsultingCompany"
-                      value={formData.lastConsultingCustomCompany}
-                      onChange={handlelastCustomCompanyChange}
-                      placeholder="Please Specify Company name...."
-                      className="w-full px-4 py-3 text-sm border focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    <select
+                      name="joinConsulting"
+                      value={formData.joinConsulting}
+                      onChange={handleChange}
+                      className="w-full px-4 py-3 pr-12 text-sm border rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none"
                       style={{ borderRadius: 50, border: "1px solid #24252C" }}
-                    />
+                      required
+                    >
+                      <option value="">Select an option</option>
+                      <option value="Lateral">Lateral</option>
+                      <option value="Out of campus">Out of Campus</option>
+                    </select>
                   </div>
                 )}
+              </Box>
 
-                <div className="mb-6 mt-9">
-                  <label
-                    className="block mb-4 ml-2"
-                    style={{
-                      fontFamily: "Satoshi",
-                      fontWeight: 500,
-                      fontSize: "16px",
-                      color: "#24252C",
-                      
-                    }}
-                  >
-                    Total Experience in Consulting{" "}
-                  </label>
-                  <select
-                    name="totalYearsInConsulting"
-                    value={formData.totalYearsInConsulting}
-                    onChange={handleChange}
-                    className="w-full px-4 py-3 pr-12 text-sm border rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none"
-                    style={{ borderRadius: 50, border: "1px solid #24252C" }}
-                    required
-                  >
-                    <option value="">Select experience</option>
-                    {Array.from({ length: 15 }, (_, i) => (
-                      <option key={i + 1} value={(i + 1).toString()}>{`${
-                        i + 1
-                      } year${i === 0 ? "" : "s"}`}</option>
-                    ))}
-                  </select>
-                </div>
-              </>
-            )}
+              <Box
+                sx={{
+                  width: { xs: "100%", sm: "100%", md: "50%", lg: "50%" },
+                  p: 2,
+                }}
+              >
+                {formData.hasConsultingBackground === "Yes" && (
+                  <>
+                    <div className="mb-6">
+                      <label
+                        className="block mb-4 ml-2"
+                        style={{
+                          fontFamily: "Satoshi",
+                          fontWeight: 500,
+                          fontSize: "16px",
+                          color: "#24252C",
+                        }}
+                      >
+                        Last/Current Consulting Company{" "}
+                      </label>
+                      <select
+                        name="lastConsultingCompany"
+                        value={formData.lastConsultingCompany}
+                        onChange={handlelastCompanyChange}
+                        className="w-full px-4 py-3 pr-12 text-sm border rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none"
+                        style={{
+                          borderRadius: 50,
+                          border: "1px solid #24252C",
+                        }}
+                      >
+                        <option value="">Select your Company</option>
+                        <option value="McKinsey & Company">
+                          McKinsey & Company
+                        </option>
+                        <option value="Boston Consulting Group">
+                          Boston Consulting Group
+                        </option>
+                        <option value="Bain & Company">Bain & Company</option>
+                        <option value="Deloitte">Deloitte</option>
+                        <option value="Accenture">Accenture</option>
+                        <option value="Kearney">Kearney</option>
+                        <option value="EY">EY</option>
+                        <option value="PwC">PwC</option>
+                        <option value="KPMG">KPMG</option>
+                        <option value="TSMG">TSMG</option>
+                        <option value="Strategy&">Strategy&</option>
+                        <option value="Oliver Wyman">Oliver Wyman</option>
+                        <option value="IBM">IBM</option>
+                        <option value="Capgemini E.L.I.T.E.">
+                          Capgemini E.L.I.T.E.
+                        </option>
+                        <option value="ZS Associates">ZS Associates</option>
+                        <option value="Roland Berger">Roland Berger</option>
+                        <option value="Alvarez & Marsal">
+                          Alvarez & Marsal
+                        </option>
+                        <option value="Parthenon Group">Parthenon Group</option>
+                        <option value="Siemens Management Consulting">
+                          Siemens Management Consulting
+                        </option>
+                        <option value="Arthur D. Little">
+                          Arthur D. Little
+                        </option>
+                        <option value="Other">Other</option>
+                      </select>
+                    </div>
+
+                    {formData.lastConsultingCompany === "Other" && (
+                      <div className="mb-6">
+                        <label
+                          className="block text-gray-700 text-sm font-semibold mb-4 ml-2"
+                          style={{
+                            fontFamily: "Satoshi",
+                            fontWeight: 500,
+                            fontSize: "16px",
+                            color: "#24252C",
+                          }}
+                        >
+                          Other Company Name
+                        </label>
+                        <input
+                          type="text"
+                          name="lastConsultingCompany"
+                          value={formData.lastConsultingCustomCompany}
+                          onChange={handlelastCustomCompanyChange}
+                          placeholder="Please Specify Company name...."
+                          className="w-full px-4 py-3 text-sm border focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          style={{
+                            borderRadius: 50,
+                            border: "1px solid #24252C",
+                          }}
+                        />
+                      </div>
+                    )}
+
+                    <div className="mb-6 mt-9">
+                      <label
+                        className="block mb-4 ml-2"
+                        style={{
+                          fontFamily: "Satoshi",
+                          fontWeight: 500,
+                          fontSize: "16px",
+                          color: "#24252C",
+                        }}
+                      >
+                        Total Experience in Consulting{" "}
+                      </label>
+                      <select
+                        name="totalYearsInConsulting"
+                        value={formData.totalYearsInConsulting}
+                        onChange={handleChange}
+                        className="w-full px-4 py-3 pr-12 text-sm border rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none"
+                        style={{
+                          borderRadius: 50,
+                          border: "1px solid #24252C",
+                        }}
+                        required
+                      >
+                        <option value="">Select experience</option>
+                        {Array.from({ length: 15 }, (_, i) => (
+                          <option key={i + 1} value={(i + 1).toString()}>{`${
+                            i + 1
+                          } year${i === 0 ? "" : "s"}`}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </>
+                )}
+              </Box>
+            </Box>
           </Box>
         </Box>
-      </Box>
-    </Box>
         <Box
           sx={{
             display: "flex",
@@ -1290,11 +1418,18 @@ const UserInfoForm = () => {
                     type="number"
                     name="expectedMinSalary"
                     value={formData.expectedMinSalary}
+                    min={1}
+                    max={1000}
                     onChange={handleChange}
                     className="w-full px-4 py-3 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     style={{ borderRadius: 50, border: "1px solid #24252C" }}
                     required
                   />
+                  {MSalErr.salary && (
+                    <p className="mt-1 ml-1 text-sm text-red-600" role="alert">
+                      {MSalErr.salary}
+                    </p>
+                  )}
                 </div>
 
                 {/* Preferred Work Types (Multi-select) */}

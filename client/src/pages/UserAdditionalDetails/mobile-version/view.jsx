@@ -9,6 +9,7 @@ import axios from "axios";
 import { useLocation } from "react-router-dom";
 import Select from "react-select";
 import { UpdateUser } from "../../../redux/userSlice"; // Assuming Redux slice is used
+import AlertModal from "../../../components/Alerts/view";
 import { useDispatch } from "react-redux";
 import { skillsList } from "../../../assets/mock"; // Assuming mock data exists
 import { Box, Button, Typography } from "@mui/material";
@@ -34,6 +35,19 @@ const UserInfoForm = () => {
   const [profilePic, setProfilePic] = useState(user?.profileUrl || ""); // Preview URL
   const [profilePicUrl, setProfilePicUrl] = useState(user?.profileUrl || ""); // Final URL to submit
   const [cities, setCities] = useState([]);
+  const [SalErr, setSalErr] = useState({
+      salary: "",
+    });
+  const [MSalErr, setMSalErr] = useState({
+      salary: "",
+    });
+
+  const [alert, setAlert] = useState({
+        open: false,
+        type: "success",
+        title: "",
+        message: "",
+    });
   const [selectedCity, setSelectedCity] = useState(null);
   const [inputValue, setInputValue] = useState(""); // For city search input
   const [isOtherSelected, setIsOtherSelected] = useState(false); // For custom city input
@@ -58,7 +72,7 @@ const UserInfoForm = () => {
     about: defaultValues?.ProfessionalDetails?.about || "",
     salary: defaultValues?.ProfessionalDetails?.currentSalary || "", // Added default for salary
     contactNumber: defaultValues?.PersonalInformation?.contactNumber || "",
-    location: defaultValues?.PersonalInformation?.location || "",
+    location: "",
     openToRelocate: defaultValues?.ProfessionalDetails?.openToRelocate || "Yes", // Default to Yes
     // isItConsultingCompany: defaultValues?.ProfessionalDetails?.isItConsultingCompany || "Yes", // This field was in original state but not in UI, removing or clarifying needed. Assuming removed for UI purposes.
     joinConsulting: defaultValues?.ProfessionalDetails?.joinConsulting || "",
@@ -67,14 +81,10 @@ const UserInfoForm = () => {
     skills: filters.skills,
     expectedMinSalary:
       defaultValues?.ProfessionalDetails?.expectedMinSalary || "", // Added default
-    preferredLocations:
-      defaultValues?.ProfessionalDetails?.preferredLocations || [], // Added default
-    preferredWorkTypes: defaultValues?.ProfessionalDetails
-      ?.preferredWorkTypes || ["Full-Time"], // Default to Full-Time
-    preferredWorkModes: defaultValues?.ProfessionalDetails
-      ?.preferredWorkModes || ["Remote"], // Default to Remote
-    highestQualification: defaultValues?.ProfessionalDetails
-      ?.highestQualification || ["Bachelor's"], // Default to Bachelors
+    preferredLocations: [], // Added default
+    preferredWorkTypes: ["Full-Time"], // Default to Full-Time
+    preferredWorkModes:  [], // Default to Remote
+    highestQualification:  ["Bachelor's"], // Default to Bachelors
     lastConsultingCompany:
       defaultValues?.ProfessionalDetails?.lastConsultingCompany || "",
     lastConsultingCustomCompany: "", // For storing the custom consulting company input temporarily
@@ -102,8 +112,22 @@ const UserInfoForm = () => {
           .map((row) => row.trim())
           .filter(Boolean) // Remove empty rows
           .sort(); // Sort alphabetically
-        setCities([...new Set(cityList)]); // Use Set to remove duplicates
-      } catch (error) {
+        const uniqueCities = [...new Set(cityList)];
+      setCities(uniqueCities);
+
+      // now that we have cities, validate the default location
+      const defaultLoc =
+        location.state?.parsedData?.data?.PersonalInformation?.location;
+      if (defaultLoc && uniqueCities.includes(defaultLoc)) {
+        setFormData((prev) => ({ ...prev, location: defaultLoc }));
+        setSelectedCity(defaultLoc);
+        setIsOtherSelected(false);
+      } else {
+        // leave it blank
+        setFormData((prev) => ({ ...prev, location: "" }));
+        setSelectedCity(null);
+        setIsOtherSelected(false);
+      } } catch (error) {
         console.error("Error loading cities:", error);
         setCities([]);
       }
@@ -208,12 +232,45 @@ const UserInfoForm = () => {
   };
 
   // Handle form field changes for standard inputs (text, number, date, select)
+ // Handle form field changes
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prevState) => ({
-      ...prevState,
-      [name]: value,
-    }));
+
+    // update the data
+    setFormData((prev) => ({ ...prev, [name]: value }));
+
+    // only validate salary here
+    if (name === "salary") {
+      if (value === "") {
+        setSalErr((prev) => ({ ...prev, salary: "Salary is required." }));
+      } else {
+        const num = Number(value);
+        if (isNaN(num)) {
+          setSalErr((prev) => ({ ...prev, salary: "Must be a number." }));
+        } else if (num < 1) {
+          setSalErr((prev) => ({ ...prev, salary: "Minimum is 1." }));
+        } else if (num > 1000) {
+          setSalErr((prev) => ({ ...prev, salary: "Cannot exceed 1000." }));
+        } else {
+          setSalErr((prev) => ({ ...prev, salary: "" }));
+        }
+      }
+    }
+    if (name === "expectedMinSalary") {
+      if (value === "") {
+      } else {
+        const num = Number(value);
+        if (isNaN(num)) {
+          setMSalErr((prev) => ({ ...prev, salary: "Must be a number." }));
+        } else if (num < 1) {
+          setMSalErr((prev) => ({ ...prev, salary: "Minimum is 1." }));
+        } else if (num > 1000) {
+          setMSalErr((prev) => ({ ...prev, salary: "Cannot exceed 1000." }));
+        } else {
+          setMSalErr((prev) => ({ ...prev, salary: "" }));
+        }
+      }
+    }
   };
 
 
@@ -244,13 +301,23 @@ const UserInfoForm = () => {
 
     // Validate file type
     if (!file.type.match(/image\/(jpeg|jpg|png)$/)) {
-      alert("Please upload an image file (JPEG, JPG, or PNG)");
+      setAlert({
+        open: true,
+        type: "warning",
+        title: "Warning",
+        message: "Please upload an image file (JPEG, JPG, or PNG)!",
+      });
       return;
     }
 
     // Validate file size (max 2MB)
     if (file.size > 2 * 1024 * 1024) {
-      alert("Image size should be less than 2MB");
+     setAlert({
+        open: true,
+        type: "warning",
+        title: "Warning",
+        message: "Image size should be less than 2MB",
+      });
       return;
     }
 
@@ -281,7 +348,12 @@ const UserInfoForm = () => {
       }
     } catch (error) {
       console.error("Profile picture upload error:", error);
-      alert("Failed to upload profile picture. Please try again.");
+     setAlert({
+        open: true,
+        type: "error",
+        title: "Error",
+        message: "Failed to upload profile picture. Please try again.",
+      });
       setProfilePic(user?.profileUrl || ""); // Revert preview on error
       setProfilePicUrl(user?.profileUrl || ""); // Revert URL on error
     } finally {
@@ -348,7 +420,12 @@ const UserInfoForm = () => {
 
       if (res?.success) {
         // Check for success property in the response
-        alert("Profile updated successfully");
+       setAlert({
+        open: true,
+        type: "success",
+        title: "Success",
+        message: "Profile updated successfully",
+      });
         console.log("res", res);
         dispatch(UpdateUser(res.user)); // Assuming the response contains the updated user object
         navigate(refer); // Navigate after successful update
@@ -356,7 +433,12 @@ const UserInfoForm = () => {
         // Handle backend validation errors or specific messages
         const errorMessage = res?.message || "Update failed. Please try again.";
         setError(errorMessage); // Set error state to display
-        alert(errorMessage); // Show alert
+        setAlert({
+        open: true,
+        type: "error",
+        title: "Error",
+        message: "Some error occurred. Please try again.",
+      });
         console.error("API Error:", res);
         // Optionally stay on the current stage or navigate back
       }
@@ -366,8 +448,12 @@ const UserInfoForm = () => {
         error?.response?.data?.message ||
         error.message ||
         "An unexpected error occurred during submission.";
-      setError(apiErrorMessage);
-      alert(`Submission Failed: ${apiErrorMessage}`);
+       setAlert({
+        open: true,
+        type: "error",
+        title: "Error",
+        message: "Failed to update Details.",
+      });
     } finally {
       setLoading(false);
     }
@@ -550,6 +636,30 @@ const UserInfoForm = () => {
       }
   };
 
+  const roundedSelectStyles = {
+  ...baseInputStyles,
+  borderRadius: 50,              // full pill shape
+  border: "1px solid #24252C",   // custom border color
+  padding: "12px 18px",          // vertical + horizontal padding
+  appearance: "none",            // remove native styling
+  WebkitAppearance: "none",      // for Safari
+  MozAppearance: "none",         // for Firefox
+
+  backgroundRepeat: "no-repeat",
+  backgroundSize: "6px 6px",
+  backgroundPosition: "right 16px center",  // adjust arrow position
+
+  // ensure text never runs under the arrow
+  paddingRight: "2.5rem",
+
+  // focus state styling
+  "&:focus": {
+    borderColor: "#3b82f6",                         // blue border
+    boxShadow: "0 0 0 2px rgba(59, 130, 246, 0.5)",  // blue ring
+    outline: "none",
+  },
+};
+
 
    // Styles for custom city input (rounded-lg, px-4 py-2 border)
    const customCityInputStyles = {
@@ -638,7 +748,7 @@ const UserInfoForm = () => {
                     name="experience"
                     value={formData.experience}
                     onChange={handleChange}
-                    style={roundedInputStyles} // Apply rounded styles including appearance:none
+                    style={roundedSelectStyles} // Apply rounded styles including appearance:none
                     required // Required based on *
                   >
                     <option value="">Select experience</option>
@@ -773,6 +883,11 @@ const UserInfoForm = () => {
                     style={{ borderRadius: 50, border: "1px solid #24252C" }}
                     required
                   />
+                  {SalErr.salary && (
+                    <p className="mt-1 ml-1 text-sm text-red-600" role="alert">
+                      {SalErr.salary}
+                    </p>
+                  )}
                 </div>
                 {/* Open to Relocation */}
                 <div className="mb-6">
@@ -922,7 +1037,7 @@ const UserInfoForm = () => {
                       name="joinConsulting"
                       value={formData.joinConsulting}
                       onChange={handleChange}
-                      style={roundedInputStyles} // Apply rounded styles including appearance:none
+                      style={roundedSelectStyles} // Apply rounded styles including appearance:none
                        // Not required
                     >
                       <option value="">Select an option</option>
@@ -952,7 +1067,7 @@ const UserInfoForm = () => {
                         name="lastConsultingCompany"
                         value={formData.lastConsultingCompany}
                         onChange={handlelastCompanyChange}
-                         style={roundedInputStyles} // Apply rounded styles including appearance:none
+                         style={roundedSelectStyles} // Apply rounded styles including appearance:none
                         // Not required
                       >
                         <option value="">Select your Company</option>
@@ -1036,7 +1151,7 @@ const UserInfoForm = () => {
                         name="totalYearsInConsulting"
                         value={formData.totalYearsInConsulting}
                         onChange={handleChange}
-                         style={roundedInputStyles} // Apply rounded styles including appearance:none
+                         style={roundedSelectStyles} // Apply rounded styles including appearance:none
                         // Not required
                       >
                         <option value="">Select experience</option>
@@ -1348,6 +1463,11 @@ const UserInfoForm = () => {
                     required // Required based on *
                     min="0" // Keep min attribute
                   />
+                   {MSalErr.salary && (
+                    <p className="mt-1 ml-1 text-sm text-red-600" role="alert">
+                      {MSalErr.salary}
+                    </p>
+                  )}
                 </div>
                 {/* Preferred Work Types (Multi-select) */}
                 <div className="mb-6">
@@ -1515,6 +1635,13 @@ const UserInfoForm = () => {
       <Box
         sx={{ display: "flex", flexDirection: "column", alignItems: "center" }}
       >
+         <AlertModal
+                      open={alert.open}
+                      onClose={() => setAlert({ ...alert, open: false })}
+                      type={alert.type}
+                      title={alert.title}
+                      message={alert.message}
+                    />
         <Typography
           sx={{
             fontFamily: "Satoshi",

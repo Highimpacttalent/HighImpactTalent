@@ -27,6 +27,37 @@ const PasswordChange = () => {
     }
   }, [step]);
 
+  const handleEmailCheck = async () => {
+    if (!email) return;
+    setError("");
+    setLoading(true);
+    try {
+      const res = await fetch(
+        "https://highimpacttalent.onrender.com/api-v1/user/check-email",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email }),
+        }
+      );
+      const data = await res.json();
+      
+
+      if (res.ok && data.success && data.exists) {
+        setError("");
+        setStep(2);
+      } else if (res.ok && data.success && !data.exists) {  
+        setError("That email isn’t registered with us.");
+      } else {
+        throw new Error(data.message || "Email check failed");
+      }
+    } catch (err) {
+      setError(err.message);
+    } finally{ 
+      setLoading(false);
+    }
+  };
+
   const sendOtp = async () => {
     const randomOtp = Math.floor(Math.random() * 10000); // Random 4-digit OTP
     setGeneratedOtp(randomOtp);
@@ -84,7 +115,7 @@ const PasswordChange = () => {
       setSuccessModal(true);
       setTimeout(() => {
         setSuccessModal(false);
-        navigate("/find-jobs"); // Redirect after success
+        navigate("/u-login"); // Redirect after success
       }, 2000);
     } catch (error) {
       setLoading(false);
@@ -104,6 +135,17 @@ const PasswordChange = () => {
           <Typography  gutterBottom color="#24252C" fontWeight={700} fontFamily={"Satoshi"} fontSize={"16px"} >
           Email Address
       </Typography>
+      {error &&  <Typography
+              textAlign="center"
+              sx={{
+                fontFamily: "Satoshi",
+                color: "#FF6B6B",
+                fontSize: "12px",
+                fontStyle: "italic",
+                mt: 1,
+                mb:1
+              }}
+            >We couldn’t find an account associated with that email address. Please double-check and try again.</Typography>}
           <TextField
             fullWidth
             placeholder="abc@gmail.com"
@@ -141,8 +183,13 @@ const PasswordChange = () => {
               <Link href="/privacy-policy"> Privacy Policy</Link> of High Impact
               Talent
             </Typography>
-          <Button fullWidth variant="contained"  disabled={!email } onClick={() => setStep(2)} sx={{borderRadius:16,mb:16,textTransform:"none",fontFamily:"Satoshi",bgColor:"#3C7EFC"}}>
-            Submit
+            
+          <Button fullWidth variant="contained"  disabled={!email } onClick={handleEmailCheck} sx={{borderRadius:16,mb:16,textTransform:"none",fontFamily:"Satoshi",bgColor:"#3C7EFC"}}>
+           {loading ? (
+                <CircularProgress size={20} sx={{ color: "white" }} />
+              ) : (
+                "Submit"
+              )}
           </Button>
         </Box>
       )}

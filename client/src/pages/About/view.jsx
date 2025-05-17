@@ -3,6 +3,7 @@ import { Box, Typography, Stack } from '@mui/material';
 import about1 from "../../assets/about1.svg";
 import about2 from "../../assets/about2.svg";
 import Profile from "../../assets/ProfileImg.jpg";
+import Profile2 from "../../assets/Umangsomani.jpeg";
 
 const About = () => {
   return (
@@ -136,7 +137,7 @@ const About = () => {
         <Box sx={{ width: { xs: "100%", md: "50%" }, p: 2 }}>
           <Stack sx={{ justifyContent: "center", alignItems: "center" }} gap={0.5}>
             <Box sx={{ width: "60%", height: 280, display: "flex", justifyContent: "center", alignItems: "center" }}>
-              <img src="https://media.licdn.com/dms/image/v2/C4E03AQHvDmfkfmUe5g/profile-displayphoto-shrink_800_800/profile-displayphoto-shrink_800_800/0/1594657616165?e=1747267200&v=beta&t=noDbx2lcVeUKX8Ql3-0bF-lJDmzHckcQLpBFrbmSocY"
+              <img src={Profile2}
                 alt="img here"
                 style={{ borderRadius: 14, height: "100%", objectFit: "cover", width: "100%" }}
               />

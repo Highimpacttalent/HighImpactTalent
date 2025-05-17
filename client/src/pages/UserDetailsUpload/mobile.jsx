@@ -143,13 +143,25 @@ const ResumeUpload = () => {
       }, 2000);
     } catch (error) {
       console.error("Resume submission error:", error);
-      setError("Failed to submit resume. Please try again.");
-      setAlert({
+      if(error.response.data.message === "Invalid or expired token"){
+        setAlert({
         open: true,
-        message: "Failed to submit resume. Please try again.",
+        message: "Your Session has expired. Please Logout once and Login again.",
         title: "Error",
         type: "error",
       });
+      }
+      setError("Failed to submit resume. Please try again.");
+      setAlert({
+        open: true,
+        message: "Failed to parse resume.Please wait..",
+        title: "Error",
+        type: "error",
+      });
+      setTimeout(() => {
+        navigate("/user-additional-details");
+      }, 2000);
+      
     } finally {
       setSubmitting(false);
       setOpenModal(false);

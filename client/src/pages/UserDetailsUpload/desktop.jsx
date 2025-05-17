@@ -77,6 +77,14 @@ const ResumeUpload = () => {
       setFileUrl(response.data.url);
     } catch (error) {
       console.error("Resume upload error:", error);
+      if(error.response.data.message === "Invalid or expired token"){
+        setAlert({
+        open: true,
+        message: "Your Session has expired. Please Logout once and Login again.",
+        title: "Error",
+        type: "error",
+      });
+      }
       setAlert({
         open: true,
         message: "Failed to upload resume. Please try again.",
@@ -146,10 +154,13 @@ const ResumeUpload = () => {
       setError("Failed to submit resume. Please try again.");
       setAlert({
         open: true,
-        message: "Failed to submit resume. Please try again.",
+        message: "Failed to parse resume.Please wait..",
         title: "Error",
         type: "error",
-        });
+      });
+      setTimeout(() => {
+        navigate("/user-additional-details");
+      }, 2000);
     } finally {
       setSubmitting(false);
       setOpenModal(false);
