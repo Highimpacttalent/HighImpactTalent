@@ -964,7 +964,7 @@ export const checkEmail = async (req, res) => {
   }
 
   try {
-    const user = await Users.findOne({ email: email.toLowerCase().trim() });
+    const user = await Users.findOne({ email });
     return res.json({ success: true, exists: Boolean(user) });
   } catch (err) {
     console.error("Error checking email existence:", err);
