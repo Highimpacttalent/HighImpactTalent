@@ -3,6 +3,7 @@ import {
   Box,
   Button,
   Typography,
+  Paper,
   CircularProgress,
   useMediaQuery,
   useTheme,
@@ -18,9 +19,7 @@ import AlertModal from "../../components/Alerts/view.jsx";
 import { useNavigate } from "react-router-dom";
 import BackupIcon from '@mui/icons-material/Backup';
 import { useLocation } from "react-router-dom";
-import { pdfjs } from 'react-pdf';
-// Initialize PDF.js worker
-pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
+import { Document, Page } from 'react-pdf';
 
 const ResumeUpload = () => {
   const location = useLocation();
@@ -140,11 +139,11 @@ const ResumeUpload = () => {
       });
 
       setTimeout(() => {
-        navigate("/user-additional-details", { state: { parsedData, refer } });
+        navigate("/user-additional-details", { state: { parsedData,refer } });
       }, 2000);
     } catch (error) {
       console.error("Resume submission error:", error);
-      if(error.response?.data?.message === "Invalid or expired token"){
+      if(error.response.data.message === "Invalid or expired token"){
         setAlert({
         open: true,
         message: "Your Session has expired. Please Logout once and Login again.",
@@ -155,7 +154,7 @@ const ResumeUpload = () => {
       setError("Failed to submit resume. Please try again.");
       setAlert({
         open: true,
-        message: "Failed to parse resume. Please wait...",
+        message: "Failed to parse resume.Please wait..",
         title: "Error",
         type: "error",
       });
@@ -246,7 +245,7 @@ const ResumeUpload = () => {
       />
 
       {/* Upload Section */}
-      <motion.div
+      <div
         initial={{ opacity: 0, y: 50 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
@@ -324,29 +323,29 @@ const ResumeUpload = () => {
             </Typography>
           )}
 
-          <Box sx={{ display: "flex", flexDirection:"column", alignItems: "center" }}>
-            <Typography
-              fontSize="14px"
-              color="#24252C80"
-              fontFamily="Poppins"
-              mt={3}
-            >
-              Only support .pdf and .docx files.
-            </Typography>
+          <Box sx={{ display: "flex",flexDirection:"column", alignItems: "center", }}>
+          <Typography
+            fontSize="14px"
+            color="#24252C80"
+            fontFamily="Poppins"
+            mt={3}
+          >
+            Only support .pdf and .docx files.
+          </Typography>
             <Button
               variant="contained"
               color="primary"
               onClick={handleSubmit}
-              sx={{ mt: 2, borderRadius: 3, fontWeight: "500", px: 2, py: 1, textTransform: "none", fontFamily: "Poppins" }}              
+              sx={{ mt: 2, borderRadius: 3, fontWeight: "500", px: 2,py:1 ,textTransform:"none",fontFamily:"Poppins"}}              
               disabled={!fileUrl || submitting}
             >
               {submitting ? "Processing..." : "Submit Resume"}
             </Button>
           </Box>
         </Box>
-      </motion.div>
+      </div>
 
-      {/* Resume Preview Section - Enhanced for better mobile compatibility */}
+      {/* Resume Preview Section */}
       {fileUrl && (
         <motion.div
           initial={{ opacity: 0, x: 50 }}
@@ -364,44 +363,31 @@ const ResumeUpload = () => {
               display: "flex",
               flexDirection: "column",
               alignItems: "center",
+              justifyContent: "center",
             }}
           >
-            <Box sx={{ width: "100%", px: 1 }}>
-              <Typography
-                fontSize="20px"
-                fontWeight="600"
-                color="#24252C"
-                fontFamily="Poppins"
-                mb={3}
-              >
-                Resume Preview
-              </Typography>
-            </Box>
-            <Box
-              sx={{
-                width: "100%",
-                height: "100%",
+            <Box sx={{width:"100%",px:1}}>
+            <Typography
+            fontSize="20px"
+            fontWeight="600"
+            color="#24252C"
+            fontFamily="Poppins"
+            mb={3}
+          >
+            Resume Preview
+          </Typography>
+          </Box>
+            <iframe
+              src={fileUrl}
+              width="100%"
+              height="100%"
+              style={{
+                border: "none",
                 borderRadius: "10px",
-                overflow: "hidden",
                 boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.1)",
               }}
-            >
-              {/* Use inline frame with specific parameters for maximum compatibility */}
-              <iframe
-                src={`${fileUrl}#toolbar=0&navpanes=0&view=fitH`}
-                width="100%"
-                height="100%"
-                style={{
-                  border: "none",
-                  borderRadius: "10px",
-                  backgroundColor: "#fff",
-                }}
-                title="Resume Preview"
-                frameBorder="0"
-                scrolling="auto"
-                seamless="seamless"
-              ></iframe>
-            </Box>
+              title="Resume Preview"
+            ></iframe>
           </Box>
         </motion.div>
       )}
