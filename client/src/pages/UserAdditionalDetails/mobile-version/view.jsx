@@ -36,22 +36,20 @@ const UserInfoForm = () => {
   const [profilePicUrl, setProfilePicUrl] = useState(user?.profileUrl || ""); // Final URL to submit
   const [cities, setCities] = useState([]);
   const [SalErr, setSalErr] = useState({
-      salary: "",
-    });
+    salary: "",
+  });
   const [MSalErr, setMSalErr] = useState({
-      salary: "",
-    });
+    salary: "",
+  });
 
   const [alert, setAlert] = useState({
-        open: false,
-        type: "success",
-        title: "",
-        message: "",
-    });
+    open: false,
+    type: "success",
+    title: "",
+    message: "",
+  });
   const [selectedCity, setSelectedCity] = useState(null);
   const [inputValue, setInputValue] = useState(""); // For city search input
-  const [isOtherSelected, setIsOtherSelected] = useState(false); // For custom city input
-  const [customCity, setCustomCity] = useState(""); // Custom city value
   const [filters, setFilters] = useState({
     // Used for skills, keeping it consistent
     skills: defaultValues.skills || [],
@@ -73,25 +71,21 @@ const UserInfoForm = () => {
     salary: defaultValues?.ProfessionalDetails?.currentSalary || "", // Added default for salary
     contactNumber: defaultValues?.PersonalInformation?.contactNumber || "",
     location: "",
-    openToRelocate: defaultValues?.ProfessionalDetails?.openToRelocate || "Yes", // Default to Yes
+    openToRelocate: "Yes", // Default to Yes
     // isItConsultingCompany: defaultValues?.ProfessionalDetails?.isItConsultingCompany || "Yes", // This field was in original state but not in UI, removing or clarifying needed. Assuming removed for UI purposes.
-    joinConsulting: defaultValues?.ProfessionalDetails?.joinConsulting || "",
+    joinConsulting: "",
     dateOfBirth: defaultValues?.PersonalInformation?.dateOfBirth || "",
     profilePic: defaultValues?.PersonalInformation?.profilePic || "",
     skills: filters.skills,
-    expectedMinSalary:
-      defaultValues?.ProfessionalDetails?.expectedMinSalary || "", // Added default
+    expectedMinSalary: "", // Added default
     preferredLocations: [], // Added default
-    preferredWorkTypes: ["Full-Time"], // Default to Full-Time
-    preferredWorkModes:  [], // Default to Remote
-    highestQualification:  ["Bachelor's"], // Default to Bachelors
-    lastConsultingCompany:
-      defaultValues?.ProfessionalDetails?.lastConsultingCompany || "",
+    preferredWorkTypes: [], // Default to Full-Time
+    preferredWorkModes: [], // Default to Remote
+    highestQualification: [], // Default to Bachelors
+    lastConsultingCompany: "",
     lastConsultingCustomCompany: "", // For storing the custom consulting company input temporarily
-    totalYearsInConsulting:
-      defaultValues?.ProfessionalDetails?.totalYearsInConsulting || "",
-    hasConsultingBackground:
-      defaultValues?.ProfessionalDetails?.hasConsultingBackground || "", // Added consulting background Yes/No
+    totalYearsInConsulting: "",
+    hasConsultingBackground: "", // Added consulting background Yes/No
   });
 
   // --- Stage Management State ---
@@ -113,66 +107,22 @@ const UserInfoForm = () => {
           .filter(Boolean) // Remove empty rows
           .sort(); // Sort alphabetically
         const uniqueCities = [...new Set(cityList)];
-      setCities(uniqueCities);
+        setCities(uniqueCities);
 
-      // now that we have cities, validate the default location
-      const defaultLoc =
-        location.state?.parsedData?.data?.PersonalInformation?.location;
-      if (defaultLoc && uniqueCities.includes(defaultLoc)) {
-        setFormData((prev) => ({ ...prev, location: defaultLoc }));
-        setSelectedCity(defaultLoc);
-        setIsOtherSelected(false);
-      } else {
-        // leave it blank
-        setFormData((prev) => ({ ...prev, location: "" }));
-        setSelectedCity(null);
-        setIsOtherSelected(false);
-      } } catch (error) {
+        // now that we have cities, validate the default location
+        const defaultLoc =
+          location.state?.parsedData?.data?.PersonalInformation?.location;
+        if (defaultLoc && uniqueCities.includes(defaultLoc)) {
+          setFormData((prev) => ({ ...prev, location: defaultLoc }));
+          setSelectedCity(defaultLoc);
+        }
+      } catch (error) {
         console.error("Error loading cities:", error);
         setCities([]);
       }
     };
     fetchCities();
   }, []);
-
-  // Effect to handle default city value and 'Other'
-  useEffect(() => {
-    if (defaultValues?.PersonalInformation?.location && cities.length > 0) {
-      const location = defaultValues.PersonalInformation.location;
-      const foundCity = cities.find((city) => city === location);
-
-      if (foundCity) {
-        setSelectedCity({ value: foundCity, label: foundCity });
-        setIsOtherSelected(false);
-        setInputValue(foundCity); // Set input value for searchable select
-      } else {
-        // If location is not in the list, assume it's a custom city
-        setIsOtherSelected(true);
-        setCustomCity(location);
-        setSelectedCity(null); // No city from the list is selected
-        setInputValue(""); // Clear searchable input
-      }
-    } else if (cities.length > 0 && formData.location) {
-      // Handle case where formData.location is set but not from defaultValues (e.g., user navigated back)
-      const location = formData.location;
-      const foundCity = cities.find((city) => city === location);
-      if (foundCity) {
-        setSelectedCity({ value: foundCity, label: foundCity });
-        setIsOtherSelected(false);
-        setInputValue(foundCity);
-      } else {
-        setIsOtherSelected(true);
-        setCustomCity(location);
-        setSelectedCity(null);
-        setInputValue("");
-      }
-    } else {
-      setSelectedCity(null);
-      setInputValue("");
-      setIsOtherSelected(false);
-      setCustomCity("");
-    }
-  }, [defaultValues?.PersonalInformation?.location, cities]); // Rerun when default location or cities list changes
 
   // Update formData's contactNumber when phoneValue changes
   useEffect(() => {
@@ -191,29 +141,11 @@ const UserInfoForm = () => {
 
   // --- Handlers ---
   const handleCityChange = (selectedOption) => {
-    if (selectedOption?.value === "Other") {
-      setIsOtherSelected(true);
-      setSelectedCity(null);
-      setFormData((prev) => ({ ...prev, location: "" })); // Clear location for custom input
-      setCustomCity(""); // Also clear custom city input
-      setInputValue(""); // Clear searchable input
-    } else {
-      setIsOtherSelected(false);
-      setSelectedCity(selectedOption);
-      setFormData((prev) => ({
-        ...prev,
-        location: selectedOption?.value || "",
-      }));
-      setCustomCity(""); // Clear custom city if selecting from list
-      setInputValue(selectedOption?.label || ""); // Set input value to selected city label
-    }
-  };
-
-  // Handle custom city input
-  const handleCustomCityChange = (e) => {
-    const { value } = e.target;
-    setCustomCity(value);
-    setFormData((prev) => ({ ...prev, location: value })); // Update formData location with custom value
+    setSelectedCity(selectedOption);
+    setFormData((prev) => ({
+      ...prev,
+      location: selectedOption?.value || "",
+    }));
   };
 
   // Handle skills change using react-select
@@ -232,7 +164,7 @@ const UserInfoForm = () => {
   };
 
   // Handle form field changes for standard inputs (text, number, date, select)
- // Handle form field changes
+  // Handle form field changes
   const handleChange = (e) => {
     const { name, value } = e.target;
 
@@ -273,7 +205,6 @@ const UserInfoForm = () => {
     }
   };
 
-
   // Handle custom company input for Last Consulting Company
   const handlelastCustomCompanyChange = (e) => {
     const { value } = e.target;
@@ -312,7 +243,7 @@ const UserInfoForm = () => {
 
     // Validate file size (max 2MB)
     if (file.size > 2 * 1024 * 1024) {
-     setAlert({
+      setAlert({
         open: true,
         type: "warning",
         title: "Warning",
@@ -348,7 +279,7 @@ const UserInfoForm = () => {
       }
     } catch (error) {
       console.error("Profile picture upload error:", error);
-     setAlert({
+      setAlert({
         open: true,
         type: "error",
         title: "Error",
@@ -363,29 +294,26 @@ const UserInfoForm = () => {
 
   // Handle form submission - Called only on the final stage's submit button click
   const handleSubmit = async (e) => {
-     // Prevent default browser submission to handle it manually after validation
-     e.preventDefault();
+    // Prevent default browser submission to handle it manually after validation
+    e.preventDefault();
 
-     // Check validity for the final stage before proceeding with API call
-     const form = e.target;
-     if (!form.checkValidity()) {
-         // Browser will show validation messages. We don't need a custom alert here on submit.
-         console.log("Final stage validation failed.");
-         return;
-     }
+    // Check validity for the final stage before proceeding with API call
+    const form = e.target;
+    if (!form.checkValidity()) {
+      // Browser will show validation messages. We don't need a custom alert here on submit.
+      console.log("Final stage validation failed.");
+      return;
+    }
 
     const finalConsultingCompany =
-       formData.hasConsultingBackground === "Yes" && formData.lastConsultingCompany === "Other"
+      formData.hasConsultingBackground === "Yes" &&
+      formData.lastConsultingCompany === "Other"
         ? formData.lastConsultingCustomCompany
         : formData.lastConsultingCompany;
 
-
-    const finalLocation = isOtherSelected ? customCity : formData.location;
-
     const updatedFormData = {
       ...formData,
-      lastConsultingCompany: finalConsultingCompany, // Use the custom consulting company name if "Other" was selected
-      location: finalLocation, // Use custom location if 'Other' was selected
+      lastConsultingCompany: finalConsultingCompany, // Use custom location if 'Other' was selected
       experience: Number(formData.experience), // Convert experience to number
       salary: Number(formData.salary), // Convert salary to number
       expectedMinSalary: Number(formData.expectedMinSalary), // Convert salary to number
@@ -393,13 +321,19 @@ const UserInfoForm = () => {
       profilePic: profilePicUrl, // Use the uploaded profile pic URL
       skills: filters.skills, // Use skills from filters state (which is kept in sync with formData)
       // Ensure preferred arrays are not empty if required by backend - Validation handles the "at least one" part now
-       preferredWorkTypes: formData.preferredWorkTypes,
-       preferredWorkModes: formData.preferredWorkModes,
-       highestQualification: formData.highestQualification,
+      preferredWorkTypes: formData.preferredWorkTypes,
+      preferredWorkModes: formData.preferredWorkModes,
+      highestQualification: formData.highestQualification,
       // Add other consulting fields if present in formData
-       hasConsultingBackground: formData.hasConsultingBackground,
-       joinConsulting: formData.hasConsultingBackground === "Yes" ? formData.joinConsulting : "",
-       totalYearsInConsulting: formData.hasConsultingBackground === "Yes" ? Number(formData.totalYearsInConsulting) : 0, // Convert to number if Yes, else 0
+      hasConsultingBackground: formData.hasConsultingBackground,
+      joinConsulting:
+        formData.hasConsultingBackground === "Yes"
+          ? formData.joinConsulting
+          : "",
+      totalYearsInConsulting:
+        formData.hasConsultingBackground === "Yes"
+          ? Number(formData.totalYearsInConsulting)
+          : 0, // Convert to number if Yes, else 0
     };
 
     // Remove temporary custom fields before submission
@@ -420,25 +354,27 @@ const UserInfoForm = () => {
 
       if (res?.success) {
         // Check for success property in the response
-       setAlert({
-        open: true,
-        type: "success",
-        title: "Success",
-        message: "Profile updated successfully",
-      });
+        setAlert({
+          open: true,
+          type: "success",
+          title: "Success",
+          message: "Profile updated successfully...",
+        });
         console.log("res", res);
         dispatch(UpdateUser(res.user)); // Assuming the response contains the updated user object
-        navigate(refer); // Navigate after successful update
+        setTimeout(() => {
+          navigate(refer); // Navigate after successful update
+        }, 2000);
       } else {
         // Handle backend validation errors or specific messages
         const errorMessage = res?.message || "Update failed. Please try again.";
         setError(errorMessage); // Set error state to display
         setAlert({
-        open: true,
-        type: "error",
-        title: "Error",
-        message: "Some error occurred. Please try again.",
-      });
+          open: true,
+          type: "error",
+          title: "Error",
+          message: "Some error occurred. Please try again.",
+        });
         console.error("API Error:", res);
         // Optionally stay on the current stage or navigate back
       }
@@ -448,7 +384,7 @@ const UserInfoForm = () => {
         error?.response?.data?.message ||
         error.message ||
         "An unexpected error occurred during submission.";
-       setAlert({
+      setAlert({
         open: true,
         type: "error",
         title: "Error",
@@ -459,42 +395,42 @@ const UserInfoForm = () => {
     }
   };
 
+  // Function to handle Next button click with validation
+  const handleNext = (event) => {
+    // Prevent default button click action
+    event.preventDefault();
+    const form = event.currentTarget.form;
 
-   // Function to handle Next button click with validation
-    const handleNext = (event) => {
-        // Prevent default button click action
-        event.preventDefault();
-        const form = event.currentTarget.form;
+    // Check validity for the current stage
+    // We can't use form.checkValidity() alone because it checks the whole form,
+    // even invisible fields. We need to find elements within the current stage.
+    // A simpler approach that adheres to "no UI change" is to let the browser's
+    // validation UI trigger, which checkValidity() does, and *only* advance
+    // the stage if it returns true. The browser's default message *is* the message.
+    // The user might perceive "Please fill out this field" as the required message.
 
-        // Check validity for the current stage
-        // We can't use form.checkValidity() alone because it checks the whole form,
-        // even invisible fields. We need to find elements within the current stage.
-        // A simpler approach that adheres to "no UI change" is to let the browser's
-        // validation UI trigger, which checkValidity() does, and *only* advance
-        // the stage if it returns true. The browser's default message *is* the message.
-        // The user might perceive "Please fill out this field" as the required message.
-
-        // Trigger HTML5 validation for currently visible fields
-        if (form.checkValidity()) {
-            // If valid, move to the next stage
-            setCurrentStage(prev => prev + 1);
-             // Optional: Scroll to the top of the form or stage for better UX
-             // form.scrollIntoView({ behavior: 'smooth' });
-        } else {
-             // If validation fails, the browser will automatically highlight
-             // the invalid fields and show default validation messages
-             // (e.g., "Please fill out this field").
-             // We don't need a separate alert here as per the instruction
-             // to not change the UI/styling, the browser's UI is the default.
-             console.log("Validation failed for current stage. Browser will show messages.");
-             // Find the first invalid element and focus it for better UX
-             const firstInvalidElement = form.querySelector(':invalid');
-             if (firstInvalidElement) {
-                 firstInvalidElement.focus();
-             }
-        }
-    };
-
+    // Trigger HTML5 validation for currently visible fields
+    if (form.checkValidity()) {
+      // If valid, move to the next stage
+      setCurrentStage((prev) => prev + 1);
+      // Optional: Scroll to the top of the form or stage for better UX
+      // form.scrollIntoView({ behavior: 'smooth' });
+    } else {
+      // If validation fails, the browser will automatically highlight
+      // the invalid fields and show default validation messages
+      // (e.g., "Please fill out this field").
+      // We don't need a separate alert here as per the instruction
+      // to not change the UI/styling, the browser's UI is the default.
+      console.log(
+        "Validation failed for current stage. Browser will show messages."
+      );
+      // Find the first invalid element and focus it for better UX
+      const firstInvalidElement = form.querySelector(":invalid");
+      if (firstInvalidElement) {
+        firstInvalidElement.focus();
+      }
+    }
+  };
 
   // --- Styles ---
   // Custom styles for React-Select components - Reverted to match original snippet
@@ -511,10 +447,10 @@ const UserInfoForm = () => {
         borderColor: "#d1d5db",
       },
     }),
-     valueContainer: (provided) => ({
-        ...provided,
-        paddingLeft: 16, // Reverted to 16 as in original
-        paddingRight: 16, // Reverted to 16 as in original
+    valueContainer: (provided) => ({
+      ...provided,
+      paddingLeft: 16, // Reverted to 16 as in original
+      paddingRight: 16, // Reverted to 16 as in original
     }),
     menu: (provided) => ({
       ...provided,
@@ -530,42 +466,41 @@ const UserInfoForm = () => {
         backgroundColor: "#f3f4f6", // Reverted hover background
       },
     }),
-     multiValue: (provided) => ({
-        ...provided,
-        backgroundColor: '#e0e7ff', // Keep from last version for better appearance
-        borderRadius: 20,
-        padding: '2px 8px',
-        margin: '2px',
-     }),
-     multiValueLabel: (provided) => ({
-        ...provided,
-        color: '#24252C', // Keep from last version for better appearance
-        fontSize: '0.875rem',
-     }),
-      multiValueRemove: (provided) => ({
-         ...provided,
-         color: '#24252C', // Keep from last version for better appearance
-         cursor: 'pointer',
-         '&:hover': {
-             color: '#ef4444',
-         },
-      }),
-      placeholder: (provided) => ({
-         ...provided,
-         color: '#808195', // Keep from last version for better appearance
-         fontSize: '0.875rem',
-      }),
-      dropdownIndicator: (provided) => ({
-        ...provided,
-         paddingLeft: 0,
-         paddingRight: 8,
-      }),
-      indicatorSeparator: (provided) => ({
-          ...provided,
-          display: 'none',
-      })
+    multiValue: (provided) => ({
+      ...provided,
+      backgroundColor: "#e0e7ff", // Keep from last version for better appearance
+      borderRadius: 20,
+      padding: "2px 8px",
+      margin: "2px",
+    }),
+    multiValueLabel: (provided) => ({
+      ...provided,
+      color: "#24252C", // Keep from last version for better appearance
+      fontSize: "0.875rem",
+    }),
+    multiValueRemove: (provided) => ({
+      ...provided,
+      color: "#24252C", // Keep from last version for better appearance
+      cursor: "pointer",
+      "&:hover": {
+        color: "#ef4444",
+      },
+    }),
+    placeholder: (provided) => ({
+      ...provided,
+      color: "#808195", // Keep from last version for better appearance
+      fontSize: "0.875rem",
+    }),
+    dropdownIndicator: (provided) => ({
+      ...provided,
+      paddingLeft: 0,
+      paddingRight: 8,
+    }),
+    indicatorSeparator: (provided) => ({
+      ...provided,
+      display: "none",
+    }),
   };
-
 
   // Common styles for the main Box containers around each stage section - Reverted to match original snippet
   const stageBoxStyles = {
@@ -607,89 +542,88 @@ const UserInfoForm = () => {
   // Common styles for the column Box holding form fields within the row - Match original
   const columnStyles = {
     width: { xs: "100%", sm: "100%", md: "50%", lg: "50%" },
-    mt:1,
+    mt: 1,
     p: 1, // Reverted padding
   };
 
   // Input/Select/Textarea shared base styles - Derived from original classes
   const baseInputStyles = {
-      width: "100%",
-      fontSize: "0.875rem", // text-sm
-      outline: "none", // focus:outline-none
+    width: "100%",
+    fontSize: "0.875rem", // text-sm
+    outline: "none", // focus:outline-none
   };
 
   // Styles for inputs/selects with rounded-full and border
   const roundedInputStyles = {
-      ...baseInputStyles,
-      borderRadius: 50, // rounded-full
-      border: "1px solid #24252C", // border + border-#24252C
-      padding: "12px 18px", // px-4 py-3 (roughly)
-       // Added specific style for select appearance
-      ' select&': { // Apply only to <select> elements using this style object
-           appearance: 'none', // appearance-none
-           paddingRight: 'calc(18px + 1.5rem)', // Add space for the default arrow if browser adds one
-      },
-       // Added ring/border color on focus to match original Tailwind focus styles
-      '&:focus': {
-          borderColor: '#3b82f6', // focus:ring-blue-500 -> border-blue-500
-          boxShadow: '0 0 0 2px rgba(59, 130, 246, 0.5)', // focus:ring-2 focus:ring-blue-500
-      }
+    ...baseInputStyles,
+    borderRadius: 50, // rounded-full
+    border: "1px solid #24252C", // border + border-#24252C
+    padding: "12px 18px", // px-4 py-3 (roughly)
+    // Added specific style for select appearance
+    " select&": {
+      // Apply only to <select> elements using this style object
+      appearance: "none", // appearance-none
+      paddingRight: "calc(18px + 1.5rem)", // Add space for the default arrow if browser adds one
+    },
+    // Added ring/border color on focus to match original Tailwind focus styles
+    "&:focus": {
+      borderColor: "#3b82f6", // focus:ring-blue-500 -> border-blue-500
+      boxShadow: "0 0 0 2px rgba(59, 130, 246, 0.5)", // focus:ring-2 focus:ring-blue-500
+    },
   };
 
   const roundedSelectStyles = {
-  ...baseInputStyles,
-  borderRadius: 50,              // full pill shape
-  border: "1px solid #24252C",   // custom border color
-  padding: "12px 18px",          // vertical + horizontal padding
-  appearance: "none",            // remove native styling
-  WebkitAppearance: "none",      // for Safari
-  MozAppearance: "none",         // for Firefox
+    ...baseInputStyles,
+    borderRadius: 50, // full pill shape
+    border: "1px solid #24252C", // custom border color
+    padding: "12px 18px", // vertical + horizontal padding
+    appearance: "none", // remove native styling
+    WebkitAppearance: "none", // for Safari
+    MozAppearance: "none", // for Firefox
 
-  backgroundRepeat: "no-repeat",
-  backgroundSize: "6px 6px",
-  backgroundPosition: "right 16px center",  // adjust arrow position
+    backgroundRepeat: "no-repeat",
+    backgroundSize: "6px 6px",
+    backgroundPosition: "right 16px center", // adjust arrow position
 
-  // ensure text never runs under the arrow
-  paddingRight: "2.5rem",
+    // ensure text never runs under the arrow
+    paddingRight: "2.5rem",
 
-  // focus state styling
-  "&:focus": {
-    borderColor: "#3b82f6",                         // blue border
-    boxShadow: "0 0 0 2px rgba(59, 130, 246, 0.5)",  // blue ring
-    outline: "none",
-  },
-};
+    // focus state styling
+    "&:focus": {
+      borderColor: "#3b82f6", // blue border
+      boxShadow: "0 0 0 2px rgba(59, 130, 246, 0.5)", // blue ring
+      outline: "none",
+    },
+  };
 
-
-   // Styles for custom city input (rounded-lg, px-4 py-2 border)
-   const customCityInputStyles = {
-       ...baseInputStyles,
-       borderRadius: 8, // rounded-lg
-       border: "1px solid #24252C", // border
-       padding: "8px 18px", // px-4 py-2 (roughly)
-        // Added ring/border color on focus
-      '&:focus': {
-           borderColor: '#3b82f6',
-           boxShadow: '0 0 0 2px rgba(59, 130, 246, 0.5)',
-       }
-   };
+  // Styles for custom city input (rounded-lg, px-4 py-2 border)
+  const customCityInputStyles = {
+    ...baseInputStyles,
+    borderRadius: 8, // rounded-lg
+    border: "1px solid #24252C", // border
+    padding: "8px 18px", // px-4 py-2 (roughly)
+    // Added ring/border color on focus
+    "&:focus": {
+      borderColor: "#3b82f6",
+      boxShadow: "0 0 0 2px rgba(59, 130, 246, 0.5)",
+    },
+  };
 
   // Styles for About You textarea (rounded-lg px-6 py-12, dashed border, text-center)
-   const aboutTextareaStyles = {
-       ...baseInputStyles,
-       borderRadius: 16, // Reverted to 16 based on original px
-       border: "2px dashed #24252C", // border-2 border-dashed border-black
-       textAlign: "center", // text-center
-       padding: "48px 24px", // px-6 py-12 (roughly)
-       height: "11rem", // h-44
-       resize: "none", // resize-none
-        // Added ring/border color on focus
-      '&:focus': {
-          borderColor: '#3b82f6', // Or maybe '#24252C' depending on desired focus style for dashed border? Let's keep blue ring for consistency.
-           boxShadow: '0 0 0 2px rgba(59, 130, 246, 0.5)',
-       }
-   };
-
+  const aboutTextareaStyles = {
+    ...baseInputStyles,
+    borderRadius: 16, // Reverted to 16 based on original px
+    border: "2px dashed #24252C", // border-2 border-dashed border-black
+    textAlign: "center", // text-center
+    padding: "48px 24px", // px-6 py-12 (roughly)
+    height: "11rem", // h-44
+    resize: "none", // resize-none
+    // Added ring/border color on focus
+    "&:focus": {
+      borderColor: "#3b82f6", // Or maybe '#24252C' depending on desired focus style for dashed border? Let's keep blue ring for consistency.
+      boxShadow: "0 0 0 2px rgba(59, 130, 246, 0.5)",
+    },
+  };
 
   // Prepare city options with "Other" at the bottom
   const filteredCities = [
@@ -934,7 +868,7 @@ const UserInfoForm = () => {
                       checked={formData.openToRelocate === "No"}
                       onChange={handleChange}
                       className="accent-blue-500"
-                       // The 'required' attribute on one radio makes the group required
+                      // The 'required' attribute on one radio makes the group required
                     />
                     <span
                       style={{
@@ -953,7 +887,7 @@ const UserInfoForm = () => {
           </Box>
         );
 
-        case 1: // Consulting Background
+      case 1: // Consulting Background
         return (
           <Box sx={stageBoxStyles}>
             <Typography sx={titleStyles}>Consulting Background</Typography>
@@ -1004,7 +938,7 @@ const UserInfoForm = () => {
                       checked={formData.hasConsultingBackground === "No"}
                       onChange={handleChange}
                       className="accent-blue-500"
-                       // The 'required' attribute on one radio makes the group required
+                      // The 'required' attribute on one radio makes the group required
                     />
                     <span
                       style={{
@@ -1038,7 +972,7 @@ const UserInfoForm = () => {
                       value={formData.joinConsulting}
                       onChange={handleChange}
                       style={roundedSelectStyles} // Apply rounded styles including appearance:none
-                       // Not required
+                      // Not required
                     >
                       <option value="">Select an option</option>
                       <option value="Lateral">Lateral</option>
@@ -1061,13 +995,13 @@ const UserInfoForm = () => {
                           color: "#24252C",
                         }}
                       >
-                        Last/Current Consulting Company{" "} {/* No * */}
+                        Last/Current Consulting Company {/* No * */}
                       </label>
                       <select
                         name="lastConsultingCompany"
                         value={formData.lastConsultingCompany}
                         onChange={handlelastCompanyChange}
-                         style={roundedSelectStyles} // Apply rounded styles including appearance:none
+                        style={roundedSelectStyles} // Apply rounded styles including appearance:none
                         // Not required
                       >
                         <option value="">Select your Company</option>
@@ -1127,7 +1061,7 @@ const UserInfoForm = () => {
                           value={formData.lastConsultingCustomCompany}
                           onChange={handlelastCustomCompanyChange}
                           placeholder="Please Specify Company name...."
-                           style={roundedInputStyles} // Apply rounded styles
+                          style={roundedInputStyles} // Apply rounded styles
                           // Not required
                         />
                       </div>
@@ -1151,7 +1085,7 @@ const UserInfoForm = () => {
                         name="totalYearsInConsulting"
                         value={formData.totalYearsInConsulting}
                         onChange={handleChange}
-                         style={roundedSelectStyles} // Apply rounded styles including appearance:none
+                        style={roundedSelectStyles} // Apply rounded styles including appearance:none
                         // Not required
                       >
                         <option value="">Select experience</option>
@@ -1388,19 +1322,6 @@ const UserInfoForm = () => {
                     required // Required based on *
                     name="location"
                   />
-                  {isOtherSelected && ( // Show custom input if "Other" is selected
-                    <div className="mt-2 flex gap-2"> {/* Reverted to flex gap-2 */}
-                      <input
-                        type="text"
-                        className="px-4 py-2 border rounded-lg w-full" // Reverted to original classes
-                        placeholder="Enter your city"
-                        value={customCity} // Use customCity state
-                        onChange={handleCustomCityChange} // Update customCity and formData.location
-                        required={isOtherSelected} // Required only if "Other" is selected
-                        // No inline style needed if using classes
-                      />
-                    </div>
-                  )}
                 </div>
                 {/* About You - NOT required */}
                 <div className="mb-6">
@@ -1463,7 +1384,7 @@ const UserInfoForm = () => {
                     required // Required based on *
                     min="0" // Keep min attribute
                   />
-                   {MSalErr.salary && (
+                  {MSalErr.salary && (
                     <p className="mt-1 ml-1 text-sm text-red-600" role="alert">
                       {MSalErr.salary}
                     </p>
@@ -1570,7 +1491,9 @@ const UserInfoForm = () => {
                     closeMenuOnSelect={false} // Keep menu open for multi-select
                     required // Required based on * (checks for at least 1 selected)
                     name="preferredLocations"
-                     isOptionDisabled={() => formData.preferredLocations.length >= 5} // Re-added as in first snippet
+                    isOptionDisabled={() =>
+                      formData.preferredLocations.length >= 5
+                    } // Re-added as in first snippet
                   />
                 </div>
                 {/* Preferred Work Mode (Multi-select) */}
@@ -1586,7 +1509,7 @@ const UserInfoForm = () => {
                   >
                     Preferred Work Mode <span style={{ color: "red" }}>*</span>
                   </label>
-                   {/* Select required prop checks if value array is non-empty */}
+                  {/* Select required prop checks if value array is non-empty */}
                   <Select
                     isMulti
                     options={[
@@ -1621,7 +1544,6 @@ const UserInfoForm = () => {
           </Box>
         );
 
-
       default:
         return null; // Should not happen
     }
@@ -1635,13 +1557,13 @@ const UserInfoForm = () => {
       <Box
         sx={{ display: "flex", flexDirection: "column", alignItems: "center" }}
       >
-         <AlertModal
-                      open={alert.open}
-                      onClose={() => setAlert({ ...alert, open: false })}
-                      type={alert.type}
-                      title={alert.title}
-                      message={alert.message}
-                    />
+        <AlertModal
+          open={alert.open}
+          onClose={() => setAlert({ ...alert, open: false })}
+          type={alert.type}
+          title={alert.title}
+          message={alert.message}
+        />
         <Typography
           sx={{
             fontFamily: "Satoshi",
@@ -1650,7 +1572,7 @@ const UserInfoForm = () => {
             color: "#24252C",
             textAlign: "center",
             mt: 4,
-            px:1
+            px: 1,
           }}
         >
           Power up your{" "}
@@ -1711,12 +1633,12 @@ const UserInfoForm = () => {
               variant="outlined"
               onClick={() => setCurrentStage((prev) => prev - 1)}
               sx={{
-                 // Reverted button styles to match original px/py/border/color
+                // Reverted button styles to match original px/py/border/color
                 px: 4,
                 py: 1,
                 border: 2, // Matches original 2px border
                 color: "#3C7EFC",
-                borderColor: '#3C7EFC',
+                borderColor: "#3C7EFC",
                 textTransform: "none",
                 borderRadius: 50, // Matches original rounded-full
                 fontSize: "18px", // Matches original font size
@@ -1732,11 +1654,11 @@ const UserInfoForm = () => {
           {currentStage < totalStages - 1 ? (
             <Button
               variant="contained"
-               onClick={handleNext} // Use the handleNext function with validation
+              onClick={handleNext} // Use the handleNext function with validation
               sx={{
-                 // Reverted button styles to match original px/py/border/color
-                 bgcolor: '#3C7EFC', // Matches original bg-blue-500 equivalent
-                 '&:hover': { bgcolor: '#306CE0' }, // Matches hover:bg-blue-700 equivalent
+                // Reverted button styles to match original px/py/border/color
+                bgcolor: "#3C7EFC", // Matches original bg-blue-500 equivalent
+                "&:hover": { bgcolor: "#306CE0" }, // Matches hover:bg-blue-700 equivalent
                 color: "white", // text-white
                 px: 6, // Matches original px-6
                 py: 1, // Matches original py-2
@@ -1756,10 +1678,10 @@ const UserInfoForm = () => {
               disabled={loading || uploadingProfilePic}
               sx={{
                 // Reverted button styles to match original px/py/border/color/width
-                 bgcolor: '#3C7EFC', // Matches original bg-blue-500 equivalent
-                 '&:hover': { bgcolor: '#306CE0' }, // Matches hover:bg-blue-700 equivalent
+                bgcolor: "#3C7EFC", // Matches original bg-blue-500 equivalent
+                "&:hover": { bgcolor: "#306CE0" }, // Matches hover:bg-blue-700 equivalent
                 color: "white", // text-white
-                 // px-6 sm:px-10 md:px-16 lg:px-24 xl:px-32 - This is complex, let's use a fixed px for simplicity or try a common responsive approach
+                // px-6 sm:px-10 md:px-16 lg:px-24 xl:px-32 - This is complex, let's use a fixed px for simplicity or try a common responsive approach
                 px: 4, // Attempt to match responsive padding
                 py: 1, // Matches original py-2
                 borderRadius: 50, // Matches original rounded-full

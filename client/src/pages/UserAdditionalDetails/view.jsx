@@ -41,16 +41,14 @@ const UserInfoForm = () => {
   const [cities, setCities] = useState([]);
   const [selectedCity, setSelectedCity] = useState(null);
   const [inputValue, setInputValue] = useState("");
-  const [isOtherSelected, setIsOtherSelected] = useState(false);
-  const [customCity, setCustomCity] = useState("");
   const [filters, setFilters] = useState({
     skills: defaultValues.skills || [],
   });
   const [alert, setAlert] = useState({
-      open: false,
-      type: "success",
-      title: "",
-      message: "",
+    open: false,
+    type: "success",
+    title: "",
+    message: "",
   });
 
   // Form data state
@@ -74,9 +72,9 @@ const UserInfoForm = () => {
     skills: filters.skills,
     expectedMinSalary: "",
     preferredLocations: [],
-    preferredWorkTypes: ["Full-Time"],
-    preferredWorkModes: ["Remote"],
-    highestQualification: ["Bachelors"],
+    preferredWorkTypes: [],
+    preferredWorkModes: [],
+    highestQualification: [],
     lastConsultingCompany: "",
     lastConsultingCustomCompany: "",
     totalYearsInConsulting: "",
@@ -96,21 +94,16 @@ const UserInfoForm = () => {
           .filter(Boolean) // Remove empty rows
           .sort(); // Sort alphabetically
         const uniqueCities = [...new Set(cityList)];
-      setCities(uniqueCities);
+        setCities(uniqueCities);
 
-      // now that we have cities, validate the default location
-      const defaultLoc =
-        location.state?.parsedData?.data?.PersonalInformation?.location;
-      if (defaultLoc && uniqueCities.includes(defaultLoc)) {
-        setFormData((prev) => ({ ...prev, location: defaultLoc }));
-        setSelectedCity(defaultLoc);
-        setIsOtherSelected(false);
-      } else {
-        // leave it blank
-        setFormData((prev) => ({ ...prev, location: "" }));
-        setSelectedCity(null);
-        setIsOtherSelected(false);
-      } } catch (error) {
+        // now that we have cities, validate the default location
+        const defaultLoc =
+          location.state?.parsedData?.data?.PersonalInformation?.location;
+        if (defaultLoc && uniqueCities.includes(defaultLoc)) {
+          setFormData((prev) => ({ ...prev, location: defaultLoc }));
+          setSelectedCity(defaultLoc);
+        }
+      } catch (error) {
         console.error("Error loading cities:", error);
         setCities([]);
       }
@@ -120,18 +113,11 @@ const UserInfoForm = () => {
 
   // Handle city selection
   const handleCityChange = (selectedOption) => {
-    if (selectedOption?.value === "Other") {
-      setIsOtherSelected(true);
-      setSelectedCity(null);
-      setFormData((prev) => ({ ...prev, location: "" }));
-    } else {
-      setIsOtherSelected(false);
-      setSelectedCity(selectedOption);
-      setFormData((prev) => ({
-        ...prev,
-        location: selectedOption?.value || "",
-      }));
-    }
+    setSelectedCity(selectedOption);
+    setFormData((prev) => ({
+      ...prev,
+      location: selectedOption?.value || "",
+    }));
   };
 
   // Handle skills change
@@ -145,12 +131,6 @@ const UserInfoForm = () => {
       ...prevState,
       skills: selectedSkills,
     }));
-  };
-
-  // Handle custom city input
-  const handleCustomCityChange = (e) => {
-    setCustomCity(e.target.value);
-    setFormData((prev) => ({ ...prev, location: e.target.value }));
   };
 
   // Handle phone number change
@@ -227,7 +207,7 @@ const UserInfoForm = () => {
 
     // Validate file type
     if (!file.type.match(/image\/(jpeg|jpg|png)$/)) {
-     setAlert({
+      setAlert({
         open: true,
         type: "warning",
         title: "Warning",
@@ -324,20 +304,25 @@ const UserInfoForm = () => {
 
       if (res) {
         setAlert({
-        open: true,
-        type: "success",
-        title: "Success",
-        message: "Profile updated successfully",
-      });
+          open: true,
+          type: "success",
+          title: "Success",
+          message: "Profile updated successfully",
+        });
+
         console.log("res", res);
-        dispatch(UpdateUser(res.user));
-        navigate(refer);
+        dispatch(UpdateUser(res.user)); // Assuming the response contains the updated user object
+
+        // Delay navigation by 2 seconds (2000 milliseconds)
+        setTimeout(() => {
+          navigate(refer); // Navigate after successful update
+        }, 2000);
       } else {
         throw new Error("Update failed");
       }
     } catch (error) {
       console.error("Form submission error:", error);
-     setAlert({
+      setAlert({
         open: true,
         type: "error",
         title: "Error",
@@ -407,12 +392,12 @@ const UserInfoForm = () => {
   return (
     <Box sx={{ padding: "2rem", bgcolor: "white" }}>
       <AlertModal
-              open={alert.open}
-              onClose={() => setAlert({ ...alert, open: false })}
-              type={alert.type}
-              title={alert.title}
-              message={alert.message}
-            />
+        open={alert.open}
+        onClose={() => setAlert({ ...alert, open: false })}
+        type={alert.type}
+        title={alert.title}
+        message={alert.message}
+      />
       <Box
         sx={{ display: "flex", flexDirection: "column", alignItems: "center" }}
       >
@@ -1297,19 +1282,9 @@ const UserInfoForm = () => {
                         ? "No matching cities found"
                         : "Start typing to search"
                     }
+                    required // Required based on *
+                    name="location"
                   />
-
-                  {isOtherSelected && (
-                    <div className="mt-2 flex gap-2">
-                      <input
-                        type="text"
-                        className="px-4 py-2 border rounded-lg w-full"
-                        placeholder="Enter your city"
-                        value={customCity}
-                        onChange={handleCustomCityChange}
-                      />
-                    </div>
-                  )}
                 </div>
 
                 <div className="mb-6">

@@ -21,6 +21,7 @@ import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
 import GoogleIcon from "@mui/icons-material/Google";
 import LinkedInIcon from "@mui/icons-material/LinkedIn";
 import { useLocation } from "react-router-dom";
+import AlertModal from "../../components/Alerts/view";
 
 const generateRandomState = () => {
   const array = new Uint32Array(16);
@@ -47,6 +48,12 @@ const UserSignUp = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [linkedinLoading, setLinkedinLoading] = useState(false);
+  const [alert, setAlert] = useState({
+      open: false,
+      type: "success",
+      title: "",
+      message: "",
+    });
   
   // Email verification states
   const [isVerifying, setIsVerifying] = useState(false);
@@ -127,11 +134,21 @@ const UserSignUp = () => {
     
     // Basic validation checks before proceeding
     if (form.password.length < 5) {
-      alert("Password must be at least 5 characters long.");
+      setAlert({
+        open: true,
+        type: "warning",
+        title: "Warning",
+        message: "Password must be at least 5 characters long.",
+      });
       return;
     }
     if (form.password !== form.confirmPassword) {
-      alert("Passwords do not match");
+      setAlert({
+        open: true,
+        type: "warning",
+        title: "Warning",
+        message: "Passwords do not match.",
+      });
       return;
     }
     
@@ -194,11 +211,21 @@ const UserSignUp = () => {
           state: { refer },
         });
       } else {
-        alert(res.message || "Error while registering");
+        setAlert({
+        open: true,
+        type: "error",
+        title: "Error",
+        message: "Error while registering",
+      });
       }
     } catch (error) {
       console.error("Registration Error:", error);
-      alert("Something went wrong. Please try again.");
+      setAlert({
+        open: true,
+        type: "error",
+        title: "Error",
+        message: "Something went wrong. Please try again.",
+      });
     } finally {
       setLoading(false);
     }
@@ -320,7 +347,7 @@ const UserSignUp = () => {
           )}
 
           <Grid container spacing={2} sx={{ mb: 3 }}>
-            <Grid item xs={6}>
+            <Grid item xs={12} sm={6}>
               <GoogleOAuthProvider clientId="390148996153-usdltgirc8gk0mor929tnibamu7a6tad.apps.googleusercontent.com">
                 <GoogleLogin
                   onSuccess={handleGoogleSuccess}
@@ -331,7 +358,7 @@ const UserSignUp = () => {
                 />
               </GoogleOAuthProvider>
             </Grid>
-            <Grid item xs={6}>
+          <Grid item xs={12} sm={6}>
               <Button
                 fullWidth
                 variant="outlined"
