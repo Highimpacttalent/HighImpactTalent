@@ -107,12 +107,10 @@ const userSchema = new mongoose.Schema(
     },
     preferredWorkTypes: {
       type: [String],
-      enum: ["Full-Time", "Part-Time", "Contract", "Temporary"],
       default: ["Full-Time"]
     },
     preferredWorkModes: {
       type: [String],
-      enum: ["Remote", "Hybrid", "Work From Office"],
       default: ["Remote"]
     },
     experienceHistory: [
@@ -141,7 +139,6 @@ const userSchema = new mongoose.Schema(
     ],
     highestQualification: {
       type: [String],
-      enum: ["MBA", "Masters", "Bachelors", "CA"]
     },
     lastConsultingCompany: {
       type: String,
