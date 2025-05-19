@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { IconButton, TextField, Button, InputAdornment, Typography, Box, Modal, CircularProgress ,Link} from "@mui/material";
+import { IconButton, TextField, Button, InputAdornment, Typography, Box, Modal, CircularProgress, Link } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 import { useSelector } from "react-redux";
-
 
 const PasswordChange = () => {
   const { user } = useSelector((state) => state.user);
@@ -18,7 +17,19 @@ const PasswordChange = () => {
   const [error, setError] = useState("");
   const [successModal, setSuccessModal] = useState(false);
   const navigate = useNavigate();
-  const [showPassword,setShowPassword] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  
+  // Password strength states
+  const [passwordStrength, setPasswordStrength] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+  const [showPasswordGuide, setShowPasswordGuide] = useState(false);
+  
+  // Password validation criteria states
+  const [lengthValid, setLengthValid] = useState(false);
+  const [uppercaseValid, setUppercaseValid] = useState(false);
+  const [lowercaseValid, setLowercaseValid] = useState(false);
+  const [numberValid, setNumberValid] = useState(false);
+  const [specialCharValid, setSpecialCharValid] = useState(false);
 
   // Generate a random OTP (0-9999) and send it when the component is first loaded
   useEffect(() => {
@@ -26,6 +37,58 @@ const PasswordChange = () => {
       sendOtp();
     }
   }, [step]);
+
+  // Check password strength whenever password changes
+  useEffect(() => {
+    if (newPassword) {
+      checkPasswordStrength(newPassword);
+      setShowPasswordGuide(true);
+    } else {
+      setPasswordStrength("");
+      setPasswordError("");
+      setShowPasswordGuide(false);
+    }
+  }, [newPassword]);
+
+  const checkPasswordStrength = (password) => {
+    const lengthCriteria = password.length >= 8;
+    const uppercaseCriteria = /[A-Z]/.test(password);
+    const lowercaseCriteria = /[a-z]/.test(password);
+    const numberCriteria = /[0-9]/.test(password);
+    const specialCharCriteria = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+    
+    // Update individual criteria states
+    setLengthValid(lengthCriteria);
+    setUppercaseValid(uppercaseCriteria);
+    setLowercaseValid(lowercaseCriteria);
+    setNumberValid(numberCriteria);
+    setSpecialCharValid(specialCharCriteria);
+
+    if (
+      lengthCriteria &&
+      uppercaseCriteria &&
+      lowercaseCriteria &&
+      numberCriteria &&
+      specialCharCriteria
+    ) {
+      setPasswordStrength("Strong Password");
+      setPasswordError("");
+    } else if (
+      lengthCriteria &&
+      (uppercaseCriteria || lowercaseCriteria) &&
+      numberCriteria
+    ) {
+      setPasswordStrength("Medium Password");
+      setPasswordError(
+        "Consider adding special characters for a stronger password."
+      );
+    } else {
+      setPasswordStrength("Weak Password");
+      setPasswordError(
+        "Password should include uppercase, lowercase, number, and special character."
+      );
+    }
+  };
 
   const handleEmailCheck = async () => {
     if (!email) return;
@@ -47,7 +110,7 @@ const PasswordChange = () => {
         setError("");
         setStep(2);
       } else if (res.ok && data.success && !data.exists) {  
-        setError("That email isn’t registered with us.");
+        setError("That email isn't registered with us.");
       } else {
         throw new Error(data.message || "Email check failed");
       }
@@ -97,6 +160,11 @@ const PasswordChange = () => {
       return;
     }
 
+    if (passwordStrength === "Weak Password") {
+      setError("Please use a stronger password before proceeding.");
+      return;
+    }
+
     try {
       setLoading(true);
       const response = await fetch("https://highimpacttalent.onrender.com/api-v1/user/change-password", {
@@ -123,6 +191,9 @@ const PasswordChange = () => {
     }
   };
 
+  // Function to get color based on validation status
+  const getValidationColor = (isValid) => isValid ? "#4CAF50" : "#808195";
+
   return (
     <Box sx={{  display: "flex",flexDirection:"column",alignItems:"center", justifyContent: "center", bgcolor: "#fff",p:2 }}>
       <Typography textAlign="center" gutterBottom color="#24252C" fontWeight={700} fontFamily={"Satoshi"} fontSize={"24px"} mt={8}>
@@ -145,7 +216,7 @@ const PasswordChange = () => {
                 mt: 1,
                 mb:1
               }}
-            >We couldn’t find an account associated with that email address. Please double-check and try again.</Typography>}
+            >We couldn't find an account associated with that email address. Please double-check and try again.</Typography>}
           <TextField
             fullWidth
             placeholder="abc@gmail.com"
@@ -209,7 +280,7 @@ const PasswordChange = () => {
                 mt: 1,
               }}
             >
-              Note: Please check your junk or spam folder if you don’t see the email in your inbox.
+              Note: Please check your junk or spam folder if you don't see the email in your inbox.
             </Typography>
           <TextField
             fullWidth
@@ -226,7 +297,7 @@ const PasswordChange = () => {
           />
           {error && <Typography color="error">{error}</Typography>}
           <Button fullWidth variant="link" sx={{ mt: 4,fontFamily:"Satoshi",color:"#474E68",fontWeight:"500",textTransform:"none" }}>
-          Didn’t Receive Code?  <Box component="span" sx={{ color: "#3C7EFC", ml: 1 }}  onClick={sendOtp}>
+          Didn't Receive Code?  <Box component="span" sx={{ color: "#3C7EFC", ml: 1 }}  onClick={sendOtp}>
     Resend Code
   </Box>
           </Button>
@@ -239,9 +310,9 @@ const PasswordChange = () => {
 
       {step === 3 && (
         <Box>
-          <Typography  gutterBottom color="#24252C" fontWeight={700} fontFamily={"Satoshi"} fontSize={"16px"} >
-          New Password *
-      </Typography>
+          <Typography gutterBottom color="#24252C" fontWeight={700} fontFamily={"Satoshi"} fontSize={"16px"} >
+            New Password *
+          </Typography>
           <TextField
             fullWidth
             placeholder="enter your new password"
@@ -256,21 +327,79 @@ const PasswordChange = () => {
               },
             }}
             InputProps={{
-                            endAdornment: (
-                              <InputAdornment position="end">
-                                <IconButton
-                                  onClick={() => setShowPassword(!showPassword)}
-                                  edge="end"
-                                >
-                                  {showPassword ? <Visibility /> : <VisibilityOff />}
-                                </IconButton>
-                              </InputAdornment>
-                            ),
-                          }}
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton
+                    onClick={() => setShowPassword(!showPassword)}
+                    edge="end"
+                  >
+                    {showPassword ? <Visibility /> : <VisibilityOff />}
+                  </IconButton>
+                </InputAdornment>
+              ),
+            }}
           />
-          <Typography  gutterBottom color="#24252C" fontWeight={700} fontFamily={"Satoshi"} fontSize={"16px"} sx={{mt:2}} >
-          Confirm Password *
-      </Typography>
+          
+          {/* Password strength indicator */}
+          {passwordStrength && (
+            <Box sx={{ mt: 1, mb: 1 }}>
+              <Typography 
+                sx={{ 
+                  fontFamily: "Satoshi", 
+                  fontWeight: 600, 
+                  fontSize: "14px",
+                  color: passwordStrength === "Strong Password" 
+                    ? "#4CAF50" 
+                    : passwordStrength === "Medium Password" 
+                      ? "#FF9800" 
+                      : "#F44336" 
+                }}
+              >
+                {passwordStrength}
+              </Typography>
+              
+              {passwordError && (
+                <Typography
+                  sx={{
+                    fontFamily: "Satoshi",
+                    color: "#FF6B6B",
+                    fontSize: "12px",
+                    fontStyle: "italic",
+                  }}
+                >
+                  {passwordError}
+                </Typography>
+              )}
+            </Box>
+          )}
+          
+          {/* Password guidelines */}
+          {showPasswordGuide && (
+            <Box sx={{ mt: 1, mb: 2, p: 2, bgcolor: "#F5F5F5", borderRadius: 2 }}>
+              <Typography sx={{ fontFamily: "Satoshi", fontWeight: 600, fontSize: "14px", mb: 1 }}>
+                A strong password typically includes:
+              </Typography>
+              <Typography sx={{ fontFamily: "Satoshi", fontSize: "14px", color: getValidationColor(lengthValid), mb: 0.5 }}>
+                • At least 8 characters
+              </Typography>
+              <Typography sx={{ fontFamily: "Satoshi", fontSize: "14px", color: getValidationColor(uppercaseValid), mb: 0.5 }}>
+                • Uppercase letters
+              </Typography>
+              <Typography sx={{ fontFamily: "Satoshi", fontSize: "14px", color: getValidationColor(lowercaseValid), mb: 0.5 }}>
+                • Lowercase letters
+              </Typography>
+              <Typography sx={{ fontFamily: "Satoshi", fontSize: "14px", color: getValidationColor(numberValid), mb: 0.5 }}>
+                • At least one number
+              </Typography>
+              <Typography sx={{ fontFamily: "Satoshi", fontSize: "14px", color: getValidationColor(specialCharValid) }}>
+                • At least one special character (e.g. !@#$%)
+              </Typography>
+            </Box>
+          )}
+          
+          <Typography gutterBottom color="#24252C" fontWeight={700} fontFamily={"Satoshi"} fontSize={"16px"} sx={{mt:2}} >
+            Confirm Password *
+          </Typography>
           <TextField
             fullWidth
             placeholder="confirm your password"
@@ -285,21 +414,65 @@ const PasswordChange = () => {
               },
             }}
             InputProps={{
-                            endAdornment: (
-                              <InputAdornment position="end">
-                                <IconButton
-                                  onClick={() => setShowPassword(!showPassword)}
-                                  edge="end"
-                                >
-                                  {showPassword ? <Visibility /> : <VisibilityOff />}
-                                </IconButton>
-                              </InputAdornment>
-                            ),
-                          }}
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton
+                    onClick={() => setShowPassword(!showPassword)}
+                    edge="end"
+                  >
+                    {showPassword ? <Visibility /> : <VisibilityOff />}
+                  </IconButton>
+                </InputAdornment>
+              ),
+            }}
           />
-          {error && <Typography color="error">{error}</Typography>}
-          <Button fullWidth variant="contained" color="primary" onClick={handlePasswordChange} sx={{ borderRadius:16,fontFamily:"Satoshi",textTransform:"none",mb:8,mt:4 }}>
-            Change Password
+          
+          {/* Password match error */}
+          {confirmPassword && newPassword !== confirmPassword && (
+            <Typography
+              sx={{
+                fontFamily: "Satoshi",
+                color: "#FF6B6B",
+                fontSize: "12px",
+                fontStyle: "italic",
+                mt: 1,
+              }}
+            >
+              Passwords do not match
+            </Typography>
+          )}
+          
+          {error && (
+            <Typography 
+              sx={{
+                fontFamily: "Satoshi",
+                color: "#FF6B6B",
+                fontSize: "14px",
+                fontWeight: 500,
+                mt: 2,
+              }}
+            >{error}</Typography>
+          )}
+          
+          <Button 
+            fullWidth 
+            variant="contained" 
+            color="primary" 
+            onClick={handlePasswordChange} 
+            disabled={passwordStrength === "Weak Password" || newPassword !== confirmPassword || !newPassword}
+            sx={{ 
+              borderRadius: 16,
+              fontFamily: "Satoshi",
+              textTransform: "none",
+              mb: 8,
+              mt: 4 
+            }}
+          >
+            {loading ? (
+              <CircularProgress size={20} sx={{ color: "white" }} />
+            ) : (
+              "Change Password"
+            )}
           </Button>
         </Box>
       )}
