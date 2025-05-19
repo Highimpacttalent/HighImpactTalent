@@ -346,51 +346,45 @@ const ResumeUpload = () => {
       </div>
 
       {/* Resume Preview Section */}
-      {fileUrl && (
-        <motion.div
-          initial={{ opacity: 0, x: 50 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.5 }}
-          style={{ display: "flex", justifyContent: "center", width: "100%" }}
-        >
-          <Box
-            sx={{
-              p: 3,
-              width: { xs: "90%", sm: "80%", md: 450 },
-              borderRadius: 3,
-              backgroundColor: "#fff",
-              height: { xs: "60vh", sm: "75vh", md: "80vh" },
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <Box sx={{width:"100%",px:1}}>
-            <Typography
-            fontSize="20px"
-            fontWeight="600"
-            color="#24252C"
-            fontFamily="Poppins"
-            mb={3}
-          >
-            Resume Preview
-          </Typography>
-          </Box>
-            <iframe
-              src={fileUrl}
-              width="100%"
-              height="100%"
-              style={{
-                border: "none",
-                borderRadius: "10px",
-                boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.1)",
-              }}
-              title="Resume Preview"
-            ></iframe>
-          </Box>
-        </motion.div>
-      )}
+       {fileUrl && (
+              <motion.div
+                initial={{ opacity: 0, x: 50 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.5 }}
+                style={{ display: "flex", justifyContent: "center", width: "100%" }}
+              >
+                <Paper
+                  elevation={4}
+                  sx={{
+                    p: 3,
+                    width: { xs: "90%", sm: "80%", md: 450 },
+                    borderRadius: 3,
+                    backgroundColor: "#fff",
+                    boxShadow: "0px 4px 15px rgba(0, 0, 0, 0.1)",
+                    height: { xs: "60vh", sm: "75vh", md: "80vh" },
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <Typography variant="h6" fontWeight="bold" color="primary" gutterBottom>
+                    Resume Preview
+                  </Typography>
+                  <iframe
+                    src={fileUrl}
+                    width="100%"
+                    height="100%"
+                    style={{
+                      border: "none",
+                      borderRadius: "10px",
+                      boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.1)",
+                    }}
+                    title="Resume Preview"
+                  ></iframe>
+                </Paper>
+              </motion.div>
+            )}
 
       {/* Modal for Animation */}
       <Modal open={openModal} onClose={() => setOpenModal(false)}>
