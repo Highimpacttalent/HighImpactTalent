@@ -132,7 +132,7 @@ const ResumeUpload = ({ userInfo, onResumeUploaded }) => {
 
       <Card variant="outlined" sx={{ py: 2, borderRadius: 2, border: "1px solid #00000040" }}>
         <CardContent>
-          <Box sx={{ display: "flex", justifyContent: "center", gap: 1 }}>
+          <Box sx={{ display: "flex",flexDirection:"column", justifyContent: "center", gap: 1 }}>
             <input
               type="file"
               ref={fileInputRef}

@@ -9,7 +9,7 @@ import {
   InputAdornment,
   IconButton,
   CircularProgress,
-  Grid
+  Grid,
 } from "@mui/material";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -46,15 +46,16 @@ const UserSignUp = () => {
   const [passwordStrength, setPasswordStrength] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [RevertPass, setRevertPass] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [linkedinLoading, setLinkedinLoading] = useState(false);
   const [alert, setAlert] = useState({
-      open: false,
-      type: "success",
-      title: "",
-      message: "",
-    });
-  
+    open: false,
+    type: "success",
+    title: "",
+    message: "",
+  });
+
   // Email verification states
   const [isVerifying, setIsVerifying] = useState(false);
   const [otp, setOtp] = useState("");
@@ -131,8 +132,18 @@ const UserSignUp = () => {
   // Function to validate email with OTP
   const validateEmail = async (e) => {
     e.preventDefault();
-    
-    // Basic validation checks before proceeding
+
+    if (passwordStrength == "Weak Password") {
+      setAlert({
+        open: true,
+        type: "warning",
+        title: "Warning",
+        message:
+          "Please choose a password of at least Medium strength to keep your account secure.",
+      });
+      setRevertPass(true);
+      return;
+    }
     if (form.password.length < 5) {
       setAlert({
         open: true,
@@ -151,21 +162,21 @@ const UserSignUp = () => {
       });
       return;
     }
-    
+
     try {
       setOtpSending(true);
-      
+
       // Generate a random 4-digit OTP
       const randomOtp = Math.floor(1000 + Math.random() * 9000);
       setGeneratedOtp(randomOtp.toString());
-      
+
       // Call the email verification API
       const res = await apiRequest({
         url: "/sendmail/password",
         method: "POST",
         data: {
           email: form.email,
-          otp: randomOtp
+          otp: randomOtp,
         },
       });
 
@@ -173,11 +184,15 @@ const UserSignUp = () => {
         setIsVerifying(true);
         setErrMsg("");
       } else {
-        setErrMsg(res.message || "Failed to send verification code. Please try again.");
+        setErrMsg(
+          res.message || "Failed to send verification code. Please try again."
+        );
       }
     } catch (error) {
       console.error("Email verification error:", error);
-      setErrMsg("An error occurred while sending verification code. Please try again.");
+      setErrMsg(
+        "An error occurred while sending verification code. Please try again."
+      );
     } finally {
       setOtpSending(false);
     }
@@ -212,11 +227,11 @@ const UserSignUp = () => {
         });
       } else {
         setAlert({
-        open: true,
-        type: "error",
-        title: "Error",
-        message: "Error while registering",
-      });
+          open: true,
+          type: "error",
+          title: "Error",
+          message: "Error while registering",
+        });
       }
     } catch (error) {
       console.error("Registration Error:", error);
@@ -313,10 +328,23 @@ const UserSignUp = () => {
         bgcolor: "white",
         display: "flex",
         padding: 3,
-        px: {md:10,lg:10,xs:4,sm:4}
+        px: { md: 10, lg: 10, xs: 4, sm: 4 },
       }}
     >
-      <Box sx={{ width: {md:"50%",lg:"50%",xs:"100%",sm:"100%"}, mt: 4, p: {md:4,lg:4,xs:0,sm:0}}}>
+      <AlertModal
+        open={alert.open}
+        onClose={() => setAlert({ ...alert, open: false })}
+        type={alert.type}
+        title={alert.title}
+        message={alert.message}
+      />
+      <Box
+        sx={{
+          width: { md: "50%", lg: "50%", xs: "100%", sm: "100%" },
+          mt: 4,
+          p: { md: 4, lg: 4, xs: 0, sm: 0 },
+        }}
+      >
         <Typography
           variant="h5"
           sx={{
@@ -335,14 +363,14 @@ const UserSignUp = () => {
               color: "#3C7EFC",
             }}
           >
-            Game-Changing{" "} 
+            Game-Changing{" "}
           </span>{" "}
-          Opportunity! 
-        </Typography> 
+          Opportunity!
+        </Typography>
         <Box>
-          {errMsg && ( 
+          {errMsg && (
             <Typography color="error" textAlign="center" mb={2}>
-              {errMsg} 
+              {errMsg}
             </Typography>
           )}
 
@@ -358,7 +386,7 @@ const UserSignUp = () => {
                 />
               </GoogleOAuthProvider>
             </Grid>
-          <Grid item xs={12} sm={6}>
+            <Grid item xs={12} sm={6}>
               <Button
                 fullWidth
                 variant="outlined"
@@ -413,10 +441,12 @@ const UserSignUp = () => {
               OR LOGIN WITH EMAIL
             </Typography>
           </Divider>
-          
+
           {isVerifying ? (
             // OTP Verification Form
-            <Box sx={{width: {md:"90%",lg:"90%",xs:"100%",sm:"100%"} }}>
+            <Box
+              sx={{ width: { md: "90%", lg: "90%", xs: "100%", sm: "100%" } }}
+            >
               <Typography
                 sx={{
                   fontFamily: "Satoshi",
@@ -438,16 +468,18 @@ const UserSignUp = () => {
                 We've sent a verification code to {form.email}
               </Typography>
               <Typography
-              sx={{
-                fontFamily: "Satoshi",
-                color: "#FF6B6B",
-                fontSize: "12px",
-                fontStyle: "italic",
-                mb:3,mt:0.5
-              }}
-            >
-              Note: Please check your junk or spam folder if you don’t see the email in your inbox.
-            </Typography>
+                sx={{
+                  fontFamily: "Satoshi",
+                  color: "#FF6B6B",
+                  fontSize: "12px",
+                  fontStyle: "italic",
+                  mb: 3,
+                  mt: 0.5,
+                }}
+              >
+                Note: Please check your junk or spam folder if you don’t see the
+                email in your inbox.
+              </Typography>
               <TextField
                 fullWidth
                 type="text"
@@ -482,7 +514,11 @@ const UserSignUp = () => {
                 }}
                 disabled={loading}
               >
-                {loading ? <CircularProgress size={24} /> : "Verify & Create Account"}
+                {loading ? (
+                  <CircularProgress size={24} />
+                ) : (
+                  "Verify & Create Account"
+                )}
               </Button>
               <Typography
                 align="center"
@@ -494,9 +530,9 @@ const UserSignUp = () => {
                 }}
               >
                 Didn't receive the code?{" "}
-                <Link 
-                  href="#" 
-                  underline="hover" 
+                <Link
+                  href="#"
+                  underline="hover"
                   onClick={(e) => {
                     e.preventDefault();
                     setIsVerifying(false);
@@ -508,10 +544,14 @@ const UserSignUp = () => {
             </Box>
           ) : (
             // Registration Form
-            <Box component="form" onSubmit={validateEmail} sx={{width: {md:"90%",lg:"90%",xs:"100%",sm:"100%"} }}>
+            <Box
+              component="form"
+              onSubmit={validateEmail}
+              sx={{ width: { md: "90%", lg: "90%", xs: "100%", sm: "100%" } }}
+            >
               <Typography
                 sx={{
-                  fontFamily: "Satoshi",  
+                  fontFamily: "Satoshi",
                   fontSize: "16px",
                   color: "#24252C",
                   fontWeight: "500",
@@ -650,6 +690,36 @@ const UserSignUp = () => {
                   ),
                 }}
               />
+              {RevertPass && (
+                <Box mt={1} px={1} mb={2}>
+                  <Typography
+                    sx={{ fontSize: "14px", fontWeight: 600, color: "#444" }}
+                  >
+                   A strong password typically includes:
+                  </Typography>
+                  <Typography
+                    sx={{ fontSize: "13px", color: "#757575", mt: 0.5 }}
+                  >
+                    • At least 8 characters
+                  </Typography>
+                  <Typography
+                    sx={{ fontSize: "13px", color: "#757575", mt: 0.3 }}
+                  >
+                    • Uppercase and lowercase letters
+                  </Typography>
+                  <Typography
+                    sx={{ fontSize: "13px", color: "#757575", mt: 0.3 }}
+                  >
+                    • At least one number
+                  </Typography>
+                  <Typography
+                    sx={{ fontSize: "13px", color: "#757575", mt: 0.3 }}
+                  >
+                    • At least one special character (e.g. !@#$%)
+                  </Typography>
+                </Box>
+              )}
+
               <Typography
                 sx={{
                   fontFamily: "Satoshi",
@@ -662,8 +732,8 @@ const UserSignUp = () => {
               >
                 By creating account, you agree to the{" "}
                 <Link href="/t&c">Terms & Conditions</Link> and
-                <Link href="/privacy-policy"> Privacy Policy</Link> of High Impact
-                Talent
+                <Link href="/privacy-policy"> Privacy Policy</Link> of High
+                Impact Talent
               </Typography>
               <Button
                 type="submit"
@@ -702,10 +772,17 @@ const UserSignUp = () => {
           )}
         </Box>
       </Box>
-      <Box sx={{display:{md:"flex",lg:"flex",xs:"none",sm:"none"}}}>
+      <Box sx={{ display: { md: "flex", lg: "flex", xs: "none", sm: "none" } }}>
         <Divider sx={{ border: "1px solid #A3A3A3", height: "76%", mt: 18 }} />
       </Box>
-      <Box sx={{ display:{md:"flex",lg:"flex",xs:"none",sm:"none"},p: 4, mt: 16, ml: 6 }}>
+      <Box
+        sx={{
+          display: { md: "flex", lg: "flex", xs: "none", sm: "none" },
+          p: 4,
+          mt: 16,
+          ml: 6,
+        }}
+      >
         <img src={Heroimg} alt="Hero" style={{ height: "550px" }} />
       </Box>
     </Box>

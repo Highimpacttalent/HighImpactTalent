@@ -19,6 +19,24 @@ import { UpdateUser } from "../../../redux/userSlice";
 import axios from "axios";
 import Select from "react-select";
 
+
+const WRAP_AT = 16;
+ function EmailWithBreak({ email }) {
+  if (!email) return null;
+  if (email.length <= WRAP_AT) {
+    return <>{email}</>;
+  }
+  const first  = email.slice(0, WRAP_AT);
+  const second = email.slice(WRAP_AT);
+  return (
+    <>
+      {first}
+      <br />
+      {second}
+    </>
+  );
+}
+
 const LocationDropdown = ({ value, onChange, isRequired = false }) => {
   const [cities, setCities] = useState([]);
   const [selectedCity, setSelectedCity] = useState(null);
@@ -46,6 +64,7 @@ const LocationDropdown = ({ value, onChange, isRequired = false }) => {
     };
     fetchCities();
   }, []);
+
 
   // Handle city selection
   const handleCityChange = (selectedOption) => {
@@ -416,6 +435,13 @@ const UserInfoCard = () => {
               gap={1}
               color="#404258"
               fontWeight="400"
+              sx={{
+                display: "inline-block",
+                maxWidth: "16ch",
+                overflowWrap: "break-word",
+                whiteSpace: "normal",
+                verticalAlign: "middle",
+              }}
             >
               <AiOutlineMail /> {updatedUserInfo.email}
             </Typography>
@@ -589,6 +615,8 @@ const UserInfoCard = () => {
     </Box>
   );
 
+ 
+
   const mobileView = (
     <Box
       display="flex"
@@ -664,6 +692,7 @@ const UserInfoCard = () => {
             mb: 1,
             color: "#404258",
             fontWeight: 700,
+            textAlign:"center",
             fontFamily: "Satoshi",
             fontSize: { xs: 20, md: 25, lg: 30 },
           }}
@@ -682,53 +711,54 @@ const UserInfoCard = () => {
             gap={1}
             color="#404258"
             fontWeight="400"
+            
           >
-            <AiOutlineMail /> {updatedUserInfo.email}
+            <AiOutlineMail /> <EmailWithBreak email={updatedUserInfo.email} />
           </Typography>
 
-            {/* Contact */}
-            {isEditing ? (
-              <TextField
-                name="contactNumber"
-                size="small"
-                value={updatedUserInfo.contactNumber}
-                onChange={(e) => {
-                  const value = e.target.value.replace(/\D/g, ""); // only digits
-                  if (value.length <= 10) {
-                    handleChange({
-                      target: {
-                        name: "contactNumber",
-                        value,
-                      },
-                    });
-                  }
-                }}
-                InputProps={{
-                  inputMode: "numeric",
-                }}
-                inputProps={{
-                  maxLength: 10,
-                  pattern: "\\d*",
-                }}
-                sx={{ width: "250px" }}
-                error={updatedUserInfo.contactNumber.length !== 10}
-                helperText={
-                  updatedUserInfo.contactNumber.length !== 10
-                    ? "Contact number must be exactly 10 digits"
-                    : ""
+          {/* Contact */}
+          {isEditing ? (
+            <TextField
+              name="contactNumber"
+              size="small"
+              value={updatedUserInfo.contactNumber}
+              onChange={(e) => {
+                const value = e.target.value.replace(/\D/g, ""); // only digits
+                if (value.length <= 10) {
+                  handleChange({
+                    target: {
+                      name: "contactNumber",
+                      value,
+                    },
+                  });
                 }
-              />
-            ) : (
-              <Typography
-                display="flex"
-                alignItems="center"
-                gap={1}
-                color="#404258"
-                fontWeight="400"
-              >
-                <FiPhoneCall /> {updatedUserInfo.contactNumber}
-              </Typography>
-            )}
+              }}
+              InputProps={{
+                inputMode: "numeric",
+              }}
+              inputProps={{
+                maxLength: 10,
+                pattern: "\\d*",
+              }}
+              sx={{ width: "250px" }}
+              error={updatedUserInfo.contactNumber.length !== 10}
+              helperText={
+                updatedUserInfo.contactNumber.length !== 10
+                  ? "Contact number must be exactly 10 digits"
+                  : ""
+              }
+            />
+          ) : (
+            <Typography
+              display="flex"
+              alignItems="center"
+              gap={1}
+              color="#404258"
+              fontWeight="400"
+            >
+              <FiPhoneCall /> {updatedUserInfo.contactNumber}
+            </Typography>
+          )}
 
           {/* Location */}
           {isEditing ? (
@@ -755,10 +785,11 @@ const UserInfoCard = () => {
       {/* Edit & Save Buttons */}
       <Box
         sx={{
-          px: 4,
           display: "flex",
           flexDirection: "column",
-          justifyContent: "flex-end",
+          mr: 5.5,
+          justifyContent: "center",
+          alignItems: "center",
         }}
       >
         {isEditing ? (

@@ -678,20 +678,35 @@ const UserInfoForm = () => {
                   >
                     Experience <span style={{ color: "red" }}>*</span>
                   </label>
-                  <select
+                  <Select
                     name="experience"
-                    value={formData.experience}
-                    onChange={handleChange}
-                    style={roundedSelectStyles} // Apply rounded styles including appearance:none
-                    required // Required based on *
-                  >
-                    <option value="">Select experience</option>
-                    {Array.from({ length: 15 }, (_, i) => (
-                      <option key={i + 1} value={(i + 1).toString()}>{`${
-                        i + 1
-                      }+`}</option>
-                    ))}
-                  </select>
+                    options={[
+                      { value: "", label: "Select experience" },
+                      ...Array.from({ length: 15 }, (_, i) => {
+                        const val = (i + 1).toString();
+                        return { value: val, label: `${val}+` };
+                      }),
+                    ]}
+                    value={
+                      formData.experience
+                        ? {
+                            value: formData.experience,
+                            label: `${formData.experience}+`,
+                          }
+                        : { value: "", label: "Select experience" }
+                    }
+                    onChange={(option) =>
+                      handleChange({
+                        target: {
+                          name: "experience",
+                          value: option ? option.value : "",
+                        },
+                      })
+                    }
+                    styles={customStyles}
+                    placeholder="Select experience"
+                    isClearable={false}
+                  />
                 </div>
                 {/* Skills */}
                 <div className="mb-6">
@@ -955,7 +970,7 @@ const UserInfoForm = () => {
 
                 {/* When did you first join Consulting? (Conditional, NOT required) */}
                 {formData.hasConsultingBackground === "Yes" && (
-                  <div className="mb-6">
+                  <div className="mb-1">
                     <label
                       className="block mb-4 ml-2"
                       style={{
@@ -967,17 +982,33 @@ const UserInfoForm = () => {
                     >
                       When did you first join Consulting? {/* No * */}
                     </label>
-                    <select
+                    <Select
                       name="joinConsulting"
-                      value={formData.joinConsulting}
-                      onChange={handleChange}
-                      style={roundedSelectStyles} // Apply rounded styles including appearance:none
-                      // Not required
-                    >
-                      <option value="">Select an option</option>
-                      <option value="Lateral">Lateral</option>
-                      <option value="Out of campus">Out of Campus</option>
-                    </select>
+                      options={[
+                        { value: "", label: "Select an option" },
+                        { value: "Lateral", label: "Lateral" },
+                        { value: "Out of campus", label: "Out of Campus" },
+                      ]}
+                      value={
+                        formData.joinConsulting
+                          ? {
+                              value: formData.joinConsulting,
+                              label: formData.joinConsulting,
+                            }
+                          : { value: "", label: "Select an option" }
+                      }
+                      onChange={(option) =>
+                        handleChange({
+                          target: {
+                            name: "joinConsulting",
+                            value: option ? option.value : "",
+                          },
+                        })
+                      }
+                      styles={customStyles}
+                      placeholder="Select an option"
+                      isClearable={false}
+                    />
                   </div>
                 )}
               </Box>
@@ -985,7 +1016,7 @@ const UserInfoForm = () => {
                 {/* Last/Current Consulting Company (Conditional, NOT required) */}
                 {formData.hasConsultingBackground === "Yes" && (
                   <>
-                    <div className="mb-6">
+                    <div className="mb-1">
                       <label
                         className="block mb-4 ml-2"
                         style={{
@@ -997,53 +1028,77 @@ const UserInfoForm = () => {
                       >
                         Last/Current Consulting Company {/* No * */}
                       </label>
-                      <select
+                      <Select
                         name="lastConsultingCompany"
-                        value={formData.lastConsultingCompany}
-                        onChange={handlelastCompanyChange}
-                        style={roundedSelectStyles} // Apply rounded styles including appearance:none
-                        // Not required
-                      >
-                        <option value="">Select your Company</option>
-                        {/* Consulting Company options */}
-                        <option value="McKinsey & Company">
-                          McKinsey & Company
-                        </option>
-                        <option value="Boston Consulting Group">
-                          Boston Consulting Group
-                        </option>
-                        <option value="Bain & Company">Bain & Company</option>
-                        <option value="Deloitte">Deloitte</option>
-                        <option value="Accenture">Accenture</option>
-                        <option value="Kearney">Kearney</option>
-                        <option value="EY">EY</option>
-                        <option value="PwC">PwC</option>
-                        <option value="KPMG">KPMG</option>
-                        <option value="TSMG">TSMG</option>
-                        <option value="Strategy&">Strategy&</option>
-                        <option value="Oliver Wyman">Oliver Wyman</option>
-                        <option value="IBM">IBM</option>
-                        <option value="Capgemini E.L.I.T.E.">
-                          Capgemini E.L.I.T.E.
-                        </option>
-                        <option value="ZS Associates">ZS Associates</option>
-                        <option value="Roland Berger">Roland Berger</option>
-                        <option value="Alvarez & Marsal">
-                          Alvarez & Marsal
-                        </option>
-                        <option value="Parthenon Group">Parthenon Group</option>
-                        <option value="Siemens Management Consulting">
-                          Siemens Management Consulting
-                        </option>
-                        <option value="Arthur D. Little">
-                          Arthur D. Little
-                        </option>
-                        <option value="Other">Other</option>
-                      </select>
+                        options={[
+                          { value: "", label: "Select your Company" },
+                          {
+                            value: "McKinsey & Company",
+                            label: "McKinsey & Company",
+                          },
+                          {
+                            value: "Boston Consulting Group",
+                            label: "Boston Consulting Group",
+                          },
+                          { value: "Bain & Company", label: "Bain & Company" },
+                          { value: "Deloitte", label: "Deloitte" },
+                          { value: "Accenture", label: "Accenture" },
+                          { value: "Kearney", label: "Kearney" },
+                          { value: "EY", label: "EY" },
+                          { value: "PwC", label: "PwC" },
+                          { value: "KPMG", label: "KPMG" },
+                          { value: "TSMG", label: "TSMG" },
+                          { value: "Strategy&", label: "Strategy&" },
+                          { value: "Oliver Wyman", label: "Oliver Wyman" },
+                          { value: "IBM", label: "IBM" },
+                          {
+                            value: "Capgemini E.L.I.T.E.",
+                            label: "Capgemini E.L.I.T.E.",
+                          },
+                          { value: "ZS Associates", label: "ZS Associates" },
+                          { value: "Roland Berger", label: "Roland Berger" },
+                          {
+                            value: "Alvarez & Marsal",
+                            label: "Alvarez & Marsal",
+                          },
+                          {
+                            value: "Parthenon Group",
+                            label: "Parthenon Group",
+                          },
+                          {
+                            value: "Siemens Management Consulting",
+                            label: "Siemens Management Consulting",
+                          },
+                          {
+                            value: "Arthur D. Little",
+                            label: "Arthur D. Little",
+                          },
+                          { value: "Other", label: "Other" },
+                        ]}
+                        value={
+                          formData.lastConsultingCompany
+                            ? {
+                                value: formData.lastConsultingCompany,
+                                label: formData.lastConsultingCompany,
+                              }
+                            : { value: "", label: "Select your Company" }
+                        }
+                        onChange={(option) =>
+                          handlelastCompanyChange({
+                            target: {
+                              name: "lastConsultingCompany",
+                              value: option ? option.value : "",
+                            },
+                          })
+                        }
+                        styles={customStyles}
+                        placeholder="Select your Company"
+                        isClearable={false}
+                      />
                     </div>
                     {/* Custom Last Consulting Company input if "Other" is selected (Conditional, NOT required) */}
                     {formData.lastConsultingCompany === "Other" && (
-                      <div className="mb-6">
+                      <div className="mb-1">
                         <label
                           className="block text-gray-700 text-sm font-semibold mb-4 ml-2"
                           style={{
@@ -1081,20 +1136,39 @@ const UserInfoForm = () => {
                       >
                         Total Experience in Consulting {/* No * */}
                       </label>
-                      <select
+                      <Select
                         name="totalYearsInConsulting"
-                        value={formData.totalYearsInConsulting}
-                        onChange={handleChange}
-                        style={roundedSelectStyles} // Apply rounded styles including appearance:none
-                        // Not required
-                      >
-                        <option value="">Select experience</option>
-                        {Array.from({ length: 15 }, (_, i) => (
-                          <option key={i + 1} value={(i + 1).toString()}>{`${
-                            i + 1
-                          } year${i === 0 ? "" : "s"}`}</option>
-                        ))}
-                      </select>
+                        options={Array.from({ length: 15 }, (_, i) => {
+                          const years = (i + 1).toString();
+                          return {
+                            value: years,
+                            label: `${years} year${years > 1 ? "s" : ""}`,
+                          };
+                        })}
+                        value={
+                          formData.totalYearsInConsulting
+                            ? {
+                                value: formData.totalYearsInConsulting,
+                                label: `${formData.totalYearsInConsulting} ${
+                                  formData.totalYearsInConsulting === "1"
+                                    ? "year"
+                                    : "years"
+                                }`,
+                              }
+                            : null
+                        }
+                        onChange={(option) =>
+                          handleChange({
+                            target: {
+                              name: "totalYearsInConsulting",
+                              value: option ? option.value : "",
+                            },
+                          })
+                        }
+                        styles={customStyles}
+                        placeholder="Select experience"
+                        isClearable={false}
+                      />
                     </div>
                   </>
                 )}
