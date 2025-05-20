@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState,useEffect } from "react";
 import { Outlet, Navigate, Route, Routes, useLocation } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
@@ -46,6 +46,7 @@ import PaymentFailure from "./pages/Payments/PaymentFailure";
 import LinkedInCallback from "./pages/AuthForm/LinkedInCallback";
 import PaymentProtectedRoute from "./pages/Payments/PaymentProtectedRoute.jsx";
 import JobRecommendationsComponent from "./pages/Match/view.jsx";
+import HighImpactTalentLanding from "./pages/Form/view.jsx";
 
 function Layout() {
   const { user } = useSelector((state) => state.user);
@@ -59,6 +60,28 @@ function Layout() {
 }
 function App() {
   const { user } = useSelector((state) => state.user);
+  const [developer, setDeveloper] = useState(false);
+
+  // Check localStorage for developer flag on mount
+  useEffect(() => {
+    const devValue = localStorage.getItem('developer');
+    if (devValue === 'developer@highimpact') {
+      setDeveloper(true);
+    } else {
+      setDeveloper(false);
+    }
+  }, []);
+
+  // Handler to set developer flag
+  const handledeveloper = () => {
+    localStorage.setItem('developer', 'developer@highimpact');
+    setDeveloper(true);
+  };
+
+  if(!developer){
+    return <HighImpactTalentLanding handledeveloper={handledeveloper}/>
+  }
+
   return (
     <main className='bg-[#f3f4f6] font-[Poppins] tracking-tighter '>
       <div className="fixe w-full z-[1000]  bg-white">
@@ -72,7 +95,7 @@ function App() {
             path='/'
             element={<Navigate to='/find-jobs' replace={true} />}
           /> */}
-          <Route path="/Develop/1234" element={<HiringPlatformLanding/>} />
+          <Route path ="/land" element={<HighImpactTalentLanding/>}></Route>
           <Route path="/" element={<LandingMain/>} />
           <Route path="/home" element={<Landing2/>} />
           <Route path='/find-jobs' element={<FindJob />} />
