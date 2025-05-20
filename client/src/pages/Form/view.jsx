@@ -19,28 +19,20 @@ export default function HighImpactTalentLanding({ handledeveloper }) {
     window.location.href = "https://shorturl.at/hlPP7";
   };
 
-  const openWhatsApp = () => {
+   const openWhatsApp = () => {
     const whatsappNumber = "918332052215";
-    // Get current user information
-    const currentUser = JSON.parse(localStorage.getItem("userInfo")) || {};
-    // Prepare message with user info if available
-    let message;
-    if (currentUser.email) {
-      const userName = currentUser.firstName
-        ? `${currentUser.firstName} ${currentUser.lastName || ""}`.trim()
-        : "User";
-      message = `Hello, my name is ${userName}. I need assistance with `;
-    } else {
-      message = "Hello, I need assistance with ";
-    }
-    const encodedMessage = encodeURIComponent(message);
+    const message = "Hello, I need assistance with ";
+    const encoded = encodeURIComponent(message);
 
     const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-    if (isMobile) {
-      window.location.href = `whatsapp://send/?phone=${whatsappNumber}&text=${encodedMessage}`;
-    } else {
-      setWhatsAppOptionsOpen(true);
-    }
+
+    const url = isMobile
+      // native app
+      ? `whatsapp://send?phone=${whatsappNumber}&text=${encoded}`
+      // universal link (works desktop & mobile web)
+      : `https://api.whatsapp.com/send?phone=${whatsappNumber}&text=${encoded}`;
+
+    window.open(url, "_blank");
   };
 
   const closeWhatsAppOptions = () => setWhatsAppOptionsOpen(false);
