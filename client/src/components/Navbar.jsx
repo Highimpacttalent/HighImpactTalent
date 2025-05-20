@@ -421,7 +421,8 @@ const LoggedInDrawer = ({ user, handleLogout, setDrawerOpen }) => (
         to="/application-tracking"
         onClick={() => setDrawerOpen(false)}
       >
-        <ListItemText primary="Application Status" />
+        <ListItemText primary=" Job Tracker" />
+        
       </ListItem>
     )}
     <ListItem
