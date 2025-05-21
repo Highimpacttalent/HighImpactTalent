@@ -46,7 +46,7 @@ import PaymentFailure from "./pages/Payments/PaymentFailure";
 import LinkedInCallback from "./pages/AuthForm/LinkedInCallback";
 import PaymentProtectedRoute from "./pages/Payments/PaymentProtectedRoute.jsx";
 import JobRecommendationsComponent from "./pages/Match/view.jsx";
-import HighImpactTalentLanding from "./pages/Form/view.jsx";
+import HighImpactTalentLanding from "./pages/Form/view2.jsx";
 
 function Layout() {
   const { user } = useSelector((state) => state.user);
