@@ -95,7 +95,6 @@ function App() {
             path='/'
             element={<Navigate to='/find-jobs' replace={true} />}
           /> */}
-          <Route path ="/land" element={<HighImpactTalentLanding/>}></Route>
           <Route path="/" element={<LandingMain/>} />
           <Route path="/home" element={<Landing2/>} />
           <Route path='/find-jobs' element={<FindJob />} />
