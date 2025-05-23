@@ -69,7 +69,8 @@ const DesktopView = () => {
       </Typography>
 
       {/* Tab Buttons */}
-      <Box sx={{ display: "flex", justifyContent: "center", mb: 4 }}>
+     {/* Tab Buttons */}
+      <Box sx={{ display: "flex", justifyContent: "center", mb: 3 }}>
         <Box
           sx={{
             display: "flex",
@@ -85,25 +86,21 @@ const DesktopView = () => {
             disableElevation
             sx={{
               borderRadius: "30px",
-              px: 4,
-              py: 1.2,
               fontWeight: 600,
-              fontSize: "16px",
+              fontFamily: "Poppins",
+              fontSize: "14px",
               background:
                 activeTab === "inProgress"
-                  ? "linear-gradient(135deg, #007FFF, #00C6FF)"
+                  ? "#03A9F4B2"
                   : "transparent",
               color: activeTab === "inProgress" ? "white" : "#555",
-              boxShadow:
-                activeTab === "inProgress"
-                  ? "0 0 12px rgba(0, 198, 255, 0.5)"
-                  : "none",
               "&:hover": {
                 background:
                   activeTab === "inProgress"
                     ? "linear-gradient(135deg, #007FFF, #00C6FF)"
                     : "#e0e0e0",
               },
+              textTransform: "none",
             }}
           >
             In Progress
@@ -114,25 +111,15 @@ const DesktopView = () => {
             disableElevation
             sx={{
               borderRadius: "30px",
-              px: 4,
-              py: 1.2,
               fontWeight: 600,
-              fontSize: "16px",
+              fontFamily: "Poppins",
+              fontSize: "14px",
               background:
                 activeTab === "notProgressing"
                   ? "linear-gradient(135deg, #FF5F6D, #FFC371)"
                   : "transparent",
               color: activeTab === "notProgressing" ? "white" : "#555",
-              boxShadow:
-                activeTab === "notProgressing"
-                  ? "0 0 12px rgba(255, 99, 71, 0.5)"
-                  : "none",
-              "&:hover": {
-                background:
-                  activeTab === "notProgressing"
-                    ? "linear-gradient(135deg, #FF5F6D, #FFC371)"
-                    : "#e0e0e0",
-              },
+              textTransform: "none",
             }}
           >
             Not Progressing

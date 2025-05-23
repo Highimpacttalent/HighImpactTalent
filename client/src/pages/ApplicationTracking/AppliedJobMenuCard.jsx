@@ -1,4 +1,5 @@
 import moment from "moment";
+import { useState } from "react";
 import {
   Card,
   CardContent,
@@ -9,37 +10,79 @@ import {
   Stack,
   useMediaQuery,
   useTheme,
+  Button,
+  Collapse,
 } from "@mui/material";
 import {
   LocationOnOutlined,
   WorkOutlineOutlined,
   Business,
   CurrencyRupee,
+  CheckCircle,
+  RadioButtonUnchecked,
+  Visibility,
+  Assignment,
+  Person,
+  WorkOutline,
+  ExpandMore,
+  ExpandLess,
 } from "@mui/icons-material";
 
 const AppliedJobMenuCard = ({ job, flag = false, enable = false }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const [showAllStatuses, setShowAllStatuses] = useState(false);
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case "APPLIED":
-        return "#2196f3"; // Blue
-      case "APPLICATION VIEWED":
-        return "#00bcd4"; // Cyan
-      case "SHORTLISTED":
-        return "#ffc107"; // Amber
-      case "INTERVIEWING":
-        return "#673ab7"; // Deep Purple
-      case "HIRED":
-        return "#4caf50"; // Green
-      case "NOT PROGRESSING":
-        return "#f44336"; // Red
-      default:
-        return "#9e9e9e"; // Grey
-    }
+  // Define all possible statuses in order
+  const allStatuses = [
+    { key: "APPLIED", label: "Applied", icon: <CheckCircle /> },
+    { key: "APPLICATION VIEWED", label: "Application Viewed", icon: <Visibility /> },
+    { key: "SHORTLISTED", label: "Shortlisted", icon: <Assignment /> },
+    { key: "INTERVIEWING", label: "Interviewed", icon: <Person /> },
+    { key: "HIRED", label: "Hired", icon: <WorkOutline /> },
+  ];
+
+  const getCurrentStatusIndex = () => {
+    const currentStatus = job?.status?.toUpperCase();
+    return allStatuses.findIndex(status => status.key === currentStatus);
   };
-  
+
+  const currentStatusIndex = getCurrentStatusIndex();
+  const currentStatus = job?.status?.toUpperCase();
+
+  const StatusIndicator = ({ status, isActive, isCompleted, showIcon = true }) => (
+    <Box
+      sx={{
+        display: "flex",
+        alignItems: "center",
+        gap: 1,
+        py: 0.5,
+        px: 1,
+      }}
+    >
+      {showIcon && (
+        <Box
+          sx={{
+            color: isActive ? "#4caf50" : isCompleted ? "#4caf50" : "#9e9e9e",
+            display: "flex",
+            alignItems: "center",
+          }}
+        >
+          {isActive || isCompleted ? status.icon : <RadioButtonUnchecked fontSize="small" />}
+        </Box>
+      )}
+      <Typography
+        variant="body2"
+        sx={{
+          color: isActive ? "#4caf50" : isCompleted ? "#666" : "#9e9e9e",
+          fontWeight: isActive ? 600 : 400,
+          fontFamily: "Poppins",
+        }}
+      >
+        {status.label}
+      </Typography>
+    </Box>
+  );
 
   const JobCard = (
     <Box
@@ -50,6 +93,7 @@ const AppliedJobMenuCard = ({ job, flag = false, enable = false }) => {
         border: "1px solid #00000040",
         borderRadius: 4,
         p: 0.5,
+        backgroundColor: "#fff",
       }}
     >
       <CardContent
@@ -61,89 +105,129 @@ const AppliedJobMenuCard = ({ job, flag = false, enable = false }) => {
           gutterBottom
           sx={{ color: "#24252C", fontFamily: "Poppins", fontSize: "18px" }}
         >
-          {job?.job?.jobTitle}
+          {job?.job?.jobTitle || "Position"}
         </Typography>
-        {/* Company Name & Like Button */}
-        <Box
-          display="flex"
-          justifyContent="space-between"
-          alignItems="center"
-          mb={1}
+        
+        {/* Company Name */}
+        <Typography
+          fontWeight={500}
+          gutterBottom
+          sx={{
+            color: "#666",
+            mb: 1.5,
+            fontFamily: "Poppins",
+            fontSize: "14px",
+          }}
         >
-          <Box
-            display="flex"
-            alignItems="center"
-            justifyContent="center"
-            gap={1}
-          >
-            <Typography
-              fontWeight={500}
-              gutterBottom
-              sx={{
-                color: "#24252C",
-                mb: 1.5,
-                fontFamily: "Poppins",
-                fontSize: "16px",
-              }}
-            >
-              {job?.company?.name}
-            </Typography>
-          </Box>
+          {job?.company?.name || "Company"} • {job?.job?.jobLocation || "City, state"}
+        </Typography>
+
+        {/* Job Details Chips */}
+        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, mb: 2 }}>
+          <Chip
+            label={`${job?.job?.salary} LPA` || "Salary"}
+            variant="outlined"
+            size="small"
+            sx={{ 
+              color: "#666", 
+              fontWeight: "400",
+              backgroundColor: "#f5f5f5",
+              border: "none",
+              borderRadius: 2,
+            }}
+          />
+          <Chip
+            label={job?.job?.workType || "Full time"}
+            variant="outlined"
+            size="small"
+            sx={{ 
+              color: "#666", 
+              fontWeight: "400",
+              backgroundColor: "#f5f5f5",
+              border: "none",
+              borderRadius: 2,
+            }}
+          />
+          <Chip
+            label={`${job?.job?.experience} years` || "Full time"}
+            variant="outlined"
+            size="small"
+            sx={{ 
+              color: "#666", 
+              fontWeight: "400",
+              backgroundColor: "#f5f5f5",
+              border: "none",
+              borderRadius: 2,
+            }}
+          />
         </Box>
 
-        {/* Job Details */}
-        <Box sx={{  display: "flex", flexWrap: "wrap" }} gap={1}>
-          <Box sx={{ display: "flex" }} gap={0.5}>
-            <Chip
-              icon={<LocationOnOutlined sx={{ color: "#474E68" }} />}
-              label={job?.job?.jobLocation}
-              variant="contained"
-              sx={{ color: "#474E68", fontWeight: "400" }}
-            />
-            <Chip
-              icon={<WorkOutlineOutlined sx={{ color: "#474E68" }} />}
-              label={`${job?.job?.experience}+ years experience`}
-              variant="contained"
-              sx={{ color: "#474E68", fontWeight: "400" }}
-            />
-          </Box>
-          <Chip
-            icon={<CurrencyRupee sx={{ color: "#474E68" }} />}
-            label={
-              job?.job?.salaryConfidential
-                ? "Confidential"
-                : `${job.job?.salary.toLocaleString()} (${
-                    job.job?.salaryCategory
-                  })`
-            }
-            variant="contained"
-            sx={{ color: "#474E68", fontWeight: "400" }}
+        {/* Status Section */}
+        <Box sx={{ mb: 2 }}>
+          {/* Current Status - Always Visible */}
+          <StatusIndicator
+            status={allStatuses[currentStatusIndex] || { label: currentStatus || "Applied", key: currentStatus }}
+            isActive={true}
+            isCompleted={false}
           />
+
+          {/* Expandable Status List */}
+          <Collapse in={showAllStatuses}>
+            <Box sx={{ mt: 1, pl: 2 }}>
+              {allStatuses.map((status, index) => {
+                if (index === currentStatusIndex) return null; // Skip current status as it's shown above
+                
+                const isCompleted = index < currentStatusIndex;
+                const isActive = false;
+                
+                return (
+                  <StatusIndicator
+                    key={status.key}
+                    status={status}
+                    isActive={isActive}
+                    isCompleted={isCompleted}
+                  />
+                );
+              })}
+            </Box>
+          </Collapse>
+
+
         </Box>
       </CardContent>
 
-      <Box
-          >
-            <Typography
-              fontWeight={500}
-              sx={{
-                color: "#24252C",
-                fontFamily: "Poppins",
-                fontSize: "16px",
-                px:2
-              }}
-            >
-              Current Status : <span style={{color:getStatusColor(job.status.toUpperCase()),fontWeight:"700"}}>{job.status.toUpperCase() || "Status Unknown"}</span>
-            </Typography>
-          </Box>
-
       {/* Fixed Bottom Section */}
       <CardActions
-        sx={{ display: "flex", justifyContent: "space-between", pl: 2, pr: 2 }}
+        sx={{ 
+          display: "flex", 
+          justifyContent: "space-between", 
+          alignItems: "center",
+          pl: 2, 
+          pr: 2,
+          pt: 0,
+        }}
       >
         <Typography variant="caption" color="text.secondary">
-          Posted {moment(job?.job?.createdAt).fromNow()}
+          {moment(job?.job?.createdAt).fromNow() || "25 minutes ago"}
         </Typography>
+        <Button
+          variant="contained"
+          onClick={() => setShowAllStatuses(!showAllStatuses)}
+          size="small"
+          sx={{
+            backgroundColor: "#2196f3",
+            color: "white",
+            textTransform: "none",
+            fontFamily: "Poppins",
+            borderRadius: 2,
+            px: 2,
+            "&:hover": {
+              backgroundColor: "#1976d2",
+            },
+          }}
+        >
+         {showAllStatuses ? "Hide Details" : "View Details"}
+        </Button>
       </CardActions>
     </Box>
   );

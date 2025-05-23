@@ -3,22 +3,15 @@ import {
   Grid,
   Box,
   Typography,
-  Drawer,
-  IconButton,
   Button
 } from "@mui/material";
-import CloseIcon from "@mui/icons-material/Close";
 import { useSelector } from "react-redux";
-import AppliedJobCard from "./AppliedJobCard";
 import AppliedJobMenuCard from "./AppliedJobMenuCard";
-import LeftPanel from "./LeftPanel";
 import axios from "axios";
 
 const MobileView = () => {
   const { user } = useSelector((state) => state.user);
   const [appliedJobs, setAppliedJobs] = useState([]);
-  const [drawerOpen, setDrawerOpen] = useState(false);
-  const [selectedJobData, setSelectedJobData] = useState(null);
   const [activeTab, setActiveTab] = useState("inProgress");
   const [isFetching, setIsFetching] = useState(false);
 
@@ -42,15 +35,6 @@ const MobileView = () => {
     fetchAppliedJobs();
   }, [user]);
 
-  const handleAppliedCardClick = (job) => {
-    setSelectedJobData(job);
-    setDrawerOpen(true);
-  };
-
-  const closeDrawer = () => {
-    setDrawerOpen(false);
-    setSelectedJobData(null);
-  };
 
   const filteredJobs =
     activeTab === "inProgress"
@@ -64,7 +48,7 @@ const MobileView = () => {
           textAlign: "center",
           color: "#404258",
           fontWeight: "600",
-          fontSize: 28,
+          fontSize: {xs: "24px", sm: "24px",md: "28px"},
           fontFamily: "Satoshi,serif",
           mb: 3,
         }}
@@ -89,25 +73,21 @@ const MobileView = () => {
             disableElevation
             sx={{
               borderRadius: "30px",
-              px: 3,
-              py: 1,
               fontWeight: 600,
+              fontFamily: "Poppins",
               fontSize: "14px",
               background:
                 activeTab === "inProgress"
-                  ? "linear-gradient(135deg, #007FFF, #00C6FF)"
+                  ? "#03A9F4B2"
                   : "transparent",
               color: activeTab === "inProgress" ? "white" : "#555",
-              boxShadow:
-                activeTab === "inProgress"
-                  ? "0 0 12px rgba(0, 198, 255, 0.5)"
-                  : "none",
               "&:hover": {
                 background:
                   activeTab === "inProgress"
                     ? "linear-gradient(135deg, #007FFF, #00C6FF)"
                     : "#e0e0e0",
               },
+              textTransform: "none",
             }}
           >
             In Progress
@@ -118,25 +98,15 @@ const MobileView = () => {
             disableElevation
             sx={{
               borderRadius: "30px",
-              px: 3,
-              py: 1,
               fontWeight: 600,
+              fontFamily: "Poppins",
               fontSize: "14px",
               background:
                 activeTab === "notProgressing"
                   ? "linear-gradient(135deg, #FF5F6D, #FFC371)"
                   : "transparent",
               color: activeTab === "notProgressing" ? "white" : "#555",
-              boxShadow:
-                activeTab === "notProgressing"
-                  ? "0 0 12px rgba(255, 99, 71, 0.5)"
-                  : "none",
-              "&:hover": {
-                background:
-                  activeTab === "notProgressing"
-                    ? "linear-gradient(135deg, #FF5F6D, #FFC371)"
-                    : "#e0e0e0",
-              },
+              textTransform: "none",
             }}
           >
             Not Progressing
@@ -152,12 +122,7 @@ const MobileView = () => {
         <Grid container spacing={2}>
           {filteredJobs.map((job) => (
             <Grid item xs={12} key={job._id}>
-              <Box
-                onClick={() => handleAppliedCardClick(job)}
-                sx={{ cursor: "pointer" }}
-              >
                 <AppliedJobMenuCard job={job} />
-              </Box>
             </Grid>
           ))}
         </Grid>
@@ -167,32 +132,6 @@ const MobileView = () => {
         </Typography>
       )}
 
-      <Drawer
-        anchor="bottom"
-        open={drawerOpen}
-        onClose={closeDrawer}
-        PaperProps={{
-          sx: {
-            height: "80vh",
-            borderTopLeftRadius: "16px",
-            borderTopRightRadius: "16px",
-            overflow: "auto",
-          },
-        }}
-      >
-        <Box display="flex" justifyContent="flex-end" p={1}>
-          <IconButton onClick={closeDrawer}>
-            <CloseIcon />
-          </IconButton>
-        </Box>
-        {selectedJobData ? (
-          <LeftPanel Application={selectedJobData} />
-        ) : (
-          <Typography variant="body1" textAlign="center" mt={2}>
-            Loading job details...
-          </Typography>
-        )}
-      </Drawer>
     </Box>
   );
 };

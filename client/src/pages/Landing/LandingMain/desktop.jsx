@@ -1,21 +1,88 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { FaSearch, FaBriefcase, FaUsers } from "react-icons/fa";
 import { Dialog, Transition } from "@headlessui/react";
-import { Box, Button, Container, Grid, Typography, Paper } from "@mui/material";
+import {
+  Box,
+  Card,
+  CardContent,
+  Typography,
+  Stack,
+  TextField,
+  Chip,
+  Button,
+  useTheme,
+  useMediaQuery,
+  Container,
+  Grid,
+} from "@mui/material";
 import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
-import { Fragment } from "react";
-import { WorkOutline, GroupAdd } from "@mui/icons-material";
-import landing from "../../../assets/Landing/Desktop.svg";
+import Hero from "../../../assets/Landing/Hero.png";
+import Comp1 from "../../../assets/Landing/COmp1.svg";
+import Comp2 from "../../../assets/Landing/Comp2.svg";
+import Comp3 from "../../../assets/Landing/Comp3.png";
+import { CheckCircle, Mail, ArrowRight } from 'lucide-react';
+import Bottom from "../../../assets/Landing/Bottom.svg";
+import PremiumSubscribeSection from "./Subscribe";
+
+// Minimal animation hook for subtle effects
+const useInView = (options = {}) => {
+  const [isInView, setIsInView] = useState(false);
+  const ref = useRef();
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) {
+        setIsInView(true);
+      }
+    }, {
+      threshold: 0.2,
+      ...options
+    });
+
+    if (ref.current) {
+      observer.observe(ref.current);
+    }
+
+    return () => {
+      if (ref.current) {
+        observer.unobserve(ref.current);
+      }
+    };
+  }, []);
+
+  return [ref, isInView];
+};
+
+// Subtle animation wrapper - minimal and professional
+const AnimatedSection = ({ children, delay = 0, ...props }) => {
+  const [ref, isInView] = useInView();
+  
+  return (
+    <div 
+      ref={ref} 
+      style={{
+        transform: isInView ? 'translateY(0px)' : 'translateY(20px)',
+        opacity: isInView ? 1 : 0,
+        transition: `all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) ${delay}ms`,
+      }} 
+      {...props}
+    >
+      {children}
+    </div>
+  );
+};
 
 const DesktopLanding = () => {
+  const theme = useTheme();
+  const [email, setEmail] = useState('');
+  const isDesktop = useMediaQuery(theme.breakpoints.up('md'));
   const { user } = useSelector((state) => state.user);
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
-  const [isHovered, setIsHovered] = useState(false);
 
-  const handleClick = () => {
+   const handleClick = () => {
     const userInfo = localStorage.getItem("userInfo");
     if (userInfo) {
       navigate("/find-jobs");
@@ -30,178 +97,418 @@ const DesktopLanding = () => {
     }
   }, [user]);
 
-  const LoginModal = (
-    <Transition appear show={isOpen} as={Fragment}>
-      <Dialog as="div" className="relative z-50" onClose={() => {}}>
-        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4">
-          <Dialog.Panel className="bg-white p-8 md:p-10 rounded-xl shadow-2xl w-[90%] max-w-lg text-center transform transition-all">
-            {/* Header */}
-            <Dialog.Title className="text-3xl font-bold text-blue-600 tracking-wide ">
-              Find Opportunities. Build Success.
-            </Dialog.Title>
-            <p className="text-gray-600 mt-3 text-base md:text-lg leading-relaxed">
-              Whether you're seeking <bold>top talent</bold> or{" "}
-              <bold>exciting career opportunities</bold>, we've got you covered.
-            </p>
-
-            {/* Selection Boxes */}
-            <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Hire Talent Box */}
-              <div
-                onClick={() => navigate("/r-login")}
-                className="p-8 bg-gradient-to-b from-blue-50 to-blue-100 border border-blue-300 rounded-xl shadow-lg cursor-pointer transition transform hover:-translate-y-1 hover:shadow-2xl flex flex-col items-center text-center"
-              >
-                <GroupAdd className="text-blue-700 text-7xl drop-shadow-lg" />
-                <h3 className="mt-4 text-xl font-semibold text-gray-800">
-                  Hire Talent
-                </h3>
-                <p className="text-sm text-gray-600 mt-2">
-                  Find skilled professionals to power your business.
-                </p>
-              </div>
-
-              {/* Search Job Box */}
-              <div
-                onClick={() => navigate("/u-login")}
-                className="p-8 bg-gradient-to-b from-green-50 to-green-100 border border-green-300 rounded-xl shadow-lg cursor-pointer transition transform hover:-translate-y-1 hover:shadow-2xl flex flex-col items-center text-center"
-              >
-                <WorkOutline className="text-green-700 text-7xl drop-shadow-lg" />
-                <h3 className="mt-4 text-xl font-semibold text-gray-800">
-                  Search Job
-                </h3>
-                <p className="text-sm text-gray-600 mt-2">
-                  Explore new career paths and exciting opportunities.
-                </p>
-              </div>
-            </div>
-          </Dialog.Panel>
-        </div>
-      </Dialog>
-    </Transition>
-  );
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    console.log('Subscribing:', email);
+  };
 
   return (
-    <div className="overflow-x-hidden">
-      {/* {LoginModal} */}
-      <Box sx={{ display: "flex", flexDirection: "column" }}>
-        <Box
-          sx={{
-            px: { xs: 3, md: 15 },
-            pb: { xs: 3, md: 15 },
-            pt: { xs: 5 },
-            minHeight: { md: "100vh" },
-            display: "flex",
-            flexDirection: { xs: "column", md: "row" },
-            alignItems: "center",
-            justifyContent: "space-between",
-            bgcolor: "white",
-          }}
-        >
-          <Box sx={{ flex: 1, textAlign: { xs: "center", md: "left" } }}>
-            <Typography
-              fontWeight={700}
-              gutterBottom
-              sx={{
-                color: "#24252C",
-                fontFamily: "Satoshi",
-                fontSize: "32px", // Smaller font on mobile
-              }}
-            >
-              A job portal designed for{" "}
-              <span
-                style={{
-                  color: "#3C7EFC",
-                  fontFamily: "Satoshi",
-                  fontWeight: "700",
-                }}
-              >
-                Impact
-              </span>
-              .
-            </Typography>
+    <Box sx={{ 
+      minHeight: '100vh',
+      bgcolor: '#fafafa',
+      overflow: 'hidden',
+      px:2
+    }}>
+      {/* Hero Section */}
+      <Box
+        component="section"
+        sx={{
+          minHeight: '100vh',
+          display: 'flex',
+          alignItems: 'center',
+          bgcolor: '#ffffff',
+          position: 'relative',
+          '&::before': {
+            content: '""',
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'linear-gradient(135deg, rgba(60, 126, 252, 0.02) 0%, rgba(27, 165, 234, 0.02) 100%)',
+            zIndex: 0
+          }
+        }}
+      >
+        <Container maxWidth="xl" sx={{ position: 'relative', zIndex: 1 }}>
+          <Grid container spacing={8} alignItems="center">
+            {/* Left Column - Content */}
+            <Grid item xs={12} md={6}>
+              <AnimatedSection delay={0}>
+                <Box sx={{ maxWidth: 600 }}>
+                  <Typography
+                    variant="h1"
+                    sx={{
+                      fontSize: { md: '2.5rem', lg: '2.5rem' },
+                      fontWeight: 700,
+                      fontFamily: 'Satoshi, -apple-system, BlinkMacSystemFont, sans-serif',
+                      lineHeight: 1.1,
+                      color: '#0a0a0a',
+                      mb: 3,
+                      letterSpacing: '-0.02em'
+                    }}
+                  >
+                    Cut through the noise.{' '}
+                    <Box 
+                      component="span" 
+                      sx={{
+                         fontSize: { md: '2.5rem', lg: '2.5rem' },
+                      fontWeight: 700,
+                      fontFamily: 'Satoshi, -apple-system, BlinkMacSystemFont, sans-serif',
+                      lineHeight: 1.1,
+                      color: '#0a0a0a',
+                      mb: 3,
+                      letterSpacing: '-0.02em',
+                        background: 'linear-gradient(135deg, #3C7EFC 0%, #1BA5EA 100%)',
+                        backgroundClip: 'text',
+                        WebkitBackgroundClip: 'text',
+                        WebkitTextFillColor: 'transparent',
+                      }}
+                    >
+                      Land roles
+                    </Box>{' '}
+                    that actually fit.
+                  </Typography>
+                  
+                  <Typography
+                    variant="h5"
+                    sx={{
+                      fontSize: '1.1rem',
+                      fontFamily: 'Poppins, sans-serif',
+                      color: '#64748b',
+                      mb: 5,
+                      lineHeight: 1.6,
+                      fontWeight: 400
+                    }}
+                  >
+                    Stop wasting time on job hunts that lead nowhere. Tell us what you do best—and what you won't settle for. We'll match you with roles that truly fit your ambitions.
+                  </Typography>
 
-            <Typography
-              variant="body1"
-              color="text.secondary"
-              sx={{
-                fontFamily: "Poppins",
-                fontSize: { xs: "0.875rem", sm: "1rem" }, // Reduce font size for mobile
-              }}
-            >
-              Top talent and high-impact opportunities move fast.
-            </Typography>
+                  <Stack direction="row" spacing={3} sx={{ mb: 6 }}>
+                    <Button
+                      variant="contained"
+                      onClick={handleClick}
+                      size="large"
+                      sx={{
+                        bgcolor: '#3C7EFC',
+                        px: 4,
+                        py: 1.5,
+                        borderRadius: '12px',
+                        fontFamily: 'Poppins',
+                        fontSize: '1rem',
+                        fontWeight: 600,
+                        textTransform: 'none',
+                        boxShadow: '0 4px 20px rgba(60, 126, 252, 0.3)',
+                        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                        '&:hover': {
+                          bgcolor: '#2563eb',
+                          transform: 'translateY(-2px)',
+                          boxShadow: '0 8px 30px rgba(60, 126, 252, 0.4)',
+                        }
+                      }}
+                    >
+                      Find Your Dream Job
+                    </Button>
+                    
+                    <Button
+                      variant="outlined"
+                      component={Link}
+                      to="/r-login"
+                      size="large"
+                      sx={{
+                        px: 4,
+                        py: 1.5,
+                        borderRadius: '12px',
+                        fontFamily: 'Poppins',
+                        fontSize: '1rem',
+                        fontWeight: 600,
+                        textTransform: 'none',
+                        border: '2px solid #e2e8f0',
+                        color: '#475569',
+                        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                        '&:hover': {
+                          borderColor: '#3C7EFC',
+                          color: '#3C7EFC',
+                          bgcolor: 'rgba(60, 126, 252, 0.04)',
+                          transform: 'translateY(-2px)',
+                        }
+                      }}
+                    >
+                      Hire Top Talent
+                    </Button>
+                  </Stack>
 
-            <Typography
-              variant="body1"
-              color="text.secondary"
-              sx={{
-                fontFamily: "Poppins",
-                fontSize: { xs: "0.875rem", sm: "1rem" }, // Reduce font size for mobile
-              }}
-            >
-              Be part of the elite network that gets there first.
-            </Typography>
+                  {/* Trust indicators */}
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                    <Box sx={{ textAlign: 'center' }}>
+                      <Typography variant="h4" sx={{ fontWeight: 700, color: '#0a0a0a', mb: 0.5 }}>
+                        10K+
+                      </Typography>
+                      <Typography variant="body2" sx={{ color: '#64748b', fontSize: '0.875rem' }}>
+                        Jobs Matched
+                      </Typography>
+                    </Box>
+                    <Box sx={{ textAlign: 'center' }}>
+                      <Typography variant="h4" sx={{ fontWeight: 700, color: '#0a0a0a', mb: 0.5 }}>
+                        5K+
+                      </Typography>
+                      <Typography variant="body2" sx={{ color: '#64748b', fontSize: '0.875rem' }}>
+                        Companies
+                      </Typography>
+                    </Box>
+                    <Box sx={{ textAlign: 'center' }}>
+                      <Typography variant="h4" sx={{ fontWeight: 700, color: '#0a0a0a', mb: 0.5 }}>
+                        98%
+                      </Typography>
+                      <Typography variant="body2" sx={{ color: '#64748b', fontSize: '0.875rem' }}>
+                        Success Rate
+                      </Typography>
+                    </Box>
+                  </Box>
+                </Box>
+              </AnimatedSection>
+            </Grid>
 
-            <Box
-              sx={{
-                mt: 3,
-                display: "flex",
-                flexDirection: { xs: "column", sm: "row" },
-                gap: 2,
-                justifyContent: { xs: "center", md: "flex-start" },
-                height: 50,
-              }}
-            >
-              <Button
-                variant="contained"
-                onClick={handleClick}
-                sx={{
-                  bgcolor: "#3C7EFC",
-                  borderRadius: 8,
-                  fontFamily: "Poppins",
-                }}
-              >
-                Find Your Opportunity
-              </Button>
-              <Button
-                variant="contained"
-                component={Link}
-                to="/r-login"
-                sx={{
-                  bgcolor: "#3C7EFC",
-                  borderRadius: 8,
-                  fontFamily: "Poppins",
-                }}
-              >
-                Hire Top Talent
-              </Button>
-            </Box>
-          </Box>
-          <Box
-            sx={{
-              flex: 1,
-              display: "flex",
-              justifyContent: "center",
-              mt: { xs: 4, md: 0 },
-            }}
-            onMouseEnter={() => setIsHovered(true)}
-            onMouseLeave={() => setIsHovered(false)}
-          >
-            <img
-              src={landing}
-              alt="Professional"
-              style={{
-                width: "100%",
-                maxWidth: "400px",
-                borderRadius: "8px",
-                transition: "opacity 0.3s ease-in-out",
-              }}
-            />
-          </Box>
-        </Box>
-        
+            {/* Right Column - Hero Image */}
+            <Grid item xs={12} md={6}>
+              <AnimatedSection delay={200}>
+                <Box sx={{ 
+                  display: 'flex', 
+                  justifyContent: 'center',
+                  position: 'relative'
+                }}>
+                  <img 
+                    src={Hero} 
+                    alt="Professional hiring platform" 
+                    style={{ 
+                      maxWidth: '100%',
+                      height: 'auto',
+                      maxHeight: '500px',
+                      filter: 'drop-shadow(0 20px 60px rgba(0, 0, 0, 0.1))'
+                    }} 
+                  />
+                </Box>
+              </AnimatedSection>
+            </Grid>
+          </Grid>
+        </Container>
       </Box>
-    </div>
+
+      {/* Job Seekers Section */}
+      <Box
+        component="section"
+        sx={{
+          py: { md: 12, lg: 16 },
+          bgcolor: '#ffffff',
+          borderTop: '1px solid #f1f5f9'
+        }}
+      >
+        <Container maxWidth="xl">
+          <Grid container spacing={10} alignItems="center">
+            <Grid item xs={12} md={6}>
+              <AnimatedSection>
+                <Box sx={{ position: 'relative' }}>
+                  <img 
+                    src={Comp1} 
+                    alt="Job matching platform" 
+                    style={{ 
+                      width: '100%',
+                      height: 'auto',
+                      filter: 'drop-shadow(0 20px 60px rgba(0, 0, 0, 0.08))'
+                    }} 
+                  />
+                </Box>
+              </AnimatedSection>
+            </Grid>
+            
+            <Grid item xs={12} md={6}>
+              <AnimatedSection delay={200}>
+                <Box sx={{ pl: { md: 4 } }}>
+                  <Chip
+                    label="For Job Seekers"
+                    sx={{
+                      mb: 3,
+                      px: 3,
+                      py: 1,
+                      bgcolor: '#eff6ff',
+                      color: '#2563eb',
+                      fontSize: '0.875rem',
+                      fontWeight: 600,
+                      borderRadius: '50px',
+                      border: '1px solid #dbeafe'
+                    }}
+                  />
+                  
+                  <Typography
+                    variant="h2"
+                    sx={{
+                      fontSize: { md: '2.5rem', lg: '2.5rem' },
+                      fontWeight: 700,
+                      fontFamily: 'Satoshi',
+                      lineHeight: 1.2,
+                      color: '#0a0a0a',
+                      mb: 4,
+                      letterSpacing: '-0.02em'
+                    }}
+                  >
+                    Smart matching for{' '}
+                    <Box component="span" sx={{ color: '#3C7EFC' }}>
+                      smarter careers
+                    </Box>
+                  </Typography>
+                  
+                  <Typography
+                    variant="body1"
+                    sx={{
+                      fontSize: '1.1rem',
+                      fontFamily: 'Poppins',
+                      color: '#64748b',
+                      mb: 4,
+                      lineHeight: 1.7
+                    }}
+                  >
+                    Our AI understands your skills, preferences, and career goals to connect you with opportunities that align with your aspirations—not just your resume.
+                  </Typography>
+
+                  <Stack spacing={3}>
+                    {[
+                      'Personalized job recommendations',
+                      'Direct company connections',
+                      'Real-time application tracking'
+                    ].map((feature, index) => (
+                      <Box key={index} sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                        <CheckCircle size={20} color="#10b981" />
+                        <Typography sx={{ color: '#374151', fontFamily: 'Poppins' }}>
+                          {feature}
+                        </Typography>
+                      </Box>
+                    ))}
+                  </Stack>
+                </Box>
+              </AnimatedSection>
+            </Grid>
+          </Grid>
+        </Container>
+      </Box>
+
+      {/* Employers Section */}
+      <Box
+        component="section"
+        sx={{
+          py: { md: 12, lg: 16 },
+          bgcolor: '#f8fafc',
+        }}
+      >
+        <Container maxWidth="xl">
+          <Grid container spacing={10} alignItems="center">
+            <Grid item xs={12} md={6}>
+              <AnimatedSection>
+                <Box sx={{ pr: { md: 4 } }}>
+                  <Chip
+                    label="For Employers"
+                    sx={{
+                      mb: 3,
+                      px: 3,
+                      py: 1,
+                      bgcolor: '#f0f9ff',
+                      color: '#0284c7',
+                      fontSize: '0.875rem',
+                      fontWeight: 600,
+                      borderRadius: '50px',
+                      border: '1px solid #e0f2fe'
+                    }}
+                  />
+                  
+                  <Typography
+                    variant="h2"
+                    sx={{
+                      fontSize: { md: '2.5rem', lg: '2.5rem' },
+                      fontWeight: 700,
+                      fontFamily: 'Satoshi',
+                      lineHeight: 1.2,
+                      color: '#0a0a0a',
+                      mb: 4,
+                      letterSpacing: '-0.02em'
+                    }}
+                  >
+                    Find talent that{' '}
+                    <Box component="span" sx={{ color: '#1BA5EA' }}>
+                      stays and thrives
+                    </Box>
+                  </Typography>
+                  
+                  <Typography
+                    variant="body1"
+                    sx={{
+                      fontSize: '1.125rem',
+                      fontFamily: 'Poppins',
+                      color: '#64748b',
+                      mb: 4,
+                      lineHeight: 1.7
+                    }}
+                  >
+                    Stop sifting through endless resumes. Our platform identifies candidates who don't just meet requirements—they exceed expectations and stay committed.
+                  </Typography>
+
+                  <Stack spacing={3}>
+                    {[
+                      'AI-powered candidate screening',
+                      'Culture-fit assessments',
+                      'Streamlined interview process'
+                    ].map((feature, index) => (
+                      <Box key={index} sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                        <CheckCircle size={20} color="#10b981" />
+                        <Typography sx={{ color: '#374151', fontFamily: 'Poppins' }}>
+                          {feature}
+                        </Typography>
+                      </Box>
+                    ))}
+                  </Stack>
+                </Box>
+              </AnimatedSection>
+            </Grid>
+            
+            <Grid item xs={12} md={6}>
+              <AnimatedSection delay={300}>
+            <Box sx={{ 
+              display: 'flex', 
+              justifyContent: 'center',
+            }}>
+              <img 
+                src={Comp3} 
+                alt="Platform interface" 
+                style={{ 
+                  maxWidth: '100%',
+                  height: 'auto',
+                  maxHeight: '400px',
+                  filter: 'drop-shadow(0 30px 80px rgba(0, 0, 0, 0.12))',
+                  borderRadius: '16px'
+                }} 
+              />
+            </Box>
+          </AnimatedSection>
+            </Grid>
+          </Grid>
+        </Container>
+      </Box>
+
+      {/* Bottom Wave */}
+      <Box sx={{ 
+        bgcolor: '#ffffff',
+        '& img': { 
+          width: '100%', 
+          height: 'auto',
+          display: 'block'
+        }
+      }}>
+        <img src={Bottom} alt="Wave decoration" />
+      </Box>
+
+      {/* Premium Subscribe Section */}
+      <AnimatedSection>
+        <PremiumSubscribeSection />
+      </AnimatedSection>
+    </Box>
   );
 };
 

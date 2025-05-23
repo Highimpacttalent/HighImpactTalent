@@ -318,7 +318,7 @@ const MobileLanding = () => {
                   </Typography>
                 </AnimatedSection>
 
-                <AnimatedSection animation="rotate" delay={800} duration={1200}>
+                <AnimatedSection animation="scale" delay={200} duration={1000}>
                   <Box sx={{ mt: 1 }}>
                     <img 
                       src={Comp1} 
