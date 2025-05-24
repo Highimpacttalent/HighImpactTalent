@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
-import { AiOutlineSearch } from "react-icons/ai";
-import { MdLocationOn } from "react-icons/md";
+import SearchOutlinedIcon from '@mui/icons-material/SearchOutlined';
+import RoomOutlinedIcon from '@mui/icons-material/RoomOutlined';
 import {
   Box,
   Typography,
@@ -26,7 +26,7 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { apiRequest } from "../../utils"; // Ensure this utility is correctly set up for API calls
 import { useSelector } from "react-redux";
 import NoJobFound from "./NoJob";
-import { JobCard } from "../../components";
+import  JobCard from "./component/DeskJobcard";
 import Loader from "../Landing/LandingMain/loader";
 import { FaSortAmountDown } from "react-icons/fa";
 
@@ -338,20 +338,20 @@ const DesktopView = () => {
       <Loader isLoading={isFetching} />
       {/* Search Bar */}
       <Box sx={{ mx: "auto", mt: 3, px: 2 }}>
-        <Paper
+        <Box
           sx={{
             display: "flex",
             alignItems: "center",
-            p: 1,
+            border:"1px solid #00000040",
             borderRadius: "50px",
-            boxShadow: 3,
+            height:"50px",
             width: "100%",
-            maxWidth: 1000,
+            maxWidth: 1100,
             mx: "auto",
           }}
         >
-          <IconButton sx={{ color: "gray" }}>
-            <AiOutlineSearch fontSize="24px" />
+          <IconButton sx={{ color: "gray",ml:1 }}>
+            <SearchOutlinedIcon fontSize="24px" />
           </IconButton>
           <InputBase
             sx={{ flex: 1, fontSize: "1.1rem", ml: 1 }}
@@ -362,7 +362,7 @@ const DesktopView = () => {
           />
           <Divider orientation="vertical" flexItem sx={{ mx: 1 }} />
           <IconButton sx={{ color: "gray" }}>
-            <MdLocationOn fontSize="24px" />
+            <RoomOutlinedIcon fontSize="24px" />
           </IconButton>
           <InputBase
             sx={{ flex: 1, fontSize: "1.1rem", ml: 1 }}
@@ -378,6 +378,7 @@ const DesktopView = () => {
               backgroundColor: "#1A73E8",
               color: "white",
               px: 3,
+              height:"100%",  
               ml: 1,
               textTransform: "none",
               fontSize: "1rem",
@@ -388,10 +389,10 @@ const DesktopView = () => {
           >
             Search
           </Button>
-        </Paper>
+        </Box>
       </Box>
 
-      <Box
+      {/* <Box
         sx={{
           maxWidth: "xl",
           mx: "auto",
@@ -487,7 +488,7 @@ const DesktopView = () => {
             </Menu>
           </Box>
         </Box>
-      </Box>
+      </Box> */}
 
       {/* Main Content */}
       <Box
