@@ -335,7 +335,7 @@ const DesktopView = () => {
 
   return (
     <Box sx={{ bgcolor: "white", minHeight: "100vh", p: 5 }}>
-      <Loader isLoading={isFetching} />
+      <Loader isLoading={true} />
       {/* Search Bar */}
       <Box sx={{ mx: "auto", mt: 3, px: 2 }}>
         <Box
