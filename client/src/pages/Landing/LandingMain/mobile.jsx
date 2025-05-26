@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { CheckCircle, Mail, ArrowRight, Briefcase, Users, Search } from 'lucide-react';
+import { Link } from "lucide-react";
 
 import Hero from "../../../assets/Landing/Hero.png";
 import Comp1 from "../../../assets/Landing/COmp1.svg";
@@ -7,12 +8,14 @@ import Comp2 from "../../../assets/Landing/Comp2.svg";
 import Comp3 from "../../../assets/Landing/Comp3.png";
 import Bottom from "../../../assets/Landing/Bottom.svg";
 import PremiumSubscribeSection from "./Subscribe";
+import { useNavigate } from 'react-router-dom';
 
 
 const MobileLanding = () => {
   const [email, setEmail] = useState('');
   const [user, setUser] = useState({}); // Mock user state
   const [isOpen, setIsOpen] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (!user || Object.keys(user).length === 0) {
@@ -25,9 +28,7 @@ const MobileLanding = () => {
     console.log('Subscribing:', email);
   };
 
-  const handleNavigation = (path) => {
-    console.log(`Navigating to: ${path}`);
-  };
+  
 
   return (
     <div className="min-h-screen bg-white">
@@ -47,13 +48,13 @@ const MobileLanding = () => {
             {/* CTA Buttons */}
             <div className="flex justify-center gap-4 ">
               <button
-                onClick={() => handleNavigation('/u-login')}
+                onClick={() => navigate('/u-login')}
                 className="bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium min-w-32"
               >
                 Get a job
               </button>
               <button
-                onClick={() => handleNavigation('/r-login')}
+                onClick={() => navigate('/r-login')}
                 className="border border-blue-600 text-blue-600 px-8 py-3 rounded-lg hover:bg-blue-50 transition-colors font-medium min-w-32"
               >
                 Hire Now
@@ -77,10 +78,11 @@ const MobileLanding = () => {
         <div className="max-w-6xl mx-auto">
           <div className="text-center">
             {/* Badge */}
-            <div className="inline-flex items-center bg-blue-100 text-blue-700 px-4 py-2 rounded-full text-sm font-medium mb-6">
-              <Briefcase className="w-4 h-4 mr-2" />
-              Get Hired
-            </div>
+          
+      <div className="inline-flex items-center bg-blue-100 text-blue-700 px-4 py-2 rounded-full text-sm font-medium mb-6 cursor-pointer hover:bg-blue-200 transition">
+        <Briefcase className="w-4 h-4 mr-2" />
+        Get Hired
+      </div>
 
             {/* Main Heading */}
             <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-6 leading-tight">
