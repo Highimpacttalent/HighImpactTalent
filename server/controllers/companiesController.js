@@ -5,8 +5,20 @@ import bcrypt from "bcryptjs";
 
 // company register
 export const register = async (req, res, next) => {
-  const { companyName, recruiterName, email, copmanyType, password, mobileNumber, profileUrl } = req.body;
-  
+  const { 
+    companyName, 
+    recruiterName, 
+    email, 
+    copmanyType, 
+    password, 
+    mobileNumber, 
+    profileUrl,
+    designation,
+    location,
+    numberOfEmployees,
+    organizationType
+  } = req.body;
+     
   //validate fields
   if (!companyName) {
     next("Company Name is required!");
@@ -28,15 +40,32 @@ export const register = async (req, res, next) => {
     next("Mobile Number is required!");
     return;
   }
-  
+  if (!designation) {
+    next("Designation is required!");
+    return;
+  }
+  if (!location) {
+    next("Company Location is required!");
+    return;
+  }
+  if (!numberOfEmployees) {
+    next("Number of Employees is required!");
+    return;
+  }
+  if (!organizationType) {
+    next("Organization Type is required!");
+    return;
+  }
+     
   const name = companyName;
   try {
     const accountExist = await Companies.findOne({ email });
-
+     
     if (accountExist) {
       next("Email Already Registered. Please Login");
       return;
     }
+    
     // create a new account
     const company = await Companies.create({
       name,
@@ -45,12 +74,16 @@ export const register = async (req, res, next) => {
       password,
       copmanyType,
       mobileNumber,
+      designation,
+      location,
+      numberOfEmployees,
+      organizationType,
       profileUrl: profileUrl || "",
     });
-
+     
     // user token
     const token = company.createJWT();
-
+     
     res.status(201).json({
       success: true,
       message: "Company Account Created Successfully",
@@ -60,9 +93,13 @@ export const register = async (req, res, next) => {
         recruiterName: company.recruiterName,
         email: company.email,
         mobileNumber: company.mobileNumber,
+        designation: company.designation,
+        location: company.location,
+        numberOfEmployees: company.numberOfEmployees,
+        organizationType: company.organizationType,
         companyType: company.copmanyType,
         accountType: company.accountType,
-        profileUrl: company.profileUrl, 
+        profileUrl: company.profileUrl,
       },
       token,
     });

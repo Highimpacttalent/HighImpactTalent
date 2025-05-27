@@ -27,26 +27,57 @@ const companySchema = new Schema({
     required: [true, "Password is required"],
     // select: true,
   },
+  designation: {
+    type: String,
+    required: [true, "Designation is required"],
+  },
+  location: {
+    type: String,
+    required: [true, "Company Location is required"],
+  },
+  numberOfEmployees: {
+    type: String,
+    required: [true, "Number of Employees is required"],
+    enum: ["1-10", "11-50", "51-200", "201-500", "501-1000", "1001-5000", "50001-10000", "10000+"]
+  },
+  organizationType: {
+    type: String,
+    required: [true, "Organization Type is required"],
+    enum: ["Startup", "Public", "Private", "Government", "Non-Profit", "MNC", "SME", "Indian MNC", "Other", "Consultant"]
+  },
   copmanyType: {
     type: String,
     required: true,
     default: "copmany",
   },
-  accountType: { type: String, default: "recruiter" },
-  contact: { type: String },
-  location: { type: String },
-  about: { type: String },
-  profileUrl: { type: String },
-  jobPosts: [{ type: Schema.Types.ObjectId, ref: "Jobs" }],
+  accountType: { 
+    type: String, 
+    default: "recruiter" 
+  },
+  contact: { 
+    type: String 
+  },
+  about: { 
+    type: String 
+  },
+  profileUrl: { 
+    type: String 
+  },
+  jobPosts: [{ 
+    type: Schema.Types.ObjectId, 
+    ref: "Jobs" 
+  }],
+}, {
+  timestamps: true
 });
 
-// middelwares
+// middlewares
 companySchema.pre("save", async function (next) {
   if (!this.isModified("password")) {
     console.log("Password not modified, skipping hashing.");
     return next();
   }
-
+  
   try {
     const salt = await bcrypt.genSalt(10);
     this.password = await bcrypt.hash(this.password, salt);
