@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState,useEffect } from "react";
 import {
   TextField,
   Button,
@@ -23,6 +23,7 @@ import { apiRequest } from "../../utils";
 import { useDispatch } from "react-redux";
 import axios from "axios";
 import { Login } from "../../redux/userSlice";
+import ReactSelect from "react-select";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 
 const RecruiterSignup = () => {
@@ -45,12 +46,41 @@ const RecruiterSignup = () => {
   const [emailError, setEmailError] = useState("");
   const [passwordError, setPasswordError] = useState("");
   const [mobileError, setMobileError] = useState("");
+  const [selectedCity, setSelectedCity] = useState(null);
   const [passwordStrength, setPasswordStrength] = useState("");
   const [profilePic, setProfilePic] = useState("");
+  const [inputValue, setInputValue] = useState("");
   const [profilePicUrl, setProfilePicUrl] = useState("");
   const [uploadingProfilePic, setUploadingProfilePic] = useState(false);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const [cities, setCities] = useState([]);
+
+  // Prepare city options with "Other" at the bottom
+  const filteredCities = [
+    ...cities
+      .filter((city) => city.toLowerCase().includes(inputValue.toLowerCase()))
+      .map((city) => ({ value: city, label: city })),
+    { value: "Other", label: "Other" }, // Always at the bottom
+  ];
+
+   useEffect(() => {
+      const fetchCities = async () => {
+        try {
+          const response = await fetch("/cities.csv");
+          const text = await response.text();
+          const rows = text.split("\n");
+          const cityList = rows.slice(1).map((row) => row.trim()).filter(Boolean).sort();
+  
+          setCities([...new Set(cityList)]);
+        } catch (error) {
+          console.error("Error loading cities:", error);
+          setCities([]);
+        }
+      };
+  
+      fetchCities();
+    }, []);
 
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   const phoneRegex = /^[0-9]{10}$/; // Basic validation for 10-digit phone number
@@ -162,6 +192,43 @@ const RecruiterSignup = () => {
     }
   };
 
+  const customStyles = {
+    control: (provided, state) => ({
+      ...provided,
+      padding: "0.45rem",
+      fontSize: "0.875rem",
+      borderRadius: "2rem",
+      borderColor: state.isFocused ? "#3b82f6" : "#d1d5db",
+      boxShadow: state.isFocused ? "0 0 0 2px #3b82f6" : "none",
+      "&:hover": {
+        borderColor: "#d1d5db",
+      },
+    }),
+    menu: (provided) => ({
+      ...provided,
+      borderRadius: "0.5rem",
+      boxShadow: "0 2px 10px rgba(0, 0, 0, 0.1)",
+      border: "1px solid #d1d5db",
+    }),
+    option: (provided, state) => ({
+      ...provided,
+      backgroundColor: state.isSelected ? "#3b82f6" : "white",
+      color: state.isSelected ? "white" : "black",
+      "&:hover": {
+        backgroundColor: "white",
+        color: "black",
+      },
+    }),
+    placeholder: (provided) => ({
+      ...provided,
+      color: "black",
+    }),
+    singleValue: (provided) => ({
+      ...provided,
+      color: "black",
+    }),
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm((prevForm) => ({ ...prevForm, [name]: value }));
@@ -186,6 +253,16 @@ const RecruiterSignup = () => {
         setMobileError("");
       }
     }
+  };
+
+  const handleCityChange = (selectedOption) => {
+      setSelectedCity(selectedOption);
+      // Update location in formData when a city is selected
+      if (selectedOption) {
+        setForm({ ...form, location: selectedOption.value });
+      } else {
+        setForm({ ...form, location: "" });
+      }
   };
 
   const handleSubmit = async (e) => {
@@ -533,21 +610,18 @@ const RecruiterSignup = () => {
             >
               Company Location
             </Typography>
-            <TextField
-              fullWidth
-              type="text"
-              name="location"
-              placeholder="Enter company location"
-              value={form.location}
-              onChange={handleChange}
-              required
-              sx={{
-                "& .MuiOutlinedInput-root": {
-                  borderRadius: 16,
-                  height: 50,
-                },
-              }}
-            />
+            <ReactSelect
+          options={filteredCities}
+          value={selectedCity}
+          styles={customStyles}
+          onChange={handleCityChange}
+          onInputChange={(value) => setInputValue(value)}
+          inputValue={inputValue}
+          placeholder="Search or select a city..."
+          isClearable
+          isSearchable
+          noOptionsMessage={() => (inputValue ? "No matching cities found" : "Start typing to search")}
+        />
 
             {/* Number of Employees */}
             <Typography
