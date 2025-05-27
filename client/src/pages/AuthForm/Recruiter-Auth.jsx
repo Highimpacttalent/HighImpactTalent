@@ -12,6 +12,9 @@ import {
   Link,
   InputAdornment,
   IconButton,
+  Select,
+  MenuItem,
+  InputLabel,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import Heroimg from "../../assets/CreateAccount/HeroImg.svg";
@@ -33,6 +36,10 @@ const RecruiterSignup = () => {
     password: "",
     confirmPassword: "",
     profilePic: null,
+    designation: "",
+    location: "",
+    numberOfEmployees: "",
+    organizationType: "",
   });
   const dispatch = useDispatch();
   const [emailError, setEmailError] = useState("");
@@ -47,6 +54,31 @@ const RecruiterSignup = () => {
 
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   const phoneRegex = /^[0-9]{10}$/; // Basic validation for 10-digit phone number
+
+  // Enum options for dropdowns
+  const numberOfEmployeesOptions = [
+    "1-10",
+    "11-50", 
+    "51-200",
+    "201-500",
+    "501-1000",
+    "1001-5000",
+    "5001-10000",
+    "10000+"
+  ];
+
+  const organizationTypeOptions = [
+    "Startup",
+    "Public",
+    "Private", 
+    "Government",
+    "Non-Profit",
+    "MNC",
+    "SME",
+    "Indian MNC",
+    "Other",
+    "Consultant"
+  ];
 
   const handleProfilePicUpload = async (e) => {
     const file = e.target.files[0];
@@ -137,7 +169,7 @@ const RecruiterSignup = () => {
     if (name === "password") checkPasswordStrength(value);
     if (name === "confirmPassword" && value !== form.password) {
       setPasswordError("Passwords do not match");
-    } else {
+    } else if (name === "confirmPassword" && value === form.password) {
       setPasswordError("");
     }
     if (name === "email") {
@@ -158,8 +190,10 @@ const RecruiterSignup = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (form.password.length < 5) {
-      alert("Password must be at least 5 characters long.");
+    
+    // Validation checks
+    if (form.password.length < 6) {
+      alert("Password must be at least 6 characters long.");
       return;
     }
     if (form.password !== form.confirmPassword) {
@@ -174,6 +208,22 @@ const RecruiterSignup = () => {
       alert("Recruiter name is required.");
       return;
     }
+    if (!form.designation) {
+      alert("Designation is required.");
+      return;
+    }
+    if (!form.location) {
+      alert("Company location is required.");
+      return;
+    }
+    if (!form.numberOfEmployees) {
+      alert("Number of employees is required.");
+      return;
+    }
+    if (!form.organizationType) {
+      alert("Organization type is required.");
+      return;
+    }
 
     setLoading(true);
 
@@ -183,6 +233,10 @@ const RecruiterSignup = () => {
       recruiterName: form.recruiterName,
       mobileNumber: form.mobileNumber,
       password: form.password,
+      designation: form.designation,
+      location: form.location,
+      numberOfEmployees: form.numberOfEmployees,
+      organizationType: form.organizationType,
       date: dayjs().format("YYYY-MM-DD"),
       time: dayjs().format("HH:mm"),
     };
@@ -212,6 +266,10 @@ const RecruiterSignup = () => {
         password: form.password,
         copmanyType: form.role,
         profileUrl: profilePicUrl,
+        designation: form.designation,
+        location: form.location,
+        numberOfEmployees: form.numberOfEmployees,
+        organizationType: form.organizationType,
       };
 
       const registerData = await apiRequest({
@@ -248,9 +306,22 @@ const RecruiterSignup = () => {
         px: { md: 10, lg: 10, xs: 4, sm: 4 },
       }}
     >
+      
       <Box
         sx={{
-          width: { md: "50%", lg: "50%", xs: "100%", sm: "100%" },
+          display: { xs: "none", sm: "none", md: "flex",lg: "flex" },
+          width: { md: "50%", lg: "50%" },
+          flexgrow: 1,
+          p: { md: 3, lg: 3, xs: 0, sm: 0 },
+          ml: 6,
+          mt: 4,
+        }}
+      >
+        <img src={Heroimg} alt="Hero" style={{ height: "550px" }} />
+      </Box>
+      <Box
+        sx={{
+          width: { md: "40%", lg: "40%", xs: "100%", sm: "100%" },
           mt: 4,
           p: { md: 4, lg: 4, xs: 0, sm: 0 },
         }}
@@ -262,24 +333,15 @@ const RecruiterSignup = () => {
             mb: 3,
             fontFamily: "Satoshi",
             color: "#24252C",
-            fontSize: "32px",
+            fontSize: "20px",
           }}
         >
-          One Click Closer to{" "}
-          <span
-            style={{
-              fontWeight: "700",
-              fontFamily: "Satoshi",
-              color: "#3C7EFC",
-            }}
-          >
-            Hiring{" "}
-          </span>
-          the Talent That Transforms Futures!
+          Lets create your account
         </Typography>
 
         <Box>
           <Box component="form" onSubmit={handleSubmit}>
+            {/* Recruiter Name */}
             <Typography
               sx={{
                 fontFamily: "Satoshi",
@@ -291,7 +353,6 @@ const RecruiterSignup = () => {
             >
               Recruiter Name
             </Typography>
-
             <TextField
               fullWidth
               name="recruiterName"
@@ -306,6 +367,7 @@ const RecruiterSignup = () => {
               }}
             />
 
+            {/* Email Address */}
             <Typography
               sx={{
                 fontFamily: "Satoshi",
@@ -318,7 +380,6 @@ const RecruiterSignup = () => {
             >
               Email Address
             </Typography>
-
             <TextField
               fullWidth
               type="email"
@@ -337,6 +398,7 @@ const RecruiterSignup = () => {
               }}
             />
 
+            {/* Mobile Number */}
             <Typography
               sx={{
                 fontFamily: "Satoshi",
@@ -349,7 +411,6 @@ const RecruiterSignup = () => {
             >
               Mobile Number
             </Typography>
-
             <TextField
               fullWidth
               type="text"
@@ -368,6 +429,36 @@ const RecruiterSignup = () => {
               }}
             />
 
+            {/* Designation */}
+            <Typography
+              sx={{
+                fontFamily: "Satoshi",
+                fontSize: "16px",
+                color: "#24252C",
+                fontWeight: "500",
+                mb: 1,
+                mt: 3,
+              }}
+            >
+              Designation
+            </Typography>
+            <TextField
+              fullWidth
+              type="text"
+              name="designation"
+              placeholder="Enter your designation"
+              value={form.designation}
+              onChange={handleChange}
+              required
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  borderRadius: 16,
+                  height: 50,
+                },
+              }}
+            />
+
+            {/* Company Category */}
             <Typography
               sx={{
                 fontFamily: "Satoshi",
@@ -380,7 +471,6 @@ const RecruiterSignup = () => {
             >
               Company Category
             </Typography>
-
             <FormControl component="fieldset" sx={{ my: 1 }}>
               <RadioGroup
                 row
@@ -401,6 +491,7 @@ const RecruiterSignup = () => {
               </RadioGroup>
             </FormControl>
 
+            {/* Company Name */}
             <Typography
               sx={{
                 fontFamily: "Satoshi",
@@ -413,7 +504,6 @@ const RecruiterSignup = () => {
             >
               Company Name
             </Typography>
-
             <TextField
               fullWidth
               type="text"
@@ -430,6 +520,106 @@ const RecruiterSignup = () => {
               }}
             />
 
+            {/* Company Location */}
+            <Typography
+              sx={{
+                fontFamily: "Satoshi",
+                fontSize: "16px",
+                color: "#24252C",
+                fontWeight: "500",
+                mb: 1,
+                mt: 3,
+              }}
+            >
+              Company Location
+            </Typography>
+            <TextField
+              fullWidth
+              type="text"
+              name="location"
+              placeholder="Enter company location"
+              value={form.location}
+              onChange={handleChange}
+              required
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  borderRadius: 16,
+                  height: 50,
+                },
+              }}
+            />
+
+            {/* Number of Employees */}
+            <Typography
+              sx={{
+                fontFamily: "Satoshi",
+                fontSize: "16px",
+                color: "#24252C",
+                fontWeight: "500",
+                mb: 1,
+                mt: 3,
+              }}
+            >
+              Number of Employees
+            </Typography>
+            <FormControl fullWidth required>
+              <Select
+                name="numberOfEmployees"
+                value={form.numberOfEmployees}
+                onChange={handleChange}
+                displayEmpty
+                sx={{
+                  borderRadius: 16,
+                  height: 50,
+                }}
+              >
+                <MenuItem value="" disabled>
+                  Select number of employees
+                </MenuItem>
+                {numberOfEmployeesOptions.map((option) => (
+                  <MenuItem key={option} value={option}>
+                    {option}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+
+            {/* Organization Type */}
+            <Typography
+              sx={{
+                fontFamily: "Satoshi",
+                fontSize: "16px",
+                color: "#24252C",
+                fontWeight: "500",
+                mb: 1,
+                mt: 3,
+              }}
+            >
+              Organization Type
+            </Typography>
+            <FormControl fullWidth required>
+              <Select
+                name="organizationType"
+                value={form.organizationType}
+                onChange={handleChange}
+                displayEmpty
+                sx={{
+                  borderRadius: 16,
+                  height: 50,
+                }}
+              >
+                <MenuItem value="" disabled>
+                  Select organization type
+                </MenuItem>
+                {organizationTypeOptions.map((option) => (
+                  <MenuItem key={option} value={option}>
+                    {option}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+
+            {/* Company Logo */}
             <Typography
               sx={{
                 fontFamily: "Satoshi",
@@ -442,8 +632,6 @@ const RecruiterSignup = () => {
             >
               Company Logo
             </Typography>
-
-            {/* Dropzone Container */}
             <Box sx={{ mt: 2 }}>
               <div
                 className="w-full border-2 border-dashed border-black rounded-lg px-6 py-12 text-center cursor-pointer hover:bg-blue-50 transition"
@@ -526,6 +714,7 @@ const RecruiterSignup = () => {
               </div>
             </Box>
 
+            {/* Password */}
             <Typography
               sx={{
                 fontFamily: "Satoshi",
@@ -567,6 +756,8 @@ const RecruiterSignup = () => {
                 ),
               }}
             />
+
+            {/* Confirm Password */}
             <TextField
               fullWidth
               type={showPassword ? "text" : "password"}
@@ -576,8 +767,8 @@ const RecruiterSignup = () => {
               onChange={handleChange}
               margin="normal"
               required
-              error={!!passwordError}
-              helperText={passwordError}
+              error={!!passwordError && form.confirmPassword !== ""}
+              helperText={form.confirmPassword !== "" && form.confirmPassword !== form.password ? "Passwords do not match" : ""}
               sx={{
                 "& .MuiOutlinedInput-root": {
                   borderRadius: 16,
@@ -649,19 +840,7 @@ const RecruiterSignup = () => {
           </Box>
         </Box>
       </Box>
-      <Box sx={{ display: { md: "flex", lg: "flex", xs: "none", sm: "none" } }}>
-        <Divider sx={{ border: "1px solid #A3A3A3", height: "90%", mt: 8 }} />
-      </Box>
-      <Box
-        sx={{
-          display: { md: "flex", lg: "flex", xs: "none", sm: "none" },
-          p: 4,
-          mt: 16,
-          ml: 6,
-        }}
-      >
-        <img src={Heroimg} alt="Hero" style={{ height: "550px" }} />
-      </Box>
+      
     </Box>
   );
 };
