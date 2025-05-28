@@ -6,13 +6,16 @@ const jobSchema = new mongoose.Schema(
     application: [{ type: Schema.Types.ObjectId, ref: "Application" }],
     jobTitle: { type: String, required: [true, "Job Title is required"] },
     jobLocation: { type: String, required: [true, "Location is required"] },
-    salary: { type: String},
+    salary: {
+      minSalary: { type: Number },
+      maxSalary: { type: Number }
+    },
     salaryConfidential: {
       type: Boolean,
       default: false,
     },
     salaryCategory:{
-      type:String,
+      type: String,
     },
     status: {
       type: String,
@@ -58,23 +61,60 @@ const jobSchema = new mongoose.Schema(
         },
       },
     ],
-    experience: { type: Number },
+    experience: {
+      minExperience: { type: Number },
+      maxExperience: { type: Number }
+    },
     companyType: { type: String },
     applicationLink: { type: String },
     duration: {
       type: String,
-      defult: "permanent",
+      default: "permanent",
     },
     poastingDate: {
       type: Date,
       default: Date.now,
     },
+    // New fields from the screenshot
+    graduationYear: {
+      minBatch: { type: Number },
+      maxBatch: { type: Number }
+    },
+    tags: {
+      type: [String],
+      default: [],
+    },
+    courseType: {
+      type: String,
+      enum: ["Full time", "Part time", "Distance Learning Program", "Executive Program", "Certification"],
+    },
+    // Diversity and inclusion fields
+    diversityPreferences: {
+      femaleCandidates: { type: Boolean, default: false },
+      womenJoiningBackWorkforce: { type: Boolean, default: false },
+      exDefencePersonnel: { type: Boolean, default: false },
+      differentlyAbledCandidates: { type: Boolean, default: false },
+      workFromHome: { type: Boolean, default: false },
+    },
+    category: {
+      type: String,
+      default: "",
+    },
+    functionalArea: {
+      type: String,
+      default: "",
+    },
+    // Premium job posting options
+    isPremiumJob: {
+      type: Boolean,
+      default: false,
+    },
   },
   { 
-  timestamps: true, 
-  toJSON: { virtuals: true },
-  toObject: { virtuals: true },
-},
+    timestamps: true, 
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true },
+  },
 );
 
 // Virtual field for total applications

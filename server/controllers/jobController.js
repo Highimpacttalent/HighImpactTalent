@@ -27,7 +27,16 @@ export const createJob = async (req, res, next) => {
       screeningQuestions,
       applicationLink,
       skills,
+      // New fields
+      graduationYear,
+      tags,
+      courseType,
+      diversityPreferences,
+      category,
+      functionalArea,
+      isPremiumJob,
     } = req.body;
+
     // Validate required fields
     if (!jobTitle || !jobLocation || !jobDescription || !workType || !workMode) {
       return res
@@ -46,20 +55,28 @@ export const createJob = async (req, res, next) => {
     const jobPost = {
       jobTitle,
       jobLocation,
-      salary: salaryConfidential ? null : salary,
+      ...(salary && !salaryConfidential && { salary }),
       salaryConfidential,
       salaryCategory,
       workType,
       workMode,
-      experience,
+      ...(experience && { experience }),
       jobDescription,
       requirements,
       qualifications,
       screeningQuestions,
       company: id,
       status: "draft",
-      ...(applicationLink && { applicationLink }),
       skills: Array.isArray(skills) ? skills : [],
+      // New fields with optional handling
+      ...(graduationYear && { graduationYear }),
+      tags: Array.isArray(tags) ? tags : [],
+      ...(courseType && { courseType }),
+      ...(diversityPreferences && { diversityPreferences }),
+      category: category || "",
+      functionalArea: functionalArea || "",
+      isPremiumJob: isPremiumJob || false,
+      ...(applicationLink && { applicationLink }),
     };
 
     // Create new job and save to database
