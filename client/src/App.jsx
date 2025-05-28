@@ -25,7 +25,7 @@ import FloatingChatAssistant from "./components/Chat/FloatingChat";
 import HiringPlatformLanding from "./pages/Landing/LandingMain/desktop2.jsx";
 import UserInfoForm from "./pages/UserAdditionalDetails/main.jsx";
 import ViewProfile from "./pages/Applicants/ViewProfile.jsx";
-import JobUploadPage from "./pages/UploadJob/view.jsx";
+import JobUploadPage from "./pages/UploadJob/test.jsx";
 import ProfileSection from "./pages/Profile/view";
 import UserLoginForm from "./pages/AuthForm/u-login";
 import ResumeSearch from "./pages/ResumeSearch/view";
