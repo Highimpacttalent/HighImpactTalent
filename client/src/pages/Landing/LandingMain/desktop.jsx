@@ -501,7 +501,7 @@ const DesktopLanding = () => {
           display: 'block'
         }
       }}>
-        <img src={Bottom} alt="Wave decoration" />
+        <img src={Bottom} alt="Wave decoration"/>
       </Box>
 
       {/* Premium Subscribe Section */}

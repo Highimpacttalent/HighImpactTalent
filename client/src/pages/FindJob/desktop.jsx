@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
-import SearchOutlinedIcon from '@mui/icons-material/SearchOutlined';
-import RoomOutlinedIcon from '@mui/icons-material/RoomOutlined';
+import SearchOutlinedIcon from "@mui/icons-material/SearchOutlined";
+import RoomOutlinedIcon from "@mui/icons-material/RoomOutlined";
 import {
   Box,
   Typography,
@@ -26,7 +26,7 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { apiRequest } from "../../utils"; // Ensure this utility is correctly set up for API calls
 import { useSelector } from "react-redux";
 import NoJobFound from "./NoJob";
-import  JobCard from "./component/DeskJobcard";
+import JobCard from "./component/DeskJobcard";
 import Loader from "../Landing/LandingMain/loader";
 import { FaSortAmountDown } from "react-icons/fa";
 
@@ -78,13 +78,13 @@ const DesktopView = () => {
         setSort("Recommended");
         setSelectedTab(1);
         break;
-      case "Newest":             // ← handle “Newest” explicitly
+      case "Newest": // ← handle “Newest” explicitly
         setSort("Newest");
         setSelectedTab(0);
         break;
       case "Saved":
         setSort("Saved");
-        setSelectedTab(2);
+        setSelectedTab(2);  
         break;
       case "Salary (High to Low)":
         setSort("Salary (High to Low)");
@@ -290,6 +290,15 @@ const DesktopView = () => {
     setPage(1);
   };
 
+ const handleTabChange = (event, newValue) => {
+    setSelectedTab(newValue); 
+    if (newValue === 0) {
+      setSort("Newest");
+    } else if (newValue === 1) {
+      setSort("Saved");
+    }
+    setPage(1); 
+  };
   const getActiveFilterCount = () => {
     return (
       experienceFilter.length +
@@ -342,15 +351,15 @@ const DesktopView = () => {
           sx={{
             display: "flex",
             alignItems: "center",
-            border:"1px solid #00000040",
+            border: "1px solid #00000040",
             borderRadius: "50px",
-            height:"50px",
+            height: "50px",
             width: "100%",
             maxWidth: 1100,
             mx: "auto",
           }}
         >
-          <IconButton sx={{ color: "gray",ml:1 }}>
+          <IconButton sx={{ color: "gray", ml: 1 }}>
             <SearchOutlinedIcon fontSize="24px" />
           </IconButton>
           <InputBase
@@ -378,7 +387,7 @@ const DesktopView = () => {
               backgroundColor: "#1A73E8",
               color: "white",
               px: 3,
-              height:"100%",  
+              height: "100%",
               ml: 1,
               textTransform: "none",
               fontSize: "1rem",
@@ -392,7 +401,7 @@ const DesktopView = () => {
         </Box>
       </Box>
 
-      {/* <Box
+      <Box
         sx={{
           maxWidth: "xl",
           mx: "auto",
@@ -403,9 +412,14 @@ const DesktopView = () => {
         }}
       >
         <Box>
-          <Tabs value={selectedTab} textColor="#474E68">
+          <Tabs
+            value={selectedTab}
+            onChange={handleTabChange}
+            textColor="#474E68"
+          >
             <Tab
               label="All Jobs"
+              value={0}
               sx={{
                 fontFamily: "Satoshi",
                 fontSize: "18px",
@@ -413,16 +427,45 @@ const DesktopView = () => {
                 textTransform: "none",
                 textColor: "#474E68",
                 indicatorColor: "primary",
-                "&::after": {
-                  content: '""',
-                  position: "absolute",
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  height: "3px",
-                  backgroundColor: "#3C7EFC", // Always-visible blue line
-                  zIndex: 1,
-                },
+                mr: 2,
+                "&::after":
+                  selectedTab == 0
+                    ? {
+                        content: '""',
+                        position: "absolute",
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        height: "3px",
+                        backgroundColor: "#3C7EFC",
+                        zIndex: 1,
+                      }
+                    : {},
+              }}
+            />
+            <Tab
+              label="Saved Jobs"
+              value={1}
+              sx={{
+                fontFamily: "Satoshi",
+                fontSize: "18px",
+                fontWeight: "700",
+                textTransform: "none",
+                textColor: "#474E68",
+                indicatorColor: "primary",
+                "&::after":
+                  selectedTab == 1
+                    ? {
+                        content: '""',
+                        position: "absolute",
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        height: "3px",
+                        backgroundColor: "#3C7EFC",
+                        zIndex: 1,
+                      }
+                    : {},
               }}
             />
           </Tabs>
@@ -482,13 +525,10 @@ const DesktopView = () => {
               <MenuItem onClick={() => handleSelect("Salary (High to Low)")}>
                 Salary (High to Low)
               </MenuItem>
-              <MenuItem onClick={() => handleSelect("Saved")}>
-                Saved Jobs
-              </MenuItem>
             </Menu>
           </Box>
         </Box>
-      </Box> */}
+      </Box>
 
       {/* Main Content */}
       <Box
