@@ -470,7 +470,7 @@ const DesktopView = () => {
             />
           </Tabs>
         </Box>
-        <Box
+        {/* <Box
           sx={{
             width: {
               xs: "100%", // full width on mobile
@@ -527,7 +527,7 @@ const DesktopView = () => {
               </MenuItem>
             </Menu>
           </Box>
-        </Box>
+        </Box> */}
       </Box>
 
       {/* Main Content */}
