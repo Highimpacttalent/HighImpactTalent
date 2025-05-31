@@ -4,11 +4,14 @@ import {
   Box,
   Typography,
   TextField,
+  Tooltip,
   Button,
   LinearProgress,
   CircularProgress,
+  IconButton,
 } from "@mui/material";
 import { AiOutlineMail, AiOutlinePlus } from "react-icons/ai";
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import { FiPhoneCall } from "react-icons/fi";
 import { HiLocationMarker } from "react-icons/hi";
 import { useMediaQuery, useTheme } from "@mui/material";
@@ -313,6 +316,12 @@ const UserInfoCard = () => {
     }
   };
 
+   // Determine which fields are missing
+  const missingFields = profileFields
+    .filter((field) => !(user[field] && user[field].toString().trim() !== ""))
+    .map((field) => field.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase()));
+  if (!user.skills?.length) missingFields.push('Skills');
+
   const desktopView = (
     <Box
       display="flex"
@@ -529,254 +538,67 @@ const UserInfoCard = () => {
           )}
         </Box>
       </Box>
-      <Box
-        sx={{
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "center",
-          alignItems: "flex-start",
-        }}
-      >
-        <Typography
-          sx={{
-            px: 1,
-            fontFamily: "Satoshi",
-            fontWeight: "700",
-            fontSize: "20px",
-            color: "#24252C",
-          }}
-        >
-          Finish Your Profile & Let the Perfect Job Find You!
-        </Typography>
+     <Box sx={{ px: 1 ,width:"300px"}}>
         <Box
           sx={{
-            px: 8,
+            position: 'relative',
+            px: 4,
             py: 2,
             borderRadius: 4,
             border: "1px solid #00000040",
             mt: 2,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            flexDirection: "column",
+            display: 'flex',
+            alignItems: 'center',
           }}
         >
-          <Box
-            sx={{
-              color: "#24252C",
-              fontFamily: "Poppins",
-              fontSize: "18px",
-              fontWeight: "500",
-            }}
-          >
-            <Typography sx={{ color: "#24252C", fontWeight: "500" }}>
-              Your Profile is
-            </Typography>
-          </Box>
-          <LinearProgress
-            variant="determinate"
-            value={profileCompletion}
-            sx={{ width: "100%", height: 6, borderRadius: 4, marginTop: 1 }}
-          />
-          <Typography
-            sx={{
-              fontFamily: "Poppins",
-              fontWeight: "500",
-              fontSize: 14,
-              mt: 1,
-              color: "#808195",
-            }}
-          >
-            {profileCompletion}% done
-          </Typography>
-        </Box>
-      </Box>
-    </Box>
-  );
-
-  const mobileView = (
-    <Box
-      display="flex"
-      flexDirection={{ xs: "column", sm: "row" }}
-      alignItems="center"
-      justifyContent="space-evenly"
-      flexWrap="wrap"
-      gap={2}
-      sx={{
-        maxWidth: "90%",
-        width: { xs: "100%", sm: "80%", md: "60%", lg: "50%" },
-        margin: "auto",
-        border: "3px solid #00000040",
-        p: 2,
-        borderRadius: 4,
-      }}
-    >
-      {/* Profile Image */}
-      <Box sx={{ position: "relative", display: "inline-block" }}>
-        <Avatar
-          src={profilePicUrl || user?.profileUrl}
-          alt="Profile"
-          sx={{
-            width: { xs: 80, md: 80, lg: 100 },
-            height: { xs: 80, md: 80, lg: 100 },
-            transition: "0.3s",
-          }}
-        />
-        <input
-          type="file"
-          accept="image/*"
-          style={{ display: "none" }}
-          id="upload-input"
-          ref={fileInputRef}
-          onChange={handleProfilePicUpload}
-          disabled={uploadingProfilePic}
-        />
-        <Box
-          component="label"
-          htmlFor="upload-input"
-          sx={{
-            position: "absolute",
-            bottom: 0,
-            right: 0,
-            backgroundColor: "white",
-            borderRadius: "50%",
-            p: 1,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            boxShadow: 3,
-            cursor: uploadingProfilePic ? "not-allowed" : "pointer",
-            opacity: uploadingProfilePic ? 0.7 : 1,
-            transition: "opacity 0.3s",
-            "&:hover": { opacity: 1 },
-          }}
-        >
-          {uploadingProfilePic ? (
-            <CircularProgress size={20} />
-          ) : (
-            <AiOutlinePlus size={20} color="#3C7EFC" />
-          )}
-        </Box>
-      </Box>
-
-      {/* User Info */}
-      <Box>
-        <Typography
-          variant="h5"
-          fontWeight="bold"
-          sx={{
-            textTransform: "capitalize",
-            mb: 1,
-            color: "#404258",
-            fontWeight: 700,
-            fontFamily: "Satoshi",
-            fontSize: { xs: 20, md: 25, lg: 30 },
-          }}
-        >
-          {user?.firstName + " " + user?.lastName}
-        </Typography>
-
-        <Box
-          textAlign="center"
-          sx={{ display: "flex", flexDirection: "column", gap: 2 }}
-        >
-          {/* Email */}
-          <Typography
-            display="flex"
-            alignItems="center"
-            gap={1}
-            color="#404258"
-            fontWeight="400"
-          >
-            <AiOutlineMail /> {updatedUserInfo.email}
-          </Typography>
-
-          {/* Contact */}
-          {isEditing ? (
-            <TextField
-              name="contactNumber"
-              size="small"
-              value={updatedUserInfo.contactNumber}
-              onChange={handleChange}
-              sx={{ width: "250px" }}
-            />
-          ) : (
-            <Typography
-              display="flex"
-              alignItems="center"
-              gap={1}
-              color="#404258"
-              fontWeight="400"
-            >
-              <FiPhoneCall /> {updatedUserInfo.contactNumber}
-            </Typography>
-          )}
-
-          {/* Location */}
-          {isEditing ? (
-            <Box sx={{ width: "250px" }}>
-              <LocationDropdown
-                value={updatedUserInfo.currentLocation}
-                onChange={handleLocationChange}
-              />
-            </Box>
-          ) : (
-            <Typography
-              display="flex"
-              alignItems="center"
-              gap={1}
-              color="#404258"
-              fontWeight="400"
-            >
-              <HiLocationMarker /> {updatedUserInfo.currentLocation}
-            </Typography>
-          )}
-        </Box>
-      </Box>
-
-      {/* Edit & Save Buttons */}
-      <Box
-        sx={{
-          px: 4,
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "flex-end",
-        }}
-      >
-        {isEditing ? (
-          <Button
-            variant="contained"
-            size="small"
-            onClick={handleSaveClick}
-            sx={{ bgcolor: "#3C7EFC", color: "white", borderRadius: 16 }}
-            disabled={loading || uploadingProfilePic}
-          >
-            {loading ? (
-              <CircularProgress size={20} sx={{ color: "white" }} />
+          <Box sx={{ flex: 1 }}>
+            {profileCompletion === 100 ? (
+              <Typography sx={{ fontFamily: "Poppins", fontWeight: 500, fontSize: 16 }}>
+                Your profile is complete and ready to land you an amazing role!
+              </Typography>
             ) : (
-              "Save"
+              <>
+                <Typography sx={{ fontFamily: "Poppins", fontWeight: 500, fontSize: 14 }}>
+                  Your Profile is
+                </Typography>
+                <LinearProgress
+                  variant="determinate"
+                  value={profileCompletion}
+                  sx={{ width: '150px', height: 6, borderRadius: 4, mt: 1 }}
+                />
+                <Typography sx={{ fontFamily: "Poppins", fontWeight: 500, fontSize: 14, mt: 1, color: '#808195' }}>
+                  {profileCompletion}% done
+                </Typography>
+              </>
             )}
-          </Button>
-        ) : (
-          <Typography
-            sx={{
-              color: "#3C7EFC",
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              gap: 1,
-            }}
-            onClick={handleEditClick}
-          >
-            <EditIcon sx={{ color: "#3C7EFC" }} /> Edit Profile
-          </Typography>
-        )}
+          </Box>
+
+          {/* Info Tooltip */}
+          {profileCompletion < 100 && (
+            <Tooltip
+              title={
+                <Box>
+                  <Typography variant="subtitle2" sx={{ mb: 1 }}>To reach 100%, please add:</Typography>
+                  <ul style={{ margin: 0, paddingLeft: '20px' }}>
+                    {missingFields.map((field) => (
+                      <li key={field} style={{ listStyleType: 'disc' }}>{field}</li>
+                    ))}
+                  </ul>
+                </Box>
+              }
+            >
+              <IconButton sx={{ ml: 2 }}>
+                <InfoOutlinedIcon />
+              </IconButton>
+            </Tooltip>
+          )}
+        </Box>
       </Box>
     </Box>
   );
 
   return (
-    <Box sx={{ width: "100%" }}>{isMobile ? mobileView : desktopView}</Box>
+    <Box sx={{ width: "100%" }}>{ desktopView}</Box>
   );
 };
 
