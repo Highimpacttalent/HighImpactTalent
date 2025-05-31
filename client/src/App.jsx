@@ -8,7 +8,7 @@ import { useSelector } from "react-redux";
 import Dashboard from "./pages/DashBoard";
 import Contact from "./pages/Contact";
 import ViewResumeProfile from "./pages/ResumeSearch/ViewResume/view";
-import ApplicationTracking from "./pages/ApplicationTracking";
+import ApplicationTracking from "./pages/ApplicationTracking/view.jsx";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import ContactUsPage from "./pages/ContactUs/view";
 import View from "./pages/JobPost/components/ViewDetails/View.jsx";
