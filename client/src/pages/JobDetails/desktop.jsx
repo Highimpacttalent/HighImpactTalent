@@ -10,6 +10,7 @@ import {
   Card,
   CardContent,
   IconButton,
+  Chip,
   Typography,
   Grid,
   Stack,
@@ -62,6 +63,8 @@ const JobDetail = () => {
           <Box sx={{ mt: 2, mb: 2 }}>
             <JobCard job={job} enable={true} />
           </Box>
+
+          {/* About the Job Section */}
           <Box sx={{ p: 1.5 }}>
             <Typography
               variant="h6"
@@ -74,6 +77,8 @@ const JobDetail = () => {
             >
               About the Job
             </Typography>
+
+            {/* Main Job Details Container */}
             <Box
               sx={{
                 borderRadius: 2.5,
@@ -82,6 +87,7 @@ const JobDetail = () => {
                 boxShadow: "0px 0px 4px 0px #00000040",
               }}
             >
+              {/* Job Description */}
               <Typography
                 sx={{
                   fontWeight: "700",
@@ -92,21 +98,21 @@ const JobDetail = () => {
               >
                 Job Description:
               </Typography>
-              <Typography sx={{ color: "#474E68", fontFamily: "sans-serif" }}>
-                {" "}
+              <Typography
+                sx={{ color: "#474E68", fontFamily: "sans-serif", mb: 3 }}
+              >
                 <ReactMarkdown>
-                  {
-                    (job?.jobDescription || "")
-                      .replace(/\\n/g, "\n") // Replace escaped newlines with actual line breaks
-                      .split("\n") // Split the string into lines
-                      .map((line) => `- ${line}`) // Prepend each line with a bullet point
-                      .join("\n") // Join back as a markdown string
-                  }
+                  {(job?.jobDescription || "")
+                    .replace(/\\n/g, "\n")
+                    .split("\n")
+                    .map((line) => `- ${line}`)
+                    .join("\n")}
                 </ReactMarkdown>
               </Typography>
 
-              {job?.requirements?.length > 0 && (
-                <Box mt={2}>
+              {/* Skills Section */}
+              {job?.skills?.length > 0 && (
+                <Box sx={{ mb: 3 }}>
                   <Typography
                     sx={{
                       fontWeight: "700",
@@ -115,35 +121,95 @@ const JobDetail = () => {
                       fontFamily: "Poppins",
                     }}
                   >
-                    Requirements:
+                    Required Skills:
                   </Typography>
-                  <ul>
-                    {job.requirements.length > 0 &&
-                    job.requirements.some((req) => req.trim() !== "") ? (
-                      job.requirements
-                        .filter((req) => req.trim() !== "")
-                        .map((req, index) => (
-                          <Typography
-                            sx={{ color: "#474E68", fontFamily: "sans-serif" }}
-                          >
-                             &#8226; {req}
-                          </Typography>
-                        ))
-                    ) : (
-                      <Stack>
-                        <Typography
-                          sx={{ color: "#474E68", fontFamily: "sans-serif" }}
-                        >
-                          No requirement mentioned by the company.
-                        </Typography>
-                      </Stack>
-                    )}
-                  </ul>
+                  <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
+                    {job.skills.map((skill, index) => (
+                      <Chip
+                        key={index}
+                        label={skill}
+                        sx={{
+                          bgcolor: "#f5f5f5",
+                          color: "#404258",
+                          fontFamily: "sans-serif",
+                          fontSize: "0.85rem",
+                          "&:hover": {
+                            bgcolor: "#e0e0e0",
+                          },
+                        }}
+                      />
+                    ))}
+                  </Box>
                 </Box>
               )}
 
+              {/* Work Details Grid */}
+              <Grid container spacing={2} sx={{ mb: 3 }}>
+                <Grid item xs={12} sm={6}>
+                  <Box
+                    sx={{
+                      p: 2,
+                      borderRadius: 2,
+                      bgcolor: "#f8f9fa",
+                      border: "1px solid #e9ecef",
+                    }}
+                  >
+                    <Typography
+                      sx={{
+                        fontWeight: "700",
+                        color: "#404258",
+                        mb: 1,
+                        fontFamily: "Poppins",
+                        fontSize: "0.9rem",
+                      }}
+                    >
+                      Work Type:
+                    </Typography>
+                    <Typography
+                      sx={{
+                        color: "#474E68",
+                        fontFamily: "sans-serif",
+                      }}
+                    >
+                      {job?.workType || "Not specified"}
+                    </Typography>
+                  </Box>
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <Box
+                    sx={{
+                      p: 2,
+                      borderRadius: 2,
+                      bgcolor: "#f8f9fa",
+                      border: "1px solid #e9ecef",
+                    }}
+                  >
+                    <Typography
+                      sx={{
+                        fontWeight: "700",
+                        color: "#404258",
+                        mb: 1,
+                        fontFamily: "Poppins",
+                        fontSize: "0.9rem",
+                      }}
+                    >
+                      Work Mode:
+                    </Typography>
+                    <Typography
+                      sx={{
+                        color: "#474E68",
+                        fontFamily: "sans-serif",
+                      }}
+                    >
+                      {job?.workMode || "Not specified"}
+                    </Typography>
+                  </Box>
+                </Grid>
+              </Grid>
+
+              {/* Qualifications */}
               {job?.qualifications?.some((qual) => qual.trim() !== "") ? (
-                <Box mt={2}>
+                <Box sx={{ mb: 3 }}>
                   <Typography
                     sx={{
                       fontWeight: "700",
@@ -154,21 +220,33 @@ const JobDetail = () => {
                   >
                     Qualifications:
                   </Typography>
-                  <ol>
+                  <Box sx={{ pl: 1 }}>
                     {job.qualifications.map(
                       (qual, index) =>
                         qual.trim() && (
                           <Typography
-                            sx={{ color: "#474E68", fontFamily: "sans-serif" }}
+                            key={index}
+                            sx={{
+                              color: "#474E68",
+                              fontFamily: "sans-serif",
+                              mb: 1,
+                              display: "flex",
+                              alignItems: "flex-start",
+                            }}
                           >
-                            &#8226;  {qual}
+                            <span
+                              style={{ marginRight: "8px", color: "#404258" }}
+                            >
+                              &#8226;
+                            </span>
+                            {qual}
                           </Typography>
                         )
                     )}
-                  </ol>
+                  </Box>
                 </Box>
               ) : (
-                <>
+                <Box sx={{ mb: 3 }}>
                   <Typography
                     sx={{
                       fontWeight: "700",
@@ -184,7 +262,384 @@ const JobDetail = () => {
                   >
                     No qualification mentioned by company.
                   </Typography>
-                </>
+                </Box>
+              )}
+
+              {/* Additional Job Information */}
+              {(job?.duration || job?.companyType || job?.courseType) && (
+                <Box sx={{ mb: 3 }}>
+                  <Typography
+                    sx={{
+                      fontWeight: "700",
+                      color: "#404258",
+                      mb: 2,
+                      fontFamily: "Poppins",
+                    }}
+                  >
+                    Additional Information:
+                  </Typography>
+                  <Grid container spacing={2}>
+                    {job?.duration && (
+                      <Grid item xs={12} sm={4}>
+                        <Box
+                          sx={{
+                            p: 1.5,
+                            borderRadius: 1.5,
+                            bgcolor: "#f8f9fa",
+                            border: "1px solid #e9ecef",
+                            textAlign: "center",
+                          }}
+                        >
+                          <Typography
+                            sx={{
+                              fontSize: "0.8rem",
+                              color: "#6c757d",
+                              fontFamily: "Poppins",
+                              mb: 0.5,
+                            }}
+                          >
+                            Duration
+                          </Typography>
+                          <Typography
+                            sx={{
+                              fontWeight: "600",
+                              color: "#404258",
+                              fontFamily: "sans-serif",
+                              textTransform: "capitalize",
+                            }}
+                          >
+                            {job.duration}
+                          </Typography>
+                        </Box>
+                      </Grid>
+                    )}
+                    {job?.companyType && (
+                      <Grid item xs={12} sm={4}>
+                        <Box
+                          sx={{
+                            p: 1.5,
+                            borderRadius: 1.5,
+                            bgcolor: "#f8f9fa",
+                            border: "1px solid #e9ecef",
+                            textAlign: "center",
+                          }}
+                        >
+                          <Typography
+                            sx={{
+                              fontSize: "0.8rem",
+                              color: "#6c757d",
+                              fontFamily: "Poppins",
+                              mb: 0.5,
+                            }}
+                          >
+                            Company Type
+                          </Typography>
+                          <Typography
+                            sx={{
+                              fontWeight: "600",
+                              color: "#404258",
+                              fontFamily: "sans-serif",
+                            }}
+                          >
+                            {job.companyType}
+                          </Typography>
+                        </Box>
+                      </Grid>
+                    )}
+                    {job?.courseType && (
+                      <Grid item xs={12} sm={4}>
+                        <Box
+                          sx={{
+                            p: 1.5,
+                            borderRadius: 1.5,
+                            bgcolor: "#f8f9fa",
+                            border: "1px solid #e9ecef",
+                            textAlign: "center",
+                          }}
+                        >
+                          <Typography
+                            sx={{
+                              fontSize: "0.8rem",
+                              color: "#6c757d",
+                              fontFamily: "Poppins",
+                              mb: 0.5,
+                            }}
+                          >
+                            Course Type
+                          </Typography>
+                          <Typography
+                            sx={{
+                              fontWeight: "600",
+                              color: "#404258",
+                              fontFamily: "sans-serif",
+                            }}
+                          >
+                            {job.courseType}
+                          </Typography>
+                        </Box>
+                      </Grid>
+                    )}
+                  </Grid>
+                </Box>
+              )}
+
+              {/* Graduation Batch Preference */}
+              {(job?.graduationYear?.minBatch ||
+                job?.graduationYear?.maxBatch) && (
+                <Box sx={{ mb: 3 }}>
+                  <Typography
+                    sx={{
+                      fontWeight: "700",
+                      color: "#404258",
+                      mb: 2,
+                      fontFamily: "Poppins",
+                    }}
+                  >
+                    Preferred Graduation Batch:
+                  </Typography>
+                  <Box
+                    sx={{
+                      p: 2,
+                      borderRadius: 2,
+                      bgcolor: "#f8f9fa",
+                      display: "inline-block",
+                    }}
+                  >
+                    <Typography
+                      sx={{
+                        fontWeight: "600",
+                        color: "#404258",
+                        fontFamily: "sans-serif",
+                      }}
+                    >
+                      {job.graduationYear.minBatch &&
+                      job.graduationYear.maxBatch
+                        ? `${job.graduationYear.minBatch} - ${job.graduationYear.maxBatch}`
+                        : job.graduationYear.minBatch
+                        ? `From ${job.graduationYear.minBatch} onwards`
+                        : `Up to ${job.graduationYear.maxBatch}`}
+                    </Typography>
+                  </Box>
+                </Box>
+              )}
+
+              {/* Tags */}
+              {job?.tags?.length > 0 && (
+                <Box sx={{ mb: 3 }}>
+                  <Typography
+                    sx={{
+                      fontWeight: "700",
+                      color: "#404258",
+                      mb: 2,
+                      fontFamily: "Poppins",
+                    }}
+                  >
+                    Job Tags:
+                  </Typography>
+                  <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
+                    {job.tags.map((tag, index) => (
+                      <Chip
+                        key={index}
+                        label={tag}
+                        variant="outlined"
+                        sx={{
+                          color: "#404258",
+                          borderColor: "#404258",
+                          fontFamily: "sans-serif",
+                          fontSize: "0.8rem",
+                          "&:hover": {
+                            bgcolor: "#404258",
+                            color: "#fff",
+                          },
+                        }}
+                      />
+                    ))}
+                  </Box>
+                </Box>
+              )}
+
+              {/* Diversity & Inclusion */}
+              {Object.values(job?.diversityPreferences || {}).some(Boolean) && (
+                <Box sx={{ mb: 3 }}>
+                  <Typography
+                    sx={{
+                      fontWeight: "700",
+                      color: "#404258",
+                      mb: 1,
+                      fontFamily: "Poppins",
+                    }}
+                  >
+                    Diversity & Inclusion:
+                  </Typography>
+                  <Box
+                    sx={{
+                      p: 2,
+                    }}
+                  >
+                    <Typography
+                      sx={{
+                        color: "#474E68",
+                        fontFamily: "sans-serif",
+                        mb: 1,
+                        display: "flex",
+                        alignItems: "flex-start",
+                      }}
+                    >
+                      This company is committed to workplace diversity and
+                      encourages applications from:
+                    </Typography>
+                    <Box sx={{ pl: 1 }}>
+                      {job.diversityPreferences.femaleCandidates && (
+                        <Typography
+                          sx={{
+                            color: "#474E68",
+                            fontFamily: "sans-serif",
+                            mb: 1,
+                            display: "flex",
+                            alignItems: "flex-start",
+                          }}
+                        >
+                          &#8226; Female candidates
+                        </Typography>
+                      )}
+                      {job.diversityPreferences.womenJoiningBackWorkforce && (
+                        <Typography
+                          sx={{
+                            color: "#474E68",
+                            fontFamily: "sans-serif",
+                            mb: 1,
+                            display: "flex",
+                            alignItems: "flex-start",
+                          }}
+                        >
+                          &#8226; Women joining back the workforce
+                        </Typography>
+                      )}
+                      {job.diversityPreferences.exDefencePersonnel && (
+                        <Typography
+                          sx={{
+                            color: "#474E68",
+                            fontFamily: "sans-serif",
+                            mb: 1,
+                            display: "flex",
+                            alignItems: "flex-start",
+                          }}
+                        >
+                          &#8226; Ex-defence personnel
+                        </Typography>
+                      )}
+                      {job.diversityPreferences.differentlyAbledCandidates && (
+                        <Typography
+                          sx={{
+                            color: "#474E68",
+                            fontFamily: "sans-serif",
+                            mb: 1,
+                            display: "flex",
+                            alignItems: "flex-start",
+                          }}
+                        >
+                          &#8226; Differently-abled candidates
+                        </Typography>
+                      )}
+                      {job.diversityPreferences.workFromHome && (
+                        <Typography
+                          sx={{
+                            color: "#474E68",
+                            fontFamily: "sans-serif",
+                            mb: 0.5,
+                            display: "flex",
+                            alignItems: "flex-start",
+                          }}
+                        >
+                          &#8226; Candidates seeking work from home
+                          opportunities
+                        </Typography>
+                      )}
+                    </Box>
+                  </Box>
+                </Box>
+              )}
+
+              {/* Category and Functional Area */}
+              {(job?.category || job?.functionalArea) && (
+                <Box sx={{ mb: 3 }}>
+                  <Typography
+                    sx={{
+                      fontWeight: "700",
+                      color: "#404258",
+                      mb: 2,
+                      fontFamily: "Poppins",
+                    }}
+                  >
+                    Job Category:
+                  </Typography>
+                  <Grid container spacing={2}>
+                    {job?.category && (
+                      <Grid item xs={12} sm={6}>
+                        <Box
+                          sx={{
+                            p: 2,
+                            borderRadius: 2,
+                            bgcolor: "#f8f9fa",
+                            border: "1px solid #e9ecef",
+                          }}
+                        >
+                          <Typography
+                            sx={{
+                              fontSize: "0.8rem",
+                              color: "#6c757d",
+                              fontFamily: "Poppins",
+                              mb: 0.5,
+                            }}
+                          >
+                            Category
+                          </Typography>
+                          <Typography
+                            sx={{
+                              fontWeight: "600",
+                              color: "#404258",
+                              fontFamily: "sans-serif",
+                            }}
+                          >
+                            {job.category}
+                          </Typography>
+                        </Box>
+                      </Grid>
+                    )}
+                    {job?.functionalArea && (
+                      <Grid item xs={12} sm={6}>
+                        <Box
+                          sx={{
+                            p: 2,
+                            borderRadius: 2,
+                            bgcolor: "#f8f9fa",
+                            border: "1px solid #e9ecef",
+                          }}
+                        >
+                          <Typography
+                            sx={{
+                              fontSize: "0.8rem",
+                              color: "#6c757d",
+                              fontFamily: "Poppins",
+                              mb: 0.5,
+                            }}
+                          >
+                            Functional Area
+                          </Typography>
+                          <Typography
+                            sx={{
+                              fontWeight: "600",
+                              color: "#404258",
+                              fontFamily: "sans-serif",
+                            }}
+                          >
+                            {job.functionalArea}
+                          </Typography>
+                        </Box>
+                      </Grid>
+                    )}
+                  </Grid>
+                </Box>
               )}
             </Box>
           </Box>
@@ -200,8 +655,8 @@ const JobDetail = () => {
             Similar Job Posts
           </Typography>
           <Grid container spacing={2}>
-            {similarJobs.slice(0, 6).map((job, index) => (
-              <Grid item xs={12} key={index}>
+            {similarJobs.slice(0, 2).map((job, index) => (
+              <Grid item xs={12} key={index} sx={{ cursor: "pointer" }}>
                 <JobCard job={job} flag={true} />
               </Grid>
             ))}
