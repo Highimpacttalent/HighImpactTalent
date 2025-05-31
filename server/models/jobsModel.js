@@ -40,11 +40,11 @@ const jobSchema = new mongoose.Schema(
       type: [String],
       default: [],
     },
-    // requirements: [
-    //   {
-    //     type: String,
-    //   },
-    // ],
+    requirements: [
+       {
+         type: String,
+       },
+    ],
     qualifications: [
       {
         type: String,
