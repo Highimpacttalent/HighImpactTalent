@@ -347,39 +347,8 @@ const DesktopView = () => {
             ))}
           </Grid>
         ) : (
-          <Box sx={{ 
-            textAlign: "center", 
-            mt: 6,
-            p: 4,
-            backgroundColor: "white",
-            borderRadius: "16px",
-            boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
-            maxWidth: "400px",
-          }}>
-            <Typography 
-              variant="h6" 
-              color="textSecondary"
-              sx={{
-                fontFamily: "Poppins",
-                fontSize: isMobile ? 16 : 18,
-                mb: 1,
-              }}
-            >
-              No applications found
-            </Typography>
-            <Typography 
-              color="textSecondary"
-              sx={{
-                fontFamily: "Poppins",
-                fontSize: isMobile ? 14 : 15,
-              }}
-            >
-              {activeTab === "inProgress" && activeProcessingStage !== "ALL"
-                ? `No applications in ${processingStages.find(s => s.key === activeProcessingStage)?.label} stage`
-                : "Try adjusting your filters"
-              }
-            </Typography>
-          </Box>
+          <>
+          </>
         )}
       </Box>
     </Box>
