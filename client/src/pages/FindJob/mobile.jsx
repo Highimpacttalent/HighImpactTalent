@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { AiOutlineSearch } from "react-icons/ai";
-import { CustomButton, JobCard } from "../../components";
+import JobCard from "./component/MobJobcard";
 import FilterListIcon from "@mui/icons-material/FilterList";
 //import { FaSortAmountDown } from "react-icons/fa";
 import { Grid } from "@mui/material";
