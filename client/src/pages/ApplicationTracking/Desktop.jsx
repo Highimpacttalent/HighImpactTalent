@@ -59,31 +59,38 @@ const DesktopView = () => {
   }, [user]);
 
   // Get jobs count for each processing stage
+  // Get jobs count for each processing stage (case-insensitive)
   const getStageCount = (stageKey) => {
-    if (stageKey === "ALL") {
-      return appliedJobs.filter((job) => job.status !== "Not Progressing").length;
-    }
-    return appliedJobs.filter((job) => 
-      job.status === stageKey && job.status !== "Not Progressing"
-    ).length;
+    return appliedJobs.filter((job) => {
+      const status = job.status?.toLowerCase();
+      if (stageKey === "ALL") {
+        return status !== "not progressing";
+      }
+      return status === stageKey.toLowerCase() && status !== "not progressing";
+    }).length;
   };
 
-  // Filter jobs based on active tab and processing stage
+  // Filter jobs based on active tab and processing stage (case-insensitive)
   const getFilteredJobs = () => {
     let filtered = [];
-    
+
     if (activeTab === "inProgress") {
-      filtered = appliedJobs.filter((job) => job.status !== "Not Progressing");
-      
+      filtered = appliedJobs.filter(
+        (job) => job.status?.toLowerCase() !== "not progressing"
+      );
       if (activeProcessingStage !== "ALL") {
-        filtered = filtered.filter((job) => job.status === activeProcessingStage);
+        filtered = filtered.filter(
+          (job) => job.status?.toLowerCase() === activeProcessingStage.toLowerCase()
+        );
       }
     } else {
-      filtered = appliedJobs.filter((job) => job.status === "Not Progressing");
+      filtered = appliedJobs.filter(
+        (job) => job.status?.toLowerCase() === "not progressing"
+      );
     }
-    
+
     return filtered;
-  };
+  };  
 
   const filteredJobs = getFilteredJobs();
 

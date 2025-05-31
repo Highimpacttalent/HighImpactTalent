@@ -492,7 +492,7 @@ const DesktopLanding = () => {
         </Container>
       </Box>
 
-      {/* Bottom Wave */}
+      {/* Bottom Wave
       <Box sx={{ 
         bgcolor: '#ffffff',
         '& img': { 
@@ -502,7 +502,7 @@ const DesktopLanding = () => {
         }
       }}>
         <img src={Bottom} alt="Wave decoration"/>
-      </Box>
+      </Box> */}
 
       {/* Premium Subscribe Section */}
       <AnimatedSection>
