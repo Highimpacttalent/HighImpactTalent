@@ -35,8 +35,10 @@ const JobCard = ({ job, flag = false }) => {
   const { user } = useSelector((state) => state.user);
   const [like, setLike] = useState(false);
   const [saving, setSaving] = useState(false);
-  const experience = user?.experience;
+  const experience = user?.experience || 0;
 
+  let noteligible = false;
+  
   if (job?.experience && job?.experience > experience) {
     noteligible = true;
   }
@@ -284,6 +286,7 @@ const JobCard = ({ job, flag = false }) => {
             component={Link}
             sx={{ borderRadius: 20, fontFamily: "Poppins",px:2.5,py:1.5,textTransform: "none" }}
             to={`/job-detail/${job?._id}`}
+            disabled={noteligible} // Optional: disable button if not eligible
           >
             View Details
           </Button>
