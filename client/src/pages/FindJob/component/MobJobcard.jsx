@@ -49,6 +49,9 @@ const JobCard = ({ job, flag = false, enable = false }) => {
   if (job?.experience && job?.experience > experience) {
     noteligible = true;
   }
+  if (job?.experience?.minExperience && job?.experience.minExperience > experience) {
+    noteligible = true;
+  } 
 
   useEffect(() => {
     setLike(user?.likedJobs?.includes(job._id));
@@ -170,55 +173,55 @@ const JobCard = ({ job, flag = false, enable = false }) => {
       <CardContent
         sx={{ flexGrow: 1, display: "flex", flexDirection: "column" }}
       >
-        <Box sx={{ display: "flex", alignItems: "center",gap:1, mb: 2 }}>
-        <Avatar
-          src={job?.company?.profileUrl || undefined}
-          sx={{
-            width: 50,
-            height: 50,
-            backgroundColor: job?.company?.profileUrl
-              ? "transparent"
-              : "#10B981",
-            borderRadius: "8px",
-            fontSize: "16px",
-            fontWeight: 600,
-            color: "#FFFFFF",
-          }}
-        >
-          {!job?.company?.profileUrl &&
-            job?.company?.name?.charAt(0).toUpperCase()}
-        </Avatar>
-        <Box sx={{ ml: 2, flexGrow: 1 }}>
-        {/* Job Title */}
-        <Typography
-          variant="h6"
-          fontWeight={700}
-          gutterBottom
-          sx={{ color: "#404258", mb: 0.5, fontFamily: "Poppins" }}
-          color="#404258"
-        >
-          {job?.jobTitle}
-        </Typography>
-        {/* Company Name & Like Button */}
-        <Box
-          display="flex"
-          justifyContent="space-between"
-          alignItems="center"
-            sx={{ mb: 1 }}
-        >
-          <Box display="flex" alignItems="center" gap={1}>
-            <Business color="#404258" />
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
+          <Avatar
+            src={job?.company?.profileUrl || undefined}
+            sx={{
+              width: 50,
+              height: 50,
+              backgroundColor: job?.company?.profileUrl
+                ? "transparent"
+                : "#10B981",
+              borderRadius: "8px",
+              fontSize: "16px",
+              fontWeight: 600,
+              color: "#FFFFFF",
+            }}
+          >
+            {!job?.company?.profileUrl &&
+              job?.company?.name?.charAt(0).toUpperCase()}
+          </Avatar>
+          <Box sx={{ ml: 2, flexGrow: 1 }}>
+            {/* Job Title */}
             <Typography
-              variant="subtitle1"
-              fontWeight={600}
+              variant="h6"
+              fontWeight={700}
+              gutterBottom
+              sx={{ color: "#404258", mb: 0.5, fontFamily: "Poppins" }}
               color="#404258"
-              fontFamily="Poppins"
             >
-              {job?.company?.name}
+              {job?.jobTitle}
             </Typography>
+            {/* Company Name & Like Button */}
+            <Box
+              display="flex"
+              justifyContent="space-between"
+              alignItems="center"
+              sx={{ mb: 1 }}
+            >
+              <Box display="flex" alignItems="center" gap={1}>
+                <Business color="#404258" />
+                <Typography
+                  variant="subtitle1"
+                  fontWeight={600}
+                  color="#404258"
+                  fontFamily="Poppins"
+                >
+                  {job?.company?.name}
+                </Typography>
+              </Box>
+            </Box>
           </Box>
-          </Box>
-        </Box>
         </Box>
 
         {/* Job Details */}
@@ -232,7 +235,7 @@ const JobCard = ({ job, flag = false, enable = false }) => {
             />
             <Chip
               icon={<WorkOutlineOutlined sx={{ color: "#474E68" }} />}
-              label={`${job?.experience}+ years experience`}
+              label={`${job?.experience?.minExperience || job?.experience }+ years experience`}
               variant="contained"
               sx={{ color: "#474E68", fontWeight: "400" }}
             />
@@ -242,9 +245,9 @@ const JobCard = ({ job, flag = false, enable = false }) => {
             label={
               job.salaryConfidential
                 ? "Confidential"
-                : `${Number(job.salary).toLocaleString("en-IN")} (${
-                    job.salaryCategory
-                  })`
+                : `${Number(job.salary.maxSalary || job.salary).toLocaleString(
+                    "en-IN"
+                  )} (${job.salaryCategory}) LPA`
             }
             variant="contained"
             sx={{ color: "#474E68", fontWeight: "400" }}

@@ -50,6 +50,9 @@ const JobCard = ({ job, flag = false, enable = false }) => {
   if (job?.experience && job?.experience > experience) {
     noteligible = true;
   }
+  if (job?.experience?.minExperience && job?.experience.minExperience > experience) {
+    noteligible = true;
+  } 
 
   useEffect(() => {
     setLike(user?.likedJobs?.includes(job._id));
@@ -199,18 +202,20 @@ const JobCard = ({ job, flag = false, enable = false }) => {
             />
             <Chip
               icon={<WorkOutlineOutlined sx={{ color: "#474E68" }} />}
-              label={`${job?.experience}+ years experience`}
+               label={`${job?.experience?.minExperience || job?.experience }+ years experience`}
               variant="contained"
               sx={{ color: "#474E68", fontWeight: "400" }}
             />
           </Box>
           <Chip
             icon={<CurrencyRupee sx={{ color: "#474E68" }} />}
-            label={
-              job.salaryConfidential
-                ? "Confidential"
-                : `${Number(job.salary).toLocaleString('en-IN')} (${job.salaryCategory})`
-            }
+             label={
+                  job.salaryConfidential
+                    ? "Confidential"
+                    : `${Number(job.salary.maxSalary||job.salary).toLocaleString("en-IN")} (${
+                        job.salaryCategory
+                      }) LPA`
+                }
             variant="contained"
             sx={{ color: "#474E68", fontWeight: "400" }}
           />
@@ -318,19 +323,19 @@ const JobCard = ({ job, flag = false, enable = false }) => {
             />
             <Chip
               icon={<WorkOutlineOutlined sx={{ color: "#474E68" }} />}
-              label={`${job?.experience}+ years experience`}
+               label={`${job?.experience?.minExperience || job?.experience }+ years experience`}
               variant="contained"
               sx={{ color: "#474E68", fontWeight: "400" }}
             />
             <Chip
               icon={<CurrencyRupee sx={{ color: "#474E68" }} />}
-              label={
-                job.salaryConfidential
-                  ? "Confidential"
-                  : `${Number(job.salary).toLocaleString("en-IN")} (${
-                      job.salaryCategory
-                    })`
-              }
+               label={
+                  job.salaryConfidential
+                    ? "Confidential"
+                    : `${Number(job.salary.maxSalary||job.salary).toLocaleString("en-IN")} (${
+                        job.salaryCategory
+                      }) LPA`
+                }
               variant="contained"
               sx={{ color: "#474E68", fontWeight: "400" }}
             />

@@ -42,7 +42,9 @@ const JobCard = ({ job, flag = false }) => {
   if (job?.experience && job?.experience > experience) {
     noteligible = true;
   }
-
+  if (job?.experience?.minExperience && job?.experience.minExperience > experience) {
+    noteligible = true;
+  } 
   useEffect(() => {
     setLike(user?.likedJobs?.includes(job._id));
   }, [user, job._id]);
@@ -190,7 +192,7 @@ const JobCard = ({ job, flag = false }) => {
               />
               <Chip
                 icon={<WorkOutlineOutlined sx={{ color: "#474E68" }} />}
-                label={`${job?.experience}+ years experience`}
+                label={`${job?.experience?.minExperience || job?.experience }+ years experience`}
                 variant="contained"
                 sx={{
                   color: "#EAEAEA",
@@ -207,9 +209,9 @@ const JobCard = ({ job, flag = false }) => {
                 label={
                   job.salaryConfidential
                     ? "Confidential"
-                    : `${Number(job.salary).toLocaleString("en-IN")} (${
+                    : `${Number(job.salary.maxSalary||job.salary).toLocaleString("en-IN")} (${
                         job.salaryCategory
-                      })`
+                      }) LPA`
                 }
                 variant="contained"
                 sx={{
