@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import SearchOutlinedIcon from "@mui/icons-material/SearchOutlined";
 import RoomOutlinedIcon from "@mui/icons-material/RoomOutlined";
+import CloseIcon from "@mui/icons-material/Close";
 import {
   Box,
   Typography,
@@ -21,6 +22,8 @@ import {
   MenuItem,
   Checkbox,
   FormControlLabel,
+  Chip,
+  Stack,
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { apiRequest } from "../../utils"; // Ensure this utility is correctly set up for API calls
@@ -78,7 +81,7 @@ const DesktopView = () => {
         setSort("Recommended");
         setSelectedTab(1);
         break;
-      case "Newest": // ← handle “Newest” explicitly
+      case "Newest": // ← handle "Newest" explicitly
         setSort("Newest");
         setSelectedTab(0);
         break;
@@ -280,6 +283,29 @@ const DesktopView = () => {
     }
   };
 
+  // New function to clear search query
+  const handleClearSearchQuery = () => {
+    setSearchQuery("");
+    setSearchKeyword("");
+    setPage(1);
+  };
+
+  // New function to clear search location
+  const handleClearSearchLocation = () => {
+    setSearchLocationQuery("");
+    setSearchLocation("");
+    setPage(1);
+  };
+
+  // New function to clear all search terms
+  const handleClearAllSearch = () => {
+    setSearchQuery("");
+    setSearchLocationQuery("");
+    setSearchKeyword("");
+    setSearchLocation("");
+    setPage(1);
+  };
+
   const handleResetFilters = () => {
     setExperienceFilter([]);
     setWorkModeFilter([]);
@@ -399,6 +425,67 @@ const DesktopView = () => {
             Search
           </Button>
         </Box>
+
+        {/* Search Result Chips */}
+        {(searchQuery || searchLocationQuery) && (
+          <Box sx={{ mt: 2, maxWidth: 1100, mx: "auto" }}>
+            <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
+              <Typography variant="body2" color="text.secondary" sx={{ mr: 1 }}>
+                Active searches:
+              </Typography>
+              
+              {searchQuery && (
+                <Chip
+                  label={`Title: "${searchQuery}"`}
+                  onDelete={handleClearSearchQuery}
+                  deleteIcon={<CloseIcon />}
+                  variant="outlined"
+                  color="primary"
+                  sx={{
+                    fontFamily: "Poppins",
+                    "& .MuiChip-deleteIcon": {
+                      color: "primary.main",
+                    },
+                  }}
+                />
+              )}
+              
+              {searchLocationQuery && (
+                <Chip
+                  label={`Location: "${searchLocationQuery}"`}
+                  onDelete={handleClearSearchLocation}
+                  deleteIcon={<CloseIcon />}
+                  variant="outlined"
+                  color="secondary"
+                  sx={{
+                    fontFamily: "Poppins",
+                    "& .MuiChip-deleteIcon": {
+                      color: "secondary.main",
+                    },
+                  }}
+                />
+              )}
+              
+              {(searchQuery && searchLocationQuery) && (
+                <Button
+                  variant="text"
+                  size="small"
+                  onClick={handleClearAllSearch}
+                  sx={{
+                    textTransform: "none",
+                    color: "text.secondary",
+                    fontSize: "0.875rem",
+                    "&:hover": {
+                      backgroundColor: "rgba(0, 0, 0, 0.04)",
+                    },
+                  }}
+                >
+                  Clear all
+                </Button>
+              )}
+            </Stack>
+          </Box>
+        )}
       </Box>
 
       <Box
@@ -470,64 +557,6 @@ const DesktopView = () => {
             />
           </Tabs>
         </Box>
-        {/* <Box
-          sx={{
-            width: {
-              xs: "100%", // full width on mobile
-              sm: "60%", // medium on small tablets
-              md: "15%", // moderate width on larger screens
-              lg: "15%", // more compact on big screens
-            },
-          }}
-        >
-          <Box
-            sx={{
-              display: "flex",
-              justifyContent: "flex-end",
-              alignItems: "center",
-              width: "100%",
-              mt: 2,
-            }}
-          >
-            <Button
-              onClick={handleClick}
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                gap: 1,
-                textTransform: "none",
-                fontFamily: "Satoshi, sans-serif",
-                fontWeight: 500,
-                color: "#3C3C3C",
-                backgroundColor: "#F5F5F5",
-                borderRadius: "8px",
-                px: 2,
-                py: 1,
-                "&:hover": {
-                  backgroundColor: "#e0e0e0",
-                },
-              }}
-            >
-              <FaSortAmountDown size={18} />
-              <Typography>Sort By</Typography>
-            </Button>
-
-            <Menu anchorEl={anchorEl} open={open} onClose={handleClose}>
-              <MenuItem onClick={() => handleSelect("All Jobs")}>
-                All Jobs
-              </MenuItem>
-              <MenuItem onClick={() => handleSelect("Recommended")}>
-                Recommended
-              </MenuItem>
-              <MenuItem onClick={() => handleSelect("Newest")}>
-                Newest First
-              </MenuItem>
-              <MenuItem onClick={() => handleSelect("Salary (High to Low)")}>
-                Salary (High to Low)
-              </MenuItem>
-            </Menu>
-          </Box>
-        </Box> */}
       </Box>
 
       {/* Main Content */}
