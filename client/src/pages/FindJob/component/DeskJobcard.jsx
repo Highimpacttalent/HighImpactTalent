@@ -286,7 +286,6 @@ const JobCard = ({ job, flag = false }) => {
             component={Link}
             sx={{ borderRadius: 20, fontFamily: "Poppins",px:2.5,py:1.5,textTransform: "none" }}
             to={`/job-detail/${job?._id}`}
-            disabled={noteligible} // Optional: disable button if not eligible
           >
             View Details
           </Button>
