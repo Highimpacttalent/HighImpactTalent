@@ -59,31 +59,38 @@ const DesktopView = () => {
   }, [user]);
 
   // Get jobs count for each processing stage
+  // Get jobs count for each processing stage (case-insensitive)
   const getStageCount = (stageKey) => {
-    if (stageKey === "ALL") {
-      return appliedJobs.filter((job) => job.status !== "Not Progressing").length;
-    }
-    return appliedJobs.filter((job) => 
-      job.status === stageKey && job.status !== "Not Progressing"
-    ).length;
+    return appliedJobs.filter((job) => {
+      const status = job.status?.toLowerCase();
+      if (stageKey === "ALL") {
+        return status !== "not progressing";
+      }
+      return status === stageKey.toLowerCase() && status !== "not progressing";
+    }).length;
   };
 
-  // Filter jobs based on active tab and processing stage
+  // Filter jobs based on active tab and processing stage (case-insensitive)
   const getFilteredJobs = () => {
     let filtered = [];
-    
+
     if (activeTab === "inProgress") {
-      filtered = appliedJobs.filter((job) => job.status !== "Not Progressing");
-      
+      filtered = appliedJobs.filter(
+        (job) => job.status?.toLowerCase() !== "not progressing"
+      );
       if (activeProcessingStage !== "ALL") {
-        filtered = filtered.filter((job) => job.status === activeProcessingStage);
+        filtered = filtered.filter(
+          (job) => job.status?.toLowerCase() === activeProcessingStage.toLowerCase()
+        );
       }
     } else {
-      filtered = appliedJobs.filter((job) => job.status === "Not Progressing");
+      filtered = appliedJobs.filter(
+        (job) => job.status?.toLowerCase() === "not progressing"
+      );
     }
-    
+
     return filtered;
-  };
+  };  
 
   const filteredJobs = getFilteredJobs();
 
@@ -340,39 +347,8 @@ const DesktopView = () => {
             ))}
           </Grid>
         ) : (
-          <Box sx={{ 
-            textAlign: "center", 
-            mt: 6,
-            p: 4,
-            backgroundColor: "white",
-            borderRadius: "16px",
-            boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
-            maxWidth: "400px",
-          }}>
-            <Typography 
-              variant="h6" 
-              color="textSecondary"
-              sx={{
-                fontFamily: "Poppins",
-                fontSize: isMobile ? 16 : 18,
-                mb: 1,
-              }}
-            >
-              No applications found
-            </Typography>
-            <Typography 
-              color="textSecondary"
-              sx={{
-                fontFamily: "Poppins",
-                fontSize: isMobile ? 14 : 15,
-              }}
-            >
-              {activeTab === "inProgress" && activeProcessingStage !== "ALL"
-                ? `No applications in ${processingStages.find(s => s.key === activeProcessingStage)?.label} stage`
-                : "Try adjusting your filters"
-              }
-            </Typography>
-          </Box>
+          <>
+          </>
         )}
       </Box>
     </Box>

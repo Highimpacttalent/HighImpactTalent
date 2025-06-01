@@ -490,10 +490,10 @@ const DesktopView = () => {
 
       <Box
         sx={{
-          maxWidth: "xl",
+          maxWidth: "lg",
           mx: "auto",
           mt: 6,
-          px: { lg: 19, md: 4, xs: 2, sm: 2 },
+          px: { md: 4, xs: 2, sm: 2 },
           justifyContent: "space-between",
           display: "flex",
         }}
