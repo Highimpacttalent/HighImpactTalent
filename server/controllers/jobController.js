@@ -852,126 +852,143 @@ export const getSavedJobs = async (req, res) => {
 export const MatchJobs = async (req, res, next) => {
   try {
     const userId = req.body.user.userId;
-   const user = await Users.findById(userId).lean();
+    
+    // Get user preferences with only needed fields
+    const user = await Users.findById(userId)
+      .select('skills experience expectedMinSalary preferredLocations preferredWorkModes preferredWorkTypes currentLocation openToRelocate')
+      .lean();
+      
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
 
     // Extract user preferences safely
     const userSkills = Array.isArray(user.skills) ? user.skills : [];
-    const userExp    = typeof user.experience === 'number' ? user.experience : 0;
+    const userExp = typeof user.experience === 'number' ? user.experience : 0;
     const userMinSal = parseInt(user.expectedMinSalary || '0', 10);
-    const prefLocs   = Array.isArray(user.preferredLocations) ? user.preferredLocations : [];
-    const prefModes  = Array.isArray(user.preferredWorkModes) ? user.preferredWorkModes : [];
-    const prefTypes  = Array.isArray(user.preferredWorkTypes) ? user.preferredWorkTypes : [];
+    const prefLocs = Array.isArray(user.preferredLocations) ? user.preferredLocations : [];
+    const prefModes = Array.isArray(user.preferredWorkModes) ? user.preferredWorkModes : [];
+    const prefTypes = Array.isArray(user.preferredWorkTypes) ? user.preferredWorkTypes : [];
     const currentLoc = user.currentLocation || '';
-    const openReloc  = (user.openToRelocate || '').toLowerCase() === 'yes';
+    const openReloc = (user.openToRelocate || '').toLowerCase() === 'yes';
 
+    // Single optimized aggregation pipeline
     const recommendations = await Jobs.aggregate([
-      // Only active/live jobs
-      { $match: { status: 'live' } },
-
-      // Ensure salary is int (default 0)
-      { $addFields: {
-        jobMinSal: { $toInt: { $ifNull: ['$salary', '0'] } }
-      } },
-
-      // Filter by hard requirements
-      { $match: {
-        experience: { $lte: userExp },
-        jobMinSal:  { $gte: userMinSal }
-      } },
-
-      // Safely handle missing skills array
-      { $addFields: {
-        skillsArr: { $ifNull: ['$skills', []] }
-      } },
-
-      // Compute counts and flags
-      { $addFields: {
-        matchedSkillsCount: { $size: { $setIntersection: [userSkills, '$skillsArr'] } },
-        reqSkillsCount:     { $size: '$skillsArr' },
-        isWorkModeOk:       { $in: ['$workMode', prefModes] },
-        isWorkTypeOk:       { $in: ['$workType', prefTypes] },
-        isPrefLoc:          { $in: ['$jobLocation', prefLocs] },
-        isCurrentLoc:       { $eq: ['$jobLocation', currentLoc] }
-      } },
-
-      // Compute sub-scores with zero-division guards
-      { $addFields: {
-        skillScore: {
-          $switch: {
-            branches: [
-              {
-                case: {
-                  $and: [
-                    { $gt: ['$reqSkillsCount', 0] },
-                    { $gte: [ { $divide: ['$matchedSkillsCount', '$reqSkillsCount'] }, 0.5 ] }
-                  ]
-                }, then: 1
-              },
-              {
-                case: { $gt: ['$reqSkillsCount', 0] },
-                then: { $divide: ['$matchedSkillsCount', '$reqSkillsCount'] }
-              }
-            ],
-            default: 0
+      // Initial match - only active jobs that meet basic criteria
+      {
+        $match: {
+          status: 'live',
+          experience: { $lte: userExp },
+          $expr: {
+            $gte: [
+              { $convert: { input: "$salary", to: "int", onError: 0 } },
+              userMinSal
+            ]
           }
-        },
-        modeScore:    { $cond: [ '$isWorkModeOk', 1, 0 ] },
-        typeScore:    { $cond: [ '$isWorkTypeOk', 1, 0 ] },
-        locScore:     { $cond: [ '$isCurrentLoc', 1, (openReloc ? 0.5 : 0) ] },
-        prefLocScore: { $cond: [ '$isPrefLoc', 0.75, 0 ] }
-      } },
-
-      // Total weighted score
-      { $addFields: {
-        totalScore: {
-          $add: [
-            { $multiply: ['$skillScore',   0.20] },
-            { $multiply: ['$modeScore',    0.15] },
-            { $multiply: ['$typeScore',    0.10] },
-            { $multiply: ['$locScore',     0.25] },
-            { $multiply: ['$prefLocScore', 0.30] }
-          ]
         }
-      } },
-
-      // Sort: by score desc, salary desc, then newest
-      { $sort: { totalScore: -1, jobMinSal: -1, poastingDate: -1 } },
-
-      // Limit to top 10
+      },
+      
+      // Add computed fields for scoring
+      {
+        $addFields: {
+          skillsArr: { $ifNull: ['$skills', []] },
+          salaryNum: { $convert: { input: "$salary", to: "int", onError: 0 } }
+        }
+      },
+      
+      // Calculate all scores in one stage
+      {
+        $addFields: {
+          matchedSkillsCount: { $size: { $setIntersection: [userSkills, '$skillsArr'] } },
+          reqSkillsCount: { $size: '$skillsArr' },
+          isWorkModeOk: { $in: ['$workMode', prefModes] },
+          isWorkTypeOk: { $in: ['$workType', prefTypes] },
+          isPrefLoc: { $in: ['$jobLocation', prefLocs] },
+          isCurrentLoc: { $eq: ['$jobLocation', currentLoc] }
+        }
+      },
+      
+      // Calculate final scores
+      {
+        $addFields: {
+          skillScore: {
+            $cond: [
+              { $eq: ['$reqSkillsCount', 0] },
+              0,
+              {
+                $cond: [
+                  { $gte: [{ $divide: ['$matchedSkillsCount', '$reqSkillsCount'] }, 0.5] },
+                  1,
+                  { $divide: ['$matchedSkillsCount', '$reqSkillsCount'] }
+                ]
+              }
+            ]
+          },
+          modeScore: { $cond: ['$isWorkModeOk', 1, 0] },
+          typeScore: { $cond: ['$isWorkTypeOk', 1, 0] },
+          locScore: { 
+            $cond: [
+              '$isCurrentLoc', 
+              1, 
+              { $cond: ['$isPrefLoc', 0.75, openReloc ? 0.5 : 0] }
+            ]
+          }
+        }
+      },
+      
+      // Calculate total weighted score
+      {
+        $addFields: {
+          totalScore: {
+            $add: [
+              { $multiply: ['$skillScore', 0.20] },
+              { $multiply: ['$modeScore', 0.15] },
+              { $multiply: ['$typeScore', 0.10] },
+              { $multiply: ['$locScore', 0.55] }
+            ]
+          }
+        }
+      },
+      
+      // Sort and limit
+      { $sort: { totalScore: -1, salaryNum: -1, createdAt: -1 } },
       { $limit: 10 },
-
-      // Shape final output
-      { $project: {
-        _id:          1,
-        jobTitle:     1,
-        jobLocation:  1,
-        salary:       1,
-        workMode:     1,
-        workType:     1,
-        totalScore:   1,
-        poastingDate: 1
-      } }
+      
+      // Populate company data
+      {
+        $lookup: {
+          from: 'companies',
+          localField: 'company',
+          foreignField: '_id',
+          as: 'company',
+          pipeline: [{ $project: { password: 0 } }]
+        }
+      },
+      { $unwind: '$company' },
+      
+      // Final projection
+      {
+        $project: {
+          _id: 1,
+          jobTitle: 1,
+          jobLocation: 1,
+          salary: 1,
+          workMode: 1,
+          workType: 1,
+          totalScore: 1,
+          createdAt: 1,
+          company: 1,
+          skills: 1,
+          experience: 1,
+          jobDescription: 1
+        }
+      }
     ]);
 
-    const ids = recommendations.map(r => r._id);
-    const scoreMap = recommendations.reduce((map, r) => { map[r._id.toString()] = r.totalScore; return map; }, {});
-    const jobs = await Jobs.find({ _id: { $in: ids } }).populate('company').lean();
-    const jobMap = jobs.reduce((map, j) => { map[j._id.toString()] = j; return map; }, {});
-
-    const finalResponse = ids
-      .map(id => {
-        const job = jobMap[id.toString()];
-        if (job) job.totalScore = scoreMap[id.toString()];
-        return job;
-      })
-      .filter(Boolean);
-
-    return res.json({ finalResponse });
+    return res.json({ finalResponse: recommendations });
+    
   } catch (err) {
-    console.error(err);
+    console.error('MatchJobs error:', err);
     return res.status(500).json({ message: 'Server error' });
   }
 }
