@@ -1,3 +1,4 @@
+
 import mongoose from "mongoose";
 import Jobs from "../models/jobsModel.js";
 import Companies from "../models/companiesModel.js";
@@ -79,24 +80,40 @@ export const createJob = async (req, res, next) => {
       ...(applicationLink && { applicationLink }),
     };
 
-    // Create new job and save to database
-    const job = new Jobs(jobPost);
-    await job.save();
+    // Use session for atomic operations
+    const session = await mongoose.startSession();
+    session.startTransaction();
+    
+    try {
+      // Create new job
+      const job = new Jobs(jobPost);
+      await job.save({ session });
 
-    // Find company and update with new job ID
-    const company = await Companies.findById(id);
-    if (!company) {
-      return res.status(404).send(`No Company with id: ${id}`);
+      // Update company with new job ID in single operation
+      const company = await Companies.findByIdAndUpdate(
+        id,
+        { $push: { jobPosts: job._id } },
+        { session, new: true }
+      );
+
+      if (!company) {
+        await session.abortTransaction();
+        return res.status(404).send(`No Company with id: ${id}`);
+      }
+
+      await session.commitTransaction();
+      
+      res.status(201).json({
+        success: true,
+        message: "Job Posted Successfully",
+        job,
+      });
+    } catch (error) {
+      await session.abortTransaction();
+      throw error;
+    } finally {
+      session.endSession();
     }
-
-    company.jobPosts.push(job._id);
-    await company.save();
-
-    res.status(201).json({
-      success: true,
-      message: "Job Posted Successfully",
-      job,
-    });
   } catch (error) {
     console.error("Error creating job:", error);
     res.status(500).json({ message: error.message });
@@ -174,241 +191,51 @@ export const updateJob = async (req, res, next) => {
   }
 };
 
+// OPTIMIZED: Main job search function with aggregation pipeline
 export const getJobPosts = async (req, res, next) => {
   try {
     const { search, query, sort, location, searchLocation, exp, workType, workMode, salary, datePosted } = req.query;
-    const { skills } = req.body;
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 6;
+    const skip = (page - 1) * limit;
+    
+    // Extract user ID from token
     let userId = null;
     const authHeader = req.headers.authorization;
-    //console.log("Auth Header:", authHeader);
     
     if (authHeader && authHeader.startsWith('Bearer ')) {
       try {
-        const token = authHeader.substring(7); // Remove 'Bearer ' prefix
+        const token = authHeader.substring(7);
         const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
         userId = decoded.userId || decoded.id || decoded._id;
       } catch (err) {
         console.log("Token validation error:", err.message);
       }
     }
-    //console.log("User ID:", userId);
-    
-    let queryObject = {};
 
-    queryObject.$or = [
-      { status: "live" },
-      { status: { $exists: false } }
-    ];
-
-    if (location || searchLocation) {
-      const locationValue = location || searchLocation;
-      
-      if (locationValue.includes(',')) {
-        const locations = locationValue.split(',').map(loc => loc.trim());
-        queryObject.jobLocation = { 
-          $in: locations.map(loc => new RegExp(loc, 'i')) 
-        };
-      } else {
-        queryObject.jobLocation = { 
-          $regex: locationValue, 
-          $options: "i" 
-        };
-      }
-    }
-    
-    if (workType) {
-      const workTypes = workType.split(',').map(type => type.trim());
-      queryObject.workType = { 
-        $in: workTypes 
-      };
-    }
-
-    if (workMode) {
-      const workModes = workMode.split(',').map(mode => mode.trim());
-      queryObject.workMode = { 
-        $in: workModes 
-      };
-    }
-
-    if (exp) {
-      const experienceRanges = exp.split(',');
-      const expConditions = [];
-      
-      experienceRanges.forEach(range => {
-        if (range.includes('-')) {
-          const [min, max] = range.split('-').map(Number);
-          if (!isNaN(min) && !isNaN(max)) {
-            if (max === 100) {
-              expConditions.push({
-                experience: { $gte: min } 
-              });
-            } 
-            else {
-              expConditions.push({
-                experience: { 
-                  $gte: min, 
-                  $lt: max  
-                }
-              });
-            }
-          }
-        }
-      });
-      
-      if (expConditions.length > 0) {
-        if (queryObject.$or) {
-          queryObject.$and = queryObject.$and || [];
-          queryObject.$and.push({ $or: expConditions });
-        } else {
-          queryObject.$or = expConditions;
-        }
-      }
-    }
-
-    if (salary) {
-      const salaryRanges = salary.split(',');
-      const salaryConditions = [];
-      
-      salaryRanges.forEach(range => {
-        if (range.includes('-')) {
-          const [min, max] = range.split('-').map(Number);
-          
-          if (!isNaN(min) && !isNaN(max)) {
-            const minSalary = min * 100000;
-            const maxSalary = max * 100000;
-            
-            salaryConditions.push({
-              $expr: {
-                $and: [
-                  { $gte: [{ $toDouble: "$salary" }, minSalary] },
-                  { $lt: [{ $toDouble: "$salary" }, maxSalary] }
-                ]
-              }
-            });
-          }
-        }
-      });
-      
-      if (salaryConditions.length > 0) {
-        queryObject.$and = queryObject.$and || [];
-        queryObject.$and.push({ $or: salaryConditions });
-      }
-    }
-
-    if (datePosted) {
-      const dateOptions = datePosted.split(',');
-      if (dateOptions.includes("Any Time")) {
-        // Do nothing, no date filter
-      } else {
-        const dateConditions = [];
-        const now = new Date();
-        
-        dateOptions.forEach(option => {
-          const date = new Date(now);
-          
-          if (option === "Last 24 hours") {
-            date.setDate(date.getDate() - 1);
-            dateConditions.push({ createdAt: { $gte: date } });
-          } else if (option === "Last one week") {
-            date.setDate(date.getDate() - 7);
-            dateConditions.push({ createdAt: { $gte: date } });
-          } else if (option === "Last one month") {
-            date.setMonth(date.getMonth() - 1);
-            dateConditions.push({ createdAt: { $gte: date } });
-          }
-        });
-        
-        if (dateConditions.length > 0) {
-          queryObject.$or = dateConditions;
-        }
-      }
-    }
-
-    const searchTerm = search || query;
-    if (searchTerm) {
-      const searchQuery = {
-        $or: [
-          { jobTitle: { $regex: searchTerm, $options: "i" } },
-          { jobLocation: { $regex: searchTerm, $options: "i" } },
-          { jobDescription: { $regex: searchTerm, $options: "i" } }
-        ],
-      };
-      
-      if (queryObject.$and) {
-        queryObject.$and.push({ $or: searchQuery.$or });
-      } else if (queryObject.$or) {
-        queryObject.$and = [
-          { $or: queryObject.$or },
-          { $or: searchQuery.$or }
-        ];
-        delete queryObject.$or;
-      } else {
-        queryObject.$or = searchQuery.$or;
-      }
-    }
-
-    let queryResult = Jobs.find(queryObject).populate({
-      path: "company",
-      select: "-password",
-    });
-
-    // Handle pagination
-    const page = Number(req.query.page) || 1;
-    const limit = Number(req.query.limit) || 6;
-    const skip = (page - 1) * limit;
-
-    // Get total count before applying limit
-    const totalJobs = await Jobs.countDocuments(queryObject);
-    const numOfPage = Math.ceil(totalJobs / limit);
-
-    // Apply pagination
-    queryResult = queryResult.skip(skip).limit(limit);
-
-    // Execute query
-    let jobs = await queryResult;
-    if (userId) {
-      const userPrefs = await Users.findById(userId)
-        .select('skills preferredLocations preferredWorkTypes preferredWorkModes expectedMinSalary experience')
-        .lean();
-      
-      if (userPrefs) {  
-        // Map over jobs and add match percentage
-        jobs = jobs.map(job => {
-          // Convert Mongoose document to plain object if needed
-          const jobData = job.toObject ? job.toObject() : job;
-          
-          // Calculate match data
-          const matchData = calculateJobMatch(userPrefs, jobData);
-          
-          // Add match data to job object
-          return {
-            ...jobData,
-            matchPercentage: matchData.matchPercentage,
-            matchDetails: matchData.matchDetails
-          };
-        });
-      }
-    } else {
-      // For non-logged in users, convert Mongoose documents to plain objects
-      // but don't add match data
-      jobs = jobs.map(job => job.toObject ? job.toObject() : job);
-    }
-
+    // Handle "Saved" sort separately for better performance
     if (sort === "Saved") {
       if (!userId) {
-        return res
-          .status(401)
-          .json({ success: false, message: "Login required for Saved Jobs" });
+        return res.status(401).json({ 
+          success: false, 
+          message: "Login required for Saved Jobs" 
+        });
       }
-      // fetch user's likedJobs
+      
       const user = await Users.findById(userId)
-        .populate({ path: "likedJobs", model: "Jobs", populate: { path: "company", select: "-password" } })
+        .select('likedJobs')
+        .populate({
+          path: "likedJobs",
+          model: "Jobs",
+          populate: { path: "company", select: "-password" }
+        })
         .lean();
 
       if (!user) {
-        return res
-          .status(404)
-          .json({ success: false, message: "User not found" });
+        return res.status(404).json({ 
+          success: false, 
+          message: "User not found" 
+        });
       }
 
       const saved = user.likedJobs || [];
@@ -422,7 +249,210 @@ export const getJobPosts = async (req, res, next) => {
       });
     }
 
-    if (sort === "Recommended") {
+    // Build aggregation pipeline for better performance
+    const pipeline = [];
+
+    // Match stage - combine all filters
+    const matchStage = {
+      $or: [
+        { status: "live" },
+        { status: { $exists: false } }
+      ]
+    };
+
+    // Location filter
+    if (location || searchLocation) {
+      const locationValue = location || searchLocation;
+      if (locationValue.includes(',')) {
+        const locations = locationValue.split(',').map(loc => loc.trim());
+        matchStage.jobLocation = { 
+          $in: locations.map(loc => new RegExp(loc, 'i')) 
+        };
+      } else {
+        matchStage.jobLocation = { 
+          $regex: locationValue, 
+          $options: "i" 
+        };
+      }
+    }
+
+    // Work type filter
+    if (workType) {
+      const workTypes = workType.split(',').map(type => type.trim());
+      matchStage.workType = { $in: workTypes };
+    }
+
+    // Work mode filter
+    if (workMode) {
+      const workModes = workMode.split(',').map(mode => mode.trim());
+      matchStage.workMode = { $in: workModes };
+    }
+
+    // Experience filter
+    if (exp) {
+      const experienceRanges = exp.split(',');
+      const expConditions = [];
+      
+      experienceRanges.forEach(range => {
+        if (range.includes('-')) {
+          const [min, max] = range.split('-').map(Number);
+          if (!isNaN(min) && !isNaN(max)) {
+            if (max === 100) {
+              expConditions.push({ experience: { $gte: min } });
+            } else {
+              expConditions.push({ experience: { $gte: min, $lt: max } });
+            }
+          }
+        }
+      });
+      
+      if (expConditions.length > 0) {
+        matchStage.$and = matchStage.$and || [];
+        matchStage.$and.push({ $or: expConditions });
+      }
+    }
+
+    // Salary filter with optimized numeric conversion
+    if (salary) {
+      const salaryRanges = salary.split(',');
+      const salaryConditions = [];
+      
+      salaryRanges.forEach(range => {
+        if (range.includes('-')) {
+          const [min, max] = range.split('-').map(Number);
+          if (!isNaN(min) && !isNaN(max)) {
+            const minSalary = min * 100000;
+            const maxSalary = max * 100000;
+            
+            salaryConditions.push({
+              $and: [
+                { salary: { $type: "number", $gte: minSalary } },
+                { salary: { $lt: maxSalary } }
+              ]
+            });
+          }
+        }
+      });
+      
+      if (salaryConditions.length > 0) {
+        matchStage.$and = matchStage.$and || [];
+        matchStage.$and.push({ $or: salaryConditions });
+      }
+    }
+
+    // Date posted filter
+    if (datePosted && !datePosted.includes("Any Time")) {
+      const dateOptions = datePosted.split(',');
+      const dateConditions = [];
+      const now = new Date();
+      
+      dateOptions.forEach(option => {
+        const date = new Date(now);
+        
+        if (option === "Last 24 hours") {
+          date.setDate(date.getDate() - 1);
+          dateConditions.push({ createdAt: { $gte: date } });
+        } else if (option === "Last one week") {
+          date.setDate(date.getDate() - 7);
+          dateConditions.push({ createdAt: { $gte: date } });
+        } else if (option === "Last one month") {
+          date.setMonth(date.getMonth() - 1);
+          dateConditions.push({ createdAt: { $gte: date } });
+        }
+      });
+      
+      if (dateConditions.length > 0) {
+        matchStage.$and = matchStage.$and || [];
+        matchStage.$and.push({ $or: dateConditions });
+      }
+    }
+
+    // Search term filter
+    const searchTerm = search || query;
+    if (searchTerm) {
+      matchStage.$and = matchStage.$and || [];
+      matchStage.$and.push({
+        $or: [
+          { jobTitle: { $regex: searchTerm, $options: "i" } },
+          { jobLocation: { $regex: searchTerm, $options: "i" } },
+          { jobDescription: { $regex: searchTerm, $options: "i" } }
+        ]
+      });
+    }
+
+    pipeline.push({ $match: matchStage });
+
+    // Add company population stage
+    pipeline.push({
+      $lookup: {
+        from: 'companies',
+        localField: 'company',
+        foreignField: '_id',
+        as: 'company',
+        pipeline: [{ $project: { password: 0 } }] // Exclude password field
+      }
+    });
+
+    pipeline.push({
+      $unwind: '$company'
+    });
+
+    // Add sorting stage
+    const sortMap = {
+      Newest: { createdAt: -1 },
+      Oldest: { createdAt: 1 },
+      "A-Z": { jobTitle: 1 },
+      "Z-A": { jobTitle: -1 },
+      "Salary (High to Low)": { salary: -1 },
+      "Salary (Low to High)": { salary: 1 },
+    };
+
+    const sortOrder = sortMap[sort] || { createdAt: -1 };
+    pipeline.push({ $sort: sortOrder });
+
+    // Execute aggregation with facet for count and data in parallel
+    const aggregationPipeline = [
+      ...pipeline,
+      {
+        $facet: {
+          data: [
+            { $skip: skip },
+            { $limit: limit }
+          ],
+          count: [
+            { $count: "total" }
+          ]
+        }
+      }
+    ];
+
+    const [result] = await Jobs.aggregate(aggregationPipeline);
+    let jobs = result.data || [];
+    const totalJobs = result.count[0]?.total || 0;
+    const numOfPage = Math.ceil(totalJobs / limit);
+
+    // Handle user preferences and match calculation if user is logged in
+    if (userId && jobs.length > 0) {
+      const userPrefs = await Users.findById(userId)
+        .select('skills preferredLocations preferredWorkTypes preferredWorkModes expectedMinSalary experience')
+        .lean();
+      
+      if (userPrefs) {
+        jobs = jobs.map(job => {
+          const matchData = calculateJobMatch(userPrefs, job);
+          return {
+            ...job,
+            matchPercentage: matchData.matchPercentage,
+            matchDetails: matchData.matchDetails
+          };
+        });
+      }
+    }
+
+    // Handle "Recommended" sorting with skills
+    if (sort === "Recommended" && req.body.skills) {
+      const { skills: userSkills } = req.body;
+      
       const calcScore = (jobSkills = [], requiredSkills = []) => {
         const matchCount = jobSkills.filter((s) => requiredSkills.includes(s)).length;
         if (matchCount === requiredSkills.length) return 3;
@@ -433,31 +463,11 @@ export const getJobPosts = async (req, res, next) => {
       jobs = jobs
         .map((job) => ({
           ...job,
-          matchScore: calcScore(job.skills, skills),
+          matchScore: calcScore(job.skills, userSkills),
         }))
         .sort((a, b) => b.matchScore - a.matchScore);
     }
-    else {
-      // 3) Otherwise apply your existing DB‐level sorts
-      const sortMap = {
-        Newest: { createdAt: -1 },
-        Oldest: { createdAt: 1 },
-        "A-Z": { jobTitle: 1 },
-        "Z-A": { jobTitle: -1 },
-        "Salary (High to Low)": { salary: -1 },
-        "Salary (Low to High)": { salary: 1 },
-      };
-      const order = sortMap[sort] || { createdAt: -1 };
-      jobs = await Jobs.find(queryObject)
-     .sort(order)
-     .skip(skip)
-     .limit(limit)
-     .populate({ path: "company", select: "-password" })
-     .lean();
-    }
 
-    
-    // Send response with a flag indicating if the user is logged in
     res.status(200).json({
       success: true,
       totalJobs,
@@ -465,7 +475,8 @@ export const getJobPosts = async (req, res, next) => {
       page,
       numOfPage,
       userLoggedIn: !!userId
-    });  
+    });
+
   } catch (error) {
     console.error("Error in getJobPosts:", error);
     res.status(500).json({ 
@@ -475,32 +486,48 @@ export const getJobPosts = async (req, res, next) => {
   }
 };
 
-
-// Get jobs sorted by salary (High to Low)
+// OPTIMIZED: Get jobs sorted by salary (High to Low)
 export const getJobsBySalaryDesc = async (req, res, next) => {
   try {
     const page = Number(req.query.page) || 1;
     const limit = Number(req.query.limit) || 20;
     const skip = (page - 1) * limit;
 
-    const statusFilter = {
-      $or: [
-        { status: "live" },
-        { status: { $exists: false } }
-      ]
-    };
+    // Use aggregation for better performance
+    const pipeline = [
+      {
+        $match: {
+          $or: [
+            { status: "live" },
+            { status: { $exists: false } }
+          ]
+        }
+      },
+      {
+        $lookup: {
+          from: 'companies',
+          localField: 'company',
+          foreignField: '_id',
+          as: 'company',
+          pipeline: [{ $project: { password: 0 } }]
+        }
+      },
+      { $unwind: '$company' },
+      { $sort: { salary: -1 } },
+      {
+        $facet: {
+          data: [
+            { $skip: skip },
+            { $limit: limit }
+          ],
+          count: [{ $count: "total" }]
+        }
+      }
+    ];
 
-    // Fetch jobs sorted by salary in descending order
-    const jobs = await Jobs.find(statusFilter)
-      .sort({ salary: -1 }) // Sorting salary in descending order
-      .skip(skip)
-      .limit(limit)
-      .populate({
-        path: "company",
-        select: "-password",
-      });
-
-    const totalJobs = await Jobs.countDocuments({});
+    const [result] = await Jobs.aggregate(pipeline);
+    const jobs = result.data || [];
+    const totalJobs = result.count[0]?.total || 0;
     const numOfPage = Math.ceil(totalJobs / limit);
 
     res.status(200).json({
@@ -516,43 +543,50 @@ export const getJobsBySalaryDesc = async (req, res, next) => {
   }
 };
 
-
-
-// get a job by id with  similar jobs
+// get a job by id with similar jobs
 export const getJobById = async (req, res, next) => {
   try {
     const { id } = req.params;
 
-    // const job = await Jobs.findById({ _id: id }).select("+password")
-    const job = await Jobs.findById({ _id: id }).populate({
-      path: "company",
-      select: "-password",
-    });
-    console.log(job);
+    // Use Promise.all to fetch job and similar jobs in parallel
+    const [job, similarJobs] = await Promise.all([
+      Jobs.findById(id).populate({
+        path: "company",
+        select: "-password",
+      }).lean(),
+      
+      // Get similar jobs with better query
+      Jobs.aggregate([
+        {
+          $match: {
+            _id: { $ne: new mongoose.Types.ObjectId(id) },
+            $or: [
+              { status: "live" },
+              { status: { $exists: false } }
+            ]
+          }
+        },
+        {
+          $lookup: {
+            from: 'companies',
+            localField: 'company',
+            foreignField: '_id',
+            as: 'company',
+            pipeline: [{ $project: { password: 0 } }]
+          }
+        },
+        { $unwind: '$company' },
+        { $sort: { createdAt: -1 } },
+        { $limit: 6 }
+      ])
+    ]);
+
     if (!job) {
-      return res.status(200).send({
+      return res.status(404).json({
         message: "Job Post Not Found",
         success: false,
       });
     }
-
-    //GET SIMILAR JOB POST
-    const searchQuery = {
-      $or: [
-        { jobTitle: { $regex: job?.jobTitle, $options: "i" } },
-        { workType: job?.workType }
-      ],
-    };
-
-    let queryResult = Jobs.find(searchQuery)
-      .populate({
-        path: "company",
-        select: "-password",
-      })
-      .sort({ _id: -1 });
-
-    queryResult = queryResult.limit(6);
-    const similarJobs = await queryResult;
 
     res.status(200).json({
       success: true,
@@ -577,11 +611,20 @@ export const getJobsByIds = async (req, res) => {
       });
     }
 
-    // Find jobs where _id is in the provided jobIds array
-    const jobs = await Jobs.find({ _id: { $in: jobIds } }).populate({
-      path: "company",
-      select: "-password",
-    });
+    // Use aggregation for better performance
+    const jobs = await Jobs.aggregate([
+      { $match: { _id: { $in: jobIds.map(id => new mongoose.Types.ObjectId(id)) } } },
+      {
+        $lookup: {
+          from: 'companies',
+          localField: 'company',
+          foreignField: '_id',
+          as: 'company',
+          pipeline: [{ $project: { password: 0 } }]
+        }
+      },
+      { $unwind: '$company' }
+    ]);
 
     if (jobs.length === 0) {
       return res.status(404).json({
@@ -604,22 +647,22 @@ export const getJobsByIds = async (req, res) => {
   }
 };
 
-
 //delete a job
 export const deleteJobPost = async (req, res, next) => {
   try {
     const { id } = req.params;
     const companyId = req.body.user.userId;
-    await Application.deleteMany({ job: id });
-    await Companies.findByIdAndUpdate(
-      { _id: companyId },
-      { $pull: { jobPosts: id } }
-    );
-    await Jobs.findByIdAndDelete(id);
+    
+    // Use Promise.all for parallel operations
+    await Promise.all([
+      Application.deleteMany({ job: id }),
+      Companies.findByIdAndUpdate(companyId, { $pull: { jobPosts: id } }),
+      Jobs.findByIdAndDelete(id)
+    ]);
 
-    res.status(200).send({
+    res.status(200).json({
       success: true,
-      messsage: "Job Post Delted Successfully.",
+      message: "Job Post Deleted Successfully.",
     });
   } catch (error) {
     console.log(error);
@@ -627,56 +670,79 @@ export const deleteJobPost = async (req, res, next) => {
   }
 };
 
-// Get jobs sorted by skill match
+// OPTIMIZED: Get jobs sorted by skill match
 export const getJobsBySkills = async (req, res, next) => {
   try {
-    const { skills } = req.body;  // skills array from request body
+    const { skills } = req.body;
     const page = Number(req.query.page) || 1;
     const limit = Number(req.query.limit) || 20;
     const skip = (page - 1) * limit;
 
-    const statusFilter = {
-      $or: [
-        { status: "live" },
-        { status: { $exists: false } }
-      ]
-    };
-
-    // Fetch jobs with skill array
-    const jobs = await Jobs.find(statusFilter)
-      .skip(skip)
-      .limit(limit)
-      .populate({
-        path: "company",
-        select: "-password",
-      });
-
-    // Helper function to calculate skill match score
-    const calculateMatchScore = (jobSkills, requiredSkills) => {
-      const matchCount = jobSkills.filter(skill => requiredSkills.includes(skill)).length;
-      if (matchCount === requiredSkills.length) {
-        return 3; // All skills match
-      } else if (matchCount > 0) {
-        return 2; // Some skills match
+    // Use aggregation pipeline for better performance
+    const pipeline = [
+      {
+        $match: {
+          $or: [
+            { status: "live" },
+            { status: { $exists: false } }
+          ]
+        }
+      },
+      {
+        $addFields: {
+          matchScore: {
+            $switch: {
+              branches: [
+                {
+                  case: {
+                    $eq: [
+                      { $size: { $setIntersection: ["$skills", skills] } },
+                      { $size: skills }
+                    ]
+                  },
+                  then: 3
+                },
+                {
+                  case: { $gt: [{ $size: { $setIntersection: ["$skills", skills] } }, 0] },
+                  then: 2
+                }
+              ],
+              default: 1
+            }
+          }
+        }
+      },
+      { $sort: { matchScore: -1, createdAt: -1 } },
+      {
+        $lookup: {
+          from: 'companies',
+          localField: 'company',
+          foreignField: '_id',
+          as: 'company',
+          pipeline: [{ $project: { password: 0 } }]
+        }
+      },
+      { $unwind: '$company' },
+      {
+        $facet: {
+          data: [
+            { $skip: skip },
+            { $limit: limit }
+          ],
+          count: [{ $count: "total" }]
+        }
       }
-      return 1; // No skills match
-    };
+    ];
 
-    // Sort jobs based on match score
-    const sortedJobs = jobs
-      .map(job => ({
-        ...job.toObject(),
-        matchScore: calculateMatchScore(job.skills, skills),
-      }))
-      .sort((a, b) => b.matchScore - a.matchScore);  // Sort by match score in descending order
-
-    const totalJobs = await Jobs.countDocuments({});
+    const [result] = await Jobs.aggregate(pipeline);
+    const jobs = result.data || [];
+    const totalJobs = result.count[0]?.total || 0;
     const numOfPage = Math.ceil(totalJobs / limit);
 
     res.status(200).json({
       success: true,
       totalJobs,
-      data: sortedJobs,
+      data: jobs,
       page,
       numOfPage,
     });
@@ -739,20 +805,39 @@ export const getSavedJobs = async (req, res) => {
       return res.status(400).json({ success: false, message: "userId is required" });
     }
 
-    // find and populate likedJobs
-    const user = await Users.findById(userId)
-      .populate({
-        path: "likedJobs",
-        model: "Jobs",
-      });
+    // Use aggregation for better performance
+    const user = await Users.aggregate([
+      { $match: { _id: new mongoose.Types.ObjectId(userId) } },
+      {
+        $lookup: {
+          from: 'jobs',
+          localField: 'likedJobs',
+          foreignField: '_id',
+          as: 'likedJobs',
+          pipeline: [
+            {
+              $lookup: {
+                from: 'companies',
+                localField: 'company',
+                foreignField: '_id',
+                as: 'company',
+                pipeline: [{ $project: { password: 0 } }]
+              }
+            },
+            { $unwind: '$company' }
+          ]
+        }
+      },
+      { $project: { likedJobs: 1 } }
+    ]);
     
-    if (!user) {
+    if (!user || user.length === 0) {
       return res.status(404).json({ success: false, message: "User not found" });
     }
 
     return res.status(200).json({
       success: true,
-      savedJobs: user.likedJobs,  // now full job objects
+      savedJobs: user[0].likedJobs || [],
     });
   } catch (error) {
     console.error("Error fetching saved jobs:", error);
@@ -763,7 +848,6 @@ export const getSavedJobs = async (req, res) => {
     });
   }
 }
-
 
 export const MatchJobs = async (req, res, next) => {
   try {
