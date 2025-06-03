@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { AiOutlineSearch } from "react-icons/ai";
 import JobCard from "./component/MobJobcard";
 import FilterListIcon from "@mui/icons-material/FilterList";
+import CloseIcon from "@mui/icons-material/Close";
 //import { FaSortAmountDown } from "react-icons/fa";
 import { Grid } from "@mui/material";
 
@@ -13,7 +14,9 @@ import {
   IconButton,
   Pagination,
   Menu,
-  MenuItem
+  MenuItem,
+  Chip,
+  Stack
 } from "@mui/material";
 import { MdLocationOn } from "react-icons/md";
 import { FaSortAmountDown } from "react-icons/fa";
@@ -50,7 +53,7 @@ const mobileView = () => {
         setSort("Recommended");
         setSelectedTab(1);
         break;
-      case "Newest":             // ← handle “Newest” explicitly
+      case "Newest":             // ← handle "Newest" explicitly
         setSort("Newest");
         setSelectedTab(0);
         break;
@@ -280,7 +283,30 @@ const mobileView = () => {
     setSearchQuery(searchKeyword);
     setSearchLocationQuery(searchLocation);
     setPage(1);
-     };
+  };
+
+  // New function to clear search query
+  const handleClearSearchQuery = () => {
+    setSearchQuery("");
+    setSearchKeyword("");
+    setPage(1);
+  };
+
+  // New function to clear search location
+  const handleClearSearchLocation = () => {
+    setSearchLocationQuery("");
+    setSearchLocation("");
+    setPage(1);
+  };
+
+  // New function to clear all search terms
+  const handleClearAllSearch = () => {
+    setSearchQuery("");
+    setSearchLocationQuery("");
+    setSearchKeyword("");
+    setSearchLocation("");
+    setPage(1);
+  };
 
   const handleResetFilters = () => {
     setExperienceFilter([]);
@@ -444,6 +470,76 @@ const mobileView = () => {
               </Button>
             </Box>
           </Box>
+
+          {/* Search Result Chips - Added from desktop version */}
+          {(searchQuery || searchLocationQuery) && (
+            <Box sx={{ mt: 2, px: 2 }}>
+              <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
+                <Typography variant="body2" color="text.secondary" sx={{ mr: 1, fontSize: "0.875rem" }}>
+                  Active searches:
+                </Typography>
+                
+                {searchQuery && (
+                  <Chip
+                    label={`Title: "${searchQuery}"`}
+                    onDelete={handleClearSearchQuery}
+                    deleteIcon={<CloseIcon />}
+                    variant="outlined"
+                    color="primary"
+                    size="small"
+                    sx={{
+                      fontFamily: "Poppins",
+                      fontSize: "0.75rem",
+                      "& .MuiChip-deleteIcon": {
+                        color: "primary.main",
+                        fontSize: "16px",
+                      },
+                    }}
+                  />
+                )}
+                
+                {searchLocationQuery && (
+                  <Chip
+                    label={`Location: "${searchLocationQuery}"`}
+                    onDelete={handleClearSearchLocation}
+                    deleteIcon={<CloseIcon />}
+                    variant="outlined"
+                    color="secondary"
+                    size="small"
+                    sx={{
+                      fontFamily: "Poppins",
+                      fontSize: "0.75rem",
+                      "& .MuiChip-deleteIcon": {
+                        color: "secondary.main",
+                        fontSize: "16px",
+                      },
+                    }}
+                  />
+                )}
+                
+                {(searchQuery && searchLocationQuery) && (
+                  <Button
+                    variant="text"
+                    size="small"
+                    onClick={handleClearAllSearch}
+                    sx={{
+                      textTransform: "none",
+                      color: "text.secondary",
+                      fontSize: "0.75rem",
+                      minWidth: "auto",
+                      px: 1,
+                      "&:hover": {
+                        backgroundColor: "rgba(0, 0, 0, 0.04)",
+                      },
+                    }}
+                  >
+                    Clear all
+                  </Button>
+                )}
+              </Stack>
+            </Box>
+          )}
+
           <Box
             sx={{
               display: "flex",
