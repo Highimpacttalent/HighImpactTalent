@@ -11,6 +11,8 @@ import {
 import { AiOutlineMail, AiOutlinePlus } from "react-icons/ai";
 import { FiPhoneCall } from "react-icons/fi";
 import { HiLocationMarker } from "react-icons/hi";
+import "react-phone-number-input/style.css";
+import PhoneInput from "react-phone-number-input";
 import { useMediaQuery, useTheme } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import { useSelector, useDispatch } from "react-redux";
@@ -429,36 +431,21 @@ const UserInfoCard = () => {
 
           {/* Contact */}
           {isEditing ? (
-            <TextField
-              name="contactNumber"
-              size="small"
-              value={updatedUserInfo.contactNumber}
-              onChange={(e) => {
-                const value = e.target.value.replace(/\D/g, ""); // only digits
-                if (value.length <= 10) {
+            <PhoneInput
+                defaultCountry="IN"
+                value={updatedUserInfo.contactNumber}
+                maxLength={15} // value like "+919876543210"
+                onChange={(phone) => {
                   handleChange({
                     target: {
                       name: "contactNumber",
-                      value,
+                      value: phone, // already includes country code like +91
                     },
                   });
-                }
-              }}
-              InputProps={{
-                inputMode: "numeric",
-              }}
-              inputProps={{
-                maxLength: 10,
-                pattern: "\\d*",
-              }}
-              sx={{ width: "250px" }}
-              error={updatedUserInfo.contactNumber.length !== 10}
-              helperText={
-                updatedUserInfo.contactNumber.length !== 10
-                  ? "Contact number must be exactly 10 digits"
-                  : ""
-              }
-            />
+                }}
+                className="rounded-full px-4 py-2.5 border focus:outline-none focus:ring-2 focus:ring-blue-500"
+                style={{ borderRadius: 50, border: "1px solid #24252C" }}
+              />
           ) : (
             <Typography
               display="flex"

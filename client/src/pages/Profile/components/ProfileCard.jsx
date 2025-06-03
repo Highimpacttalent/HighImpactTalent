@@ -11,10 +11,12 @@ import {
   IconButton,
 } from "@mui/material";
 import { AiOutlineMail, AiOutlinePlus } from "react-icons/ai";
-import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import { FiPhoneCall } from "react-icons/fi";
 import { HiLocationMarker } from "react-icons/hi";
 import { useMediaQuery, useTheme } from "@mui/material";
+import "react-phone-number-input/style.css";
+import PhoneInput from "react-phone-number-input";
 import EditIcon from "@mui/icons-material/Edit";
 import { useSelector, useDispatch } from "react-redux";
 import AlertModal from "../../../components/Alerts/view.jsx";
@@ -263,11 +265,7 @@ const UserInfoCard = () => {
   }, 0);
 
   // Add 1 to count if skills exist and are not empty
-  if (
-    user.skills &&
-    Array.isArray(user.skills) &&
-    user.skills.length > 0
-  ) {
+  if (user.skills && Array.isArray(user.skills) && user.skills.length > 0) {
     filledFieldsCount += 1;
   }
 
@@ -316,11 +314,13 @@ const UserInfoCard = () => {
     }
   };
 
-   // Determine which fields are missing
+  // Determine which fields are missing
   const missingFields = profileFields
     .filter((field) => !(user[field] && user[field].toString().trim() !== ""))
-    .map((field) => field.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase()));
-  if (!user.skills?.length) missingFields.push('Skills');
+    .map((field) =>
+      field.replace(/([A-Z])/g, " $1").replace(/^./, (str) => str.toUpperCase())
+    );
+  if (!user.skills?.length) missingFields.push("Skills");
 
   const desktopView = (
     <Box
@@ -434,37 +434,21 @@ const UserInfoCard = () => {
             </Typography>
 
             {/* Contact */}
-            {/* Contact */}
             {isEditing ? (
-              <TextField
-                name="contactNumber"
-                size="small"
+              <PhoneInput
+                defaultCountry="IN"
                 value={updatedUserInfo.contactNumber}
-                onChange={(e) => {
-                  const value = e.target.value.replace(/\D/g, ""); // remove non-digits
-                  if (value.length <= 10) {
-                    handleChange({
-                      target: {
-                        name: "contactNumber",
-                        value,
-                      },
-                    });
-                  }
+                maxLength={15} // value like "+919876543210"
+                onChange={(phone) => {
+                  handleChange({
+                    target: {
+                      name: "contactNumber",
+                      value: phone, // already includes country code like +91
+                    },
+                  });
                 }}
-                InputProps={{
-                  inputMode: "numeric",
-                }}
-                inputProps={{
-                  maxLength: 10,
-                  pattern: "[0-9]*",
-                }}
-                sx={{ width: "250px" }}
-                error={updatedUserInfo.contactNumber.length !== 10}
-                helperText={
-                  updatedUserInfo.contactNumber.length !== 10
-                    ? "Contact number must be 10 digits"
-                    : ""
-                }
+                className="rounded-full px-4 py-2.5 border focus:outline-none focus:ring-2 focus:ring-blue-500"
+                style={{ borderRadius: 50, border: "1px solid #24252C" }}
               />
             ) : (
               <Typography
@@ -538,35 +522,47 @@ const UserInfoCard = () => {
           )}
         </Box>
       </Box>
-     <Box sx={{ px: 1 ,width:"300px"}}>
+      <Box sx={{ px: 1, width: "300px" }}>
         <Box
           sx={{
-            position: 'relative',
+            position: "relative",
             px: 4,
             py: 2,
             borderRadius: 4,
             border: "1px solid #00000040",
             mt: 2,
-            display: 'flex',
-            alignItems: 'center',
+            display: "flex",
+            alignItems: "center",
           }}
         >
           <Box sx={{ flex: 1 }}>
             {profileCompletion === 100 ? (
-              <Typography sx={{ fontFamily: "Poppins", fontWeight: 500, fontSize: 16 }}>
+              <Typography
+                sx={{ fontFamily: "Poppins", fontWeight: 500, fontSize: 16 }}
+              >
                 Your profile is complete and ready to land you an amazing role!
               </Typography>
             ) : (
               <>
-                <Typography sx={{ fontFamily: "Poppins", fontWeight: 500, fontSize: 14 }}>
+                <Typography
+                  sx={{ fontFamily: "Poppins", fontWeight: 500, fontSize: 14 }}
+                >
                   Your Profile is
                 </Typography>
                 <LinearProgress
                   variant="determinate"
                   value={profileCompletion}
-                  sx={{ width: '150px', height: 6, borderRadius: 4, mt: 1 }}
+                  sx={{ width: "150px", height: 6, borderRadius: 4, mt: 1 }}
                 />
-                <Typography sx={{ fontFamily: "Poppins", fontWeight: 500, fontSize: 14, mt: 1, color: '#808195' }}>
+                <Typography
+                  sx={{
+                    fontFamily: "Poppins",
+                    fontWeight: 500,
+                    fontSize: 14,
+                    mt: 1,
+                    color: "#808195",
+                  }}
+                >
                   {profileCompletion}% done
                 </Typography>
               </>
@@ -578,10 +574,14 @@ const UserInfoCard = () => {
             <Tooltip
               title={
                 <Box>
-                  <Typography variant="subtitle2" sx={{ mb: 1 }}>To reach 100%, please add:</Typography>
-                  <ul style={{ margin: 0, paddingLeft: '20px' }}>
+                  <Typography variant="subtitle2" sx={{ mb: 1 }}>
+                    To reach 100%, please add:
+                  </Typography>
+                  <ul style={{ margin: 0, paddingLeft: "20px" }}>
                     {missingFields.map((field) => (
-                      <li key={field} style={{ listStyleType: 'disc' }}>{field}</li>
+                      <li key={field} style={{ listStyleType: "disc" }}>
+                        {field}
+                      </li>
                     ))}
                   </ul>
                 </Box>
@@ -597,9 +597,7 @@ const UserInfoCard = () => {
     </Box>
   );
 
-  return (
-    <Box sx={{ width: "100%" }}>{ desktopView}</Box>
-  );
+  return <Box sx={{ width: "100%" }}>{desktopView}</Box>;
 };
 
 export default UserInfoCard;
