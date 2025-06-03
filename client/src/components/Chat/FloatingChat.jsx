@@ -281,12 +281,12 @@ const PremiumChatbot = () => {
       {open && storedUser?.email && (
         <Slide direction="up" in={open} mountOnEnter unmountOnExit>
           <Paper sx={{ 
-            width: 380, 
+            width: {md:380,lg:380,sm: 300, xs: 300}, 
             height: 520,
             boxShadow: "0 12px 48px rgba(0,0,0,0.15)",
             borderRadius: 4, 
             bgcolor: "white",
-            border: "2px solid #1976d2",
+            border: "2px solid #1976d2",  
             display: "flex",
             flexDirection: "column"
           }}>
