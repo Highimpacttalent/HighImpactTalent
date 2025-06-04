@@ -1,31 +1,26 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import {
-  Avatar,
-  Box,
-  Button,
-  CircularProgress,
-  Grid,
-  Paper,
-  Card,
+ Box,
   Typography,
+  Paper,
   IconButton,
   InputBase,
-  CardHeader,
-  Chip,
-  CardContent,
-  CardActions,
-  LinearProgress,
+  Button,
+  FormControl,
+  TextField,
+  InputLabel,
+  Select,
+  MenuItem,
+  Grid,
+  CircularProgress,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
-  Divider,
-  Select,
-  MenuItem,
-  TextField,
-  FormControl,
-  InputLabel,
+  Drawer,
+  useMediaQuery,
+  useTheme,
 } from "@mui/material";
 import { styled } from "@mui/system";
 import { AiOutlineSearch } from "react-icons/ai";
@@ -35,7 +30,10 @@ import axios from "axios";
 import { AiOutlineClose } from "react-icons/ai";
 import { LinkedIn } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
+import ApplicationCard from "./component/ApplicantsCard";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
+
+import FilterListIcon from '@mui/icons-material/FilterList';
 
 const computeMatchScore = (job, applicant) => {
   // Weights
@@ -183,7 +181,10 @@ const JobApplications = () => {
   const [openBreakdownId, setOpenBreakdownId] = useState(null);
   const [breakdownDialogOpen, setBreakdownDialogOpen] = useState(false);
   const [selectedBreakdown, setSelectedBreakdown] = useState("");
-  
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const [drawerOpen, setDrawerOpen] = useState(false);
+
   // Filter states (moved from ViewAnalytics)
   const [filters, setFilters] = useState({
     experience: "",
@@ -307,6 +308,8 @@ const JobApplications = () => {
       console.error("Error marking application as viewed:", err);
     }
   };
+  
+  
 
   // Handle filter changes (from ViewAnalytics)
   const handleFilterChange = (e) => {
@@ -352,34 +355,88 @@ const JobApplications = () => {
     setFilteredApps(applications);
   };
 
+  const FiltersContent = (
+    <Box sx={{ p: 2, width: isMobile ? 250 : 'auto' }}>
+      <Typography variant="h6" sx={{ mb: 2 }}>Filters</Typography>
+      <FormControl fullWidth sx={{ mb: 2 }}>
+        <TextField
+          label="Current Job"
+          name="currentJob"
+          value={filters.currentJob}
+          onChange={handleFilterChange}
+          placeholder="Enter job title..."
+          size="small"
+        />
+      </FormControl>
+      <FormControl fullWidth sx={{ mb: 2 }}>
+        <InputLabel>Experience</InputLabel>
+        <Select
+          name="experience"
+          value={filters.experience}
+          onChange={handleFilterChange}
+          label="Experience"
+          size="small"
+        >
+          <MenuItem value="">All</MenuItem>
+          <MenuItem value={1}>1+ years</MenuItem>
+          <MenuItem value={3}>3+ years</MenuItem>
+          <MenuItem value={5}>5+ years</MenuItem>
+        </Select>
+      </FormControl>
+      <FormControl fullWidth sx={{ mb: 2 }}>
+        <InputLabel>Join Consulting</InputLabel>
+        <Select
+          name="joinConsulting"
+          value={filters.joinConsulting}
+          onChange={handleFilterChange}
+          label="Join Consulting"
+          size="small"
+        >
+          <MenuItem value="">All</MenuItem>
+          <MenuItem value="Lateral">Lateral</MenuItem>
+          <MenuItem value="Out of Campus">Out of Campus</MenuItem>
+        </Select>
+      </FormControl>
+      <FormControl fullWidth sx={{ mb: 2 }}>
+        <InputLabel>Open to Relocate</InputLabel>
+        <Select
+          name="openToRelocate"
+          value={filters.openToRelocate}
+          onChange={handleFilterChange}
+          label="Open to Relocate"
+          size="small"
+        >
+          <MenuItem value="">All</MenuItem>
+          <MenuItem value="yes">Yes</MenuItem>
+          <MenuItem value="no">No</MenuItem>
+        </Select>
+      </FormControl>
+      <Box sx={{ display: 'flex', gap: 1 }}>
+        <Button variant="contained" fullWidth onClick={applyFilters}>
+          Apply
+        </Button>
+        <Button variant="outlined" fullWidth onClick={clearFilters}>
+          Clear
+        </Button>
+      </Box>
+    </Box>
+  );
+
   return (
-    <Box sx={{ bgcolor: "white", p: 4 }}>
+    <Box sx={{ bgcolor: 'white', p: { xs: 2, md: 4 } }}>
       <Typography
         sx={{
-          textAlign: "center",
-          mt: 2,
-          color: "#24252C",
-          fontFamily: "Satoshi",
-          mb: 4,
-          fontWeight: 700,
-          fontSize: "30px",
+          textAlign: 'center', mt: 2, color: '#24252C', fontFamily: 'Satoshi',
+          mb: 4, fontWeight: 700, fontSize: '30px',
         }}
       >
         Job Applications
       </Typography>
 
-      {loading && (
-        <CircularProgress sx={{ display: "block", margin: "20px auto" }} />
-      )}
-      {error && (
-        <Typography color="error" align="center">
-          {error}
-        </Typography>
-      )}
+      {loading && <CircularProgress sx={{ display: 'block', m: '20px auto' }} />}
+      {error && <Typography color="error" align="center">{error}</Typography>}
       {!loading && !error && applications.length === 0 && (
-        <Typography align="center">
-          No applications found for this job.
-        </Typography>
+        <Typography align="center">No applications found for this job.</Typography>
       )}
 
       <Box sx={{ p: 0 }}>
@@ -387,123 +444,38 @@ const JobApplications = () => {
       </Box>
 
       {/* Main content */}
-      <Box sx={{ display: "flex", mt: 4 }}>
-        {/* Left side - Filters */}
-        <Box sx={{ width: "25%", pr: 2 }}>
-          <Paper sx={{ padding: 3, boxShadow: 3, borderRadius: 2 }}>
-            <Typography
-              variant="h6"
-              sx={{ fontWeight: "bold", marginBottom: 2 }}
-            >
-              Filters
-            </Typography>
-
-            <FormControl fullWidth sx={{ marginBottom: 2 }}>
-              <TextField
-                label="Current Job"
-                name="currentJob"
-                value={filters.currentJob}
-                onChange={handleFilterChange}
-                placeholder="Enter job title..."
-              />
-            </FormControl>
-
-            <FormControl fullWidth sx={{ marginBottom: 2 }}>
-              <InputLabel>Experience</InputLabel>
-              <Select
-                name="experience"
-                value={filters.experience}
-                onChange={handleFilterChange}
-                label="Experience"
-              >
-                <MenuItem value="">All</MenuItem>
-                <MenuItem value={1}>1+ years</MenuItem>
-                <MenuItem value={3}>3+ years</MenuItem>
-                <MenuItem value={5}>5+ years</MenuItem>
-              </Select>
-            </FormControl>
-
-            <FormControl fullWidth sx={{ marginBottom: 2 }}>
-              <InputLabel>Join Consulting</InputLabel>
-              <Select
-                name="joinConsulting"
-                value={filters.joinConsulting}
-                onChange={handleFilterChange}
-                label="Join Consulting"
-              >
-                <MenuItem value="">All</MenuItem>
-                <MenuItem value={"Lateral"}>Lateral</MenuItem>
-                <MenuItem value={"Out of Campus"}>Out of Campus</MenuItem>
-              </Select>
-            </FormControl>
-
-            <FormControl fullWidth sx={{ marginBottom: 2 }}>
-              <InputLabel>Open to Relocate</InputLabel>
-              <Select
-                name="openToRelocate"
-                value={filters.openToRelocate}
-                onChange={handleFilterChange}
-                label="Open to Relocate"
-              >
-                <MenuItem value="">All</MenuItem>
-                <MenuItem value={"yes"}>Yes</MenuItem>
-                <MenuItem value={"no"}>No</MenuItem>
-              </Select>
-            </FormControl>
-
-            <Box sx={{ display: "flex", gap: 2 }}>
-              <Button
-                variant="contained"
-                color="primary"
-                fullWidth
-                onClick={applyFilters}
-              >
-                Apply Filters
-              </Button>
-              <Button
-                variant="outlined"
-                color="primary"
-                fullWidth
-                onClick={clearFilters}
-              >
-                Clear
-              </Button>
-            </Box>
-          </Paper>
+      <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, mt: 4 }}>
+        {/* Filters */}
+        <Box sx={{ width: { xs: '100%', md: '25%' }, pr: { md: 2 }, mb: { xs: 2, md: 0 } }}>
+          {isMobile ? (
+            <IconButton onClick={() => setDrawerOpen(true)} sx={{bgcolor: 'grey.300', borderRadius: 2, p: 0.5,ml:2, boxShadow: 3}}>
+              <FilterListIcon /> <span style={{fontFamily:"Poppins",fontSize:16,fontWeight:500}}>Filters</span>
+            </IconButton>
+          ) : (
+            <Paper sx={{ p: 2, boxShadow: 3, borderRadius: 2 }}>{FiltersContent}</Paper>
+          )}
+          <Drawer anchor="left" open={drawerOpen} onClose={() => setDrawerOpen(false)}>
+            {FiltersContent}
+          </Drawer>
         </Box>
 
-        {/* Right side - Search & Applications */}
-        <Box sx={{ width: "75%" }}>
-          {/* Search Bar */}
+        {/* Search & Applications */}
+        <Box sx={{ width: { xs: '100%', md: '75%' } }}>
           <Paper
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              p: 1,
-              borderRadius: "50px",
-              boxShadow: 3,
-              width: "100%",
-              mb: 3,
-            }}
+            sx={{ display: 'flex', alignItems: 'center', p: 1,
+                  borderRadius: '50px', boxShadow: 3, mb: { xs: 2, md: 3 } }}
           >
-            <IconButton sx={{ color: "gray" }}>
-              <AiOutlineSearch fontSize="24px" />
-            </IconButton>
+            <IconButton sx={{ color: 'gray' }}><AiOutlineSearch /></IconButton>
             <InputBase
-              sx={{ flex: 1, fontSize: "1.1rem", ml: 1 }}
-              placeholder="Tell us what kind of candidate you're searching for and our AI powered search will find the best match..."
+              sx={{ flex: 1, ml: 1, fontSize: '1.1rem' }}
+              placeholder="Tell us what kind of candidate you're searching for..."
               value={searchKeyword}
               onChange={(e) => setSearchKeyword(e.target.value)}
             />
-            {/* Cross icon appears only if search is active */}
             {searchKeyword && (
-              <IconButton
-                onClick={restoreSearch}
-              >
-                <AiOutlineClose fontSize="20px" />
-              </IconButton>
+              <IconButton onClick={restoreSearch}><AiOutlineClose /></IconButton>
             )}
-            <Button
+           <Button
               variant="contained"
               sx={{
                 borderRadius: "50px",
@@ -522,218 +494,28 @@ const JobApplications = () => {
             </Button>
           </Paper>
 
-          {/* Applications Grid */}
-          {!loading && !error && applications.length > 0 && (
-            <Grid container spacing={2}>
-              {filteredApps.map((app) => (
-                <Grid item xs={12} sm={6} md={4} key={app._id}>
-                  <Card
-                    sx={{
-                      display: "flex",
-                      flexDirection: "column",
-                      height: "100%",
-                      borderRadius: 2,
-                      boxShadow: 3,
-                    }}
-                  >
-                    {/* Header: Avatar, Name, Match Chip + Donut */}
-                    <CardHeader
-                      avatar={
-                        <Avatar
-                          src={app.applicant.profileUrl}
-                          sx={{ width: 56, height: 56 }}
-                        />
-                      }
-                      title={
-                        <Typography variant="subtitle1" fontWeight="600">
-                          {app.applicant.firstName} {app.applicant.lastName}
-                        </Typography>
-                      }
-                      subheader={
-                        <Box
-                          sx={{ display: "flex", alignItems: "center", gap: 1 }}
-                        >
-                          {/* Donut */}
-                          <Box position="relative" display="inline-flex">
-                            <CircularProgress
-                              variant="determinate"
-                              value={app.matchScore}
-                              size={40}
-                              thickness={4}
-                              sx={{
-                                color:
-                                  app.matchScore > 75
-                                    ? "success.main"
-                                    : app.matchScore > 50
-                                    ? "warning.main"
-                                    : "error.main",
-                              }}
-                            />
-                            <Box
-                              top={0}
-                              left={0}
-                              bottom={0}
-                              right={0}
-                              position="absolute"
-                              display="flex"
-                              alignItems="center"
-                              justifyContent="center"
-                            >
-                              <Typography variant="caption" fontWeight="700">
-                                {app.matchScore}%
-                              </Typography>
-                            </Box>
-                          </Box>
+          <Grid container spacing={2}>
+            {filteredApps.map((app) => (
+              <Grid item xs={12} key={app._id}>
+                <ApplicationCard
+                  app={app}
+                  setSelectedBreakdown={setSelectedBreakdown}
+                  setBreakdownDialogOpen={setBreakdownDialogOpen}
+                  navigate={navigate}
+                  markAsViewed={markAsViewed}
+                />
+              </Grid>
+            ))}
+          </Grid>
 
-                          {/* Chip */}
-                          <Chip
-                            label={
-                              app.matchScore > 75
-                                ? "Excellent Fit"
-                                : app.matchScore > 50
-                                ? "Good Fit"
-                                : "Fair Fit"
-                            }
-                            size="small"
-                            sx={{
-                              bgcolor:
-                                app.matchScore > 75
-                                  ? "success.light"
-                                  : app.matchScore > 50
-                                  ? "warning.light"
-                                  : "error.light",
-                              color:
-                                app.matchScore > 75
-                                  ? "success.dark"
-                                  : app.matchScore > 50
-                                  ? "warning.dark"
-                                  : "error.dark",
-                              fontWeight: 600,
-                            }}
-                          />
-                        </Box>
-                      }
-                      action={
-                        <IconButton
-                          aria-label="Match breakdown"
-                          onClick={() => {
-                            setSelectedBreakdown(app.matchBreakdown);
-                            setBreakdownDialogOpen(true);
-                          }}
-                        >
-                          <InfoOutlinedIcon />
-                        </IconButton>
-                      }
-                    />
-
-                    {/* Body: Key Details */}
-                    <CardContent sx={{ flexGrow: 1, pt: 0 }}>
-                      <Typography variant="body2" gutterBottom>
-                        <strong>Experience:</strong> {app.applicant.experience}{" "}
-                        yrs
-                      </Typography>
-                      <Typography variant="body2" gutterBottom>
-                        <strong>Relocate:</strong>{" "}
-                        {app.applicant.openToRelocate}
-                      </Typography>
-                      <Typography variant="body2" gutterBottom>
-                        <strong>Join Consulting:</strong>{" "}
-                        {app.applicant.joinConsulting}
-                      </Typography>
-                      <Typography
-                        variant="body2"
-                        display="flex"
-                        alignItems="center"
-                      >
-                        <strong>LinkedIn:</strong>
-                        <IconButton
-                          size="small"
-                          href={app.applicant.linkedinLink}
-                          target="_blank"
-                          sx={{ ml: 0.5 }}
-                        >
-                          <LinkedIn fontSize="small" />
-                        </IconButton>
-                      </Typography>
-                    </CardContent>
-
-                    {/* Actions */}
-                    <CardActions sx={{ justifyContent: "center", pb: 2 }}>
-                      <Button
-                        variant="contained"
-                        role="link"
-                        color="primary"
-                        sx={{
-                          borderRadius: 16,
-                          px: 2,
-                          py: 1,
-                          fontFamily: "Satoshi",
-                          textTransform: "none",
-                        }}
-                        size="small"
-                        onClick={async () => {
-                          if (app.status === "Applied") {
-                            try {
-                              // Mark the application as viewed
-                              await markAsViewed(app._id);
-                        
-                              // Navigate to the profile view
-                              navigate("/view-profile", {
-                                state: { applicant: app.applicant, status: app.status, applicationId: app._id },
-                              });
-                            } catch (error) {
-                              console.error("Error marking application as viewed:", error);
-                              alert("An error occurred while marking the application as viewed.");
-                            }
-                          } else {
-                            // If the status is not 'Applied', just navigate
-                            navigate("/view-profile", {
-                              state: { applicant: app.applicant, status: app.status, applicationId: app._id },
-                            });
-                          }
-                        }}
-                      >
-                        View Profile
-                      </Button>
-                      <Button
-                        variant="contained"
-                        role="link"
-                        color="primary"
-                        sx={{
-                          borderRadius: 16,
-                          px: 2,
-                          py: 1,
-                          fontFamily: "Satoshi",
-                          textTransform: "none",
-                        }}
-                        size="small"
-                        onClick={async () => {
-                          await markAsViewed(app._id); // Mark the application as viewed
-                          window.open(app.applicant.cvUrl, "_blank"); // Open resume in new tab
-                        }}
-                      >
-                        View Resume
-                      </Button>
-                    </CardActions>
-                  </Card>
-                </Grid>
-              ))}
-            </Grid>
-          )}
-          
-          {/* Show message when no results after filtering */}
-          {!loading && !error && filteredApps.length === 0 && applications.length > 0 && (
-            <Box sx={{ textAlign: "center", mt: 4, p: 3, bgcolor: "#f5f5f5", borderRadius: 2 }}>
+          {(!loading && !error && filteredApps.length === 0 && applications.length > 0) && (
+            <Box sx={{ textAlign: 'center', mt: 4, p: 3,
+                       bgcolor: '#f5f5f5', borderRadius: 2 }}>
               <Typography variant="h6">No matching applications found</Typography>
-              <Typography variant="body2" color="textSecondary" sx={{ mt: 1 }}>
+              <Typography variant="body2" sx={{ mt: 1 }}>
                 Try adjusting your filters or search criteria
               </Typography>
-              <Button 
-                variant="outlined" 
-                color="primary" 
-                sx={{ mt: 2 }}
-                onClick={clearFilters}
-              >
+              <Button variant="outlined" sx={{ mt: 2 }} onClick={clearFilters}>
                 Clear All Filters
               </Button>
             </Box>
@@ -750,21 +532,12 @@ const JobApplications = () => {
       >
         <DialogTitle>Match Score Breakdown</DialogTitle>
         <DialogContent dividers>
-          <Typography
-            component="pre"
-            variant="body2"
-            sx={{
-              whiteSpace: "pre-wrap",
-              fontFamily: "monospace",
-            }}
-          >
+          <Typography component="pre" variant="body2" sx={{ whiteSpace: 'pre-wrap', fontFamily: 'monospace' }}>
             {selectedBreakdown}
           </Typography>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setBreakdownDialogOpen(false)}>
-            Close
-          </Button>
+          <Button onClick={() => setBreakdownDialogOpen(false)}>Close</Button>
         </DialogActions>
       </Dialog>
     </Box>
