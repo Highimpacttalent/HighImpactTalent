@@ -840,133 +840,219 @@ function cosineSimilarity(vecA, vecB) {
 }
 // --- End Cosine Similarity Helper ---
 
-
-// Optimized AI-Based Resume Filtering - Single Prompt, No Skill Matching
+// AI Based resume filtering - Now includes Skill Matching
 export const analyseIdealCandidate = async (req, res) => {
   try {
-    const { jobDescription } = req.body;
+    const { jobDescription, skills: bodySkills = [] } = req.body;
 
-    // Input validation
     if (!jobDescription || typeof jobDescription !== "string") {
       return res.status(400).json({
         success: false,
-        message: "Invalid input: 'jobDescription' (string) is required."
+        message: "Invalid input: 'jobDescription' (string) is required in the request body.",
       });
     }
 
-    // Single comprehensive prompt for both filtering and candidate ranking
-    const comprehensivePrompt = `
-You are an expert recruitment AI. Analyze the job description and provide structured filtering criteria AND rank candidates from our database in a single response.
+    // validate that bodySkills is an array of strings
+    if (!Array.isArray(bodySkills) || !bodySkills.every(s => typeof s === 'string')) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid input: 'skills' must be an array of strings.",
+      });
+    }
 
-JOB DESCRIPTION:
-"""${jobDescription.trim()}"""
+    // --- STEP 1: Get Structured Filters using Gemini ---
 
-TASK 1 - Extract filtering criteria as JSON:
-{
-  "minimumYearsExperience": number | null,
-  "isTopCompaniesRequired": boolean,
-  "isTopInstitutesRequired": boolean,
-  "requiresConsultingBackground": boolean,
-  "requiredLocation": string | null,
-  "requiredCompanies": string[],
-  "requiredInstitutes": string[],
-  "jobLevel": "entry" | "mid" | "senior" | "executive",
-  "industryPreference": string | null,
-  "functionalArea": string | null
-}
+    // Define the structure of the data we want to extract
+     const outputStructureDescription = {
+      minimumYearsExperience: "number | null (minimum years of professional experience required. If a range is given, use the lower bound. Use null if no specific minimum number is mentioned.)",
+      isTopCompaniesRequired: "boolean (true if the JD explicitly requires or strongly prefers candidates from 'top-tier', 'tier-1', 'leading', 'renowned', or generally recognized 'top' companies/organizations, OR requires experience specifically gained at such top-tier *types* of organizations like 'Tier-1 consulting firm'. False otherwise.)",
+      isTopInstitutesRequired: "boolean (true if the JD explicitly requires or strongly prefers candidates from 'top-tier', 'tier-1', 'leading', 'renowned', or generally recognized 'top' academic institutions. False otherwise.)",
+      requiresConsultingBackground: "boolean (true if the JD explicitly requires or strongly prefers candidates with a background in consulting, management consulting, strategy consulting, etc. False otherwise.)",
+      requiredLocation: "string | null (The primary required location for the role (e.g., 'New York, NY', 'Remote', 'India', 'USA'). Use null if the location is not specified or is highly flexible/global.)",
+      requiredCompanies: "string[] (An array of specific company names explicitly required or strongly preferred by the JD as work experience. Empty array if none are explicitly listed as requirements.)",
+      requiredInstitutes: "string[] (An array of specific academic institution names explicitly required or strongly preferred by the JD as education. Empty array if none are explicitly listed as requirements.)",
+    };
 
-TASK 2 - Generate optimized search query for candidate database:
-Provide a search query string that can be used with Elasticsearch/database search to find matching candidates. Focus on keywords, titles, and critical requirements.
+     const filterPrompt = `
+    You are an expert recruitment AI focused on extracting specific, structured candidate filtering criteria from job descriptions. Your task is to analyze the job description and identify boolean or numerical filtering values, as well as lists of required names, that correspond to common fields in a candidate database.
 
-TASK 3 - Provide ranking criteria:
-List the top 5 factors in order of importance for ranking candidates for this role.
+    Analyze the following job description:
 
-FORMAT YOUR RESPONSE AS:
-FILTERS: [JSON object from Task 1]
-SEARCH_QUERY: [Search query string from Task 2]  
-RANKING_CRITERIA: [Numbered list from Task 3]
+    """${jobDescription.trim()}"""
+
+    Based on this job description, extract the criteria required for initial candidate screening. Ensure the output strictly adheres to the JSON structure described below.
+
+    **Output Keys and Value Types:**
+    ${Object.entries(outputStructureDescription).map(([key, desc]) => `- "${key}": ${desc}`).join("\n")}
+
+    **Extraction Rules:**
+    1.  **minimumYearsExperience**: Identify the minimum number of years of *professional* work experience required. If a range is specified (e.g., "6-8 years"), use the lower number (e.g., 6). If the JD mentions experience without a specific minimum number (e.g., "relevant experience", "experience is a plus") or doesn't mention experience minimums at all, set this value to \`null\`.
+    2.  **isTopCompaniesRequired**: Set to \`true\` only if the JD uses terms like "top-tier", "Tier-1", "leading", "renowned", "top", or similar phrasing indicating a requirement for candidates coming from highly regarded *companies* or *organizations*. This is also \`true\` if the JD requires experience specifically gained at a top-tier *type* of organization (e.g., "experience at a Tier-1 investment bank", "Tier-1 consulting background"). Otherwise, set to \`false\`.
+    3.  **isTopInstitutesRequired**: Set to \`true\` only if the JD explicitly states a preference for or requirement of candidates who attended "top-tier", "Tier-1", "leading", "renowned", "top", or similar phrasing indicating a requirement for high-status academic institutions (universities, colleges, business schools). Otherwise, set to \`false\`.
+    4.  **requiresConsultingBackground**: Set to \`true\` only if the JD explicitly mentions that a background in management consulting, strategy consulting, or similar consulting roles is required or strongly preferred. Otherwise, set to \`false\`.
+    5.  **requiredLocation**: Extract the primary geographical location mentioned for the role (e.g., city, state, country, "Remote", "Hybrid"). If no specific location is stated, or if the role is explicitly location-flexible or global without a primary hub, set this value to \`null\`.
+    6.  **requiredCompanies**: Extract and list as strings in an array any *specific* company names that the JD explicitly states candidates *must* have experience from or are *strongly preferred* to have experience from. Look for phrasing like "experience at X or Y", "must have worked at Z". If no specific companies are explicitly named as requirements, return an empty array \`[]\`.
+    7.  **requiredInstitutes**: Extract and list as strings in an array any *specific* academic institution names that the JD explicitly states candidates *must* have degrees from or are *strongly preferred* to have degrees from. Look for phrasing like "degree from X or Y", "MBA from Z". If no specific institutes are explicitly named as requirements, return an empty array \`[]\`.
+    8.  **Distinction Clarification**: The 'isTopCompaniesRequired' and 'isTopInstitutesRequired' booleans are about the general prestige tier, while 'requiredCompanies' and 'requiredInstitutes' are *only* about specific names listed. Prioritize extracting specific names into the arrays if they are present. A JD might require both (e.g., "MBA from a top-tier school like Harvard or Stanford"). In this case, isTopInstitutesRequired should be true, and requiredInstitutes should be \`["Harvard", "Stanford"]\`. If it just says "MBA from a top-tier school" without naming them, isTopInstitutesRequire should be true, and requiredInstitutes should be \`[]\`.
+    9.  **Do NOT** extract a list of general skills (like "communication", "leadership") or specific job titles beyond identifying the overall role type if relevant to other filters.
+    10. **Output STRICTLY and ONLY** the JSON object. No additional text, comments, or markdown formatting outside the JSON object.
+
+    **Output Format:**
+    {
+      "minimumYearsExperience": null | number,
+      "isTopCompaniesRequired": boolean,
+      "isTopInstitutesRequired": boolean,
+      "requiresConsultingBackground": boolean,
+      "requiredLocation": null | string,
+      "requiredCompanies": string[],
+      "requiredInstitutes": string[]
+    }
     `;
 
-    let parsedResponse = null;
-    let searchQuery = "";
-    let rankingCriteria = [];
-
+    let parsedFilters = null;
     try {
-      // Single API call to Gemini
-      const geminiResponse = await axios.post(
+      const geminiFilterResponse = await axios.post(
         `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`,
-        { 
-          contents: [{ 
-            role: "user", 
-            parts: [{ text: comprehensivePrompt }] 
-          }] 
-        },
+        { contents: [{ role: "user", parts: [{ text: filterPrompt }] }] },
         { headers: { "Content-Type": "application/json" } }
       );
 
-      const rawResponse = geminiResponse.data?.candidates?.[0]?.content?.parts?.[0]?.text || "";
-      
-      // Parse the structured response
-      const filtersMatch = rawResponse.match(/FILTERS:\s*({[^}]*})/s);
-      const searchQueryMatch = rawResponse.match(/SEARCH_QUERY:\s*([^\n]+)/);
-      const rankingMatch = rawResponse.match(/RANKING_CRITERIA:\s*([\s\S]*?)(?=\n\n|$)/);
+      const rawFilterText = geminiFilterResponse.data?.candidates?.[0]?.content?.parts?.[0]?.text || "";
+      const jsonFilterText = rawFilterText.replace(/^```json\s*/, "").replace(/\s*```$/, "").trim();
 
-      if (filtersMatch) {
-        parsedResponse = JSON.parse(filtersMatch[1]);
-      }
-      
-      if (searchQueryMatch) {
-        searchQuery = searchQueryMatch[1].trim();
-      }
-      
-      if (rankingMatch) {
-        rankingCriteria = rankingMatch[1].trim().split('\n').filter(line => line.trim());
+      // Basic validation and parsing for filters
+      parsedFilters = JSON.parse(jsonFilterText);
+      const expectedKeys = [
+          'minimumYearsExperience', 'isTopCompaniesRequired',
+          'isTopInstitutesRequired', 'requiresConsultingBackground',
+          'requiredLocation', 'requiredCompanies', 'requiredInstitutes'
+      ];
+      const hasAllExpectedKeys = expectedKeys.every(key => key in parsedFilters);
+
+      if (parsedFilters === null || typeof parsedFilters !== 'object' || !hasAllExpectedKeys) {
+         console.error("Gemini returned non-matching JSON for filters:", jsonFilterText);
+         // If parsing fails but doesn't throw, set filters to a default structure
+         parsedFilters = {
+           minimumYearsExperience: null,
+            isTopCompaniesRequired: false,
+            isTopInstitutesRequired: false,
+            requiresConsultingBackground: false,
+            requiredLocation: null,
+            requiredCompanies: [], // Default empty array
+            requiredInstitutes: [] // Default empty array
+         };
       }
 
-    } catch (parseError) {
-      console.error("Error parsing Gemini response:", parseError.message);
-      // Fallback to default values
-      parsedResponse = {
-        minimumYearsExperience: null,
-        isTopCompaniesRequired: false,
-        isTopInstitutesRequired: false,
-        requiresConsultingBackground: false,
-        requiredLocation: null,
-        requiredCompanies: [],
-        requiredInstitutes: [],
-        jobLevel: "mid",
-        industryPreference: null,
-        functionalArea: null
-      };
-      searchQuery = jobDescription.slice(0, 100); // Fallback search
+    } catch (filterErr) {
+        console.error("Error getting structured filters from Gemini:", filterErr.message);
+        // If API call fails, return default filter values
+        parsedFilters = {
+           minimumYearsExperience: null,
+           isTopCompaniesRequired: false,
+           isTopInstitutesRequired: false,
+           requiresConsultingBackground: false,
+           requiredLocation: null
+        };
     }
 
-    // Optimized candidate filtering and ranking
+
+    // --- STEP 2: Find Relevant Skills using Embeddings ---
+
+    let relevantSkills = []; // Array to store the matching skills
+    const SIMILARITY_THRESHOLD = 0.6; // You can adjust this threshold
+    const TOP_N_SKILLS = 30; // Number of top skills to consider before thresholding
+
+    try {
+        const skillEmbeddings = await loadSkillEmbeddings();
+
+        if (skillEmbeddings.length > 0) {
+            // Generate embedding for the Job Description using Gemini's embedding model
+            const embeddingModelName = 'embedding-001'; // Or 'text-embedding-004'
+            const jdEmbeddingResponse = await axios.post(
+              `https://generativelanguage.googleapis.com/v1beta/models/${embeddingModelName}:embedContent?key=${GEMINI_API_KEY}`,
+              {
+                model: embeddingModelName,
+                content: { parts: [{ text: jobDescription.trim() }] }
+              },
+              { headers: { "Content-Type": "application/json" } }
+            );
+
+            const jdEmbedding = jdEmbeddingResponse.data?.embedding?.values;
+            if (!jdEmbedding || jdEmbedding.length === 0) {
+              console.error("Failed to generate embedding for job description.");
+            } else {
+              const skillScores = [];
+
+              // Calculate similarity with each skill embedding
+              for (const skillData of skillEmbeddings) {
+                  const skillEmbedding = skillData.embedding;
+                  if (skillEmbedding && skillEmbedding.length === jdEmbedding.length) { // Ensure dimensions match
+                      const score = cosineSimilarity(jdEmbedding, skillEmbedding);
+                      skillScores.push({ skill: skillData.skill, score: score });
+                  }
+              }
+
+              // Sort by score descending and filter by threshold
+              relevantSkills = skillScores
+                  .sort((a, b) => b.score - a.score)
+                  .slice(0, TOP_N_SKILLS) // Optional: Take top N before applying threshold
+                  .filter(item => item.score >= SIMILARITY_THRESHOLD)
+                  .map(item => item.skill); // Extract just the skill name
+            }
+        } else {
+            console.warn("Skill embeddings not loaded or empty. Skipping skill matching.");
+        }
+
+    } catch (skillMatchingError) {
+        console.error("Error during skill matching:", skillMatchingError.message);
+        // Continue without relevantSkills if matching fails
+    }
+
+    // Remove duplicates by using a Set
+    const combinedSkills = Array.from(new Set([
+      ...relevantSkills,
+      ...bodySkills.map(s => s.trim()).filter(s => s.length > 0)
+    ]));
+
+    // --- STEP 3: Filter and Rank Candidates using the Utility Function ---
     let recommendedCandidates = [];
     try {
-      recommendedCandidates = await optimizedCandidateSearch(parsedResponse, searchQuery, rankingCriteria);
-    } catch (searchError) {
-      console.error("Error during candidate search:", searchError.message);
-      return res.status(500).json({
-        success: false,
-        message: "Failed to search candidates.",
-        error: searchError.message
-      });
+        // Pass the obtained filters and relevantSkills to the utility function
+        recommendedCandidates = await filterAndRankCandidates(parsedFilters, combinedSkills);
+        console.log(`Successfully filtered and ranked ${recommendedCandidates.length} candidates.`);
+
+    } catch (candidateFilteringError) {
+        console.error("Error during candidate filtering and ranking:", candidateFilteringError);
+        // Return an empty array or an error response if filtering fails
+        return res.status(500).json({
+          success: false,
+          message: "Failed to filter and rank candidates.",
+          error: candidateFilteringError.message
+        });
     }
 
-    // Return comprehensive results
+    // --- STEP 3: Combine and Return Results ---
+
+    // --- STEP 4: Return the Filtered and Ranked Candidates ---
     return res.status(200).json({
       success: true,
-      filters: parsedResponse,
-      searchQuery: searchQuery,
-      rankingCriteria: rankingCriteria,
-      totalCandidates: recommendedCandidates.length,
-      recommendedCandidates: recommendedCandidates.slice(0, 50), // Limit to top 50
-      processingTime: Date.now() - req.startTime // Add timing if needed
+      filters: parsedFilters, // Still return the extracted filters for context
+      relevantSkills: relevantSkills, // Still return the matched skills for context
+      recommendedCandidates: recommendedCandidates // The final list of candidates
     });
 
   } catch (err) {
+    // Catch-all for unexpected errors
     console.error("Unexpected error in analyseIdealCandidate:", err.message);
+    if (err.response) {
+        console.error("API error response data:", err.response.data);
+        console.error("API error response status:", err.response.status);
+    } else if (err.request) {
+        console.error("API request error:", err.request);
+    } else {
+        console.error("Other error details:", err);
+    }
+
     return res.status(500).json({
       success: false,
       message: "Failed to analyse job description.",
@@ -974,252 +1060,3 @@ RANKING_CRITERIA: [Numbered list from Task 3]
     });
   }
 };
-
-// Optimized candidate search function
-async function optimizedCandidateSearch(filters, searchQuery, rankingCriteria) {
-  try {
-    // Build Elasticsearch query for optimal performance
-    const esQuery = {
-      index: 'candidates',
-      body: {
-        query: {
-          bool: {
-            must: [
-              // Full-text search on resume content
-              {
-                multi_match: {
-                  query: searchQuery,
-                  fields: [
-                    'resume_text^3',      // Higher boost for resume content
-                    'job_titles^2',       // Medium boost for job titles
-                    'skills',             // Standard boost for skills
-                    'company_names',
-                    'education'
-                  ],
-                  type: 'best_fields',
-                  fuzziness: 'AUTO'
-                }
-              }
-            ],
-            filter: buildElasticsearchFilters(filters),
-            should: buildBoostingQueries(filters, rankingCriteria)
-          }
-        },
-        sort: [
-          { _score: { order: 'desc' } },
-          { last_active: { order: 'desc' } },
-          { profile_completeness: { order: 'desc' } }
-        ],
-        size: 100, // Fetch top 100 candidates
-        _source: {
-          includes: [
-            'id', 'name', 'email', 'phone', 'current_role', 
-            'total_experience', 'current_company', 'location',
-            'key_skills', 'education', 'last_active', 'match_score'
-          ]
-        }
-      }
-    };
-
-    // Execute search (pseudo-code - replace with your ES client)
-    const searchResults = await elasticsearchClient.search(esQuery);
-    
-    // Process and score results
-    const processedCandidates = searchResults.body.hits.hits.map(hit => {
-      const candidate = hit._source;
-      const matchScore = calculateAdvancedMatchScore(candidate, filters, rankingCriteria);
-      
-      return {
-        ...candidate,
-        relevanceScore: hit._score,
-        matchScore: matchScore,
-        combinedScore: (hit._score * 0.6) + (matchScore * 0.4)
-      };
-    });
-
-    // Sort by combined score
-    return processedCandidates.sort((a, b) => b.combinedScore - a.combinedScore);
-
-  } catch (error) {
-    console.error("Error in optimized candidate search:", error);
-    throw error;
-  }
-}
-
-// Build Elasticsearch filters for precise matching
-function buildElasticsearchFilters(filters) {
-  const esFilters = [];
-
-  // Experience filter
-  if (filters.minimumYearsExperience !== null) {
-    esFilters.push({
-      range: {
-        total_experience: {
-          gte: filters.minimumYearsExperience
-        }
-      }
-    });
-  }
-
-  // Location filter
-  if (filters.requiredLocation) {
-    esFilters.push({
-      match: {
-        location: {
-          query: filters.requiredLocation,
-          fuzziness: 'AUTO'
-        }
-      }
-    });
-  }
-
-  // Specific companies filter
-  if (filters.requiredCompanies && filters.requiredCompanies.length > 0) {
-    esFilters.push({
-      terms: {
-        'company_names.keyword': filters.requiredCompanies
-      }
-    });
-  }
-
-  // Specific institutes filter
-  if (filters.requiredInstitutes && filters.requiredInstitutes.length > 0) {
-    esFilters.push({
-      terms: {
-        'education_institutes.keyword': filters.requiredInstitutes
-      }
-    });
-  }
-
-  // Job level filter
-  if (filters.jobLevel) {
-    esFilters.push({
-      match: {
-        seniority_level: filters.jobLevel
-      }
-    });
-  }
-
-  return esFilters;
-}
-
-// Build boosting queries for better ranking
-function buildBoostingQueries(filters, rankingCriteria) {
-  const boostQueries = [];
-
-  // Boost top companies if required
-  if (filters.isTopCompaniesRequired) {
-    boostQueries.push({
-      match: {
-        is_top_tier_company: true
-      },
-      boost: 2.0
-    });
-  }
-
-  // Boost top institutes if required
-  if (filters.isTopInstitutesRequired) {
-    boostQueries.push({
-      match: {
-        is_top_tier_institute: true
-      },
-      boost: 1.8
-    });
-  }
-
-  // Boost consulting background if required
-  if (filters.requiresConsultingBackground) {
-    boostQueries.push({
-      match: {
-        has_consulting_background: true
-      },
-      boost: 1.5
-    });
-  }
-
-  // Boost recently active candidates
-  boostQueries.push({
-    range: {
-      last_active: {
-        gte: 'now-30d'
-      }
-    },
-    boost: 1.3
-  });
-
-  return boostQueries;
-}
-
-// Calculate advanced match score
-function calculateAdvancedMatchScore(candidate, filters, rankingCriteria) {
-  let score = 0;
-  let maxScore = 100;
-
-  // Experience match (25 points)
-  if (filters.minimumYearsExperience !== null) {
-    const expDiff = candidate.total_experience - filters.minimumYearsExperience;
-    if (expDiff >= 0) {
-      score += Math.min(25, 15 + (expDiff * 2)); // Bonus for extra experience
-    }
-  } else {
-    score += 20; // Default if no requirement
-  }
-
-  // Location match (20 points)
-  if (filters.requiredLocation) {
-    if (candidate.location && 
-        candidate.location.toLowerCase().includes(filters.requiredLocation.toLowerCase())) {
-      score += 20;
-    }
-  } else {
-    score += 15;
-  }
-
-  // Company prestige (20 points)
-  if (filters.isTopCompaniesRequired && candidate.is_top_tier_company) {
-    score += 20;
-  } else if (!filters.isTopCompaniesRequired) {
-    score += 15;
-  }
-
-  // Education prestige (15 points)
-  if (filters.isTopInstitutesRequired && candidate.is_top_tier_institute) {
-    score += 15;
-  } else if (!filters.isTopInstitutesRequired) {
-    score += 12;
-  }
-
-  // Profile activity and completeness (20 points)
-  const daysSinceActive = Math.floor((Date.now() - new Date(candidate.last_active)) / (1000 * 60 * 60 * 24));
-  if (daysSinceActive <= 7) score += 20;
-  else if (daysSinceActive <= 30) score += 15;
-  else if (daysSinceActive <= 90) score += 10;
-  else score += 5;
-
-  return Math.min(score, maxScore);
-}
-
-// Caching layer for frequent searches
-const searchCache = new Map();
-const CACHE_TTL = 300000; // 5 minutes
-
-function getCachedResult(key) {
-  const cached = searchCache.get(key);
-  if (cached && (Date.now() - cached.timestamp) < CACHE_TTL) {
-    return cached.data;
-  }
-  return null;
-}
-
-function setCachedResult(key, data) {
-  searchCache.set(key, {
-    data: data,
-    timestamp: Date.now()
-  });
-  
-  // Clean old cache entries
-  if (searchCache.size > 1000) {
-    const oldestKey = searchCache.keys().next().value;
-    searchCache.delete(oldestKey);
-  }
-}
