@@ -94,7 +94,6 @@ export const skillsList = [
   "Collection",
   "Venture Capital",
   "Process Excellence",
-  "Goods & Services Tax",
   "Record To Report",
   "Product Control",
   "Enterprise Risk",
