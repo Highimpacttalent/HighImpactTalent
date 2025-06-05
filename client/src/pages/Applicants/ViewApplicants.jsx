@@ -435,9 +435,6 @@ const JobApplications = () => {
 
       {loading && <CircularProgress sx={{ display: 'block', m: '20px auto' }} />}
       {error && <Typography color="error" align="center">{error}</Typography>}
-      {!loading && !error && applications.length === 0 && (
-        <Typography align="center">No applications found for this job.</Typography>
-      )}
 
       <Box sx={{ p: 0 }}>
         <StatusJob activeStep={activeStep} onStepClick={handleStepClick} />
