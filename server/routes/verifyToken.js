@@ -13,7 +13,7 @@ router.get("/verify-token", userAuth, (req, res) => {
     success: true,
     msg: "Token is valid",
     user: req.body.user   // { userId: ... }
-  });
+  }); 
 });
 
 export default router;
