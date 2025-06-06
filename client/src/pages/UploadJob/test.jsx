@@ -1545,7 +1545,7 @@ const JobUploadPage = () => {
           </div>
 
           {/* Is Premium Job Checkbox */}
-          <Box
+          {/* <Box
             sx={{
               mt: 4,
               mb: 4,
@@ -1586,7 +1586,7 @@ const JobUploadPage = () => {
               }
               sx={{ mr: 0 }}
             />
-          </Box>
+          </Box> */}
 
           {/* Form Buttons - Post Job, Cancel */}
           <Box sx={{ display: "flex", gap: 2, mt: 4, mb: 2 }}>
