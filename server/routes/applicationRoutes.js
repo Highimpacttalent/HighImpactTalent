@@ -1,5 +1,5 @@
 import express from "express";
-import {createApplication, getApplication,updateApplicationStatus,getApplicationsOfAjob,getallApplicationOfApplicant, getApplicationsWithJobs, ApplicationStatusUpdate} from "../controllers/ApplicationController.js";
+import {createApplication, getApplication,updateApplicationStatus,getApplicationsOfAjob,getallApplicationOfApplicant, getApplicationsWithJobs, ApplicationStatusUpdate, bulkRejectApplications, bulkAdvanceApplications} from "../controllers/ApplicationController.js";
 import userAuth from "../middlewares/authMiddleware.js";
 
 
@@ -18,5 +18,9 @@ router.put("/status/:id",userAuth,updateApplicationStatus)
 router.post("/get-jobs",getApplicationsWithJobs)
 
 router.post("/update-status",ApplicationStatusUpdate)
+
+router.put('/bulk-reject', bulkRejectApplications);
+
+router.put('/bulk-advance', bulkAdvanceApplications);
 
 export default router;

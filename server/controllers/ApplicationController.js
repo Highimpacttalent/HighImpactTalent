@@ -316,4 +316,164 @@ export const ApplicationStatusUpdate = async (req, res) => {
   }
 };
 
+// Bulk reject applications (set to "Not Progressing")
+export const bulkRejectApplications = async (req, res) => {
+  const { applicationIds } = req.body;
 
+  try {
+    const companyId = req.body.user.userId;
+
+    // Validate input
+    if (!applicationIds || !Array.isArray(applicationIds) || applicationIds.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Application IDs array is required and cannot be empty"
+      });
+    }
+
+    // Find all applications
+    const applications = await Application.find({
+      _id: { $in: applicationIds }
+    });
+
+    if (applications.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "No applications found"
+      });
+    }
+
+    // Check authorization - ensure all applications belong to the company
+    for (let application of applications) {
+      if (companyId != application.company.toString()) {
+        return res.status(401).json({
+          success: false,
+          message: "Not authorized to update status"
+        });
+      }
+    }
+
+    // Bulk update applications
+    const bulkOps = applications.map(app => ({
+      updateOne: {
+        filter: { _id: app._id },
+        update: {
+          $set: { status: "Not Progressing" },
+          $push: {
+            statusHistory: {
+              status: "Not Progressing",
+              changedAt: new Date()
+            }
+          }
+        }
+      }
+    }));
+
+    const result = await Application.bulkWrite(bulkOps);
+
+    res.status(200).json({
+      success: true,
+      message: `${result.modifiedCount} applications rejected successfully`,
+      modifiedCount: result.modifiedCount
+    });
+
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).json({
+      success: false,
+      message: "Server error"
+    });
+  }
+};
+
+// Bulk advance applications to next round
+export const bulkAdvanceApplications = async (req, res) => {
+  const { applicationIds } = req.body;
+
+  try {
+    const companyId = req.body.user.userId;
+
+    // Validate input
+    if (!applicationIds || !Array.isArray(applicationIds) || applicationIds.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Application IDs array is required and cannot be empty"
+      });
+    }
+
+    // Find all applications
+    const applications = await Application.find({
+      _id: { $in: applicationIds }
+    });
+
+    if (applications.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "No applications found"
+      });
+    }
+
+    // Check authorization - ensure all applications belong to the company
+    for (let application of applications) {
+      if (companyId != application.company.toString()) {
+        return res.status(401).json({
+          success: false,
+          message: "Not authorized to update status"
+        });
+      }
+    }
+
+    // Define status progression logic
+    const getNextStatus = (currentStatus) => {
+      const statusFlow = {
+        "Applied": "Application Viewed",
+        "Application Viewed": "Shortlisted",
+        "Shortlisted": "Interviewing",
+        "Interviewing": "Hired"
+      };
+      
+      return statusFlow[currentStatus] || currentStatus;
+    };
+
+    // Prepare bulk operations
+    const bulkOps = applications.map(app => {
+      const nextStatus = getNextStatus(app.status);
+      
+      return {
+        updateOne: {
+          filter: { _id: app._id },
+          update: {
+            $set: { status: nextStatus },
+            $push: {
+              statusHistory: {
+                status: nextStatus,
+                changedAt: new Date()
+              }
+            }
+          }
+        }
+      };
+    });
+
+    const result = await Application.bulkWrite(bulkOps);
+
+    // Get updated applications to return current status info
+    const updatedApplications = await Application.find({
+      _id: { $in: applicationIds }
+    }).select('_id status');
+
+    res.status(200).json({
+      success: true,
+      message: `${result.modifiedCount} applications advanced successfully`,
+      modifiedCount: result.modifiedCount,
+      updatedApplications: updatedApplications
+    });
+
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).json({
+      success: false,
+      message: "Server error"
+    });
+  }
+};
