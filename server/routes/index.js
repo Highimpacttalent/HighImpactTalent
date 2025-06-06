@@ -9,6 +9,7 @@ import sendMailRoute from "./sendMailRoutes.js";
 import aiRoutes from "./aiRoutes.js";
 import resumepool from "./resumepool.js"
 import paymentRoute from "./paymentRoutes.js"
+import verifyRoute from "./verifyToken.js";
 
 const router = express.Router();
 
@@ -25,5 +26,7 @@ router.use(`${path}sendmail`, sendMailRoute);
 router.use(`${path}ai`, aiRoutes);
 router.use(`${path}resume`, resumepool);
 router.use(`${path}payment`, paymentRoute);
+router.use(`${path}verify`, verifyRoute);
+
 
 export default router;
