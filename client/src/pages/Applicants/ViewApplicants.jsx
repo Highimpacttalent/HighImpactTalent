@@ -237,6 +237,7 @@ const JobApplications = () => {
     "Shortlisted",
     "Interviewing",
     "Hired",
+    "Not Progressing",
   ];
   const { jobId } = useParams();
   const [applications, setApplications] = useState([]);
@@ -253,6 +254,7 @@ const JobApplications = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [stageCounts, setStageCounts] = useState({});
   const currentUser = useSelector((state) => state.user.user);
 
   // Bulk selection states
@@ -307,6 +309,13 @@ const JobApplications = () => {
         setAllApplications(enriched);
         setApplications(enriched);
         setFilteredApps(enriched);
+
+        const counts = enriched.reduce((acc, app) => {
+        acc[app.status] = (acc[app.status] || 0) + 1;
+        return acc;
+      }, {});
+      setStageCounts(counts);
+
       } catch (err) {
         setError(err.message);
       } finally {
@@ -616,12 +625,6 @@ const JobApplications = () => {
 
   const FiltersContent = (
     <Box sx={{ p: 2, width: isMobile ? 250 : "auto" }}>
-      <Typography
-        variant="h6"
-        sx={{ mb: 2, fontFamily: "Satoshi", fontWeight: 600 }}
-      >
-        Filters
-      </Typography>
       <FormControl fullWidth sx={{ mb: 2 }}>
         <TextField
           label="Current Job"
@@ -699,97 +702,252 @@ const JobApplications = () => {
   );
 
   return (
-    <Box sx={{ bgcolor: "white", p: { xs: 2, md: 4 } }}>
-      <Typography
+    <Box sx={{ bgcolor: "#fff", minHeight: "100vh", p: { xs: 2, md: 4 } }}>
+      {/* Header Section */}
+      <Box
         sx={{
-          textAlign: "center",
-          mt: 2,
-          color: "#24252C",
-          fontFamily: "Satoshi",
-          mb: 4,
-          fontWeight: 700,
-          fontSize: "30px",
+          bgcolor: "white",
+          p: { xs: 1, md: 2 },
+          mb: 3,
         }}
       >
-        Job Applications
-      </Typography>
-
-      {loading && (
-        <CircularProgress sx={{ display: "block", m: "20px auto" }} />
-      )}
-      {error && (
-        <Typography color="error" align="center">
-          {error}
+        <Typography
+          sx={{
+            textAlign: "center",
+            color: "#24252C",
+            fontFamily: "Satoshi",
+            fontWeight: 700,
+            fontSize: { xs: "24px", md: "30px" },
+            mb: 1,
+          }}
+        >
+          Job Applications
         </Typography>
-      )}
-
-      <Box sx={{ p: 0 }}>
-        <StatusJob activeStep={activeStep} onStepClick={handleStepClick} />
       </Box>
 
-      {/* Main content */}
+      {loading && (
+        <Box sx={{ display: "flex", justifyContent: "center", my: 4 }}>
+          <CircularProgress sx={{ color: "#1976d2" }} size={40} />
+        </Box>
+      )}
+
+      {error && (
+        <Alert
+          severity="error"
+          sx={{
+            mb: 3,
+            borderRadius: 3,
+            fontFamily: "Satoshi",
+            boxShadow: "0 2px 12px rgba(239, 68, 68, 0.15)",
+          }}
+        >
+          {error}
+        </Alert>
+      )}
+
+      {/* Main Content */}
       <Box
         sx={{
           display: "flex",
           flexDirection: { xs: "column", md: "row" },
-          mt: 4,
+          gap: 3,
         }}
       >
-        {/* Filters */}
+        {/* Enhanced Filters Sidebar */}
         <Box
           sx={{
-            width: { xs: "100%", md: "25%" },
-            pr: { md: 2 },
-            mb: { xs: 2, md: 0 },
+            width: { xs: "100%", md: "300px" },
+            flexShrink: 0,
           }}
         >
           {isMobile ? (
-            <IconButton
-              onClick={() => setDrawerOpen(true)}
+            <Box sx={{ mb: 3 }}>
+              <Button
+                onClick={() => setDrawerOpen(true)}
+                variant="outlined"
+                startIcon={<FilterListIcon />}
+                sx={{
+                  bgcolor: "white",
+                  borderRadius: 3,
+                  p: 2,
+                  fontFamily: "Satoshi",
+                  fontWeight: 600,
+                  textTransform: "none",
+                  border: "2px solid #e2e8f0",
+                  color: "#24252C",
+                  boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
+                  "&:hover": {
+                    bgcolor: "#f8fafc",
+                    border: "2px solid #1976d2",
+                    transform: "translateY(-1px)",
+                  },
+                }}
+              >
+                Filters & Search
+              </Button>
+            </Box>
+          ) : (
+            <Box
               sx={{
-                bgcolor: "grey.300",
-                borderRadius: 2,
-                p: 0.5,
-                ml: 2,
-                boxShadow: 3,
-                fontFamily: "Poppins",
+                bgcolor: "white",
+                p: 3,
+                borderRight: "2px solid #e2e8f0",
+                position: "sticky",
+                top: 20,
               }}
             >
-              <FilterListIcon />
-              <span
-                style={{ fontFamily: "Poppins", fontSize: 16, fontWeight: 500 }}
+              <Typography
+                sx={{
+                  fontFamily: "Satoshi",
+                  fontWeight: 600,
+                  fontSize: "22px",
+                  color: "#24252C",
+                  mb: 3,
+                  borderBottom: "2px solid #f1f5f9",
+                  pb: 2,
+                }}
               >
-                Filters
-              </span>
-            </IconButton>
-          ) : (
-            <Paper sx={{ p: 2, boxShadow: 3, borderRadius: 2 }}>
+                Filters & Search
+              </Typography>
               {FiltersContent}
-            </Paper>
+            </Box>
           )}
+
           <Drawer
             anchor="left"
             open={drawerOpen}
             onClose={() => setDrawerOpen(false)}
+            PaperProps={{
+              sx: {
+                width: 320,
+                bgcolor: "white",
+                borderRadius: "0 16px 16px 0",
+              },
+            }}
           >
-            {FiltersContent}
+            <Box sx={{ p: 3 }}>
+              <Typography
+                sx={{
+                  fontFamily: "Satoshi",
+                  fontWeight: 700,
+                  fontSize: "18px",
+                  color: "#24252C",
+                  mb: 3,
+                  borderBottom: "2px solid #f1f5f9",
+                  pb: 2,
+                }}
+              >
+                Filters & Search
+              </Typography>
+              {FiltersContent}
+            </Box>
           </Drawer>
         </Box>
 
         {/* Applications Section */}
-        <Box sx={{ width: { xs: "100%", md: "75%" } }}>
-          {/* Bulk Actions Header */}
-          {filteredApps.length > 0 && (
-            <Paper
+        <Box sx={{ flex: 1 }}>
+          {/* Premium Tab Navigation */}
+          <Box
+            sx={{
+              bgcolor: "transparent",
+              borderBottom: "1px solid #e2e8f0",
+              mb: 3,
+              overflowX: "auto",
+              px: 1,
+            }}
+          >
+            <Box
               sx={{
-                p: 3,
-                mb: 3,
-                borderRadius: 3,
-                boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
-                border: "1px solid #f0f0f0",
+                display: "flex",
+                gap: 1.5,
+                overflowX: "auto",
+                "&::-webkit-scrollbar": {
+                  height: 4,
+                },
+                "&::-webkit-scrollbar-track": {
+                  backgroundColor: "#f1f5f9",
+                  borderRadius: 2,
+                },
+                "&::-webkit-scrollbar-thumb": {
+                  backgroundColor: "#cbd5e1",
+                  borderRadius: 2,
+                },
               }}
             >
-              {/* Selection Info */}
+              {steps.map((step, index) => {
+                 const isActive = activeStep === index;
+                 const candidateCount = stageCounts[step] || 0;
+
+                return (
+                  <Box
+                    key={step}
+                    onClick={() => handleStepClick(index)}
+                    sx={{
+                      display: "flex",
+                      flexDirection: "row",
+                      alignItems: "center",
+                      gap: 1,
+                      px: 2,
+                      py: 1.2,
+                      cursor: "pointer",
+                      borderBottom: isActive
+                        ? "3px solid #1976d2"
+                        : "3px solid transparent",
+                      transition: "all 0.3s ease",
+                      backgroundColor: isActive ? "#f0f7ff" : "transparent",
+                      "&:hover": {
+                        backgroundColor: isActive ? "#e3f2fd" : "#f8fafc",
+                      },
+                    }}
+                  >
+                    <Typography
+                      sx={{
+                        fontFamily: "Satoshi",
+                        fontWeight: isActive ? 700 : 500,
+                        fontSize: "14px",
+                        color: isActive ? "#1976d2" : "#334155",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {step}
+                    </Typography>
+
+                    <Box
+                      sx={{
+                        bgcolor: isActive ? "#1976d2" : "#cbd5e1",
+                        color: "white",
+                        px: 1,
+                        py: 0.3,
+                        borderRadius: "12px",
+                        fontSize: "12px",
+                        fontWeight: 700,
+                        fontFamily: "Satoshi",
+                        minWidth: "24px",
+                        textAlign: "center",
+                      }}
+                    >
+                      {candidateCount}
+                    </Box>
+                  </Box>
+                );
+              })}
+            </Box>
+          </Box>
+
+          {/* Enhanced Bulk Actions */}
+          {filteredApps.length > 0 && (
+            <Box
+              sx={{
+                bgcolor: "white",
+                borderRadius: 3,
+                p: 3,
+                mb: 3,
+                boxShadow: "0 2px 12px rgba(0,0,0,0.06)",
+                border: "1px solid #e2e8f0",
+                background: "linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)",
+              }}
+            >
+              {/* Compact Header with Inline Actions */}
               <Box
                 sx={{
                   display: "flex",
@@ -797,292 +955,503 @@ const JobApplications = () => {
                   justifyContent: "space-between",
                   flexWrap: "wrap",
                   gap: 2,
-                  mb: selectedApplications.size > 0 ? 2 : 0,
+                  mb: 2,
                 }}
               >
+                {/* Left Section - Selection Info */}
                 <Box
                   sx={{
                     display: "flex",
                     alignItems: "center",
                     gap: 2,
-                    flexWrap: "wrap",
+                    flex: 1,
+                    minWidth: "250px",
                   }}
                 >
                   <Button
                     variant="outlined"
-                    size="small"
                     startIcon={<SelectAllIcon />}
                     onClick={handleSelectAll}
                     sx={{
                       fontFamily: "Satoshi",
-                      fontWeight: 500,
+                      fontWeight: 600,
                       fontSize: "13px",
-                      borderRadius: 2,
+                      borderRadius: 2.5,
                       textTransform: "none",
-                      borderColor: "#e0e0e0",
-                      color: "#666",
+                      px: 2.5,
+                      py: 1,
+                      border: "1.5px solid #e2e8f0",
+                      color: "#475569",
+                      bgcolor: "white",
+                      minHeight: "36px",
                       "&:hover": {
-                        borderColor: "#1976d2",
+                        border: "1.5px solid #1976d2",
                         color: "#1976d2",
-                        backgroundColor: "#f5f5f5",
+                        bgcolor: "#f0f7ff",
+                        transform: "translateY(-1px)",
                       },
                     }}
                   >
                     {selectedApplications.size === filteredApps.length
-                      ? "Deselect All"
+                      ? "Deselect"
                       : "Select All"}
                   </Button>
 
-                  <Typography
-                    variant="body2"
-                    sx={{
-                      color: "#666",
-                      fontFamily: "Satoshi",
-                      fontWeight: 500,
-                    }}
-                  >
-                    {filteredApps.length} candidate
-                    {filteredApps.length !== 1 ? "s" : ""} at{" "}
-                    {steps[activeStep]} stage
-                  </Typography>
-                </Box>
-
-                {selectedApplications.size > 0 && (
-                  <SelectionChip
-                    label={`${selectedApplications.size} selected`}
-                    onDelete={clearSelection}
-                    size="small"
-                  />
-                )}
-              </Box>
-
-              {/* Action Buttons */}
-              <Box
-                sx={{
-                  display: "flex",
-                  gap: 2,
-                  flexWrap: "wrap",
-                  alignItems: "center",
-                }}
-              >
-                {/* Advance Selected */}
-                <ActionButton
-                  variant="advance"
-                  disabled={
-                    selectedApplications.size === 0 ||
-                    bulkActionLoading ||
-                    activeStep === steps.length - 1
-                  }
-                  onClick={() =>
-                    openConfirmDialog(
-                      "advance",
-                      "Advance Selected Candidates",
-                      `Move ${selectedApplications.size} selected candidate${
-                        selectedApplications.size !== 1 ? "s" : ""
-                      } to "${getNextStepName()}" stage?`
-                    )
-                  }
-                  startIcon={
-                    bulkActionLoading ? (
-                      <CircularProgress size={16} color="inherit" />
-                    ) : (
-                      <ArrowForwardIcon />
-                    )
-                  }
-                  sx={{ minWidth: "140px" }}
-                >
-                  {bulkActionLoading ? "Processing..." : "Advance Selected"}
-                </ActionButton>
-
-                {/* Reject Selected */}
-                <ActionButton
-                  variant="reject"
-                  disabled={
-                    selectedApplications.size === 0 || bulkActionLoading
-                  }
-                  onClick={() =>
-                    openConfirmDialog(
-                      "reject",
-                      "Reject Selected Candidates",
-                      `Mark ${selectedApplications.size} selected candidate${
-                        selectedApplications.size !== 1 ? "s" : ""
-                      } as "Not Progressing"?`
-                    )
-                  }
-                  startIcon={<CancelOutlinedIcon />}
-                  sx={{ minWidth: "130px" }}
-                >
-                  Reject Selected
-                </ActionButton>
-
-                <Divider
-                  orientation="vertical"
-                  flexItem
-                  sx={{ mx: 1, height: "40px" }}
-                />
-
-                {/* Reject All */}
-                <ActionButton
-                  variant="rejectAll"
-                  disabled={filteredApps.length === 0 || bulkActionLoading}
-                  onClick={() =>
-                    openConfirmDialog(
-                      "rejectAll",
-                      "Reject All at This Stage",
-                      `Mark all ${filteredApps.length} candidate${
-                        filteredApps.length !== 1 ? "s" : ""
-                      } at "${steps[activeStep]}" stage as "Not Progressing"?`
-                    )
-                  }
-                  startIcon={<CancelOutlinedIcon />}
-                  sx={{ minWidth: "110px" }}
-                >
-                  Reject All
-                </ActionButton>
-              </Box>
-            </Paper>
-          )}
-
-          {/* Applications Grid */}
-          <Grid container spacing={2}>
-            {filteredApps.map((app) => (
-              <Grid item xs={12} key={app._id}>
-                <Box sx={{ position: "relative" }}>
-                  {/* Selection Checkbox */}
-                  <Checkbox
-                    checked={selectedApplications.has(app._id)}
-                    onChange={() => handleApplicationSelect(app._id)}
-                    sx={{
-                      position: "absolute",
-                      top: 8,
-                      right: 8,
-                      zIndex: 2,
-                      backgroundColor: "rgba(255, 255, 255, 0.9)",
-                      borderRadius: "50%",
-                      "&:hover": {
-                        backgroundColor: "rgba(255, 255, 255, 1)",
-                      },
-                    }}
-                  />
-
-                  {/* Application Card with Selection Border */}
                   <Box
                     sx={{
-                      border: selectedApplications.has(app._id)
-                        ? "2px solid #1976d2"
-                        : "2px solid transparent",
-                      borderRadius: 2,
-                      transition: "all 0.2s ease-in-out",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 1,
+                      bgcolor: "#f0f7ff",
+                      px: 2.5,
+                      py: 1,
+                      borderRadius: 2.5,
+                      border: "1px solid #bfdbfe",
+                      minHeight: "36px",
+                    }}
+                  >
+                    <Typography
+                      sx={{
+                        color: "#1976d2",
+                        fontFamily: "Satoshi",
+                        fontWeight: 700,
+                        fontSize: "15px",
+                        lineHeight: 1,
+                      }}
+                    >
+                      {filteredApps.length}
+                    </Typography>
+                    <Typography
+                      sx={{
+                        color: "#1976d2",
+                        fontFamily: "Satoshi",
+                        fontWeight: 500,
+                        fontSize: "13px",
+                        lineHeight: 1,
+                      }}
+                    >
+                      at <strong>{steps[activeStep]}</strong>
+                    </Typography>
+                  </Box>
+
+                  {/* Selection Badge */}
+                  {selectedApplications.size > 0 && (
+                    <Box
+                      sx={{
+                        bgcolor: "#dcfce7",
+                        color: "#166534",
+                        px: 2,
+                        py: 0.75,
+                        borderRadius: 2,
+                        border: "1px solid #bbf7d0",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 0.5,
+                        minHeight: "36px",
+                      }}
+                    >
+                      <Typography
+                        sx={{
+                          fontFamily: "Satoshi",
+                          fontWeight: 600,
+                          fontSize: "13px",
+                          lineHeight: 1,
+                        }}
+                      >
+                        {selectedApplications.size} selected
+                      </Typography>
+                      <IconButton
+                        size="small"
+                        onClick={clearSelection}
+                        sx={{
+                          color: "#166534",
+                          p: 0.25,
+                          ml: 0.5,
+                          "&:hover": { bgcolor: "rgba(22, 101, 52, 0.1)" },
+                        }}
+                      >
+                        <CancelOutlinedIcon sx={{ fontSize: 16 }} />
+                      </IconButton>
+                    </Box>
+                  )}
+                </Box>
+
+                {/* Right Section - Action Buttons */}
+                <Box
+                  sx={{
+                    display: "flex",
+                    gap: 1.5,
+                    alignItems: "center",
+                    flexShrink: 0,
+                  }}
+                >
+                  {/* Primary Actions */}
+                  <Button
+                    variant="contained"
+                    disabled={
+                      selectedApplications.size === 0 ||
+                      bulkActionLoading ||
+                      activeStep === steps.length - 1
+                    }
+                    onClick={() =>
+                      openConfirmDialog(
+                        "advance",
+                        "Advance Selected Candidates",
+                        `Move ${selectedApplications.size} selected candidate${
+                          selectedApplications.size !== 1 ? "s" : ""
+                        } to "${getNextStepName()}" stage?`
+                      )
+                    }
+                    startIcon={
+                      bulkActionLoading ? (
+                        <CircularProgress size={14} color="inherit" />
+                      ) : (
+                        <ArrowForwardIcon sx={{ fontSize: 16 }} />
+                      )
+                    }
+                    sx={{
+                      fontFamily: "Satoshi",
+                      fontWeight: 600,
+                      fontSize: "13px",
+                      textTransform: "none",
+                      borderRadius: 2.5,
+                      px: 2.5,
+                      py: 1,
+                      minHeight: "36px",
+                      bgcolor: "#1976d2",
+                      boxShadow: "0 2px 8px rgba(25, 118, 210, 0.25)",
                       "&:hover": {
-                        border: selectedApplications.has(app._id)
-                          ? "2px solid #1565c0"
-                          : "2px solid #e0e0e0",
+                        bgcolor: "#1565c0",
+                        transform: "translateY(-1px)",
+                        boxShadow: "0 4px 12px rgba(25, 118, 210, 0.35)",
+                      },
+                      "&:disabled": {
+                        bgcolor: "#e2e8f0",
+                        color: "#94a3b8",
                       },
                     }}
                   >
-                    <ApplicationCard
-                      app={app}
-                      setSelectedBreakdown={setSelectedBreakdown}
-                      setBreakdownDialogOpen={setBreakdownDialogOpen}
-                      navigate={navigate}
-                      markAsViewed={markAsViewed}
-                    />
-                  </Box>
-                </Box>
-              </Grid>
-            ))}
-          </Grid>
+                    {bulkActionLoading ? "Processing..." : "Advance"}
+                  </Button>
 
-          {!loading &&
-            !error &&
-            filteredApps.length === 0 &&
-            applications.length > 0 && (
+                  <Button
+                    variant="outlined"
+                    disabled={
+                      selectedApplications.size === 0 || bulkActionLoading
+                    }
+                    onClick={() =>
+                      openConfirmDialog(
+                        "reject",
+                        "Reject Selected Candidates",
+                        `Mark ${selectedApplications.size} selected candidate${
+                          selectedApplications.size !== 1 ? "s" : ""
+                        } as "Not Progressing"?`
+                      )
+                    }
+                    startIcon={<CancelOutlinedIcon sx={{ fontSize: 16 }} />}
+                    sx={{
+                      fontFamily: "Satoshi",
+                      fontWeight: 600,
+                      fontSize: "13px",
+                      textTransform: "none",
+                      borderRadius: 2.5,
+                      px: 2.5,
+                      py: 1,
+                      minHeight: "36px",
+                      border: "1.5px solid #ef4444",
+                      color: "#ef4444",
+                      bgcolor: "white",
+                      "&:hover": {
+                        bgcolor: "#fef2f2",
+                        border: "1.5px solid #dc2626",
+                        color: "#dc2626",
+                        transform: "translateY(-1px)",
+                      },
+                      "&:disabled": {
+                        border: "1.5px solid #e2e8f0",
+                        color: "#94a3b8",
+                      },
+                    }}
+                  >
+                    Reject
+                  </Button>
+
+                  {/* Divider */}
+                  <Divider
+                    orientation="vertical"
+                    sx={{
+                      height: "24px",
+                      borderColor: "#e2e8f0",
+                      mx: 0.5,
+                    }}
+                  />
+
+                  {/* Secondary Action */}
+                  <Button
+                    variant="text"
+                    disabled={filteredApps.length === 0 || bulkActionLoading}
+                    onClick={() =>
+                      openConfirmDialog(
+                        "rejectAll",
+                        "Reject All at This Stage",
+                        `Mark all ${filteredApps.length} candidate${
+                          filteredApps.length !== 1 ? "s" : ""
+                        } at "${steps[activeStep]}" stage as "Not Progressing"?`
+                      )
+                    }
+                    startIcon={<CancelOutlinedIcon sx={{ fontSize: 16 }} />}
+                    sx={{
+                      fontFamily: "Satoshi",
+                      fontWeight: 600,
+                      fontSize: "13px",
+                      textTransform: "none",
+                      borderRadius: 2.5,
+                      px: 2,
+                      py: 1,
+                      minHeight: "36px",
+                      color: "#64748b",
+                      "&:hover": {
+                        bgcolor: "#f1f5f9",
+                        color: "#ef4444",
+                      },
+                      "&:disabled": {
+                        color: "#cbd5e1",
+                      },
+                    }}
+                  >
+                    Reject All
+                  </Button>
+                </Box>
+              </Box>
+            </Box>
+          )}
+
+          {/* Enhanced Applications Grid */}
+          <Box
+            sx={{
+              bgcolor: "white",
+              borderRadius: 4,
+              p: { xs: 2, md: 3 },
+              minHeight: "400px",
+            }}
+          >
+            <Grid container spacing={3}>
+              {filteredApps.map((app) => (
+                <Grid item xs={12} key={app._id}>
+                  <Box
+                    sx={{
+                      position: "relative",
+                      borderRadius: 3,
+                      overflow: "hidden",
+                      transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+                      "&:hover": {
+                        transform: "translateY(-2px)",  
+                      },
+                    }}
+                  >
+                    {/* Enhanced Selection Checkbox */}
+                    <Checkbox
+                      checked={selectedApplications.has(app._id)}
+                      onChange={() => handleApplicationSelect(app._id)}
+                      sx={{
+                        position: "absolute",
+                        top: 12,
+                        right: 12,
+                        zIndex: 3,
+                        bgcolor: "rgba(255, 255, 255, 0.95)",
+                        borderRadius: "50%",
+                        p: 1,
+                        boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+                        "&:hover": {
+                          bgcolor: "white",
+                          transform: "scale(1.1)",
+                        },
+                        "& .MuiSvgIcon-root": {
+                          fontSize: 20,
+                          color: selectedApplications.has(app._id)
+                            ? "#1976d2"
+                            : "#64748b",
+                        },
+                      }}
+                    />
+
+                    {/* Enhanced Application Card */}
+                    <Box
+                      sx={{
+                        border: selectedApplications.has(app._id)
+                          ? "3px solid #1976d2"
+                          : "3px solid transparent",
+                        borderRadius: 3,
+                        transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+                        background: selectedApplications.has(app._id)
+                          ? "linear-gradient(135deg, #f0f7ff 0%, #ffffff 100%)"
+                          : "white",
+                        position: "relative",
+                        "&::before": selectedApplications.has(app._id)
+                          ? {
+                              content: '""',
+                              position: "absolute",
+                              top: 0,
+                              left: 0,
+                              right: 0,
+                              height: 4,
+                              bgcolor: "#1976d2",
+                              borderRadius: "3px 3px 0 0",
+                            }
+                          : {},
+                      }}
+                    >
+                      <ApplicationCard
+                        app={app}
+                        setSelectedBreakdown={setSelectedBreakdown}
+                        setBreakdownDialogOpen={setBreakdownDialogOpen}
+                        navigate={navigate}
+                        markAsViewed={markAsViewed}
+                      />
+                    </Box>
+                  </Box>
+                </Grid>
+              ))}
+            </Grid>
+
+            {/* Enhanced Empty States */}
+            {!loading &&
+              !error &&
+              filteredApps.length === 0 &&
+              applications.length > 0 && (
+                <Box
+                  sx={{
+                    textAlign: "center",
+                    py: 8,
+                    px: 4,
+                  }}
+                >
+                  <Box
+                    sx={{
+                      width: 80,
+                      height: 80,
+                      borderRadius: "50%",
+                      bgcolor: "#f1f5f9",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      mx: "auto",
+                      mb: 3,
+                    }}
+                  >
+                    <FilterListIcon sx={{ fontSize: 40, color: "#64748b" }} />
+                  </Box>
+                  <Typography
+                    variant="h6"
+                    sx={{
+                      fontFamily: "Satoshi",
+                      fontWeight: 700,
+                      color: "#24252C",
+                      mb: 2,
+                      fontSize: "20px",
+                    }}
+                  >
+                    No matching applications found
+                  </Typography>
+                  <Typography
+                    sx={{
+                      color: "#64748b",
+                      fontFamily: "Satoshi",
+                      mb: 4,
+                      fontSize: "16px",
+                      maxWidth: "400px",
+                      mx: "auto",
+                    }}
+                  >
+                    Try adjusting your filters or search criteria to find the
+                    candidates you're looking for
+                  </Typography>
+                  <Button
+                    variant="contained"
+                    onClick={clearFilters}
+                    sx={{
+                      fontFamily: "Satoshi",
+                      fontWeight: 600,
+                      borderRadius: 3,
+                      textTransform: "none",
+                      px: 4,
+                      py: 1.5,
+                      bgcolor: "#1976d2",
+                      boxShadow: "0 4px 16px rgba(25, 118, 210, 0.3)",
+                      "&:hover": {
+                        bgcolor: "#1565c0",
+                        transform: "translateY(-2px)",
+                        boxShadow: "0 6px 20px rgba(25, 118, 210, 0.4)",
+                      },
+                    }}
+                  >
+                    Clear All Filters
+                  </Button>
+                </Box>
+              )}
+
+            {!loading && !error && applications.length === 0 && (
               <Box
                 sx={{
                   textAlign: "center",
-                  mt: 4,
-                  p: 4,
-                  bgcolor: "#f8f9fa",
-                  borderRadius: 3,
-                  border: "1px solid #e9ecef",
+                  py: 8,
+                  px: 4,
                 }}
               >
+                <Box
+                  sx={{
+                    width: 80,
+                    height: 80,
+                    borderRadius: "50%",
+                    bgcolor: "#f1f5f9",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    mx: "auto",
+                    mb: 3,
+                  }}
+                >
+                  <Typography
+                    sx={{
+                      fontSize: 32,
+                      fontWeight: 300,
+                      color: "#64748b",
+                    }}
+                  >
+                    📋
+                  </Typography>
+                </Box>
                 <Typography
                   variant="h6"
                   sx={{
                     fontFamily: "Satoshi",
-                    fontWeight: 600,
-                    color: "#495057",
-                    mb: 1,
+                    fontWeight: 700,
+                    color: "#24252C",
+                    mb: 2,
+                    fontSize: "20px",
                   }}
                 >
-                  No matching applications found
+                  No applications at this stage
                 </Typography>
                 <Typography
-                  variant="body2"
                   sx={{
-                    mt: 1,
-                    color: "#6c757d",
+                    color: "#64748b",
                     fontFamily: "Satoshi",
-                    mb: 2,
+                    fontSize: "16px",
+                    maxWidth: "400px",
+                    mx: "auto",
                   }}
                 >
-                  Try adjusting your filters or search criteria
+                  There are currently no candidates at the{" "}
+                  <strong>"{steps[activeStep]}"</strong> stage
                 </Typography>
-                <Button
-                  variant="outlined"
-                  sx={{
-                    mt: 2,
-                    fontFamily: "Satoshi",
-                    fontWeight: 600,
-                    borderRadius: 2,
-                    textTransform: "none",
-                  }}
-                  onClick={clearFilters}
-                >
-                  Clear All Filters
-                </Button>
               </Box>
             )}
-
-          {!loading && !error && applications.length === 0 && (
-            <Box
-              sx={{
-                textAlign: "center",
-                mt: 4,
-                p: 4,
-                bgcolor: "#f8f9fa",
-                borderRadius: 3,
-                border: "1px solid #e9ecef",
-              }}
-            >
-              <Typography
-                variant="h6"
-                sx={{
-                  fontFamily: "Satoshi",
-                  fontWeight: 600,
-                  color: "#495057",
-                  mb: 1,
-                }}
-              >
-                No applications at this stage
-              </Typography>
-              <Typography
-                variant="body2"
-                sx={{
-                  color: "#6c757d",
-                  fontFamily: "Satoshi",
-                }}
-              >
-                There are currently no candidates at the "{steps[activeStep]}"
-                stage
-              </Typography>
-            </Box>
-          )}
+          </Box>
         </Box>
       </Box>
 
-      {/* Confirmation Dialog */}
+      {/* Enhanced Confirmation Dialog */}
       <Dialog
         open={confirmDialog.open}
         onClose={() =>
@@ -1092,8 +1461,9 @@ const JobApplications = () => {
         fullWidth
         PaperProps={{
           sx: {
-            borderRadius: 3,
-            p: 1,
+            borderRadius: 4,
+            p: 2,
+            boxShadow: "0 20px 60px rgba(0,0,0,0.15)",
           },
         }}
       >
@@ -1101,24 +1471,35 @@ const JobApplications = () => {
           sx={{
             fontFamily: "Satoshi",
             fontWeight: 700,
-            fontSize: "20px",
+            fontSize: "22px",
             color: "#24252C",
+            pb: 2,
           }}
         >
           {confirmDialog.title}
         </DialogTitle>
-        <DialogContent>
+        <DialogContent sx={{ pb: 2 }}>
           <Typography
             sx={{
               fontFamily: "Satoshi",
-              color: "#666",
+              color: "#64748b",
               lineHeight: 1.6,
+              fontSize: "16px",
             }}
           >
             {confirmDialog.message}
           </Typography>
           {confirmDialog.action === "rejectAll" && (
-            <Alert severity="warning" sx={{ mt: 2, borderRadius: 2 }}>
+            <Alert
+              severity="warning"
+              sx={{
+                mt: 3,
+                borderRadius: 3,
+                fontFamily: "Satoshi",
+                border: "1px solid #fbbf24",
+                bgcolor: "#fffbeb",
+              }}
+            >
               <Typography sx={{ fontFamily: "Satoshi", fontSize: "14px" }}>
                 This action cannot be undone. All candidates will be marked as
                 "Not Progressing".
@@ -1126,7 +1507,7 @@ const JobApplications = () => {
             </Alert>
           )}
         </DialogContent>
-        <DialogActions sx={{ p: 3, pt: 1 }}>
+        <DialogActions sx={{ p: 3, pt: 1, gap: 2 }}>
           <Button
             onClick={() =>
               setConfirmDialog({
@@ -1136,17 +1517,26 @@ const JobApplications = () => {
                 message: "",
               })
             }
+            variant="outlined"
             sx={{
               fontFamily: "Satoshi",
               fontWeight: 600,
               textTransform: "none",
-              borderRadius: 2,
+              borderRadius: 3,
+              px: 3,
+              py: 1,
+              border: "2px solid #e2e8f0",
+              color: "#64748b",
+              "&:hover": {
+                border: "2px solid #cbd5e1",
+                bgcolor: "#f8fafc",
+              },
             }}
           >
             Cancel
           </Button>
-          <ActionButton
-            variant={confirmDialog.action === "advance" ? "advance" : "reject"}
+          <Button
+            variant="contained"
             onClick={handleConfirmAction}
             disabled={bulkActionLoading}
             startIcon={
@@ -1154,21 +1544,41 @@ const JobApplications = () => {
                 <CircularProgress size={16} color="inherit" />
               ) : null
             }
+            sx={{
+              fontFamily: "Satoshi",
+              fontWeight: 600,
+              textTransform: "none",
+              borderRadius: 3,
+              px: 4,
+              py: 1,
+              bgcolor:
+                confirmDialog.action === "advance" ? "#1976d2" : "#ef4444",
+              boxShadow:
+                confirmDialog.action === "advance"
+                  ? "0 4px 16px rgba(25, 118, 210, 0.3)"
+                  : "0 4px 16px rgba(239, 68, 68, 0.3)",
+              "&:hover": {
+                bgcolor:
+                  confirmDialog.action === "advance" ? "#1565c0" : "#dc2626",
+                transform: "translateY(-1px)",
+              },
+            }}
           >
             {bulkActionLoading ? "Processing..." : "Confirm"}
-          </ActionButton>
+          </Button>
         </DialogActions>
       </Dialog>
 
-      {/* Breakdown Dialog */}
+      {/* Enhanced Breakdown Dialog */}
       <Dialog
         open={breakdownDialogOpen}
         onClose={() => setBreakdownDialogOpen(false)}
-        maxWidth="sm"
+        maxWidth="md"
         fullWidth
         PaperProps={{
           sx: {
-            borderRadius: 3,
+            borderRadius: 4,
+            boxShadow: "0 20px 60px rgba(0,0,0,0.15)",
           },
         }}
       >
@@ -1176,22 +1586,34 @@ const JobApplications = () => {
           sx={{
             fontFamily: "Satoshi",
             fontWeight: 700,
-            fontSize: "20px",
+            fontSize: "22px",
             color: "#24252C",
+            borderBottom: "1px solid #f1f5f9",
+            pb: 2,
           }}
         >
           Match Score Breakdown
         </DialogTitle>
-        <DialogContent dividers>
+        <DialogContent
+          dividers
+          sx={{
+            bgcolor: "#f8fafc",
+            borderColor: "#f1f5f9",
+          }}
+        >
           <Typography
             component="pre"
             variant="body2"
             sx={{
               whiteSpace: "pre-wrap",
-              fontFamily: "monospace",
+              fontFamily: "Monaco, Consolas, monospace",
               fontSize: "13px",
-              lineHeight: 1.5,
-              color: "#333",
+              lineHeight: 1.6,
+              color: "#24252C",
+              bgcolor: "white",
+              p: 3,
+              borderRadius: 2,
+              border: "1px solid #e2e8f0",
             }}
           >
             {selectedBreakdown}
@@ -1200,11 +1622,20 @@ const JobApplications = () => {
         <DialogActions sx={{ p: 3 }}>
           <Button
             onClick={() => setBreakdownDialogOpen(false)}
+            variant="contained"
             sx={{
               fontFamily: "Satoshi",
               fontWeight: 600,
               textTransform: "none",
-              borderRadius: 2,
+              borderRadius: 3,
+              px: 4,
+              py: 1,
+              bgcolor: "#1976d2",
+              "&:hover": {
+                bgcolor: "#1565c0",
+                transform: "translateY(-1px)",
+                boxShadow: "0 6px 20px rgba(25, 118, 210, 0.4)",
+              },
             }}
           >
             Close
@@ -1212,7 +1643,7 @@ const JobApplications = () => {
         </DialogActions>
       </Dialog>
 
-      {/* Success/Error Snackbar */}
+      {/* Enhanced Success/Error Snackbar */}
       <Snackbar
         open={snackbar.open}
         autoHideDuration={6000}
@@ -1224,8 +1655,20 @@ const JobApplications = () => {
           severity={snackbar.severity}
           sx={{
             width: "100%",
-            borderRadius: 2,
+            borderRadius: 3,
             fontFamily: "Satoshi",
+            fontWeight: 500,
+            boxShadow: "0 8px 32px rgba(0,0,0,0.12)",
+            border: "1px solid",
+            borderColor:
+              snackbar.severity === "success" ? "#bbf7d0" : "#fecaca",
+            "& .MuiAlert-icon": {
+              fontSize: 22,
+            },
+            "& .MuiAlert-message": {
+              fontSize: "15px",
+              fontWeight: 500,
+            },
           }}
         >
           {snackbar.message}
