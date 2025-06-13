@@ -127,7 +127,7 @@ const PremiumSubscribeSection = () => {
                 fontWeight={600}
                 mb={2}
               >
-                Stay Ahead of the
+                Stay Ahead.
                 <Box
                   component="span"
                   sx={{
@@ -139,7 +139,7 @@ const PremiumSubscribeSection = () => {
                     fontFamily: "Satoshi, sans-serif",
                   }}
                 >
-                  Career Curve
+                  Stay Wanted.
                 </Box>
               </Typography>
 
@@ -151,8 +151,7 @@ const PremiumSubscribeSection = () => {
                 fontSize={{ xs: "1rem", md: "1.25rem" }}
                 mb={4}
               >
-                Join 25,000+ professionals who get exclusive career insights,
-                job opportunities, and industry trends delivered weekly.
+                Join 2,500+ ambitious professionals getting handpicked job drops, market moves, and no-fluff career advice—every week.
               </Typography>
 
               {/* Subscribe Form */}

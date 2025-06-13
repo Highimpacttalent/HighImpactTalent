@@ -183,7 +183,7 @@ const ResumeUpload = () => {
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
-          mb: 3,
+          mb: 1,
           px: 4,
         }}
       >
@@ -197,18 +197,18 @@ const ResumeUpload = () => {
             mt: 4,
           }}
         >
-          You're Now Part of an{" "}
+          You’re In.  {" "}
           <span
             style={{
               fontFamily: "Satoshi",
               fontSize: "24px",
+             color: "#3C7EFC",
               fontWeight: 600,
-              color: "#3C7EFC",
             }}
           >
-            Exclusive Talent
-          </span>{" "}
-          Network
+            Time to Flex  
+         
+          </span>{" "}<br/> that Resume
         </Typography>
         <Box
           sx={{
@@ -229,8 +229,7 @@ const ResumeUpload = () => {
               textAlign: "center",
             }}
           >
-            Save Time, Land Faster! Fill a few details to get more personalized
-            recommendations
+            Welcome to the club that gets hired<br/> smarter, not harder.
           </Typography>
         </Box>
       </Box>
@@ -265,7 +264,7 @@ const ResumeUpload = () => {
             fontFamily="Poppins"
             mb={1}
           >
-            Upload Resume
+            Upload Resume <span style={{fontSize:"14px"}}>(PDF/DOCX — we’re old school like that)</span>
           </Typography>
           <Typography
             fontSize="14px"
@@ -273,7 +272,8 @@ const ResumeUpload = () => {
             fontFamily="Poppins"
             mb={3}
           >
-            Upload your resume to explore exciting job opportunities!
+            So we can hook you up with opportunities that get you.
+Save time. Skip the chaos. Land faster!
           </Typography>
 
           <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>

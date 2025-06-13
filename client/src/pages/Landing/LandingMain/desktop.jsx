@@ -351,9 +351,9 @@ const DesktopLanding = () => {
                       letterSpacing: '-0.02em'
                     }}
                   >
-                    Smart matching for{' '}
+                    Your career deserves better{' '}
                     <Box component="span" sx={{ color: '#3C7EFC' }}>
-                      smarter careers
+                      than job boards.
                     </Box>
                   </Typography>
                   
@@ -367,14 +367,14 @@ const DesktopLanding = () => {
                       lineHeight: 1.7
                     }}
                   >
-                    Our AI understands your skills, preferences, and career goals to connect you with opportunities that align with your aspirations—not just your resume.
+                    We don’t just parse your resume—we understand your story. Our AI matches you to roles that respect your ambition and skip the fluff.
                   </Typography>
 
                   <Stack spacing={3}>
                     {[
-                      'Personalized job recommendations',
-                      'Direct company connections',
-                      'Real-time application tracking'
+                      'Hyper-personalized job matches',
+                      'Direct access to top companies',
+                      'Real-time application tracking (and no ghosting)'
                     ].map((feature, index) => (
                       <Box key={index} sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                         <CheckCircle size={20} color="#10b981" />
@@ -431,9 +431,9 @@ const DesktopLanding = () => {
                       letterSpacing: '-0.02em'
                     }}
                   >
-                    Find talent that{' '}
+                    Find candidates{' '}
                     <Box component="span" sx={{ color: '#1BA5EA' }}>
-                      stays and thrives
+                       you won’t want to lose.
                     </Box>
                   </Typography>
                   
@@ -447,14 +447,14 @@ const DesktopLanding = () => {
                       lineHeight: 1.7
                     }}
                   >
-                    Stop sifting through endless resumes. Our platform identifies candidates who don't just meet requirements—they exceed expectations and stay committed.
+                    No more CV flood. No more guesswork. Just sharp, high-retention talent vetted for skill and culture fit. Delivered faster than your team’s group chat.
                   </Typography>
 
                   <Stack spacing={3}>
                     {[
-                      'AI-powered candidate screening',
-                      'Culture-fit assessments',
-                      'Streamlined interview process'
+                      'AI-driven resume screening (zero noise)',
+                      'Culture-fit insights (beyond keywords)',
+                      'Interview-ready shortlists in short time'
                     ].map((feature, index) => (
                       <Box key={index} sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                         <CheckCircle size={20} color="#10b981" />

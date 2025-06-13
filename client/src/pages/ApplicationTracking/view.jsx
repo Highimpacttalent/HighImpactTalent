@@ -58,7 +58,6 @@ const DesktopView = () => {
     fetchJobs();
   }, [user]);
 
-  // Get jobs count for each processing stage
   // Get jobs count for each processing stage (case-insensitive)
   const getStageCount = (stageKey) => {
     return appliedJobs.filter((job) => {
@@ -122,159 +121,210 @@ const DesktopView = () => {
         </Typography>
       </Box>
 
-      {/* Main Tab Buttons */}
-      <Box sx={{ display: "flex", justifyContent: "center", mb: 4 }}>
-        <Box
-          sx={{
+      {/* Professional Tab Navigation */}
+      <Box sx={{ maxWidth: "1200px", mx: "auto", mb: 4 }}>
+        {/* Parent Tabs */}
+        <Box 
+          sx={{ 
             display: "flex",
-            borderRadius: "60px",
-            p: 0.75,
-            bgcolor: "white",
-            boxShadow: "0 8px 25px rgba(0,0,0,0.08)",
-            border: "1px solid #e5e7eb",
+            borderBottom: "1px solid #e5e7eb",
+            mb: 3,
+            justifyContent: "center",
           }}
         >
-          <Button
+          <Box
             onClick={() => {
               setActiveTab("inProgress");
               setActiveProcessingStage("ALL");
             }}
-            variant="contained"
-            disableElevation
-            startIcon={activeTab === "inProgress" ? <CheckCircle /> : null}
             sx={{
-              borderRadius: "50px",
-              fontWeight: 600,
-              fontFamily: "Poppins",
-              fontSize: isMobile ? "13px" : "14px",
-              px: isMobile ? 2 : 3,
-              py: 1,
-              background:
-                activeTab === "inProgress"
-                  ? "linear-gradient(135deg, #667eea 0%, #764ba2 100%)"
-                  : "transparent",
-              color: activeTab === "inProgress" ? "white" : "#6b7280",
-              "&:hover": {
-                background:
-                  activeTab === "inProgress"
-                    ? "linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%)"
-                    : "#f3f4f6",
-              },
-              textTransform: "none",
+              display: "flex",
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 1,
+              px: 3,
+              py: 1.5,
+              cursor: "pointer",
+              borderBottom: activeTab === "inProgress"
+                ? "3px solid #1976d2"
+                : "3px solid transparent",
               transition: "all 0.3s ease",
+              backgroundColor: activeTab === "inProgress" ? "#f0f7ff" : "transparent",
+              "&:hover": {
+                backgroundColor: activeTab === "inProgress" ? "#e3f2fd" : "#f8fafc",
+              },
             }}
           >
-            In Progress ({appliedJobs.filter(job => job.status !== "Not Progressing").length})
-          </Button>
-          <Button
-            onClick={() => setActiveTab("notProgressing")}
-            variant="contained"
-            disableElevation
-            startIcon={activeTab === "notProgressing" ? <Block /> : null}
-            sx={{
-              borderRadius: "50px",
-              fontWeight: 600,
-              fontFamily: "Poppins",
-              fontSize: isMobile ? "13px" : "14px",
-              px: isMobile ? 2 : 3,
-              py: 1,
-              background:
-                activeTab === "notProgressing"
-                  ? "linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%)"
-                  : "transparent",
-              color: activeTab === "notProgressing" ? "white" : "#6b7280",
-              "&:hover": {
-                background:
-                  activeTab === "notProgressing"
-                    ? "linear-gradient(135deg, #ff5252 0%, #d63031 100%)"
-                    : "#f3f4f6",
-              },
-              textTransform: "none",
-              transition: "all 0.3s ease",
-            }}
-          >
-            Not Progressing ({appliedJobs.filter(job => job.status === "Not Progressing").length})
-          </Button>
-        </Box>
-      </Box>
+            <Typography
+              sx={{
+                fontFamily: "Poppins",
+                fontWeight: activeTab === "inProgress" ? "600" : "500",
+                fontSize: isMobile ? 14 : 16,
+                color: activeTab === "inProgress" ? "#1976d2" : "#6b7280",
+              }}
+            >
+              In Progress
+            </Typography>
+            <Chip
+              label={appliedJobs.filter(job => job.status !== "Not Progressing").length}
+              size="small"
+              sx={{
+                backgroundColor: activeTab === "inProgress" ? "#1976d2" : "#e5e7eb",
+                color: activeTab === "inProgress" ? "white" : "#6b7280",
+                fontWeight: "600",
+                fontSize: "12px",
+                height: "20px",
+                "& .MuiChip-label": {
+                  px: 1,
+                }
+              }}
+            />
+          </Box>
 
-      {/* Processing Stage Filters - Only show when "In Progress" is active */}
-      {activeTab === "inProgress" && (
-        <Box sx={{ mb: 4 }}>
-          <Typography
+          <Box
+            onClick={() => setActiveTab("notProgressing")}
             sx={{
-              color: "#374151",
-              fontWeight: "600",
-              fontSize: isMobile ? 16 : 18,
-              fontFamily: "Poppins",
-              mb: 2,
-              textAlign: "center",
+              display: "flex",
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 1,
+              px: 3,
+              py: 1.5,
+              cursor: "pointer",
+              borderBottom: activeTab === "notProgressing"
+                ? "3px solid #dc2626"
+                : "3px solid transparent",
+              transition: "all 0.3s ease",
+              backgroundColor: activeTab === "notProgressing" ? "#fef2f2" : "transparent",
+              "&:hover": {
+                backgroundColor: activeTab === "notProgressing" ? "#fee2e2" : "#f8fafc",
+              },
             }}
           >
-            Filter by Status
-          </Typography>
-          
-          <Box 
-            sx={{ 
-              display: "flex", 
-              flexWrap: "wrap", 
-              justifyContent: "center", 
-              gap: isMobile ? 1 : 1.5,
-              maxWidth: "900px",
-              mx: "auto",
-            }}
-          >
-            {processingStages.map((stage) => {
-              const count = getStageCount(stage.key);
-              const isActive = activeProcessingStage === stage.key;
-              
-              return (
-                <Badge
-                  key={stage.key}
-                  badgeContent={count}
-                  color="primary"
-                  sx={{
-                    "& .MuiBadge-badge": {
-                      backgroundColor: isActive ? "#ffffff" : stage.color,
-                      color: isActive ? stage.color : "#ffffff",
-                      fontWeight: "600",
-                      fontSize: "11px",
-                    }
-                  }}
-                >
-                  <Chip
-                    icon={stage.icon}
-                    label={stage.label}
-                    onClick={() => setActiveProcessingStage(stage.key)}
-                    variant={isActive ? "filled" : "outlined"}
-                    sx={{
-                      fontFamily: "Poppins",
-                      fontWeight: isActive ? "600" : "500",
-                      fontSize: isMobile ? "12px" : "13px",
-                      px: isMobile ? 0.5 : 1,
-                      py: isMobile ? 2.5 : 3,
-                      backgroundColor: isActive ? stage.color : "white",
-                      color: isActive ? "white" : stage.color,
-                      borderColor: stage.color,
-                      borderWidth: "2px",
-                      "&:hover": {
-                        backgroundColor: isActive ? stage.color : `${stage.color}15`,
-                        borderColor: stage.color,
-                        transform: "translateY(-2px)",
-                      },
-                      "& .MuiChip-icon": {
-                        color: isActive ? "white" : stage.color,
-                      },
-                      transition: "all 0.3s ease",
-                      cursor: "pointer",
-                    }}
-                  />
-                </Badge>
-              );
-            })}
+            <Typography
+              sx={{
+                fontFamily: "Poppins",
+                fontWeight: activeTab === "notProgressing" ? "600" : "500",
+                fontSize: isMobile ? 14 : 16,
+                color: activeTab === "notProgressing" ? "#dc2626" : "#6b7280",
+              }}
+            >
+              Not Progressing
+            </Typography>
+            <Chip
+              label={appliedJobs.filter(job => job.status === "Not Progressing").length}
+              size="small"
+              sx={{
+                backgroundColor: activeTab === "notProgressing" ? "#dc2626" : "#e5e7eb",
+                color: activeTab === "notProgressing" ? "white" : "#6b7280",
+                fontWeight: "600",
+                fontSize: "12px",
+                height: "20px",
+                "& .MuiChip-label": {
+                  px: 1,
+                }
+              }}
+            />
           </Box>
         </Box>
-      )}
+
+        {/* Sub Tabs - Only show when "In Progress" is active */}
+        {activeTab === "inProgress" && (
+          <Box>
+            <Typography
+              sx={{
+                color: "#374151",
+                fontWeight: "600",
+                fontSize: isMobile ? 14 : 16,
+                fontFamily: "Poppins",
+                mb: 2,
+                textAlign: "center",
+              }}
+            >
+              Filter by Status
+            </Typography>
+            
+            <Box 
+              sx={{ 
+                display: "flex", 
+                flexWrap: "wrap", 
+                justifyContent: "center", 
+                gap: 0,
+                backgroundColor: "#f8fafc",
+                borderRadius: "8px",
+                p: 1,
+                border: "1px solid #e5e7eb",
+              }}
+            >
+              {processingStages.map((stage) => {
+                const count = getStageCount(stage.key);
+                const isActive = activeProcessingStage === stage.key;
+                
+                return (
+                  <Box
+                    key={stage.key}
+                    onClick={() => setActiveProcessingStage(stage.key)}
+                    sx={{
+                      display: "flex",
+                      flexDirection: "row",
+                      alignItems: "center",
+                      gap: 1,
+                      px: isMobile ? 1.5 : 2,
+                      py: 1,
+                      cursor: "pointer",
+                      borderRadius: "6px",
+                      transition: "all 0.3s ease",
+                      backgroundColor: isActive ? "white" : "transparent",
+                      boxShadow: isActive ? "0 2px 4px rgba(0,0,0,0.1)" : "none",
+                      border: isActive ? "1px solid #e5e7eb" : "1px solid transparent",
+                      "&:hover": {
+                        backgroundColor: isActive ? "white" : "#f1f5f9",
+                      },
+                      minWidth: isMobile ? "auto" : "100px",
+                      justifyContent: "center",
+                    }}
+                  >
+                    {stage.icon && (
+                      <Box sx={{ 
+                        color: isActive ? stage.color : "#6b7280",
+                        display: "flex",
+                        alignItems: "center",
+                        fontSize: isMobile ? "16px" : "18px",
+                      }}>
+                        {stage.icon}
+                      </Box>
+                    )}
+                    <Typography
+                      sx={{
+                        fontFamily: "Poppins",
+                        fontWeight: isActive ? "600" : "500",
+                        fontSize: isMobile ? "12px" : "13px",
+                        color: isActive ? stage.color : "#6b7280",
+                      }}
+                    >
+                      {stage.label}
+                    </Typography>
+                    <Chip
+                      label={count}
+                      size="small"
+                      sx={{
+                        backgroundColor: isActive ? stage.color : "#e5e7eb",
+                        color: isActive ? "white" : "#6b7280",
+                        fontWeight: "600",
+                        fontSize: "11px",
+                        height: "18px",
+                        "& .MuiChip-label": {
+                          px: 0.5,
+                        }
+                      }}
+                    />
+                  </Box>
+                );
+              })}
+            </Box>
+          </Box>
+        )}
+      </Box>
 
       {/* Results Summary */}
       <Box sx={{ textAlign: "center", mb: 3 }}>

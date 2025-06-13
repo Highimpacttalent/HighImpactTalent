@@ -340,7 +340,7 @@ const UserSignUp = () => {
       />
       <Box
         sx={{
-          width: { md: "50%", lg: "50%", xs: "100%", sm: "100%" },
+          width: { md: "60%", lg: "60%", xs: "100%", sm: "100%" },
           mt: 4,
           p: { md: 4, lg: 4, xs: 0, sm: 0 },
         }}
@@ -355,7 +355,7 @@ const UserSignUp = () => {
             fontSize: "32px",
           }}
         >
-          One Click Closer to a{" "}
+          You're One Step Away {" "}
           <span
             style={{
               fontWeight: "700",
@@ -363,9 +363,23 @@ const UserSignUp = () => {
               color: "#3C7EFC",
             }}
           >
-            Game-Changing{" "}
+           from Smarter,Faster Hiring!{" "}
           </span>{" "}
-          Opportunity!
+          
+        </Typography>
+        <Typography
+          variant="h5"
+          sx={{
+            fontWeight: "400",
+            mb: 3,
+            fontFamily: "Satoshi",
+            color: "grey",
+            fontSize: "18px",
+          }}
+        >
+          Create your free account. No spam. Just opportunities that match your ambition.
+
+          
         </Typography>
         <Box>
           {errMsg && (
@@ -456,35 +470,36 @@ const UserSignUp = () => {
                   mb: 1,
                 }}
               >
-                Verify Your Email
+                Ping! Your Invite Just Landed!
               </Typography>
               <Typography
                 sx={{
                   fontFamily: "Satoshi",
                   fontSize: "14px",
                   color: "#808195",
+                  mb:4
                 }}
               >
-                We've sent a verification code to {form.email}
+                We've sent a verification code to {form.email} <br/>Because even the smartest career moves need a tiny security check.
               </Typography>
+
+             
               <Typography
                 sx={{
                   fontFamily: "Satoshi",
-                  color: "#FF6B6B",
-                  fontSize: "12px",
-                  fontStyle: "italic",
-                  mb: 3,
-                  mt: 0.5,
+                  fontSize: "16px",
+                  color: "#24252C",
+                  fontWeight: "500",
+                  mb: 1,
                 }}
               >
-                Note: Please check your junk or spam folder if you don’t see the
-                email in your inbox.
+                Enter the magic digits below
               </Typography>
               <TextField
                 fullWidth
                 type="text"
                 name="otp"
-                placeholder="Enter verification code"
+                placeholder="Yes, the ones from your inbox — not your ATM pin."
                 value={otp}
                 onChange={handleOtpChange}
                 required
@@ -520,16 +535,29 @@ const UserSignUp = () => {
                   "Verify & Create Account"
                 )}
               </Button>
+               <Typography
+                sx={{
+                  fontFamily: "Satoshi",
+                  color: "#FF6B6B",
+                  fontSize: "12px",
+                  fontStyle: "italic",
+                  textAlign:'center',
+                  mt: 3,
+                }}
+              >
+                Can’t find it?
+Try your Spam, Junk, or that weird tab Gmail made up called “Promotions.”
+              </Typography>
               <Typography
                 align="center"
                 sx={{
-                  mt: 2,
+                  mt: 1,
                   fontFamily: "Satoshi",
                   fontWeight: "700",
                   color: "#808195",
                 }}
               >
-                Didn't receive the code?{" "}
+                Still nothing?{" "}
                 <Link
                   href="#"
                   underline="hover"
@@ -540,6 +568,7 @@ const UserSignUp = () => {
                 >
                   Resend OTP
                 </Link>
+                 {" "}- we got you
               </Typography>
             </Box>
           ) : (
@@ -558,7 +587,7 @@ const UserSignUp = () => {
                   mb: 1,
                 }}
               >
-                Name
+                Tell us your Name (we'll remember it)
               </Typography>
               <Box sx={{ display: "flex", gap: 2 }}>
                 <TextField
@@ -600,7 +629,7 @@ const UserSignUp = () => {
                   mt: 3,
                 }}
               >
-                Email Address
+                Email Address (We’ll only send you relevant stuff—no spam, ever.)
               </Typography>
               <TextField
                 fullWidth
@@ -628,7 +657,7 @@ const UserSignUp = () => {
                   mt: 2,
                 }}
               >
-                Password
+                Password (Make it strong. This is your career, after all.)
               </Typography>
               <TextField
                 fullWidth
@@ -663,7 +692,7 @@ const UserSignUp = () => {
               <TextField
                 fullWidth
                 type={showPassword ? "text" : "password"}
-                placeholder="Confirm Password"
+                placeholder="Confirm Password (Just to be sure)"
                 name="confirmPassword"
                 value={form.confirmPassword}
                 onChange={handleChange}
@@ -773,7 +802,7 @@ const UserSignUp = () => {
         </Box>
       </Box>
       <Box sx={{ display: { md: "flex", lg: "flex", xs: "none", sm: "none" } }}>
-        <Divider sx={{ border: "1px solid #A3A3A3", height: "76%", mt: 18 }} />
+        <Divider sx={{ border: "1px solid #A3A3A3", height: "90%", mt: 9 }} />
       </Box>
       <Box
         sx={{

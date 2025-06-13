@@ -704,7 +704,8 @@ function UserLoginForm() {
               fontFamily: 'Satoshi'
             }}
           >
-            Join thousands of satisfied users who have transformed their workflow with our platform
+            We don’t do job lists. We do dream fits.
+Tell us what you’re great at—and what you’ll never settle for. We’ll match you with roles that get it, and get you.
           </Typography>
         </Box>
 

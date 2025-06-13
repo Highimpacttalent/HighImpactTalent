@@ -7,17 +7,17 @@ import Profile2 from "../../assets/Umangsomani.jpeg";
 
 const About = () => {
   return (
-    <Box sx={{ p: { xs: 2, md: 5 }, bgcolor: "white" }}>
+    <Box sx={{ p: { xs: 2, md: 8 },pt: { xs: 2, md: 4 }, bgcolor: "white" }}>
       <Typography
         variant="h4"
         fontWeight="600"
         textAlign="center"
         sx={{ mb: 8, fontFamily: "Urbanist", color: "#3C7EFC", mt: 6 }}
       >
-        <span style={{ color: "#474E68", fontFamily: "Urbanist", fontWeight: "600" }}>Strategic{" "}</span>
-        Hiring,{" "}
-        <span style={{ color: "#474E68", fontFamily: "Urbanist", fontWeight: "600" }}>Meaningful{" "}</span>
-        Careers
+        <span style={{ color: "#474E68", fontFamily: "Urbanist", fontWeight: "600" }}>Where Strategic{" "}</span>
+        Hiring Meets{" "}
+        <span style={{ color: "#474E68", fontFamily: "Urbanist", fontWeight: "600" }}>Career-Defining{" "}</span>
+        Moves
       </Typography>
 
       <Typography
@@ -30,10 +30,9 @@ const About = () => {
           fontSize: { xs: 16, md: 20 },
         }}
       >
-        Great careers don’t happen by chance, and neither do great hires. At High Impact Talent<br />
-        we bridge the gap between top talent and leading organizations, ensuring the <br />
-        perfect match—not just by skills, but by culture, ambition, and long-term vision. <br />
-        Because when the right people meet the right opportunity, success follows.
+        Great careers aren’t built on luck—and great hires aren’t found by sifting through 10,000 resumes. At High Impact Talent, we bridge the gap between high-performing professionals and forward-thinking organizations.<br/><br/>
+
+We go beyond job descriptions and CVs. We match ambition with vision, culture with chemistry, and people with purpose.
       </Typography>
 
       {/* Our Story */}
@@ -52,9 +51,12 @@ const About = () => {
               Our Story
             </Typography>
             <Typography sx={{ fontFamily: "Poppins", color: "#474E68", fontSize: 20 }}>
-              Founded by experts from Bain & Company and the Mahindra Group, High Impact Talent was born out of a desire to solve the challenges faced by organizations in finding the right talent for strategic roles.<br /><br />
-              With our extensive industry knowledge and network, we are uniquely positioned to understand and meet the needs of both job seekers and employers. We work closely with both parties to create lasting professional relationships, ensuring that every placement is a step towards greater success.
-            </Typography>
+              Built by Insiders. Backed by Experience. Trusted by Leaders.
+Founded by veterans from Bain & Company and the Mahindra Group, High Impact Talent was born to fix what traditional hiring platforms broke: speed, relevance, and trust.
+
+We saw the pain—founders wasting weeks skimming irrelevant profiles, and top-tier candidates lost in the noise. So we built a solution. One that’s fast, curated, and radically outcome-driven.
+
+Whether you're a Series A rocketship or an enterprise giant, we’re your unfair advantage in hiring strategic, high-impact talent. </Typography>
           </Stack>
         </Box>
         <Box sx={{ width: { xs: "100%", md: "30%" }, display: "flex", justifyContent: "center" }}>
@@ -78,9 +80,14 @@ const About = () => {
               Our Vision
             </Typography>
             <Typography sx={{ fontFamily: "Poppins", color: "#474E68", fontSize: 20 }}>
-              Our vision is to be the most trusted and effective recruitment partner for high-impact roles, driving success for individuals and organizations alike.<br /><br />
-              We aim to revolutionize the hiring process by leveraging data-driven insights, AI-powered recommendations, and human expertise to ensure the best possible match between candidates and companies.
-            </Typography>
+              To Make Every Hire Count. For Good.
+We’re not a job board. We’re a talent intelligence platform. Our vision is to redefine the way high-stakes hiring happens—through:<br/>
+
+1. AI-powered shortlisting (no noise, just precision)<br/>
+2. Human-led matchmaking (we’ve been in the boardroom, not just the backend)<br/>
+3. Data-driven decisions (because gut-feel doesn’t scale)<br/>
+
+Our mission? To become the most trusted recruitment partner for high-impact roles across India and beyond.</Typography>
           </Stack>
         </Box>
         <Box sx={{ width: { xs: "100%", md: "30%" }, display: "flex", justifyContent: "center" }}>
@@ -88,80 +95,8 @@ const About = () => {
         </Box>
       </Box>
 
-      {/* Founders Section */}
-      <Typography
-        variant="h4"
-        fontWeight="600"
-        textAlign="center"
-        sx={{ mb: 8, fontFamily: "Urbanist", color: "#474E68", mt: 6 }}
-      >
-        About the founders
-      </Typography>
 
-      <Box
-        sx={{
-          display: 'flex',
-          flexDirection: { xs: 'column', md: 'row' },
-          justifyContent: "space-between",
-          mt: 10,
-          gap: 4,
-        }}
-      >
-        {/* Founder 1 */}
-        <Box sx={{ width: { xs: "100%", md: "50%" }, p: 2 }}>
-          <Stack sx={{ justifyContent: "center", alignItems: "center" }} gap={0.5}>
-            <Box sx={{ width: "60%", height: 280, display: "flex", justifyContent: "center", alignItems: "center" }}>
-              <img src={Profile} alt="img here" style={{ borderRadius: 14, height: "100%", objectFit: "cover", width: "100%" }} />
-            </Box>
-            <Typography sx={{ color: "#404258", fontSize: 16, fontWeight: "600", fontFamily: "Poppins" }}>Koustubh Haridas</Typography>
-            <Typography sx={{ color: "#474E68", fontSize: 12, fontWeight: "600", fontFamily: "Poppins" }}>Co-Founder & CEO</Typography>
-            <Typography sx={{ color: "#808195", fontSize: 10, fontFamily: "Poppins" }}>(ex-Bain & Company)</Typography>
-            <Typography sx={{
-              justifyContent: "center",
-              fontSize: 10,
-              alignItems: "center",
-              textAlign: "center",
-              border: 1,
-              borderRadius: 2,
-              p: 1,
-              color: "#474E68",
-              fontWeight: "400",
-              fontFamily: "Poppins"
-            }}>
-              With years of strategic consulting<br /> experience, Koustubh drives the vision<br /> and growth of High Impact Talent.
-            </Typography>
-          </Stack>
-        </Box>
-
-        {/* Founder 2 */}
-        <Box sx={{ width: { xs: "100%", md: "50%" }, p: 2 }}>
-          <Stack sx={{ justifyContent: "center", alignItems: "center" }} gap={0.5}>
-            <Box sx={{ width: "60%", height: 280, display: "flex", justifyContent: "center", alignItems: "center" }}>
-              <img src={Profile2}
-                alt="img here"
-                style={{ borderRadius: 14, height: "100%", objectFit: "cover", width: "100%" }}
-              />
-            </Box>
-            <Typography sx={{ color: "#404258", fontSize: 16, fontWeight: "600", fontFamily: "Poppins" }}>Umang Somani</Typography>
-            <Typography sx={{ color: "#474E68", fontSize: 12, fontWeight: "600", fontFamily: "Poppins" }}>Co-Founder & CFO</Typography>
-            <Typography sx={{ color: "#808195", fontSize: 10, fontFamily: "Poppins" }}>(Mahindra Group)</Typography>
-            <Typography sx={{
-              justifyContent: "center",
-              fontSize: 10,
-              alignItems: "center",
-              textAlign: "center",
-              border: 1,
-              borderRadius: 2,
-              p: 1,
-              color: "#474E68",
-              fontWeight: "400",
-              fontFamily: "Poppins"
-            }}>
-              Umang's financial and operational<br /> acumen ensures seamless execution and<br /> continuous improvement in our services.
-            </Typography>
-          </Stack>
-        </Box>
-      </Box>
+      
     </Box>
   );
 };

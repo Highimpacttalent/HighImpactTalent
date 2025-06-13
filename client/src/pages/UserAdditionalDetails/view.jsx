@@ -158,7 +158,7 @@ const UserInfoForm = () => {
         } else if (num < 1) {
           setSalErr((prev) => ({ ...prev, salary: "Minimum is 1." }));
         } else if (num > 1000) {
-          setSalErr((prev) => ({ ...prev, salary: "Cannot exceed 1000." }));
+          setSalErr((prev) => ({ ...prev, salary: "Cannot exceed 1000. Please mention in INR Lakhs & not INR" }));
         } else {
           setSalErr((prev) => ({ ...prev, salary: "" }));
         }

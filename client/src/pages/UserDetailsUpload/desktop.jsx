@@ -211,10 +211,10 @@ const ResumeUpload = () => {
           }}
         >
           <Typography variant="h4" fontWeight="bold" color="primary" gutterBottom>
-            Upload Your Resume
+            Welcome to the Inner Circle
           </Typography>
           <Typography variant="body1" color="textSecondary" mb={3}>
-            Upload your resume to explore exciting job opportunities!
+            Let’s get you hired. Fast.<br/>Drop your resume (PDF or DOCX only).
           </Typography>
 
           <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
