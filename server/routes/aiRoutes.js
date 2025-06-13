@@ -1,6 +1,6 @@
 import express from "express";
 import multer from "multer";
-import { parseResume,resumepool,AIana, filterResumesByPrompt,uploadAndShortlist,analyseJobDescription, analyseIdealCandidate } from "../controllers/AiController.js";
+import { parseResume,resumepool,AIana, filterResumesByPrompt,uploadAndShortlist,analyseJobDescription, analyseIdealCandidate, ask } from "../controllers/AiController.js";
 
 
 const router = express.Router();
@@ -22,5 +22,7 @@ router.post("/upload-resume", uploadAndShortlist)
 router.post("/analyse-jd", analyseJobDescription)
 
 router.post("/shortlisting", analyseIdealCandidate)
+
+router.post("/ask", ask)
 
 export default router;
