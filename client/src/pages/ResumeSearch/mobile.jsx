@@ -751,6 +751,28 @@ const ResumeSearch = () => {
   </Button>
 </Box>
 
+ <Box
+              sx={{
+                background: "linear-gradient(45deg, #ff6ec4, #7873f5)",
+                color: "white",
+                px: 2.5,
+                py: 1.2,
+                borderRadius: 2,
+                boxShadow: 4,
+                fontWeight: "bold",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                gap: 1,
+              }}
+              onClick={() => navigate("/ai-chat")}
+            >
+              <span role="img" aria-label="star">
+                ✨
+              </span>
+              Ask Koustubh!
+            </Box>
+
 </Box>
       {/* Main content */}
       <Box sx={{ flex: 1 }}>
