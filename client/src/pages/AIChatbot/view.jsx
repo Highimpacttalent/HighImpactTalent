@@ -63,7 +63,7 @@ const RecruitmentChatbot = () => {
     setIsLoading(true);
 
     try {
-      const response = await fetch('http://localhost:8800/api-v1/ai/ask', {
+      const response = await fetch('https://highimpacttalent.onrender.com/api-v1/ai/ask', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
