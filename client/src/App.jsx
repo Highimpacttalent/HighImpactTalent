@@ -47,6 +47,7 @@ import LinkedInCallback from "./pages/AuthForm/LinkedInCallback";
 import PaymentProtectedRoute from "./pages/Payments/PaymentProtectedRoute.jsx";
 import JobRecommendationsComponent from "./pages/Match/view.jsx";
 import HighImpactTalentLanding from "./pages/Form/view2.jsx";
+import RecruitmentChatbot from "./pages/AIChatbot/view.jsx" 
 
 function Layout() {
   const { user } = useSelector((state) => state.user);
@@ -141,7 +142,7 @@ function App() {
         <Route path="/blog/:blogId" element={<SingleBlog/>}></Route>
         <Route path="/application-tracking" element={<ApplicationTracking />} />
         <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-
+        <Route path="/ai-chat" element={<RecruitmentChatbot />} />
 
       </Routes>
       {user && <FloatingChatAssistant />} 
