@@ -266,7 +266,7 @@ const RecruitmentChatbot = () => {
                     {message.type === 'bot' && !message.error && (
                       <div className="flex items-center justify-between mb-4 pb-3 border-b border-gray-100">
                         <div className="flex items-center gap-3">
-                          <span className="font-bold text-gray-900 text-lg">Koustubh</span>
+                          <span className="font-bold text-gray-900 text-lg">High Impact Talent</span>
                           <span className="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded-full font-medium">
                             AI Recruiter
                           </span>
@@ -331,7 +331,7 @@ const RecruitmentChatbot = () => {
                       <div className="w-3 h-3 bg-blue-600 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
                     </div>
                     <div>
-                      <p className="font-semibold text-gray-900">Koustubh is analyzing your requirements</p>
+                      <p className="font-semibold text-gray-900">Analyzing your requirements</p>
                       <p className="text-sm text-gray-600">Searching through our premium talent database...</p>
                     </div>
                   </div>
