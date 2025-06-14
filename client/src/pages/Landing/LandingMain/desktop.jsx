@@ -242,7 +242,7 @@ const DesktopLanding = () => {
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                     <Box sx={{ textAlign: 'center' }}>
                       <Typography variant="h4" sx={{ fontWeight: 700, color: '#0a0a0a', mb: 0.5 }}>
-                        10K+
+                        1K+
                       </Typography>
                       <Typography variant="body2" sx={{ color: '#64748b', fontSize: '0.875rem' }}>
                         Jobs Matched
@@ -250,7 +250,7 @@ const DesktopLanding = () => {
                     </Box>
                     <Box sx={{ textAlign: 'center' }}>
                       <Typography variant="h4" sx={{ fontWeight: 700, color: '#0a0a0a', mb: 0.5 }}>
-                        5K+
+                        50+
                       </Typography>
                       <Typography variant="body2" sx={{ color: '#64748b', fontSize: '0.875rem' }}>
                         Companies
@@ -258,7 +258,7 @@ const DesktopLanding = () => {
                     </Box>
                     <Box sx={{ textAlign: 'center' }}>
                       <Typography variant="h4" sx={{ fontWeight: 700, color: '#0a0a0a', mb: 0.5 }}>
-                        98%
+                        90%
                       </Typography>
                       <Typography variant="body2" sx={{ color: '#64748b', fontSize: '0.875rem' }}>
                         Success Rate

@@ -271,7 +271,7 @@ const PremiumSubscribeSection = () => {
                           fontWeight={700}
                           color="text.primary"
                         >
-                          25,000+
+                          2500+
                         </Box>{" "}
                         professionals already joined
                       </Typography>
