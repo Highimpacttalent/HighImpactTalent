@@ -148,7 +148,7 @@ const DesktopLanding = () => {
                       letterSpacing: '-0.02em'
                     }}
                   >
-                    Cut through the noise.{' '}
+                    Where the right people meet the{' '}
                     <Box 
                       component="span" 
                       sx={{
@@ -165,9 +165,9 @@ const DesktopLanding = () => {
                         WebkitTextFillColor: 'transparent',
                       }}
                     >
-                      Land roles
+                      Right roles
                     </Box>{' '}
-                    that actually fit.
+                    Fast.
                   </Typography>
                   
                   <Typography
@@ -181,7 +181,7 @@ const DesktopLanding = () => {
                       fontWeight: 400
                     }}
                   >
-                    Stop wasting time on job hunts that lead nowhere. Tell us what you do best—and what you won't settle for. We'll match you with roles that truly fit your ambitions.
+                    Most platforms throw thousands of irrelevant profiles your way. We don't. Whether you're hiring or job hunting, we get you to the shortlist faster—with AI, insight, and a human touch.
                   </Typography>
 
                   <Stack direction="row" spacing={3} sx={{ mb: 6 }}>
