@@ -123,57 +123,23 @@ export const createJob = async (req, res, next) => {
 // update a job using id
 export const updateJob = async (req, res, next) => {
   try {
-    const {
-      jobTitle,
-      workType,
-      workMode,
-      jobLocation,
-      salary,
-      experience,
-      salaryConfidential,
-      jobDescription,
-      skills,
-      qualifications,
-      requirements,
-      screeningQuestions,
-      applicationLink,
-      jobId
-    } = req.body;
+    const { jobId, ...updates } = req.body;
 
-    if (
-      !jobTitle ||
-      !jobLocation ||
-      !salary ||
-      !requirements ||
-      !workType ||
-      !workMode
-    ) {
-      next("Please Provide All Required Fields");
-      return;
+    if (!jobId) {
+      return res.status(400).json({ success: false, message: "Job ID is required" });
     }
 
-    const jobPost = {
-      jobTitle,
-      workType,
-      workMode,
-      jobLocation,
-      salaryConfidential,
-      salary,
-      requirements,
-      qualifications,
-      experience,
-      skills,
-      jobDescription, 
-      screeningQuestions,
-      ...(applicationLink !== undefined && { applicationLink }),
-      _id: jobId,
-    };
+    // Filter out undefined fields to avoid overwriting with undefined
+    const filteredUpdates = Object.fromEntries(
+      Object.entries(updates).filter(([_, value]) => value !== undefined)
+    );
 
-    const jobupdate = await Jobs.findByIdAndUpdate(jobId, jobPost, {
+    const updatedJob = await Jobs.findByIdAndUpdate(jobId, filteredUpdates, {
       new: true,
+      runValidators: true, // Ensure updated values respect schema validations
     });
 
-    if (!jobupdate) {
+    if (!updatedJob) {
       return res.status(404).json({
         success: false,
         message: "Job not found",
@@ -182,12 +148,12 @@ export const updateJob = async (req, res, next) => {
 
     res.status(200).json({
       success: true,
-      message: "Job Post Updated SUccessfully",
-      jobPost,
+      message: "Job updated successfully",
+      updatedJob,
     });
   } catch (error) {
-    console.log(error);
-    res.status(404).json({ message: error.message });
+    console.error("Error updating job:", error);
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
