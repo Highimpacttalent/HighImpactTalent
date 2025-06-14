@@ -245,7 +245,7 @@ const DesktopLanding = () => {
                         1K+
                       </Typography>
                       <Typography variant="body2" sx={{ color: '#64748b', fontSize: '0.875rem' }}>
-                        Jobs Matched
+                        Jobs Parsed
                       </Typography>
                     </Box>
                     <Box sx={{ textAlign: 'center' }}>
