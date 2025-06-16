@@ -331,7 +331,7 @@ function JobCardRecriter({ job, fetchJobs }) {
           />
           <Chip
             icon={<WorkOutlineOutlined sx={{ color: "#6B7280 !important", fontSize: "16px !important" }} />}
-            label={`${job?.experience}+ years experience`}
+             label={`${job?.experience?.minExperience || job?.experience }+ years experience`}
             variant="outlined"
             sx={{ 
               color: "#374151", 
@@ -347,7 +347,9 @@ function JobCardRecriter({ job, fetchJobs }) {
             label={
               job.salaryConfidential
                 ? "Confidential"
-                : `${Number(job.salary).toLocaleString("en-IN")} (${job.salaryCategory})`
+                : `${Number(job.salary.maxSalary||job.salary).toLocaleString("en-IN")} (${
+                        job.salaryCategory
+                      }) LPA`
             }
             variant="outlined"
             sx={{ 
@@ -516,7 +518,7 @@ function JobCardRecriter({ job, fetchJobs }) {
                 />
                 <Chip
                   icon={<WorkOutlineOutlined sx={{ color: "#474E68" }} />}
-                  label={`${job?.experience}+ years experience`}
+                   label={`${job?.experience?.minExperience || job?.experience }+ years experience`}
                   variant="contained"
                   sx={{ color: "#474E68", fontWeight: "400" }}
                 />
@@ -526,9 +528,9 @@ function JobCardRecriter({ job, fetchJobs }) {
                 label={
                   job.salaryConfidential
                     ? "Confidential"
-                    : `${Number(job.salary).toLocaleString("en-IN")} (${
+                    : `${Number(job.salary.maxSalary||job.salary).toLocaleString("en-IN")} (${
                         job.salaryCategory
-                      })`
+                      }) LPA`
                 }
                 variant="contained"
                 sx={{ color: "#474E68", fontWeight: "400" }}

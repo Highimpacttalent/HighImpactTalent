@@ -1,37 +1,45 @@
 import { useState } from "react";
 import {
-  CardHeader,
+  Box,
+  Card,
+  CardContent,
   Avatar,
   Typography,
-  Box,
-  Grid,
   Chip,
-  IconButton,
-  CardContent,
   Button,
+  IconButton,
+  Grid,
   Stack,
   Tooltip,
-  Drawer,
   Menu,
   MenuItem,
-  useTheme,
-  useMediaQuery,
+  Drawer,
   Divider,
-} from "@mui/material";
+  Badge
+} from '@mui/material';
 import {
-  LinkedIn,
-  LocationOn,
   Work,
-  School,
-  MonetizationOn,
   Business,
-  Info as InfoIcon,
-  Close as CloseIcon,
+  MonetizationOn,
+  LocationOn,
+  School,
+  LinkedIn,
   MoreVert as MoreVertIcon,
-} from "@mui/icons-material";
+  Close as CloseIcon,
+  Info as InfoIcon,
+  Star,
+  Download,
+  Visibility,
+  Phone,
+  Email,
+  CalendarToday,
+  TrendingUp
+} from '@mui/icons-material';
+import {useTheme} from "@mui/material";
+import {useMediaQuery} from "@mui/material";
 
 const ApplicationCard = ({ app, navigate, markAsViewed }) => {
-  const { applicant, matchScore, status } = app;
+  const { applicant, matchScore, status, screeningAnswers } = app;
   const [showAll, setShowAll] = useState(false);
   const [resumeOpen, setResumeOpen] = useState(false);
   const theme = useTheme();
@@ -41,15 +49,14 @@ const ApplicationCard = ({ app, navigate, markAsViewed }) => {
   const openMenu = (e) => setAnchorEl(e.currentTarget);
   const closeMenu = () => setAnchorEl(null);
 
-
   const skills = applicant.skills || [];
-  const visibleSkills = showAll ? skills : skills.slice(0, 5);
+  const visibleSkills = showAll ? skills : skills.slice(0, 8);
 
-  // Determine match chip colors
+  // Professional match color scheme
   const getMatchColor = (score) => {
-    if (score > 75) return { bg: "#e8f5e9", fg: "#2e7d32" };
-    if (score > 50) return { bg: "#fff3e0", fg: "#f57c00" };
-    return { bg: "#ffebee", fg: "#d32f2f" };
+    if (score >= 80) return { bg: "#f0f8f0", fg: "#2d5a2d", border: "#4a7c4a" };
+    if (score >= 60) return { bg: "#fff8e1", fg: "#8b4513", border: "#daa520" };
+    return { bg: "#fef2f2", fg: "#b91c1c", border: "#dc2626" };
   };
   const matchColor = getMatchColor(matchScore);
 
@@ -61,279 +68,392 @@ const ApplicationCard = ({ app, navigate, markAsViewed }) => {
     }
   };
 
-  return (
-    <>
-      <Box sx={{ p: 2, borderRadius: 3, mb: 2, border: "2px solid #e0e0e0" }}>
-        {/* Header */}
-        <CardHeader
-      sx={{
-        pb: 1,
-        "& .MuiCardHeader-content": {
-          flex: 1,
-          ml: isMobile ? 0 : 2,
-        },
-      }}
-      avatar={
-        <Avatar
-          src={applicant.profileUrl}
-          sx={{
-            width: isMobile ? 48 : 60,
-            height: isMobile ? 48 : 60,
-            border: "2px solid",
-            borderColor: theme.palette.primary.main,
-          }}
-        >
-          {applicant.firstName?.[0]}
-          {applicant.lastName?.[0]}
-        </Avatar>
-      }
-      title={
-        <Box
-          sx={{
-            display: "flex",
-            flexDirection: isMobile ? "column" : "row",
-            alignItems: isMobile ? "flex-start" : "center",
-            gap: 1,
-          }}
-        >
-          <Typography variant={isMobile ? "subtitle1" : "h6"} fontWeight={700}>
-            {applicant.firstName} {applicant.lastName}
-          </Typography>
-          <Chip
-            label={`${matchScore}% Match`}
-            size="small"
-            sx={{
-              backgroundColor: matchColor.bg,
-              color: matchColor.fg,
-              fontWeight: 600,
-            }}
-          />
-        </Box>
-      }
-      action={
-        isMobile ? (
-          <>
-            <IconButton onClick={openMenu}>
-              <MoreVertIcon />
-            </IconButton>
-            <Menu
-              anchorEl={anchorEl}
-              open={Boolean(anchorEl)}
-              onClose={closeMenu}
-              anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-              transformOrigin={{ vertical: "top", horizontal: "right" }}
-            >
-              {applicant.linkedinLink && (
-                <MenuItem
-                  component="a"
-                  href={applicant.linkedinLink}
-                  target="_blank"
-                  onClick={closeMenu}
-                >
-                  <LinkedIn fontSize="small" sx={{ mr: 1, color: "#0077b5" }} />
-                  LinkedIn
-                </MenuItem>
-              )}
-              <MenuItem onClick={() => {
-                if (status === "Applied") markAsViewed(app._id);
-                navigate("/view-profile", {
-                  state: { applicant, status, applicationId: app._id },
-                });
-              }}>View Profile</MenuItem>
-              <MenuItem onClick={() => { handleViewResume(); closeMenu(); }}>
-                View Resume
-              </MenuItem>
-            </Menu>
-          </>
-        ) : (
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-            {applicant.linkedinLink && (
-              <Tooltip title="LinkedIn Profile">
-                <IconButton
-                  href={applicant.linkedinLink}
-                  target="_blank"
-                  sx={{ color: "#0077b5" }}
-                >
-                  <LinkedIn />
-                </IconButton>
-              </Tooltip>
-            )}
-            <Button
-              size="small"
-              variant="contained"
-              onClick={() => {
-                if (status === "Applied") markAsViewed(app._id);
-                navigate("/view-profile", {
-                  state: { applicant, status, applicationId: app._id },
-                });
-              }}
-              sx={{ textTransform: "none" }}
-            >
-              View Profile
-            </Button>
-            <Button
-              size="small"
-              variant="contained"
-              onClick={handleViewResume}
-              sx={{ textTransform: "none" }}
-            >
-              View Resume
-            </Button>
-          </Box>
-        )
-      }
-    />
+  const handleViewProfile = () => {
+    if (status === "Applied") markAsViewed(app._id);
+    navigate("/view-profile", {
+      state: { applicant, status, applicationId: app._id, screeningAnswers },
+    });
+  };
 
-        <CardContent sx={{ pt: 0 }}>
-          <Grid container spacing={2}>
-            {/* Basic Info */}
-            <Grid item xs={12} sm={6} md={4}>
-              <Stack spacing={1}>
-                <InfoRow
-                  icon={<Work fontSize="small" />}
-                  label="Designation"
-                  value={applicant.currentDesignation || "N/A"}
+  return (
+    <Card sx={{ 
+      backgroundColor: '#ffffff',
+      border: '1px solid #e5e7eb',
+      borderRadius: 2,
+      boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
+      mb: 2,
+      '&:hover': {
+        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+        borderColor: '#d1d5db',
+        transition: 'all 0.2s ease'
+      }
+    }}>
+      <CardContent sx={{ p: 3 }}>
+        {/* Header Row */}
+        <Box sx={{ 
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'flex-start',
+          mb: 3
+        }}>
+          {/* Left Side - Avatar and Basic Info */}
+          <Box sx={{ display: 'flex', gap: 2, flex: 1 }}>
+            <Avatar
+              src={applicant.profileUrl}
+              sx={{
+                width: 60,
+                height: 60,
+                border: '2px solid #f3f4f6',
+                fontSize: '1.25rem',
+                fontWeight: 600,
+                color: '#374151',
+                backgroundColor: '#f9fafb'
+              }}
+            >
+              {applicant.firstName?.[0]}{applicant.lastName?.[0]}
+            </Avatar>
+            
+            <Box sx={{ flex: 1, minWidth: 0 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
+                <Typography 
+                  variant="h6" 
+                  sx={{
+                    fontFamily: 'Poppins, sans-serif',
+                    fontWeight: 600,
+                    color: '#111827',
+                    fontSize: '1.125rem',
+                    lineHeight: 1.2
+                  }}
+                >
+                  {applicant.firstName} {applicant.lastName}
+                </Typography>
+                
+                <Chip
+                  label={`${matchScore}% Match`}
+                  size="small"
+                  sx={{
+                    backgroundColor: matchColor.bg,
+                    color: matchColor.fg,
+                    border: `1px solid ${matchColor.border}`,
+                    fontFamily: 'Satoshi, sans-serif',
+                    fontWeight: 600,
+                    fontSize: '0.75rem',
+                    height: 24
+                  }}
                 />
-                <InfoRow
-                  icon={<Business fontSize="small" />}
-                  label="Company"
+                
+                <Chip
+                  label={status}
+                  size="small"
+                  variant="outlined"
+                  sx={{
+                    borderColor: '#d1d5db',
+                    color: '#6b7280',
+                    fontFamily: 'Satoshi, sans-serif',
+                    fontWeight: 500,
+                    fontSize: '0.75rem',
+                    height: 24
+                  }}
+                />
+              </Box>
+              
+              <Typography 
+                variant="body2" 
+                sx={{ 
+                  color: '#4b5563',
+                  fontFamily: 'Satoshi, sans-serif',
+                  fontWeight: 500,
+                  mb: 0.5
+                }}
+              >
+                {applicant.currentDesignation} • {applicant.currentCompany}
+              </Typography>
+              
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 3, color: '#6b7280' }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                  <Work sx={{ fontSize: 14 }} />
+                  <Typography variant="caption" sx={{ fontFamily: 'Satoshi, sans-serif', fontWeight: 500 }}>
+                    {applicant.experience} yrs exp
+                  </Typography>
+                </Box>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                  <LocationOn sx={{ fontSize: 14 }} />
+                  <Typography variant="caption" sx={{ fontFamily: 'Satoshi, sans-serif', fontWeight: 500 }}>
+                    {applicant.currentLocation}
+                  </Typography>
+                </Box>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                  <MonetizationOn sx={{ fontSize: 14 }} />
+                  <Typography variant="caption" sx={{ fontFamily: 'Satoshi, sans-serif', fontWeight: 500 }}>
+                    ₹{applicant.currentSalary}L - ₹{applicant.expectedMinSalary}L
+                  </Typography>
+                </Box>
+              </Box>
+            </Box>
+          </Box>
+
+          {/* Right Side - Actions */}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            {!isMobile ? (
+              <>
+                {applicant.linkedinLink && (
+                  <Tooltip title="LinkedIn Profile">
+                    <IconButton
+                      href={applicant.linkedinLink}
+                      target="_blank"
+                      size="small"
+                      sx={{ 
+                        color: '#0077b5',
+                        '&:hover': { backgroundColor: '#f0f8ff' }
+                      }}
+                    >
+                      <LinkedIn fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
+                )}
+                <Button
+                  variant="outlined"
+                  size="small"
+                  startIcon={<Visibility />}
+                  onClick={handleViewProfile}
+                  sx={{ 
+                    textTransform: 'none',
+                    fontFamily: 'Satoshi, sans-serif',
+                    fontWeight: 600,
+                    borderColor: '#d1d5db',
+                    color: '#374151',
+                    '&:hover': { 
+                      borderColor: '#9ca3af',
+                      backgroundColor: '#f9fafb'
+                    },
+                    minWidth: 100
+                  }}
+                >
+                  Profile
+                </Button>
+                <Button
+                  variant="contained"
+                  size="small"
+                  startIcon={<Download />}
+                  onClick={handleViewResume}
+                  sx={{ 
+                    textTransform: 'none',
+                    fontFamily: 'Satoshi, sans-serif',
+                    fontWeight: 600,
+                    backgroundColor: '#374151',
+                    '&:hover': { backgroundColor: '#1f2937' },
+                    minWidth: 100
+                  }}
+                >
+                  Resume
+                </Button>
+              </>
+            ) : (
+              <>
+                <IconButton onClick={openMenu} size="small">
+                  <MoreVertIcon />
+                </IconButton>
+                <Menu
+                  anchorEl={anchorEl}
+                  open={Boolean(anchorEl)}
+                  onClose={closeMenu}
+                  anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+                  transformOrigin={{ vertical: "top", horizontal: "right" }}
+                >
+                  {applicant.linkedinLink && (
+                    <MenuItem component="a" href={applicant.linkedinLink} target="_blank">
+                      <LinkedIn fontSize="small" sx={{ mr: 1, color: "#0077b5" }} />
+                      LinkedIn
+                    </MenuItem>
+                  )}
+                  <MenuItem onClick={handleViewProfile}>
+                    <Visibility fontSize="small" sx={{ mr: 1 }} />
+                    View Profile
+                  </MenuItem>
+                  <MenuItem onClick={handleViewResume}>
+                    <Download fontSize="small" sx={{ mr: 1 }} />
+                    View Resume
+                  </MenuItem>
+                </Menu>
+              </>
+            )}
+          </Box>
+        </Box>
+
+        {/* Information Grid */}
+        <Grid container spacing={3}>
+          {/* Professional Details */}
+          <Grid item xs={12} sm={6} md={3}>
+            <Box>
+              <Typography 
+                variant="subtitle2" 
+                sx={{ 
+                  fontFamily: 'Poppins, sans-serif',
+                  fontWeight: 600,
+                  color: '#374151',
+                  mb: 1.5,
+                  fontSize: '0.875rem'
+                }}
+              >
+                Professional Details
+              </Typography>
+              <Stack spacing={1}>
+                <DetailItem
+                  icon={<Business sx={{ fontSize: 16, color: '#6b7280' }} />}
+                  label="Current Company"
                   value={applicant.currentCompany || "N/A"}
                 />
-                <InfoRow
-                  icon={<MonetizationOn fontSize="small" />}
-                  label="Current Salary"
-                  value={
-                    applicant.currentSalary
-                      ? `₹${applicant.currentSalary}K`
-                      : "N/A"
-                  }
+                <DetailItem
+                  icon={<TrendingUp sx={{ fontSize: 16, color: '#6b7280' }} />}
+                  label="Consulting Experience"
+                  value={`${applicant.totalYearsInConsulting || 0} years`}
                 />
-                <InfoRow
-                  icon={<MonetizationOn fontSize="small" />}
-                  label="Expected Salary"
-                  value={
-                    applicant.expectedMinSalary
-                      ? `₹${applicant.expectedMinSalary}K`
-                      : "N/A"
-                  }
-                />
-              </Stack>
-            </Grid>
-
-            {/* Experience & Consulting */}
-            <Grid item xs={12} sm={6} md={4}>
-              <Stack spacing={1}>
-                <InfoRow
-                  icon={<InfoIcon fontSize="small" />}
-                  label="Total Exp"
-                  value={`${applicant.experience} yrs`}
-                />
-                <InfoRow
-                  icon={<Business fontSize="small" />}
-                  label="Consulting"
-                  value={`${applicant.totalYearsInConsulting || 0} yrs`}
-                />
-                <InfoRow
-                  icon={<LocationOn fontSize="small" />}
-                  label="Location"
-                  value={applicant.currentLocation}
-                />
-                <InfoRow
-                  icon={<LocationOn fontSize="small" />}
-                  label="Relocate"
-                  value={applicant.openToRelocate}
-                />
-              </Stack>
-            </Grid>
-
-            {/* Skills & Preferences */}
-            <Grid item xs={12} sm={12} md={4}>
-              <Stack spacing={1}>
-                <InfoRow
-                  icon={<School fontSize="small" />}
+                <DetailItem
+                  icon={<School sx={{ fontSize: 16, color: '#6b7280' }} />}
                   label="Education"
-                  value={applicant.highestQualification?.join(", ") || "N/A"}
+                  value={applicant.highestQualification?.[0] || "N/A"}
                 />
-                <InfoRow
-                  icon={<LocationOn fontSize="small" />}
-                  label="Preferred Loc"
-                  value={applicant.preferredLocations?.join(", ") || "Any"}
+              </Stack>
+            </Box>
+          </Grid>
+
+          {/* Location & Preferences */}
+          <Grid item xs={12} sm={6} md={3}>
+            <Box>
+              <Typography 
+                variant="subtitle2" 
+                sx={{ 
+                  fontFamily: 'Poppins, sans-serif',
+                  fontWeight: 600,
+                  color: '#374151',
+                  mb: 1.5,
+                  fontSize: '0.875rem'
+                }}
+              >
+                Location & Preferences
+              </Typography>
+              <Stack spacing={1}>
+                <DetailItem
+                  icon={<LocationOn sx={{ fontSize: 16, color: '#6b7280' }} />}
+                  label="Open to Relocate"
+                  value={applicant.openToRelocate || "N/A"}
                 />
-                <InfoRow
-                  icon={<Business fontSize="small" />}
-                  label="Work Type"
-                  value={applicant.preferredWorkTypes?.join(", ") || "Any"}
+                <DetailItem
+                  icon={<LocationOn sx={{ fontSize: 16, color: '#6b7280' }} />}
+                  label="Preferred Locations"
+                  value={applicant.preferredLocations?.slice(0, 2).join(", ") || "Any"}
                 />
-                <InfoRow
-                  icon={<Business fontSize="small" />}
+                <DetailItem
+                  icon={<Work sx={{ fontSize: 16, color: '#6b7280' }} />}
                   label="Work Mode"
                   value={applicant.preferredWorkModes?.join(", ") || "Any"}
                 />
               </Stack>
-            </Grid>
+            </Box>
+          </Grid>
 
-            {/* Key Skills */}
-            <Grid item xs={12} sm={6}>
-              <Box>
-                <Typography
-                  variant="subtitle2"
-                  fontWeight={600}
-                  sx={{ mb: 0.5 }}
-                >
-                  Key Skills
-                </Typography>
-
-                <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
-                  {skills.length > 0 ? (
-                    visibleSkills.map((skill) => (
-                      <Chip
-                        key={skill}
-                        label={skill}
-                        size="small"
-                        sx={{ fontSize: "0.75rem" }}
-                      />
-                    ))
-                  ) : (
-                    <Typography variant="body2">No skills</Typography>
-                  )}
-                </Box>
-
-                {skills.length > 6 && (
-                  <Button
-                    size="small"
-                    onClick={() => setShowAll((prev) => !prev)}
-                    sx={{ mt: 1, textTransform: "none", fontSize: "0.75rem" }}
-                  >
-                    {showAll ? "View Less" : "View More"}
-                  </Button>
+          {/* Skills */}
+          <Grid item xs={12} sm={12} md={6}>
+            <Box>
+              <Typography 
+                variant="subtitle2" 
+                sx={{ 
+                  fontFamily: 'Poppins, sans-serif',
+                  fontWeight: 600,
+                  color: '#374151',
+                  mb: 1.5,
+                  fontSize: '0.875rem'
+                }}
+              >
+                Key Skills ({skills.length})
+              </Typography>
+              
+              <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.75 }}>
+                {skills.length > 0 ? (
+                  visibleSkills.map((skill) => (
+                    <Chip
+                      key={skill}
+                      label={skill}
+                      size="small"
+                      sx={{
+                        backgroundColor: '#f3f4f6',
+                        color: '#374151',
+                        fontFamily: 'Satoshi, sans-serif',
+                        fontWeight: 500,
+                        fontSize: '0.75rem',
+                        height: 24,
+                        '&:hover': {
+                          backgroundColor: '#e5e7eb'
+                        }
+                      }}
+                    />
+                  ))
+                ) : (
+                  <Typography variant="body2" color="text.secondary">
+                    No skills listed
+                  </Typography>
                 )}
               </Box>
-            </Grid>
+
+              {skills.length > 8 && (
+                <Button
+                  size="small"
+                  onClick={() => setShowAll(!showAll)}
+                  sx={{ 
+                    mt: 1, 
+                    textTransform: "none",
+                    fontFamily: 'Satoshi, sans-serif',
+                    fontWeight: 600,
+                    color: '#6366f1',
+                    fontSize: '0.75rem',
+                    p: 0,
+                    minWidth: 'auto'
+                  }}
+                >
+                  {showAll ? "Show Less" : `+${skills.length - 8} more`}
+                </Button>
+              )}
+            </Box>
           </Grid>
-        </CardContent>
-      </Box>
+        </Grid>
+      </CardContent>
 
       {/* Resume Drawer */}
       <Drawer
         anchor="right"
         open={resumeOpen}
         onClose={() => setResumeOpen(false)}
-        PaperProps={{ sx: { width: { xs: "100%", sm: 600 } } }}
+        PaperProps={{ 
+          sx: { 
+            width: { xs: "100%", sm: 600 },
+            backgroundColor: '#ffffff'
+          } 
+        }}
       >
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            p: 2,
-          }}
-        >
-          <Typography variant="h6">Resume Preview</Typography>
-          <IconButton onClick={() => setResumeOpen(false)}>
+        <Box sx={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          p: 2,
+          borderBottom: '1px solid #e5e7eb'
+        }}>
+          <Typography 
+            variant="h6" 
+            sx={{ 
+              fontFamily: 'Poppins, sans-serif',
+              fontWeight: 600,
+              color: '#111827'
+            }}
+          >
+            Resume Preview
+          </Typography>
+          <IconButton 
+            onClick={() => setResumeOpen(false)}
+            size="small"
+          >
             <CloseIcon />
           </IconButton>
         </Box>
-        <Divider />
         {applicant.cvUrl ? (
           <Box sx={{ height: "100%", width: "100%" }}>
             <iframe
@@ -345,32 +465,58 @@ const ApplicationCard = ({ app, navigate, markAsViewed }) => {
             />
           </Box>
         ) : (
-          <Box sx={{ p: 4 }}>
-            <Typography>No resume to display.</Typography>
+          <Box sx={{ p: 4, textAlign: 'center' }}>
+            <Typography 
+              variant="body1" 
+              sx={{ 
+                fontFamily: 'Satoshi, sans-serif',
+                color: '#6b7280'
+              }}
+            >
+              No resume available
+            </Typography>
           </Box>
         )}
       </Drawer>
-    </>
+    </Card>
   );
 };
 
-const InfoRow = ({ icon, label, value }) => (
-  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-    {icon}
-    <Typography
-      variant="caption"
-      color="text.secondary"
-      sx={{ fontSize: "0.9rem", fontFamily: "Satoshi, sans-serif" }}
-    >
-      {label}:
-    </Typography>
-    <Typography
-      variant="body2"
-      fontWeight={500}
-      sx={{ fontSize: "0.9rem",fontFamily: "Poppins, sans-serif" }}
-    >
-      {value}
-    </Typography>
+const DetailItem = ({ icon, label, value }) => (
+  <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}>
+    <Box sx={{ mt: 0.25 }}>
+      {icon}
+    </Box>
+    <Box sx={{ flex: 1, minWidth: 0 }}>
+      <Typography 
+        variant="caption" 
+        sx={{ 
+          color: '#9ca3af', 
+          fontFamily: 'Satoshi, sans-serif',
+          fontWeight: 500,
+          fontSize: '0.7rem',
+          textTransform: 'uppercase',
+          letterSpacing: '0.025em',
+          display: 'block',
+          lineHeight: 1.2
+        }}
+      >
+        {label}
+      </Typography>
+      <Typography 
+        variant="body2" 
+        sx={{ 
+          color: '#374151',
+          fontFamily: 'Poppins, sans-serif',
+          fontWeight: 500,
+          fontSize: '0.8rem',
+          lineHeight: 1.3,
+          mt: 0.25
+        }}
+      >
+        {value}
+      </Typography>
+    </Box>
   </Box>
 );
 

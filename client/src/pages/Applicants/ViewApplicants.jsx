@@ -125,7 +125,7 @@ const computeMatchScore = (job, applicant) => {
       salScore = weights.sal;
     }
   } else {
-    salScore = weights.sal;
+    salScore = weights.sal; 
   }
 
   const totalScore = Math.round(
