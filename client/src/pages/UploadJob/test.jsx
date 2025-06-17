@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { apiRequest } from "../../utils";
 import { useNavigate } from "react-router-dom";
-import DocumentScannerIcon from "@mui/icons-material/DocumentScanner";
+import DocumentScannerIcon from "@mui/icons-material/DocumentScanner"; // Not used
 import { useSelector } from "react-redux";
 import {
   Box,
@@ -15,17 +15,17 @@ import {
   Button,
   CircularProgress,
   Grid,
-  // Paper, // Not used in this version
+  IconButton, // Import IconButton for removing items
 } from "@mui/material";
 import Select from "react-select";
-import CreatableSelect from "react-select/creatable"; // Use creatable for tags
-import { skillsList } from "../../assets/mock";
+import CreatableSelect from "react-select/creatable";
+import { skillsList } from "../../assets/mock"; // Assuming this exists
 import {
   functionalAreasCategory,
   tagCategory,
-  categoryOptions as categoryOptionsList,
+  categoryOptions as categoryOptionsList, // Renamed categoryOptions import
   IndustryCategory,
-} from "../../assets/functionalarea"; // Renamed categoryOptions import
+} from "../../assets/functionalarea"; // Assuming this exists
 
 // Helper styles - Based on original code's sx props
 const formLabelStyle = {
@@ -170,8 +170,6 @@ const JobUploadPage = () => {
 
   // State for City Select/Input
   const [cities, setCities] = useState([]);
-  // Removed state variables for functionalAreaOptions, tagOptions, categoryOptions
-  // as we will use the imported lists directly to map options
   const [selectedCity, setSelectedCity] = useState(null);
   const [inputValue, setInputValue] = useState("");
   const [isOtherSelected, setIsOtherSelected] = useState(false);
@@ -179,7 +177,6 @@ const JobUploadPage = () => {
 
   // Options arrays (matching backend enums or derived)
   const salaryCategoryOptions = [
-    // Renamed from salaryOptions
     "On Experience",
     "Competitive",
     "Fixed",
@@ -189,7 +186,6 @@ const JobUploadPage = () => {
   const workTypeOptions = ["Full-Time", "Part-Time", "Contract", "Temporary"];
   const workModeOptions = ["Work From Office", "Remote", "Hybrid"];
   const courseTypeOptions = [
-    // Based on backend enum
     { value: "Full time", label: "Full time" },
     { value: "Part time", label: "Part time" },
     { value: "Distance Learning Program", label: "Distance Learning Program" },
@@ -197,10 +193,19 @@ const JobUploadPage = () => {
     { value: "Certification", label: "Certification" },
   ];
 
+  const screeningQuestionTypeOptions = [
+    { value: 'yes/no', label: 'Yes/No' },
+    { value: 'single_choice', label: 'Single Choice' },
+    { value: 'multi_choice', label: 'Multi Choice' },
+    { value: 'short_answer', label: 'Short Answer' },
+    { value: 'long_answer', label: 'Long Answer' },
+  ];
+
+
   // Experience options for Min/Max Selects (1 to 50+)
   const experienceRangeOptions = Array.from({ length: 50 }, (_, i) => ({
     value: i + 1,
-    label: `${i + 1}${i < 49 ? "" : "+"}`, // Add '+' to the last option (50+)
+    label: `${i + 1}${i < 49 ? "" : "+"}`,
   }));
 
   // Batch Year options for Min/Max Selects
@@ -211,7 +216,7 @@ const JobUploadPage = () => {
       const year = 1970 + i;
       return { value: year, label: year.toString() };
     }
-  ).reverse(); // Show recent years first
+  ).reverse();
 
   // Mapped options for React-Select from imported lists
   const categorySelectOptions = categoryOptionsList.map((cat) => ({
@@ -248,7 +253,14 @@ const JobUploadPage = () => {
     jobDescription: "", // string
     requirements: [""], // [string]
     qualifications: [], // [string] - Using Multi-select now
-    screeningQuestions: [{ question: "", isMandatory: false }], // [{ question: string, isMandatory: boolean }]
+    screeningQuestions: [
+      {
+        question: "",
+        questionType: "short_answer", // Default type
+        options: [], // Default empty array for options
+        isMandatory: false,
+      },
+    ], // Array of screening question objects
     applicationLink: "", // string
     skills: [], // [string]
     graduationYear: { minBatch: "", maxBatch: "" }, // object
@@ -265,8 +277,6 @@ const JobUploadPage = () => {
     category: "", // string - Now handled by Select
     functionalArea: "", // string - Now handled by Select
     isPremiumJob: false, // boolean
-    // duration: "permanent", // default in schema, not required in form
-    // postingDate: new Date(), // default in schema, not required in form
   });
 
   // Fetch Cities Effect (Kept)
@@ -391,7 +401,7 @@ const JobUploadPage = () => {
     { value: "Other", label: "Other" },
   ];
 
-  // Handle JD Analysis (Updated to use isMandatory and filter empty results)
+  // Handle JD Analysis (Updated to populate new screening question structure)
   const handleAnalysis = async () => {
     if (!formData.jobDescription.trim()) {
       alert("Please enter Job Description to analyze.");
@@ -417,15 +427,25 @@ const JobUploadPage = () => {
             : [],
           qualifications: Array.isArray(data.qualifications)
             ? data.qualifications.filter((q) => q.trim() !== "")
-            : [], // Qualifications is now multi-select array
+            : [],
+          // Map analysis questions to the new structure
           screeningQuestions: Array.isArray(data.screeningQuestions)
             ? data.screeningQuestions
                 .filter((q) => q.trim() !== "")
                 .map((q) => ({
                   question: q,
-                  isMandatory: false, // Default mandatory to false based on analysis output
+                  questionType: 'short_answer', // Default type from analysis
+                  options: [], // Analysis doesn't provide options
+                  isMandatory: false, // Default mandatory to false
                 }))
-            : [],
+            : [
+              {
+                 question: "",
+                 questionType: "short_answer",
+                 options: [],
+                 isMandatory: false,
+              },
+            ], // Ensure at least one empty question if analysis returns none
         }));
         alert(
           "Job Description analyzed successfully! Requirements, Qualifications, and Screening Questions have been populated."
@@ -456,63 +476,137 @@ const JobUploadPage = () => {
     if (!lastItem || lastItem.trim() !== "") {
       setFormData({ ...formData, [fieldName]: [...formData[fieldName], ""] });
     } else {
-      console.log(`Please fill the last ${fieldName.slice(0, -1)} first.`);
+      console.log(`Please fill the last ${fieldName.slice(0, -1)} first.`); // Or show a user-facing message
     }
   };
 
-  // Remove item from dynamic array fields (requirements, screeningQuestions)
+  // Remove item from dynamic array fields (requirements)
   const removeArrayItem = (fieldName, index) => {
     const updatedArray = formData[fieldName].filter((_, i) => i !== index);
-    // If screeningQuestions becomes empty, add one empty field for display
-    if (fieldName === "screeningQuestions" && updatedArray.length === 0) {
+    // If requirements become empty, add one empty field for display
+    if (fieldName === "requirements" && updatedArray.length === 0) {
       setFormData({
         ...formData,
-        [fieldName]: [{ question: "", isMandatory: false }],
+        [fieldName]: [""],
       });
     } else {
       setFormData({ ...formData, [fieldName]: updatedArray });
     }
   };
 
-  // Handle screening question changes (question text or isMandatory checkbox)
-  const handleScreeningQuestionChange = (index, fieldName, value) => {
-    const updatedQuestions = [...formData.screeningQuestions];
-    updatedQuestions[index] = {
-      ...updatedQuestions[index],
-      [fieldName]: value,
-    };
-    setFormData({ ...formData, screeningQuestions: updatedQuestions });
+
+  // --- New/Updated Handlers for Screening Questions Structure ---
+
+  // Handle changes to properties *within* a specific screening question object
+  const handleScreeningQuestionObjectChange = (index, updatedQuestion) => {
+    setFormData(prevState => {
+      const updatedQuestions = [...prevState.screeningQuestions];
+      updatedQuestions[index] = updatedQuestion;
+      return { ...prevState, screeningQuestions: updatedQuestions };
+    });
   };
 
-  // Add screening question - Kept, updated structure and added limit
+  // Add a new empty screening question
   const addScreeningQuestion = () => {
-    // Prevent adding more than 10 questions (as seen in image hint)
-    if (formData.screeningQuestions.length >= 10) {
-      alert("You can add a maximum of 10 screening questions.");
-      return;
-    }
-    // Add only if the last question is not empty
-    const lastQuestion =
-      formData.screeningQuestions[formData.screeningQuestions.length - 1]
-        ?.question;
-    // Also check if the array is currently empty (initial state)
-    if (
-      formData.screeningQuestions.length === 0 ||
-      (lastQuestion && lastQuestion.trim() !== "")
-    ) {
-      setFormData({
-        ...formData,
-        screeningQuestions: [
-          ...formData.screeningQuestions.filter(
-            (q) => q.question.trim() !== "" || q.isMandatory
-          ), // Keep non-empty or mandatory existing questions
-          { question: "", isMandatory: false }, // Add new empty one
-        ],
-      });
-    } else {
-      console.log("Please fill the last question first.");
-    }
+     // Prevent adding more than 10 questions (as seen in image hint)
+     const currentValidQuestions = formData.screeningQuestions.filter(q => q.question.trim() !== "");
+     if (currentValidQuestions.length >= 10) {
+       alert("You can add a maximum of 10 screening questions.");
+       return;
+     }
+
+     // Add only if the last question is not empty (text) OR is a choice type with options
+     const lastQuestion = formData.screeningQuestions[formData.screeningQuestions.length - 1];
+     const isLastQuestionValid = lastQuestion &&
+                               (lastQuestion.question.trim() !== "" ||
+                                (['single_choice', 'multi_choice'].includes(lastQuestion.questionType) &&
+                                 lastQuestion.options.filter(opt => opt.trim() !== "").length > 0));
+
+
+    // Add only if the current array is empty or the last question is valid/has content
+    if (formData.screeningQuestions.length === 0 || isLastQuestionValid) {
+        setFormData(prevState => ({
+            ...prevState,
+            screeningQuestions: [
+                ...prevState.screeningQuestions,
+                { question: "", questionType: "short_answer", options: [], isMandatory: false },
+            ],
+        }));
+     } else {
+       // Optional: Alert user to fill the last question before adding a new one
+       // alert("Please fill the last screening question before adding a new one.");
+       console.log("Please fill the last screening question before adding a new one.");
+     }
   };
+
+
+   // Remove a screening question
+   const removeScreeningQuestion = (indexToRemove) => {
+      setFormData(prevState => {
+          const updatedQuestions = prevState.screeningQuestions.filter((_, index) => index !== indexToRemove);
+          // If the array becomes empty, add one empty question back for display
+          if (updatedQuestions.length === 0) {
+              return {
+                  ...prevState,
+                  screeningQuestions: [
+                       { question: "", questionType: "short_answer", options: [], isMandatory: false },
+                  ],
+              };
+          }
+          return { ...prevState, screeningQuestions: updatedQuestions };
+      });
+   };
+
+
+  // Handle change to an option text within a specific screening question
+  const handleOptionChange = (questionIndex, optionIndex, value) => {
+    setFormData(prevState => {
+      const updatedQuestions = [...prevState.screeningQuestions];
+      const updatedOptions = [...updatedQuestions[questionIndex].options];
+      updatedOptions[optionIndex] = value;
+      updatedQuestions[questionIndex] = {
+        ...updatedQuestions[questionIndex],
+        options: updatedOptions,
+      };
+      return { ...prevState, screeningQuestions: updatedQuestions };
+    });
+  };
+
+  // Add an option to a specific screening question
+  const handleAddOption = (questionIndex) => {
+    setFormData(prevState => {
+      const updatedQuestions = [...prevState.screeningQuestions];
+      const currentOptions = updatedQuestions[questionIndex].options;
+       // Add only if the last option is not empty or if the array is empty
+      if (currentOptions.length === 0 || currentOptions[currentOptions.length - 1].trim() !== "") {
+         updatedQuestions[questionIndex] = {
+            ...updatedQuestions[questionIndex],
+            options: [...currentOptions, ""], // Add a new empty option string
+         };
+      } else {
+         // Optional: Alert user to fill the last option first
+         // alert("Please fill the last option before adding a new one.");
+         console.log("Please fill the last option before adding a new one.");
+      }
+      return { ...prevState, screeningQuestions: updatedQuestions };
+    });
+  };
+
+  // Remove an option from a specific screening question
+  const handleRemoveOption = (questionIndex, optionIndexToRemove) => {
+     setFormData(prevState => {
+       const updatedQuestions = [...prevState.screeningQuestions];
+       const updatedOptions = updatedQuestions[questionIndex].options.filter((_, index) => index !== optionIndexToRemove);
+
+        // If removing the last option, keep one empty option field for UI consistency
+       updatedQuestions[questionIndex] = {
+         ...updatedQuestions[questionIndex],
+         options: updatedOptions.length === 0 ? [""] : updatedOptions,
+       };
+       return { ...prevState, screeningQuestions: updatedQuestions };
+     });
+  };
+
 
   // Handle form submission
   const handleSubmit = async (e) => {
@@ -534,29 +628,19 @@ const JobUploadPage = () => {
       const value = formData[field];
       // Check for empty string for text/select fields
       if (typeof value === "string" && value.trim() === "") {
-        alert(`Please select or fill out the required field: ${field}`);
+        alert(`Please select or fill out the required field: ${field.replace(/([A-Z])/g, ' $1').trim().toLowerCase()}`); // Improve field name in alert
         return;
       }
       // Check for empty array for multi-selects now marked as required (like qualifications)
       if (Array.isArray(value) && value.length === 0) {
-        alert(`Please select at least one option for required field: ${field}`);
+        alert(`Please select at least one option for required field: ${field.replace(/([A-Z])/g, ' $1').trim().toLowerCase()}`);
         return;
       }
       // Check for null for react-select single value (shouldn't happen if value is bound to string)
       if (value === null) {
-        alert(`Please select a value for required field: ${field}`);
+        alert(`Please select a value for required field: ${field.replace(/([A-Z])/g, ' $1').trim().toLowerCase()}`);
         return;
       }
-    }
-    // Qualifications validation is now covered by the array check above if it's added to requiredFields
-
-    // Check if at least one screening question is added (if array is empty, it won't pass backend validation if required)
-    if (
-      formData.screeningQuestions.filter((q) => q.question.trim() !== "")
-        .length === 0
-    ) {
-      alert("Please add at least one screening question.");
-      return;
     }
 
     // Validation for min/max ranges: ensure min <= max if both are provided and not empty
@@ -592,60 +676,50 @@ const JobUploadPage = () => {
     if (!validateRange("experience", "experience")) return;
     if (!validateRange("graduationYear", "batch year")) return;
 
-    // Prepare data for submission - clean up empty strings in nested objects and filter empty array items
+    // Validation for screening questions
+     const validScreeningQuestions = formData.screeningQuestions.filter(q => {
+        // Question must have text
+        const hasText = q.question.trim() !== "";
+
+        // If it's a choice type, it must have at least one non-empty option
+        const hasValidOptions = (q.questionType === 'single_choice' || q.questionType === 'multi_choice') ?
+                                 q.options.filter(opt => opt.trim() !== "").length > 0 : true; // Other types don't require options
+
+        // Also ensure a question type is selected (should be covered by default, but defensive)
+        const hasType = !!q.questionType;
+
+        return hasText && hasValidOptions && hasType;
+     });
+
+    if (validScreeningQuestions.length === 0) {
+      alert("Please add at least one screening question with text and valid options (if applicable).");
+      return;
+    }
+
+    // Prepare data for submission - clean up empty strings in nested objects and filter invalid questions/options
     const submissionData = { ...formData };
 
-    // Clean up number fields in nested objects
-    if (submissionData.salary) {
-      if (submissionData.salary.minSalary === "")
-        delete submissionData.salary.minSalary;
-      else
-        submissionData.salary.minSalary = Number(
-          submissionData.salary.minSalary
-        );
-      if (submissionData.salary.maxSalary === "")
-        delete submissionData.salary.maxSalary;
-      else
-        submissionData.salary.maxSalary = Number(
-          submissionData.salary.maxSalary
-        );
-      if (Object.keys(submissionData.salary).length === 0)
-        delete submissionData.salary; // Remove object if empty
+    // Clean up number fields in nested objects (handle empty strings and convert to number)
+    const cleanupRangeField = (obj, field) => {
+        const minKey = `min${field.replace(/./, c => c.toUpperCase())}`;
+        const maxKey = `max${field.replace(/./, c => c.toUpperCase())}`;
+
+        if (obj && obj[field]) { // Check if the nested object exists
+            if (obj[field][minKey] === "") delete obj[field][minKey];
+            else obj[field][minKey] = Number(obj[field][minKey]);
+
+            if (obj[field][maxKey] === "") delete obj[field][maxKey];
+            else obj[field][maxKey] = Number(obj[field][maxKey]);
+
+            // If both min and max were empty/deleted, remove the parent object too
+            if (Object.keys(obj[field]).length === 0) delete obj[field];
+        }
     }
 
-    if (submissionData.experience) {
-      if (submissionData.experience.minExperience === "")
-        delete submissionData.experience.minExperience;
-      else
-        submissionData.experience.minExperience = Number(
-          submissionData.experience.minExperience
-        );
-      if (submissionData.experience.maxExperience === "")
-        delete submissionData.experience.maxExperience;
-      else
-        submissionData.experience.maxExperience = Number(
-          submissionData.experience.maxExperience
-        );
-      if (Object.keys(submissionData.experience).length === 0)
-        delete submissionData.experience;
-    }
+    cleanupRangeField(submissionData, 'salary');
+    cleanupRangeField(submissionData, 'experience');
+    cleanupRangeField(submissionData, 'graduationYear');
 
-    if (submissionData.graduationYear) {
-      if (submissionData.graduationYear.minBatch === "")
-        delete submissionData.graduationYear.minBatch;
-      else
-        submissionData.graduationYear.minBatch = Number(
-          submissionData.graduationYear.minBatch
-        );
-      if (submissionData.graduationYear.maxBatch === "")
-        delete submissionData.graduationYear.maxBatch;
-      else
-        submissionData.graduationYear.maxBatch = Number(
-          submissionData.graduationYear.maxBatch
-        );
-      if (Object.keys(submissionData.graduationYear).length === 0)
-        delete submissionData.graduationYear;
-    }
 
     // Filter out empty strings from requirements and qualifications arrays
     submissionData.requirements = submissionData.requirements.filter(
@@ -653,10 +727,33 @@ const JobUploadPage = () => {
     );
     submissionData.qualifications = submissionData.qualifications.filter(
       (qual) => qual.trim() !== ""
-    ); // Qualifications is multi-select, but still filter any accidental empty strings
-    // Filter out screening questions with empty text
-    submissionData.screeningQuestions =
-      submissionData.screeningQuestions.filter((q) => q.question.trim() !== "");
+    );
+
+    // Filter out screening questions and clean up their options
+    submissionData.screeningQuestions = formData.screeningQuestions
+        .filter(q => q.question.trim() !== "") // Keep questions with text
+        .map(q => {
+             // For choice types, filter out empty options
+            if (q.questionType === 'single_choice' || q.questionType === 'multi_choice') {
+                return {
+                    ...q,
+                    options: q.options.filter(opt => opt.trim() !== "")
+                };
+            }
+             // For other types, ensure options array is empty
+            return {
+                ...q,
+                options: []
+            };
+        })
+        .filter(q => {
+            // Double check: If it's a choice type, ensure it still has options after filtering
+            if (q.questionType === 'single_choice' || q.questionType === 'multi_choice') {
+                return q.options.length > 0;
+            }
+            return true; // Other types are fine as long as they had text
+        });
+
 
     console.log("Submitting Data:", submissionData);
     setIsLoading(true);
@@ -670,7 +767,6 @@ const JobUploadPage = () => {
       });
 
       if (res.success) {
-        // Backend response has 'success' boolean
         console.log("success", res);
         alert(
           "Job Created Successfully. For Uploading more jobs visit Upload Jobs section."
@@ -687,7 +783,6 @@ const JobUploadPage = () => {
       setIsLoading(false);
     }
   };
-
   return (
     <Box
       sx={{
@@ -1305,6 +1400,8 @@ const JobUploadPage = () => {
           <Typography sx={{ ...sectionTitleStyle }}>Applications</Typography>
 
           {/* Screening Questions Dynamic List */}
+          
+          {/* Screening Questions Dynamic List (Updated for multi-type) */}
           <div className="mb-4">
             <Typography sx={{ ...formLabelStyle }}>
               Screening Questions<span style={{ color: "red" }}>*</span>
@@ -1314,8 +1411,7 @@ const JobUploadPage = () => {
               color="textSecondary"
               sx={{ mb: 2, fontSize: "0.875rem" }}
             >
-              You can ask some questions before the candidates apply to your
-              job!
+              Add questions candidates must answer before applying. Choose the type and add options for single/multi-choice questions.
             </Typography>
 
             <Typography
@@ -1331,84 +1427,88 @@ const JobUploadPage = () => {
               /{10})
             </Typography>
 
-            {/* Ensure at least one empty field if the array is empty */}
-            {(formData.screeningQuestions.length === 0
-              ? [{ question: "", isMandatory: false }]
-              : formData.screeningQuestions
-            ).map((question, index) => (
+            {/* Ensure at least one empty field if the array is empty - map iterates */}
+            {formData.screeningQuestions.map((question, index) => (
               <Box
-                key={`sq-${index}`}
-                mb={2}
-                sx={{ border: "1px dashed #ccc", p: 2, borderRadius: 1 }}
+                key={`sq-${index}`} // Use index for key as _id might not be present until save
+                mb={3} // Increased margin bottom for separation
+                sx={{ border: "1px dashed #ccc", p: 2, borderRadius: 1, position: 'relative' }} // Added relative for positioning remove button
               >
-                <Box display="flex" alignItems="center" mb={1}>
-                  <Typography
-                    variant="body2"
-                    sx={{
-                      minWidth: 24,
-                      fontWeight: "bold",
-                      mr: 1,
-                      flexShrink: 0,
-                    }}
-                  >
-                    {index + 1}.
-                  </Typography>
-                  <TextField
-                    fullWidth
-                    size="small"
-                    variant="outlined"
-                    name="question"
-                    value={question.question}
-                    onChange={(e) =>
-                      handleScreeningQuestionChange(
-                        index,
-                        "question",
-                        e.target.value
-                      )
-                    }
-                    placeholder={`Question ${index + 1}`}
-                    label={`Question ${index + 1}`}
-                    sx={{ ...flatTextFieldStyle, mr: 1 }}
-                  />
-                  {/* Show remove only if there's more than 1 item OR if it's the only item but has content */}
-                  {(formData.screeningQuestions.length > 1 ||
-                    (formData.screeningQuestions.length === 1 &&
-                      question.question.trim() !== "")) && (
-                    <Button
-                      variant="outlined"
-                      color="error"
+                 {/* Remove Question Button (Positioned top right) */}
+                 {/* Show remove if there is more than 1 question OR if it's the only question but has content */}
+                {(formData.screeningQuestions.length > 1 || (formData.screeningQuestions.length === 1 && (question.question.trim() !== "" || question.options.filter(opt => opt.trim() !== "").length > 0))) && (
+                   <IconButton
+                     size="small"
+                     color="error"
+                     onClick={() => removeScreeningQuestion(index)}
+                     sx={{
+                       position: 'absolute',
+                       top: 8,
+                       right: 8,
+                       p: '4px',
+                       bgcolor: 'white',
+                       '&:hover': { bgcolor: '#f9f9f9' }
+                     }}
+                   >
+                     X
+                   </IconButton>
+                 )}
+
+
+                {/* Question Text Field */}
+                 <Box mb={2}>
+                   <Typography variant="body2" sx={{ ...formLabelStyle, mb: 0.5 }}>Question Text <span style={{color: 'red'}}>*</span></Typography>
+                    <TextField
+                      fullWidth
                       size="small"
-                      onClick={() =>
-                        removeArrayItem("screeningQuestions", index)
+                      variant="outlined"
+                      name="question"
+                      value={question.question}
+                      onChange={(e) =>
+                        handleScreeningQuestionObjectChange(index, { ...question, question: e.target.value })
                       }
-                      sx={{
-                        minWidth: "auto",
-                        p: "4px",
-                        borderRadius: 16,
-                        borderColor: "error.main",
-                        color: "error.main",
-                        "&:hover": {
-                          borderColor: "error.main",
-                          bgcolor: "rgba(244, 67, 54, 0.04)",
-                        },
-                      }}
-                    >
-                      {" "}
-                      X{" "}
-                    </Button>
-                  )}
+                      placeholder={`Enter Question ${index + 1} text`}
+                      label={`Question ${index + 1}`}
+                      sx={{ ...flatTextFieldStyle }}
+                      required // Frontend required
+                    />
+                 </Box>
+
+                {/* Question Type Select */}
+                <Box mb={2}>
+                  <Typography variant="body2" sx={{ ...formLabelStyle, mb: 0.5 }}>Question Type <span style={{color: 'red'}}>*</span></Typography>
+                  <Select
+                    options={screeningQuestionTypeOptions}
+                    value={screeningQuestionTypeOptions.find(opt => opt.value === question.questionType)} // Find current value object
+                    onChange={(selectedOption) => {
+                      const newType = selectedOption ? selectedOption.value : 'short_answer'; // Default if cleared
+                      const updatedQuestion = { ...question, questionType: newType };
+
+                      // Clear options if the new type doesn't use them
+                      if (newType !== 'single_choice' && newType !== 'multi_choice') {
+                        updatedQuestion.options = [];
+                      } else if (updatedQuestion.options.length === 0) {
+                         // If changing TO single/multi and options are empty, add one blank option for input
+                         updatedQuestion.options = [""];
+                      }
+
+                      handleScreeningQuestionObjectChange(index, updatedQuestion);
+                    }}
+                    placeholder="Select Type"
+                    isClearable={false} // Type is mandatory
+                    styles={customSelectStyle}
+                    required // Frontend required
+                  />
                 </Box>
+
+                {/* Mandatory Checkbox */}
                 <FormControlLabel
                   control={
                     <Checkbox
                       name="isMandatory"
                       checked={question.isMandatory}
                       onChange={(e) =>
-                        handleScreeningQuestionChange(
-                          index,
-                          "isMandatory",
-                          e.target.checked
-                        )
+                        handleScreeningQuestionObjectChange(index, { ...question, isMandatory: e.target.checked })
                       }
                       size="small"
                     />
@@ -1420,12 +1520,68 @@ const JobUploadPage = () => {
                   }
                   sx={{ mt: 1 }}
                 />
+
+                {/* Options Input (Conditional Rendering) */}
+                {(question.questionType === 'single_choice' || question.questionType === 'multi_choice') && (
+                  <Box mt={2} pl={2}> {/* Indent options */}
+                    <Typography variant="body2" sx={{ ...formLabelStyle, mb: 1 }}>Options <span style={{color: 'red'}}>*</span></Typography>
+                     <Typography variant="body2" color="textSecondary" sx={{ mb: 1, fontSize: "0.75rem" }}>
+                      Provide options for candidates to select. At least one non-empty option is required.
+                     </Typography>
+                    {/* Ensure at least one option field is shown if options array is empty for UI */}
+                    {(question.options.length === 0 ? [""] : question.options).map((option, optIndex) => (
+                      <Box key={`sq-${index}-opt-${optIndex}`} display="flex" alignItems="center" mb={1} gap={1}>
+                        <Typography variant="body2" sx={{ minWidth: 16, flexShrink: 0, textAlign: 'right' }}>{optIndex + 1}.</Typography>
+                         <TextField
+                           fullWidth
+                           size="small"
+                           variant="outlined"
+                           value={option}
+                           onChange={(e) => handleOptionChange(index, optIndex, e.target.value)}
+                           placeholder={`Option ${optIndex + 1}`}
+                           sx={{ ...flatTextFieldStyle }}
+                         />
+                         {/* Show remove only if more than 1 option OR it's the only option but has text */}
+                        {(question.options.length > 1 || (question.options.length === 1 && option.trim() !== "")) && (
+                           <IconButton
+                             size="small"
+                             color="error"
+                             onClick={() => handleRemoveOption(index, optIndex)}
+                             sx={{ flexShrink: 0 }}
+                           >
+                             X
+                           </IconButton>
+                         )}
+                      </Box>
+                    ))}
+                    {/* Add option button - Show only if the last option is not empty */}
+                     {(question.options.length === 0 || question.options[question.options.length - 1]?.trim() !== "") ? (
+                      <Button
+                        variant="text"
+                        onClick={() => handleAddOption(index)}
+                        sx={{ ...addRemoveButtonStyle, mt: 0.5 }}
+                      >
+                        Add Option
+                      </Button>
+                     ) : (
+                       // Optionally disable or hide if the last option is empty
+                       <Button
+                         variant="text"
+                         disabled // Disable if the last option is empty
+                         sx={{ ...addRemoveButtonStyle, color: '#ccc', mt: 0.5 }}
+                       >
+                         Add Option
+                       </Button>
+                     )}
+                  </Box>
+                )}
+
               </Box>
             ))}
             <Button
               variant="text"
               onClick={addScreeningQuestion}
-              disabled={formData.screeningQuestions.length >= 10}
+              disabled={formData.screeningQuestions.filter(q => q.question.trim() !== "" || (['single_choice', 'multi_choice'].includes(q.questionType) && q.options.filter(opt => opt.trim() !== "").length > 0)).length >= 10} // Disable if 10 valid questions added
               sx={{ ...addRemoveButtonStyle }}
             >
               Add Question
