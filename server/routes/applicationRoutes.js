@@ -1,5 +1,5 @@
 import express from "express";
-import {createApplication, getApplication,updateApplicationStatus,getApplicationsOfAjob,getallApplicationOfApplicant, getApplicationsWithJobs, ApplicationStatusUpdate, bulkRejectApplications, bulkAdvanceApplications} from "../controllers/ApplicationController.js";
+import {createApplication, getApplication,updateApplicationStatus,getApplicationsOfAjob,getallApplicationOfApplicant, getApplicationsWithJobs, ApplicationStatusUpdate, bulkRejectApplications, bulkAdvanceApplications,getScreeningFilterOptions} from "../controllers/ApplicationController.js";
 import userAuth from "../middlewares/authMiddleware.js";
 
 
@@ -22,5 +22,7 @@ router.post("/update-status",ApplicationStatusUpdate)
 router.put('/bulk-reject', bulkRejectApplications);
 
 router.put('/bulk-advance', bulkAdvanceApplications);
+
+router.get('/get-screening-filter-options/:jobid', getScreeningFilterOptions);
 
 export default router;
