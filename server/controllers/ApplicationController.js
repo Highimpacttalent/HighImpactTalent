@@ -251,10 +251,6 @@ export const getApplicationsOfAjob = async (req, res) => {
           pipeline: [
             { 
               $project: { 
-                password: 0,
-                firstName: 1,
-                lastName: 1,
-                email: 1,
                 currentDesignation: 1,
                 currentLocation: 1,
                 preferredLocations: 1,
@@ -262,8 +258,6 @@ export const getApplicationsOfAjob = async (req, res) => {
                 skills: 1,
                 experience: 1,
                 currentCompany: 1,
-                profileUrl: 1,
-                cvUrl: 1,
                 about: 1
               } 
             }
@@ -287,9 +281,6 @@ export const getApplicationsOfAjob = async (req, res) => {
       const keywordRegex = new RegExp(keywords.trim(), 'i');
       filterConditions.push({
         $or: [
-          { 'applicant.firstName': keywordRegex },
-          { 'applicant.lastName': keywordRegex },
-          { 'applicant.email': keywordRegex },
           { 'applicant.currentDesignation': keywordRegex },
           { 'applicant.currentCompany': keywordRegex },
           { 'applicant.skills': { $in: [keywordRegex] } },
