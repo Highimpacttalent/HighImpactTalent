@@ -51,18 +51,45 @@ const applicationSchema = new Schema({
   screeningAnswers: [
     {
       questionId: {
-        type: mongoose.Schema.Types.ObjectId
+        type: mongoose.Schema.Types.ObjectId,
+        required: true
       },
       question: {
         type: String,
         required: true
       },
-      answer: {
+      questionType: {
         type: String,
+        enum: ['yes/no', 'single_choice', 'multi_choice', 'short_answer', 'long_answer'],
         required: true
+      },
+      answer: {
+        type: mongoose.Schema.Types.Mixed, // Can store String, Array, or Boolean
+        required: true
+      },
+      // For validation and search optimization
+      answerText: {
+        type: String // Normalized text version for searching
       }
     }
   ]
+});
+
+// Pre-save middleware to normalize answers for better searching
+applicationSchema.pre('save', function(next) {
+  if (this.screeningAnswers && this.screeningAnswers.length > 0) {
+    this.screeningAnswers.forEach(answer => {
+      // Create searchable text version of answer
+      if (answer.questionType === 'multi_choice' && Array.isArray(answer.answer)) {
+        answer.answerText = answer.answer.join(', ');
+      } else if (answer.questionType === 'yes/no') {
+        answer.answerText = answer.answer.toString();
+      } else {
+        answer.answerText = answer.answer.toString();
+      }
+    });
+  }
+  next();
 });
 
 const Application = mongoose.model("Application", applicationSchema);

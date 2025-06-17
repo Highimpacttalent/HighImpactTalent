@@ -73,7 +73,6 @@ const computeMatchScore = (job, applicant) => {
 
   // 2) Skills Match (40%)
   if (Array.isArray(job.skills) && job.skills.length > 0) {
-    // primary: match against job.skills
     const matches = job.skills.filter((js) =>
       (applicant.skills || []).some(
         (ast) => ast.toLowerCase() === js.toLowerCase()
@@ -81,7 +80,6 @@ const computeMatchScore = (job, applicant) => {
     );
     skillsScore = (matches.length / job.skills.length) * weights.skills;
   } else {
-    // no skills *or* requirements specified → full marks
     skillsScore = weights.skills;
   }
 
@@ -132,7 +130,6 @@ const computeMatchScore = (job, applicant) => {
     expScore + skillsScore + locScore + typeScore + modeScore + salScore
   );
 
-  // Detailed console.log for analysis
   const breakdown = `
 Candidate: ${applicant.firstName} ${applicant.lastName}
 Job Criteria:
@@ -274,11 +271,13 @@ const JobApplications = () => {
 
   // Filter states
   const [filters, setFilters] = useState({
-    experience: "",
-    currentJob: "",
-    joinConsulting: "",
-    openToRelocate: "",
+    keywords: "",
+    location: "",
+    currentDesignation: "",
+    totalYearsInConsulting: "",
   });
+
+  const [screeningQuestions, setScreeningQuestions] = useState([]);
 
   useEffect(() => {
     const fetchApplications = async () => {
@@ -292,13 +291,11 @@ const JobApplications = () => {
           throw new Error(response.message || "Failed to fetch applications");
         }
 
-        // enrich each application with matchScore
         const enriched = response.applications.map((app) => {
           const { totalScore, breakdown } = computeMatchScore(
             app.job,
             app.applicant
           );
-
           return {
             ...app,
             matchScore: totalScore,
@@ -311,10 +308,10 @@ const JobApplications = () => {
         setFilteredApps(enriched);
 
         const counts = enriched.reduce((acc, app) => {
-        acc[app.status] = (acc[app.status] || 0) + 1;
-        return acc;
-      }, {});
-      setStageCounts(counts);
+          acc[app.status] = (acc[app.status] || 0) + 1;
+          return acc;
+        }, {});
+        setStageCounts(counts);
 
       } catch (err) {
         setError(err.message);
@@ -323,12 +320,28 @@ const JobApplications = () => {
       }
     };
 
+    const fetchScreeningQuestions = async () => {
+      try {
+        const response = await apiRequest({
+          url: `jobs/get-screening-filter-options/${jobId}`,
+          method: "GET",
+        });
+        
+        if (response.success && response.jobScreeningQuestions) {
+          setScreeningQuestions(response.jobScreeningQuestions);
+        }
+      } catch (err) {
+        console.error("Error fetching screening questions:", err);
+      }
+    };
+
     fetchApplications();
+    fetchScreeningQuestions();
   }, [jobId]);
 
   const handleStepClick = (index) => {
     setActiveStep(index);
-    setSelectedApplications(new Set()); // Clear selections when changing steps
+    setSelectedApplications(new Set());
   };
 
   useEffect(() => {
@@ -336,8 +349,255 @@ const JobApplications = () => {
     const filtered = allApplications.filter((app) => app.status === status);
     setApplications(filtered);
     setFilteredApps(filtered);
-    setSelectedApplications(new Set()); // Clear selections when step changes
+    setSelectedApplications(new Set());
   }, [activeStep, allApplications]);
+
+  const handleFilterChange = (e) => {
+    const { name, value } = e.target;
+    setFilters({ ...filters, [name]: value });
+  };
+
+  const applyFilters = () => {
+    let filtered = applications;
+    
+    if (filters.keywords) {
+      const keywordRegex = new RegExp(filters.keywords, "i");
+      filtered = filtered.filter(app => 
+        keywordRegex.test(app.applicant.firstName) ||
+        keywordRegex.test(app.applicant.lastName) ||
+        keywordRegex.test(app.applicant.email) ||
+        keywordRegex.test(app.applicant.currentDesignation) ||
+        keywordRegex.test(app.applicant.currentCompany) ||
+        (app.applicant.skills && app.applicant.skills.some(skill => 
+          keywordRegex.test(skill)
+        ) ||
+        keywordRegex.test(app.applicant.about)
+      ));
+    }
+    
+    if (filters.location) {
+      const locationValue = filters.location.trim();
+      if (locationValue.includes(",")) {
+        const locations = locationValue.split(",").map(loc => loc.trim());
+        filtered = filtered.filter(app => 
+          locations.some(loc => 
+            new RegExp(loc, "i").test(app.applicant.currentLocation) ||
+            (app.applicant.preferredLocations && 
+             app.applicant.preferredLocations.some(prefLoc => 
+               new RegExp(loc, "i").test(prefLoc)
+             ))
+          )
+        );
+      } else {
+        const locationRegex = new RegExp(locationValue, "i");
+        filtered = filtered.filter(app => 
+          locationRegex.test(app.applicant.currentLocation) ||
+          (app.applicant.preferredLocations && 
+           app.applicant.preferredLocations.some(loc => 
+             locationRegex.test(loc)
+           ))
+        );
+      }
+    }
+    
+    if (filters.currentDesignation) {
+      const designationValue = filters.currentDesignation.trim();
+      if (designationValue.includes(",")) {
+        const designations = designationValue.split(",").map(des => des.trim());
+        filtered = filtered.filter(app => 
+          designations.some(des => 
+            new RegExp(des, "i").test(app.applicant.currentDesignation)
+          )
+        );
+      } else {
+        filtered = filtered.filter(app => 
+          new RegExp(designationValue, "i").test(app.applicant.currentDesignation)
+        );
+      }
+    }
+    
+    if (filters.totalYearsInConsulting) {
+      const [min, max] = filters.totalYearsInConsulting.split("-").map(Number);
+      filtered = filtered.filter(app => {
+        const years = app.applicant.totalYearsInConsulting || 0;
+        return years >= min && (max === 100 || years < max);
+      });
+    }
+    
+    screeningQuestions.forEach(question => {
+      const filterKey = `screening_${question._id}`;
+      if (filters[filterKey]) {
+        filtered = filtered.filter(app => {
+          const answer = app.screeningAnswers?.find(a => 
+            a.questionId === question._id
+          );
+          if (!answer) return false;
+          
+          if (question.questionType === "yes/no") {
+            return answer.answer === (filters[filterKey] === "Yes");
+          }
+          if (question.questionType === "single_choice" || 
+              question.questionType === "multi_choice") {
+            return answer.answer === filters[filterKey];
+          }
+          return true;
+        });
+      }
+    });
+    
+    setFilteredApps(filtered);
+    setSelectedApplications(new Set());
+  };
+
+  const clearFilters = () => {
+    const resetFilters = {
+      keywords: "",
+      location: "",
+      currentDesignation: "",
+      totalYearsInConsulting: "",
+    };
+    
+    screeningQuestions.forEach(question => {
+      resetFilters[`screening_${question._id}`] = "";
+    });
+    
+    setFilters(resetFilters);
+    setFilteredApps(applications);
+    setSelectedApplications(new Set());
+  };
+
+  const FiltersContent = (
+    <Box sx={{ p: 2, width: isMobile ? 250 : "auto" }}>
+      <FormControl fullWidth sx={{ mb: 2 }}>
+        <TextField
+          label="Keywords"
+          name="keywords"
+          value={filters.keywords}
+          onChange={handleFilterChange}
+          placeholder="Search by name, skills, etc."
+          size="small"
+          sx={{ "& .MuiInputLabel-root": { fontFamily: "Satoshi" } }}
+        />
+      </FormControl>
+
+      <FormControl fullWidth sx={{ mb: 2 }}>
+        <TextField
+          label="Location"
+          name="location"
+          value={filters.location}
+          onChange={handleFilterChange}
+          placeholder="City, country or region"
+          size="small"
+          sx={{ "& .MuiInputLabel-root": { fontFamily: "Satoshi" } }}
+        />
+      </FormControl>
+
+      <FormControl fullWidth sx={{ mb: 2 }}>
+        <TextField
+          label="Current Designation"
+          name="currentDesignation"
+          value={filters.currentDesignation}
+          onChange={handleFilterChange}
+          placeholder="Job title or role"
+          size="small"
+          sx={{ "& .MuiInputLabel-root": { fontFamily: "Satoshi" } }}
+        />
+      </FormControl>
+
+      <FormControl fullWidth sx={{ mb: 2 }}>
+        <InputLabel sx={{ fontFamily: "Satoshi" }}>Years in Consulting</InputLabel>
+        <Select
+          name="totalYearsInConsulting"
+          value={filters.totalYearsInConsulting}
+          onChange={handleFilterChange}
+          label="Years in Consulting"
+          size="small"
+        >
+          <MenuItem value="">All</MenuItem>
+          <MenuItem value="0-2">0-2 years</MenuItem>
+          <MenuItem value="2-5">2-5 years</MenuItem>
+          <MenuItem value="5-10">5-10 years</MenuItem>
+          <MenuItem value="10-100">10+ years</MenuItem>
+        </Select>
+      </FormControl>
+
+      {screeningQuestions.length > 0 && (
+        <Box sx={{ mb: 2 }}>
+          <Typography 
+            variant="subtitle2" 
+            sx={{ 
+              fontFamily: "Satoshi", 
+              fontWeight: 600, 
+              mb: 1,
+              color: "#24252C"
+            }}
+          >
+            Screening Questions
+          </Typography>
+          {screeningQuestions.map((question) => (
+            <FormControl 
+              key={question._id} 
+              fullWidth 
+              sx={{ mb: 2 }}
+            >
+              <InputLabel sx={{ fontFamily: "Satoshi" }}>
+                {question.question}
+              </InputLabel>
+              <Select
+                name={`screening_${question._id}`}
+                value={filters[`screening_${question._id}`] || ""}
+                onChange={handleFilterChange}
+                label={question.question}
+                size="small"
+              >
+                <MenuItem value="">All</MenuItem>
+                {question.options?.map((option, idx) => (
+                  <MenuItem key={idx} value={option}>
+                    {option}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          ))}
+        </Box>
+      )}
+
+      <Box sx={{ display: "flex", gap: 1 }}>
+        <Button
+          variant="contained"
+          fullWidth
+          onClick={applyFilters}
+          sx={{ 
+            fontFamily: "Satoshi", 
+            fontWeight: 600,
+            bgcolor: "#1976d2",
+            "&:hover": {
+              bgcolor: "#1565c0"
+            }
+          }}
+        >
+          Apply Filters
+        </Button>
+        <Button
+          variant="outlined"
+          fullWidth
+          onClick={clearFilters}
+          sx={{ 
+            fontFamily: "Satoshi", 
+            fontWeight: 600,
+            borderColor: "#1976d2",
+            color: "#1976d2",
+            "&:hover": {
+              borderColor: "#1565c0",
+              color: "#1565c0"
+            }
+          }}
+        >
+          Clear All
+        </Button>
+      </Box>
+    </Box>
+  );
 
   const handleSearchClick = async () => {
     if (!searchKeyword.trim()) return;
@@ -406,7 +666,6 @@ const JobApplications = () => {
     }
   };
 
-  // Bulk selection handlers
   const handleApplicationSelect = (applicationId) => {
     const newSelected = new Set(selectedApplications);
     if (newSelected.has(applicationId)) {
@@ -429,7 +688,6 @@ const JobApplications = () => {
     setSelectedApplications(new Set());
   };
 
-  // Bulk actions
   const handleBulkAdvance = async () => {
     if (selectedApplications.size === 0) return;
 
@@ -451,8 +709,6 @@ const JobApplications = () => {
           message: `${response.data.modifiedCount} applications advanced successfully`,
           severity: "success",
         });
-
-        // Refresh applications
         window.location.reload();
       }
     } catch (err) {
@@ -489,8 +745,6 @@ const JobApplications = () => {
           message: `${response.data.modifiedCount} applications rejected successfully`,
           severity: "success",
         });
-
-        // Refresh applications
         window.location.reload();
       }
     } catch (err) {
@@ -526,8 +780,6 @@ const JobApplications = () => {
           message: `All ${response.data.modifiedCount} applications at this stage rejected`,
           severity: "success",
         });
-
-        // Refresh applications
         window.location.reload();
       }
     } catch (err) {
@@ -566,52 +818,6 @@ const JobApplications = () => {
     }
   };
 
-  // Handle filter changes
-  const handleFilterChange = (e) => {
-    const { name, value } = e.target;
-    setFilters({ ...filters, [name]: value });
-  };
-
-  // Apply filters
-  const applyFilters = () => {
-    let filtered = applications;
-    if (filters.experience) {
-      filtered = filtered.filter(
-        (app) => app.applicant.experience >= filters.experience
-      );
-    }
-    if (filters.currentJob) {
-      filtered = filtered.filter((app) =>
-        app.applicant.currentJobRole
-          ?.toLowerCase()
-          .includes(filters.currentJob.toLowerCase())
-      );
-    }
-    if (filters.joinConsulting) {
-      filtered = filtered.filter(
-        (app) => app.applicant.joinConsulting === filters.joinConsulting
-      );
-    }
-    if (filters.openToRelocate) {
-      filtered = filtered.filter(
-        (app) => app.applicant.openToRelocate === filters.openToRelocate
-      );
-    }
-    setFilteredApps(filtered);
-    setSelectedApplications(new Set()); // Clear selections when filtering
-  };
-
-  const clearFilters = () => {
-    setFilters({
-      experience: "",
-      currentJob: "",
-      joinConsulting: "",
-      openToRelocate: "",
-    });
-    setFilteredApps(applications);
-    setSelectedApplications(new Set());
-  };
-
   const getNextStepName = () => {
     const currentStatus = steps[activeStep];
     const statusFlow = {
@@ -622,84 +828,6 @@ const JobApplications = () => {
     };
     return statusFlow[currentStatus] || "Next Stage";
   };
-
-  const FiltersContent = (
-    <Box sx={{ p: 2, width: isMobile ? 250 : "auto" }}>
-      <FormControl fullWidth sx={{ mb: 2 }}>
-        <TextField
-          label="Current Job"
-          name="currentJob"
-          value={filters.currentJob}
-          onChange={handleFilterChange}
-          placeholder="Enter job title..."
-          size="small"
-          sx={{ "& .MuiInputLabel-root": { fontFamily: "Satoshi" } }}
-        />
-      </FormControl>
-      <FormControl fullWidth sx={{ mb: 2 }}>
-        <InputLabel sx={{ fontFamily: "Satoshi" }}>Experience</InputLabel>
-        <Select
-          name="experience"
-          value={filters.experience}
-          onChange={handleFilterChange}
-          label="Experience"
-          size="small"
-          sx={{ "& .MuiInputLabel-root": { fontFamily: "Satoshi" } }}
-        >
-          <MenuItem value="">All</MenuItem>
-          <MenuItem value={1}>1+ years</MenuItem>
-          <MenuItem value={3}>3+ years</MenuItem>
-          <MenuItem value={5}>5+ years</MenuItem>
-        </Select>
-      </FormControl>
-      <FormControl fullWidth sx={{ mb: 2 }}>
-        <InputLabel sx={{ fontFamily: "Satoshi" }}>Join Consulting</InputLabel>
-        <Select
-          name="joinConsulting"
-          value={filters.joinConsulting}
-          onChange={handleFilterChange}
-          label="Join Consulting"
-          size="small"
-        >
-          <MenuItem value="">All</MenuItem>
-          <MenuItem value="Lateral">Lateral</MenuItem>
-          <MenuItem value="Out of Campus">Out of Campus</MenuItem>
-        </Select>
-      </FormControl>
-      <FormControl fullWidth sx={{ mb: 2 }}>
-        <InputLabel sx={{ fontFamily: "Satoshi" }}>Open to Relocate</InputLabel>
-        <Select
-          name="openToRelocate"
-          value={filters.openToRelocate}
-          onChange={handleFilterChange}
-          label="Open to Relocate"
-          size="small"
-        >
-          <MenuItem value="">All</MenuItem>
-          <MenuItem value="yes">Yes</MenuItem>
-          <MenuItem value="no">No</MenuItem>
-        </Select>
-      </FormControl>
-      <Box sx={{ display: "flex", gap: 1 }}>
-        <Button
-          variant="contained"
-          fullWidth
-          onClick={applyFilters}
-          sx={{ fontFamily: "Satoshi", fontWeight: 600 }}
-        >
-          Apply
-        </Button>
-        <Button
-          variant="outlined"
-          fullWidth
-          onClick={clearFilters}
-          sx={{ fontFamily: "Satoshi", fontWeight: 600 }}
-        >
-          Clear
-        </Button>
-      </Box>
-    </Box>
-  );
 
   return (
     <Box sx={{ bgcolor: "#fff", minHeight: "100vh", p: { xs: 2, md: 4 } }}>

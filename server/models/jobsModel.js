@@ -51,16 +51,33 @@ const jobSchema = new mongoose.Schema(
       },
     ],
     screeningQuestions: [
-      {
-        question: {
-          type: String,
-        },
-        isMandatory: {
-          type: Boolean,
-          default: false,
-        },
+    {
+      _id: {
+        type: mongoose.Schema.Types.ObjectId,
+        default: () => new mongoose.Types.ObjectId()
       },
-    ],
+      question: {
+        type: String,
+        required: true
+      },
+      questionType: {
+        type: String,
+        enum: ['yes/no', 'single_choice', 'multi_choice', 'short_answer', 'long_answer'],
+        required: true
+      },
+      options: [{
+        type: String
+      }], // For single_choice and multi_choice questions
+      isMandatory: {
+        type: Boolean,
+        default: false
+      },
+      order: {
+        type: Number,
+        default: 0
+      }
+    }
+  ],
     experience: {
       minExperience: { type: Number },
       maxExperience: { type: Number }
