@@ -323,7 +323,7 @@ const JobApplications = () => {
     const fetchScreeningQuestions = async () => {
       try {
         const response = await apiRequest({
-          url: `jobs/get-screening-filter-options/${jobId}`,
+          url: `application/get-screening-filter-options/${jobId}`,
           method: "GET",
         });
         
