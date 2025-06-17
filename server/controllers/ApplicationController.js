@@ -210,6 +210,9 @@ export const getApplicationsOfAjob = async (req, res) => {
     const limitNum = Number(limit);
     const skip = (pageNum - 1) * limitNum;
 
+    // Initialize screeningFiltersParsed outside the conditional block
+    let screeningFiltersParsed = null;
+
     console.log('Job ID:', jobId);
     console.log('Filters:', { keywords, location, currentDesignation, totalYearsInConsulting, screeningFilters });
 
@@ -360,13 +363,97 @@ export const getApplicationsOfAjob = async (req, res) => {
     }
 
     // Enhanced Screening Filters - supports all 5 question types
-    if (screeningFilters) {
-      let screeningFiltersParsed;
-      
+    if (screeningFilters && screeningFilters.trim()) {
       try {
         screeningFiltersParsed = typeof screeningFilters === 'string' 
           ? JSON.parse(screeningFilters) 
           : screeningFilters;
+
+        // Only process if screeningFiltersParsed is a valid object with properties
+        if (screeningFiltersParsed && typeof screeningFiltersParsed === 'object' && Object.keys(screeningFiltersParsed).length > 0) {
+          Object.entries(screeningFiltersParsed).forEach(([questionId, filterConfig]) => {
+            const { questionType, expectedAnswer, searchText } = filterConfig;
+            
+            switch (questionType) {
+              case 'yes/no':
+                // Boolean matching for yes/no questions
+                filterConditions.push({
+                  'screeningAnswers': {
+                    $elemMatch: {
+                      'questionId': new mongoose.Types.ObjectId(questionId),
+                      'answer': expectedAnswer === 'Yes' || expectedAnswer === true
+                    }
+                  }
+                });
+                break;
+
+              case 'single_choice':
+                // Exact match for single choice
+                if (Array.isArray(expectedAnswer)) {
+                  // Multiple acceptable answers
+                  filterConditions.push({
+                    'screeningAnswers': {
+                      $elemMatch: {
+                        'questionId': new mongoose.Types.ObjectId(questionId),
+                        'answer': { $in: expectedAnswer }
+                      }
+                    }
+                  });
+                } else {
+                  // Single acceptable answer
+                  filterConditions.push({
+                    'screeningAnswers': {
+                      $elemMatch: {
+                        'questionId': new mongoose.Types.ObjectId(questionId),
+                        'answer': expectedAnswer
+                      }
+                    }
+                  });
+                }
+                break;
+
+              case 'multi_choice':
+                // Array intersection for multi-choice
+                if (Array.isArray(expectedAnswer)) {
+                  filterConditions.push({
+                    'screeningAnswers': {
+                      $elemMatch: {
+                        'questionId': new mongoose.Types.ObjectId(questionId),
+                        'answer': { $in: expectedAnswer }
+                      }
+                    }
+                  });
+                } else {
+                  // Single value in multi-choice array
+                  filterConditions.push({
+                    'screeningAnswers': {
+                      $elemMatch: {
+                        'questionId': new mongoose.Types.ObjectId(questionId),
+                        'answer': expectedAnswer
+                      }
+                    }
+                  });
+                }
+                break;
+
+              case 'short_answer':
+              case 'long_answer':
+                // Text search for answer text (these are not typically filtered but included for completeness)
+                if (searchText && searchText.trim()) {
+                  const textRegex = new RegExp(searchText.trim(), 'i');
+                  filterConditions.push({
+                    'screeningAnswers': {
+                      $elemMatch: {
+                        'questionId': new mongoose.Types.ObjectId(questionId),
+                        'answerText': textRegex
+                      }
+                    }
+                  });
+                }
+                break;
+            }
+          });
+        }
       } catch (error) {
         console.error('Error parsing screening filters:', error);
         return res.status(400).json({
@@ -374,89 +461,6 @@ export const getApplicationsOfAjob = async (req, res) => {
           message: 'Invalid screening filter format'
         });
       }
-
-      Object.entries(screeningFiltersParsed).forEach(([questionId, filterConfig]) => {
-        const { questionType, expectedAnswer, searchText } = filterConfig;
-        
-        switch (questionType) {
-          case 'yes/no':
-            // Boolean matching for yes/no questions
-            filterConditions.push({
-              'screeningAnswers': {
-                $elemMatch: {
-                  'questionId': new mongoose.Types.ObjectId(questionId),
-                  'answer': expectedAnswer === 'Yes' || expectedAnswer === true
-                }
-              }
-            });
-            break;
-
-          case 'single_choice':
-            // Exact match for single choice
-            if (Array.isArray(expectedAnswer)) {
-              // Multiple acceptable answers
-              filterConditions.push({
-                'screeningAnswers': {
-                  $elemMatch: {
-                    'questionId': new mongoose.Types.ObjectId(questionId),
-                    'answer': { $in: expectedAnswer }
-                  }
-                }
-              });
-            } else {
-              // Single acceptable answer
-              filterConditions.push({
-                'screeningAnswers': {
-                  $elemMatch: {
-                    'questionId': new mongoose.Types.ObjectId(questionId),
-                    'answer': expectedAnswer
-                  }
-                }
-              });
-            }
-            break;
-
-          case 'multi_choice':
-            // Array intersection for multi-choice
-            if (Array.isArray(expectedAnswer)) {
-              filterConditions.push({
-                'screeningAnswers': {
-                  $elemMatch: {
-                    'questionId': new mongoose.Types.ObjectId(questionId),
-                    'answer': { $in: expectedAnswer }
-                  }
-                }
-              });
-            } else {
-              // Single value in multi-choice array
-              filterConditions.push({
-                'screeningAnswers': {
-                  $elemMatch: {
-                    'questionId': new mongoose.Types.ObjectId(questionId),
-                    'answer': expectedAnswer
-                  }
-                }
-              });
-            }
-            break;
-
-          case 'short_answer':
-          case 'long_answer':
-            // Text search for answer text (these are not typically filtered but included for completeness)
-            if (searchText) {
-              const textRegex = new RegExp(searchText, 'i');
-              filterConditions.push({
-                'screeningAnswers': {
-                  $elemMatch: {
-                    'questionId': new mongoose.Types.ObjectId(questionId),
-                    'answerText': textRegex
-                  }
-                }
-              });
-            }
-            break;
-        }
-      });
     }
 
     // Apply all filter conditions
@@ -503,7 +507,7 @@ export const getApplicationsOfAjob = async (req, res) => {
           location,
           currentDesignation,
           totalYearsInConsulting,
-          screeningFilters: screeningFiltersParsed || null
+          screeningFilters: screeningFiltersParsed
         }
       });
     }
@@ -519,7 +523,7 @@ export const getApplicationsOfAjob = async (req, res) => {
         location,
         currentDesignation,
         totalYearsInConsulting,
-        screeningFilters: screeningFiltersParsed || null
+        screeningFilters: screeningFiltersParsed
       }
     });
 
