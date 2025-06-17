@@ -254,14 +254,52 @@ export const getApplicationsOfAjob = async (req, res) => {
           pipeline: [
             { 
               $project: { 
+                // Basic Info
+                firstName: 1,
+                lastName: 1,
+                email: 1,
+                contactNumber: 1,
+                profileUrl: 1,
+                cvUrl: 1,
+                
+                // Professional Info
                 currentDesignation: 1,
+                currentCompany: 1,
+                currentSalary: 1,
                 currentLocation: 1,
                 preferredLocations: 1,
                 totalYearsInConsulting: 1,
+                lastConsultingCompany: 1,
+                isItConsultingCompany: 1,
+                
+                // Experience & Skills
                 skills: 1,
                 experience: 1,
-                currentCompany: 1,
-                about: 1
+                experienceHistory: 1,
+                about: 1,
+                
+                // Preferences
+                expectedMinSalary: 1,
+                preferredWorkTypes: 1,
+                preferredWorkModes: 1,
+                openToRelocate: 1,
+                joinConsulting: 1,
+                
+                // Education & Social
+                highestQualification: 1,
+                linkedinLink: 1,
+                dateOfBirth: 1,
+                
+                // Account Info
+                accountType: 1,
+                isEmailVerified: 1,
+                createdAt: 1,
+                updatedAt: 1
+                
+                // Explicitly exclude sensitive fields
+                // password: 0, (already excluded by not including it)
+                // providerId: 0, (already excluded by not including it)
+                // authProvider: 0 (already excluded by not including it)
               } 
             }
           ]
@@ -287,7 +325,9 @@ export const getApplicationsOfAjob = async (req, res) => {
           { 'applicant.currentDesignation': keywordRegex },
           { 'applicant.currentCompany': keywordRegex },
           { 'applicant.skills': { $in: [keywordRegex] } },
-          { 'applicant.about': keywordRegex }
+          { 'applicant.about': keywordRegex },
+          { 'applicant.firstName': keywordRegex },
+          { 'applicant.lastName': keywordRegex }
         ]
       });
     }
