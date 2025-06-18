@@ -95,7 +95,7 @@ export const createApplication = async (req, res) => {
     // Update user's applied jobs
     const user = await Users.findByIdAndUpdate(
       { _id: applicant },
-      { $push: { appliedJobs: newApplication._id } },
+      { $push: { appliedJobs: job._id } },
       { new: true }
     );
     
