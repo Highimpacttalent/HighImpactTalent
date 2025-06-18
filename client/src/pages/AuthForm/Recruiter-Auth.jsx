@@ -289,10 +289,10 @@ const RecruiterSignup = () => {
       alert("Designation is required.");
       return;
     }
-    if (!form.location) {
-      alert("Company location is required.");
-      return;
-    }
+    // if (!form.location) {
+    //   alert("Company location is required.");
+    //   return;
+    // }
     if (!form.numberOfEmployees) {
       alert("Number of employees is required.");
       return;
@@ -428,7 +428,7 @@ const RecruiterSignup = () => {
                 mb: 1,
               }}
             >
-              Recruiter Name
+              Recruiter Name <span style={{ color: "red" }}>*</span>
             </Typography>
             <TextField
               fullWidth
@@ -455,7 +455,7 @@ const RecruiterSignup = () => {
                 mt: 3,
               }}
             >
-              Email Address
+              Email Address <span style={{ color: "red" }}>*</span>
             </Typography>
             <TextField
               fullWidth
@@ -486,7 +486,7 @@ const RecruiterSignup = () => {
                 mt: 3,
               }}
             >
-              Mobile Number
+              Mobile Number <span style={{ color: "red" }}>*</span>
             </Typography>
             <TextField
               fullWidth
@@ -517,7 +517,7 @@ const RecruiterSignup = () => {
                 mt: 3,
               }}
             >
-              Designation
+              Designation <span style={{ color: "red" }}>*</span>
             </Typography>
             <TextField
               fullWidth
@@ -579,7 +579,7 @@ const RecruiterSignup = () => {
                 mt: 3,
               }}
             >
-              Company Name
+              Company Name <span style={{ color: "red" }}>*</span>
             </Typography>
             <TextField
               fullWidth
@@ -634,7 +634,7 @@ const RecruiterSignup = () => {
                 mt: 3,
               }}
             >
-              Number of Employees
+              Number of Employees <span style={{ color: "red" }}>*</span>
             </Typography>
             <FormControl fullWidth required>
               <Select
@@ -669,7 +669,7 @@ const RecruiterSignup = () => {
                 mt: 3,
               }}
             >
-              Organization Type
+              Organization Type <span style={{ color: "red" }}>*</span>
             </Typography>
             <FormControl fullWidth required>
               <Select
@@ -798,7 +798,7 @@ const RecruiterSignup = () => {
                 mt: 2,
               }}
             >
-              Password
+              Password <span style={{ color: "red" }}>*</span>
             </Typography>
             <TextField
               fullWidth
