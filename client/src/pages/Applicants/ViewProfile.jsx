@@ -35,6 +35,7 @@ const ViewProfile = () => {
   const location = useLocation();
   const userData = location.state?.applicant || {};
   const ScreeningQues = location.state?.screeningAnswers || [];
+  console.log(ScreeningQues)
   const applicationId = location.state?.applicationId || "";
   const [expanded, setExpanded] = useState({});
   const [expandedExperience, setExpandedExperience] = useState({});

@@ -11,9 +11,6 @@ import {
   Button,
   Grid,
   FormControl,
-  InputLabel,
-  MenuItem,
-  Chip,
   FormControlLabel,
   Checkbox,
   Divider,
@@ -32,7 +29,6 @@ import {
   Add as AddIcon,
   Delete as DeleteIcon,
   Save as SaveIcon,
-  Preview as PreviewIcon,
   LocationOn as LocationIcon,
   Work as WorkIcon,
   School as SchoolIcon,
@@ -41,7 +37,7 @@ import {
   Star as StarIcon,
 } from "@mui/icons-material";
 import { createTheme, useTheme } from "@mui/material/styles";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { skillsList } from "../../../../assets/mock";
 import {
   functionalAreasCategory,
@@ -50,13 +46,13 @@ import {
   IndustryCategory,
 } from "../../../../assets/functionalarea";
 
-
 const formLabelStyle = {
   fontSize: "0.875rem", // 14px
   fontWeight: 500,
   color: "text.primary",
-  mb: 0.5, // Reduced margin
+  mb: 1, // Reduced margin
   display: "block",
+  ml:1
 };
 
 const theme = createTheme({
@@ -162,46 +158,45 @@ const theme = createTheme({
   },
 });
 
+
 export default function JobEditForm() {
   const location = useLocation();
-  const jobId = location.state?.job._id;
+  const navigate = useNavigate();
+  const jobId = location.state?.job?._id;
   const muiTheme = useTheme();
-  const [saving, setSaving] = useState(false); 
+  const [saving, setSaving] = useState(false);
 
+  // Define initial state matching required fields and structure
   const [jobData, setJobData] = useState({
     jobTitle: "",
-    jobLocation: "",
-    salary: { minSalary: "", maxSalary: "" },
+    jobLocation: "", // Kept as TextField based on original edit UI
+    salary: { minSalary: "", maxSalary: "" }, // Kept as TextFields based on original edit UI
     salaryConfidential: false,
-    salaryCategory: "",
-    status: "draft",
-    workType: "",
-    workMode: "",
+    salaryCategory: "", // Changed to Select
+    status: "draft", // Changed to Select
+    workType: "", // Changed to Select
+    workMode: "", // Changed to Select
     jobDescription: "",
-    skills: [],
-    requirements: [""],
-    qualifications: [""],
-    screeningQuestions: [],
-    experience: { minExperience: "", maxExperience: "" },
-    companyType: "",
+    skills: [], // Multi-select
+    qualifications: [], // Multi-select based on UploadJob example
+    screeningQuestions: [{ question: "", questionType: "short_answer", options: [], isMandatory: false }], // Structure based on UploadJob example
+    experience: { minExperience: "", maxExperience: "" }, // Kept as TextFields based on original edit UI
+    companyType: "", // Acts as Industry, changed to Select based on UploadJob example
     applicationLink: "",
-    duration: "",
-    graduationYear: { minBatch: "", maxBatch: "" },
-    tags: [],
-    courseType: "",
+    graduationYear: { minBatch: "", maxBatch: "" }, // Kept as TextFields based on original edit UI
+    tags: [], // Creatable Multi-select
     diversityPreferences: {
       femaleCandidates: false,
-      womenJoiningBackforce: false,
+      womenJoiningBackforce: false, // Assuming this key based on initial code
       exDefencePersonnel: false,
       differentlyAbledCandidates: false,
       workFromHome: false,
     },
-    category: "",
-    functionalArea: "",
-    isPremiumJob: false,
+    category: "", // Changed to Select
+    functionalArea: "", // Changed to Select
+    isPremiumJob: false, // Switch
   });
 
-  const [tagInput, setTagInput] = useState("");
   const [notification, setNotification] = useState({
     open: false,
     message: "",
@@ -211,13 +206,21 @@ export default function JobEditForm() {
   const [error, setError] = useState(null);
   const [initialLoadError, setInitialLoadError] = useState(null);
 
-  // Options for React Select
+  // Options for React Selects
   const [functionalAreaOptions, setFunctionalAreaOptions] = useState([]);
   const [categoryOptions, setCategoryOptions] = useState([]);
   const [salaryCategoryOptions, setSalaryCategoryOptions] = useState([]);
-  const [durationOptions, setDurationOptions] = useState([]);
-  const [courseTypeOptions, setCourseTypeOptions] = useState([]);
   const [skillOptions, setSkillOptions] = useState([]);
+  const [tagOptions, setTagOptions] = useState([]);
+  const [industryOptions, setIndustryOptions] = useState([]);
+  const [qualificationsSelectOptions] = useState([
+    { value: "Bachelor's", label: "Bachelor's" },
+    { value: "Master", label: "Master" },
+    { value: "MBA", label: "MBA" },
+    { value: "CA", label: "CA" },
+    // Add other relevant qualifications if needed
+  ]);
+
 
   const screeningQuestionTypeOptions = [
     { value: 'yes/no', label: 'Yes/No' },
@@ -227,101 +230,93 @@ export default function JobEditForm() {
     { value: 'long_answer', label: 'Long Answer' },
   ];
 
-  // Options for other dropdowns
-  const workTypes = [
-    "Full-Time",
-    "Part-Time",
-    "Contract",
-    "Temporary",
-    "Internship",
-  ].map((wt) => ({
-    value: wt,
-    label: wt,
-  }));
+  // Lists for deriving Select options
+  const workTypesList = [ "Full-Time", "Part-Time", "Contract", "Temporary", "Internship" ];
+  const workModeList = ["Remote", "Hybrid", "Work From Office"];
+  const statusOptionsList = ["live", "draft", "deleted", "paused"];
+  const salaryCategoriesList = [ "On Experience", "Competitive", "Fixed", "Negotiable", "Confidential" ];
 
-  const workMode = ["Remote", "Hybrid", "Work From Office"].map((wt) => ({
-    value: wt,
-    label: wt,
-  }));
-  const statusOptions = ["live", "draft", "deleted", "paused"].map((wt) => ({
-    value: wt,
-    label: wt,
-  }));
-  const durationTypes = ["Permanent", "Contract", "Temporary", "Project-based"];
-  const courseTypes = ["Full time", "Part time", "Distance Learning Program", "Executive Program", "Certification"];
-  const salaryCategories = [
-    // Renamed from salaryOptions
-    "On Experience",
-    "Competitive",
-    "Fixed",
-    "Negotiable",
-    "Confidential",
-  ];
-
-  const tagOptions = tagCategory.map((tag) => ({
-  value: tag,
-  label: tag,
-}));
 
   // React Select custom styles
   const customSelectStyle = {
-    control: (base) => ({
-      ...base,
-      minHeight: "26px",
-      borderRadius: "8px",
-      borderColor: muiTheme.palette.mode === "light" ? "#c4c4c4" : "#555",
+    control: (provided, state) => ({
+      ...provided,
+      fontSize: "0.875rem", // 14px
+      borderRadius: "8px", // Rounded corners
+      borderColor: state.isFocused ? "#3C7EFC" : "#d1d5db", // Match primary color
+      boxShadow: state.isFocused ? "0 0 0 2px rgba(60, 126, 252, 0.5)" : "none", // Subtle shadow
+      minHeight: "42px", // Standard height
       "&:hover": {
-        borderColor: muiTheme.palette.primary.main,
+        borderColor: "#d1d5db", // Keep hover neutral or match focus
       },
     }),
-    input: (base) => ({
-      ...base,
-      color: muiTheme.palette.text.primary,
+     valueContainer: (provided) => ({
+         ...provided,
+         padding: "0 12px", // Adjust horizontal padding
+     }),
+    indicatorSeparator: () => ({
+        display: 'none', // Hide the separator line
     }),
-    singleValue: (base) => ({
-      ...base,
-      color: muiTheme.palette.text.primary,
+    dropdownIndicator: (provided) => ({ // Adjust padding
+        ...provided,
+        padding: '8px',
     }),
-    menu: (base) => ({
-      ...base,
-      zIndex: 9999,
-      backgroundColor: muiTheme.palette.background.paper,
+      clearIndicator: (provided) => ({ // Adjust padding
+        ...provided,
+        padding: '8px',
     }),
-    option: (base, { isFocused, isSelected }) => ({
-      ...base,
-      backgroundColor: isSelected
-        ? muiTheme.palette.primary.main
-        : isFocused
-        ? muiTheme.palette.action.hover
-        : undefined,
-      color: isSelected ? "#fff" : muiTheme.palette.text.primary,
-      "&:active": {
-        backgroundColor: muiTheme.palette.primary.light,
+    menu: (provided) => ({
+      ...provided,
+      borderRadius: "0.5rem",
+      boxShadow: "0 2px 10px rgba(0, 0, 0, 0.1)",
+      border: "1px solid #d1d5db",
+      zIndex: 1000,
+    }),
+    option: (provided, state) => ({
+      ...provided,
+      backgroundColor: state.isSelected ? "#3C7EFC" : "white",
+      color: state.isSelected ? "white" : "black", // Use black for options text
+      "&:hover": {
+        backgroundColor: "#f0f0f0", // Light hover background
+        color: "black",
       },
+      fontSize: "0.875rem",
     }),
-    placeholder: (base) => ({
-      ...base,
-      color: muiTheme.palette.text.secondary,
+    multiValue: (provided) => ({
+      ...provided,
+      backgroundColor: "#e0e0e0", // Light grey chips
+      borderRadius: 16,
+      margin: "2px",
     }),
-    multiValue: (base) => ({
-      ...base,
-      backgroundColor: muiTheme.palette.primary.light,
+    multiValueLabel: (provided) => ({
+      ...provided,
+      color: "black",
+      fontSize: "0.875rem",
     }),
-    multiValueLabel: (base) => ({
-      ...base,
-      color: "#fff",
-    }),
-    multiValueRemove: (base) => ({
-      ...base,
-      color: "#fff",
+    multiValueRemove: (provided) => ({
+      ...provided,
+      color: "black",
+      borderRadius: 16,
       ":hover": {
-        backgroundColor: muiTheme.palette.primary.dark,
-        color: "#fff",
+        backgroundColor: "#c0c0c0",
+        color: "red",
       },
     }),
+    placeholder: (provided) => ({
+      ...provided,
+      color: "#a0a0a0",
+      fontSize: "0.875rem",
+    }),
+    singleValue: (provided) => ({
+      ...provided,
+      color: "black",
+      fontSize: "0.875rem",
+    }),
+
   };
 
-  // Initialize React Select options
+
+  // Initialize Options for React Selects
   useEffect(() => {
     setFunctionalAreaOptions(
       functionalAreasCategory.map((area) => ({ label: area, value: area }))
@@ -330,17 +325,19 @@ export default function JobEditForm() {
       categoryOptionsList.map((cat) => ({ label: cat, value: cat }))
     );
     setSalaryCategoryOptions(
-      salaryCategories.map((cat) => ({ label: cat, value: cat }))
+      salaryCategoriesList.map((cat) => ({ label: cat, value: cat }))
     );
-    setDurationOptions(
-      durationTypes.map((dur) => ({ label: dur, value: dur }))
-    );
-    setCourseTypeOptions(
-      courseTypes.map((type) => ({ label: type, value: type }))
-    );
+     // Sort skills alphabetically
     setSkillOptions(
-      skillsList.map((skill) => ({ label: skill, value: skill }))
+      skillsList.slice().sort((a, b) => a.localeCompare(b)).map((skill) => ({ label: skill, value: skill }))
     );
+     setTagOptions(
+      tagCategory.slice().sort((a, b) => a.localeCompare(b)).map((tag) => ({ label: tag, value: tag }))
+    );
+    setIndustryOptions(
+      IndustryCategory.slice().sort((a, b) => a.localeCompare(b)).map((industry) => ({ label: industry, value: industry }))
+    );
+
   }, []);
 
   // Fetch job data
@@ -348,6 +345,11 @@ export default function JobEditForm() {
     if (!jobId) {
       setLoading(false);
       setInitialLoadError("Job ID is missing. Cannot fetch job details.");
+      setNotification({
+        open: true,
+        message: "Job ID is missing. Cannot fetch job details.",
+        severity: "error",
+      });
       return;
     }
     setLoading(true);
@@ -355,182 +357,111 @@ export default function JobEditForm() {
     setInitialLoadError(null);
 
     try {
+      const token = localStorage.getItem('token');
+       if (!token) {
+            setLoading(false);
+            setInitialLoadError("Authentication token missing. Please log in again.");
+             setNotification({
+                open: true,
+                message: "Authentication token missing. Please log in again.",
+                severity: "error",
+            });
+            // Optionally redirect to login
+             // navigate("/login");
+            return;
+       }
+
       const response = await fetch(
-        `https://highimpacttalent.onrender.com/api-v1/jobs/get-job-detail/${jobId}`
+        `https://highimpacttalent.onrender.com/api-v1/jobs/get-job-detail/${jobId}`,
+         {
+            headers: {
+                'Authorization': `Bearer ${token}`,
+            },
+         }
       );
+
+       if (!response.ok) {
+           let errorMessage = `Failed to fetch job data: ${response.status} - ${response.statusText}`;
+           try {
+               const errorJson = await response.json();
+               errorMessage = errorJson.message || errorMessage;
+           } catch { /* ignore */ }
+           console.error("Fetch API Error Response:", response.status, errorMessage);
+           throw new Error(errorMessage);
+       }
+
       const result = await response.json();
 
       if (result.success && result.data) {
         const fetchedJob = result.data;
 
-        // Process salary
-        let salaryState = { minSalary: "", maxSalary: "" };
-        if (fetchedJob.salary !== undefined && fetchedJob.salary !== null) {
-          if (
-            typeof fetchedJob.salary === "object" &&
-            fetchedJob.salary !== null
-          ) {
-            salaryState.minSalary =
-              fetchedJob.salary.minSalary !== undefined &&
-              fetchedJob.salary.minSalary !== null
-                ? String(fetchedJob.salary.minSalary)
-                : "";
-            salaryState.maxSalary =
-              fetchedJob.salary.maxSalary !== undefined &&
-              fetchedJob.salary.maxSalary !== null
-                ? String(fetchedJob.salary.maxSalary)
-                : "";
-          } else {
-            salaryState.minSalary = String(fetchedJob.salary);
-          }
-        }
-
-        // Process experience
-        let experienceState = { minExperience: "", maxExperience: "" };
-        if (
-          fetchedJob.experience !== undefined &&
-          fetchedJob.experience !== null
-        ) {
-          if (
-            typeof fetchedJob.experience === "object" &&
-            fetchedJob.experience !== null
-          ) {
-            experienceState.minExperience =
-              fetchedJob.experience.minExperience !== undefined &&
-              fetchedJob.experience.minExperience !== null
-                ? String(fetchedJob.experience.minExperience)
-                : "";
-            experienceState.maxExperience =
-              fetchedJob.experience.maxExperience !== undefined &&
-              fetchedJob.experience.maxExperience !== null
-                ? String(fetchedJob.experience.maxExperience)
-                : "";
-          } else {
-            experienceState.minExperience = String(fetchedJob.experience);
-          }
-        }
-
-        // Process graduation year
-        const graduationYearState =
-          fetchedJob.graduationYear &&
-          typeof fetchedJob.graduationYear === "object" &&
-          fetchedJob.graduationYear !== null
-            ? {
-                minBatch:
-                  fetchedJob.graduationYear.minBatch !== undefined &&
-                  fetchedJob.graduationYear.minBatch !== null
-                    ? String(fetchedJob.graduationYear.minBatch)
-                    : "",
-                maxBatch:
-                  fetchedJob.graduationYear.maxBatch !== undefined &&
-                  fetchedJob.graduationYear.maxBatch !== null
-                    ? String(fetchedJob.graduationYear.maxBatch)
-                    : "",
-              }
-            : { minBatch: "", maxBatch: "" };
-
-        // Process diversity preferences
-        const diversityPreferencesState =
-          fetchedJob.diversityPreferences &&
-          typeof fetchedJob.diversityPreferences === "object" &&
-          fetchedJob.diversityPreferences !== null
-            ? {
-                femaleCandidates:
-                  fetchedJob.diversityPreferences.femaleCandidates ?? false,
-                womenJoiningBackforce:
-                  fetchedJob.diversityPreferences.womenJoiningBackforce ??
-                  false,
-                exDefencePersonnel:
-                  fetchedJob.diversityPreferences.exDefencePersonnel ?? false,
-                differentlyAbledCandidates:
-                  fetchedJob.diversityPreferences.differentlyAbledCandidates ??
-                  false,
-                workFromHome:
-                  fetchedJob.diversityPreferences.workFromHome ?? false,
-              }
-            : {
-                femaleCandidates: false,
-                womenJoiningBackforce: false,
-                exDefencePersonnel: false,
-                differentlyAbledCandidates: false,
-                workFromHome: false,
-              };
-
-        // Process requirements and qualifications
-        const fetchedRequirements = Array.isArray(fetchedJob.requirements)
-          ? fetchedJob.requirements.filter((req) => req !== null)
-          : [];
-        const requirementsState =
-          fetchedRequirements.length > 0 &&
-          fetchedRequirements.some((req) => req.trim() !== "")
-            ? fetchedRequirements
-            : [""];
-
-        const fetchedQualifications = Array.isArray(fetchedJob.qualifications)
-          ? fetchedJob.qualifications.filter((qual) => qual !== null)
-          : [];
-        const qualificationsState =
-          fetchedQualifications.length > 0 &&
-          fetchedQualifications.some((qual) => qual.trim() !== "")
-            ? fetchedQualifications
-            : [""];
-
-        // Process screening questions
-        // Process screening questions (ensure array, filter invalid, map to new structure)
-        const fetchedScreeningQuestions = Array.isArray(fetchedJob.screeningQuestions)
-          ? fetchedJob.screeningQuestions.filter(q => q && typeof q === 'object' && q.question) // Filter out null/invalid objects
-          : [];
-
-        const screeningQuestionsState = fetchedScreeningQuestions.map(q => ({
-            _id: q._id, // Keep _id for existing questions
-            question: q.question || "",
-            questionType: q.questionType || "short_answer", // Default type if missing
-            options: Array.isArray(q.options) ? q.options.filter(opt => opt !== null && opt !== undefined) : [], // Ensure options is array and filter nulls
-            isMandatory: q.isMandatory ?? false, // Default to false if missing
-        }));
-
-         // If no valid screening questions are fetched, add one empty one for UI
-         if(screeningQuestionsState.length === 0) {
-             screeningQuestionsState.push({
-                  question: "",
-                  questionType: "short_answer",
-                  options: [],
-                  isMandatory: false,
-             });
-         }
-
-        // Process skills and tags
-        const skillsState = Array.isArray(fetchedJob.skills)
-          ? fetchedJob.skills
-          : [];
-        const tagsState = Array.isArray(fetchedJob.tags) ? fetchedJob.tags : [];
-
+        // Map fetched data to state structure, ensuring correct types and defaults
         setJobData({
           jobTitle: fetchedJob.jobTitle || "",
           jobLocation: fetchedJob.jobLocation || "",
-          salary: salaryState,
+          salary: { // Handle object or single number
+              minSalary: (typeof fetchedJob.salary === 'object' ? fetchedJob.salary?.minSalary : fetchedJob.salary) !== undefined && fetchedJob.salary !== null ? String(typeof fetchedJob.salary === 'object' ? fetchedJob.salary.minSalary : fetchedJob.salary) : "",
+              maxSalary: typeof fetchedJob.salary === 'object' && fetchedJob.salary?.maxSalary !== undefined && fetchedJob.salary.maxSalary !== null ? String(fetchedJob.salary.maxSalary) : "",
+          },
           salaryConfidential: fetchedJob.salaryConfidential ?? false,
           salaryCategory: fetchedJob.salaryCategory || "",
           status: fetchedJob.status || "draft",
           workType: fetchedJob.workType || "",
           workMode: fetchedJob.workMode || "",
           jobDescription: fetchedJob.jobDescription || "",
-          skills: skillsState,
-          requirements: requirementsState,
-          qualifications: qualificationsState,
-          screeningQuestions: screeningQuestionsState,
-          experience: experienceState,
-          companyType: fetchedJob.companyType || "",
+          skills: Array.isArray(fetchedJob.skills) ? fetchedJob.skills.filter(s => s !== null && s !== undefined) : [],
+          qualifications: Array.isArray(fetchedJob.qualifications) ? fetchedJob.qualifications.filter(q => q !== null && q !== undefined) : [], // Array of strings for multi-select
+          screeningQuestions: (Array.isArray(fetchedJob.screeningQuestions) ? fetchedJob.screeningQuestions.filter(q => q && typeof q === 'object' && q.question) : []) // Filter invalid objects
+               .map(q => ({ // Map to required structure
+                    _id: q._id, // Keep ID for existing questions
+                    question: q.question || "",
+                    questionType: screeningQuestionTypeOptions.some(opt => opt.value === q.questionType) ? q.questionType : "short_answer",
+                    options: Array.isArray(q.options) && (q.questionType === 'single_choice' || q.questionType === 'multi_choice') ? q.options.filter(opt => opt !== null && opt !== undefined) : [], // Filter null options for choice types
+                    isMandatory: q.isMandatory ?? false,
+                }))
+               .map(q => { // Add empty option field for choice types if none exist after filtering
+                   if(['single_choice', 'multi_choice'].includes(q.questionType) && q.options.length === 0) {
+                       return {...q, options: [""]};
+                   }
+                   return q;
+               })
+               .filter(q => q.question.trim() !== "" || !['single_choice', 'multi_choice'].includes(q.questionType) || (Array.isArray(q.options) && q.options.filter(opt => opt.trim() !== "").length > 0)) // Final filter to remove invalid choice questions
+               ,
+          experience: { // Handle object or single number
+              minExperience: (typeof fetchedJob.experience === 'object' ? fetchedJob.experience?.minExperience : fetchedJob.experience) !== undefined && fetchedJob.experience !== null ? String(typeof fetchedJob.experience === 'object' ? fetchedJob.experience.minExperience : fetchedJob.experience) : "",
+              maxExperience: typeof fetchedJob.experience === 'object' && fetchedJob.experience?.maxExperience !== undefined && fetchedJob.experience.maxExperience !== null ? String(fetchedJob.experience.maxExperience) : "",
+          },
+          companyType: fetchedJob.companyType || "", // Industry string
           applicationLink: fetchedJob.applicationLink || "",
-          duration: fetchedJob.duration || "",
-          graduationYear: graduationYearState,
-          tags: tagsState,
-          courseType: fetchedJob.courseType || "",
-          diversityPreferences: diversityPreferencesState,
+          graduationYear: {
+              minBatch: fetchedJob.graduationYear?.minBatch !== undefined && fetchedJob.graduationYear?.minBatch !== null ? String(fetchedJob.graduationYear.minBatch) : "",
+              maxBatch: fetchedJob.graduationYear?.maxBatch !== undefined && fetchedJob.graduationYear?.maxBatch !== null ? String(fetchedJob.graduationYear.maxBatch) : "",
+          },
+          tags: Array.isArray(fetchedJob.tags) ? fetchedJob.tags.filter(t => t !== null && t !== undefined) : [],
+          diversityPreferences: { // Ensure object exists and has boolean defaults
+            femaleCandidates: fetchedJob.diversityPreferences?.femaleCandidates ?? false,
+             // Check for both possible backend keys
+            womenJoiningBackforce: fetchedJob.diversityPreferences?.womenJoiningBackforce ?? fetchedJob.diversityPreferences?.womenJoiningBackWorkforce ?? false,
+            exDefencePersonnel: fetchedJob.diversityPreferences?.exDefencePersonnel ?? false,
+            differentlyAbledCandidates: fetchedJob.diversityPreferences?.differentlyAbledCandidates ?? false,
+            workFromHome: fetchedJob.diversityPreferences?.workFromHome ?? false,
+          },
           category: fetchedJob.category || "",
           functionalArea: fetchedJob.functionalArea || "",
           isPremiumJob: fetchedJob.isPremiumJob ?? false,
         });
+
+         // Add one empty screening question field if the filtered list is still empty
+         setJobData(prev => {
+             if(prev.screeningQuestions.length === 0) {
+                 return {
+                     ...prev,
+                     screeningQuestions: [{ question: "", questionType: "short_answer", options: [], isMandatory: false }]
+                 };
+             }
+             return prev;
+         })
+
 
         setNotification({
           open: true,
@@ -548,7 +479,8 @@ export default function JobEditForm() {
         });
       }
     } catch (err) {
-      const errorMessage = "An error occurred while fetching job data.";
+      console.error("Fetch Error:", err);
+      const errorMessage = err.message || "An error occurred while fetching job data.";
       setError(errorMessage);
       setInitialLoadError(errorMessage);
       setNotification({ open: true, message: errorMessage, severity: "error" });
@@ -559,9 +491,12 @@ export default function JobEditForm() {
 
   useEffect(() => {
     fetchJobData();
+     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [jobId]);
 
-  // Handle input changes
+  // --- State Update Handlers ---
+
+  // Generic handler for text, number, boolean fields and nested number objects
   const handleInputChange = (field, value) => {
     if (
       field.startsWith("salary.") ||
@@ -570,11 +505,27 @@ export default function JobEditForm() {
     ) {
       setJobData((prev) => {
         const [parent, child] = field.split(".");
+        // Allow empty string, otherwise ensure it's a string representation of the number
+        const numValue = value === "" ? "" : String(value);
+
+        // Optional: Add inline validation for number inputs if desired,
+        // but primary number validation is in prepareDataForSave
+        if (numValue !== "" && isNaN(Number(numValue))) {
+            // Prevent updating state with non-numeric input
+             setNotification({ open: true, message: "Please enter a valid number.", severity: "warning" });
+            return prev;
+        }
+        if (numValue !== "" && Number(numValue) < 0) {
+             setNotification({ open: true, message: "Value cannot be negative.", severity: "warning" });
+            return prev;
+        }
+
+
         return {
           ...prev,
           [parent]: {
             ...prev[parent],
-            [child]: value === "" ? "" : String(value),
+            [child]: numValue,
           },
         };
       });
@@ -596,7 +547,19 @@ export default function JobEditForm() {
     }
   };
 
-  // Handle changes in array fields
+   // Handler for React-Select fields (single or multi)
+   const handleSelectChange = (field, selectedOptions) => {
+       if (Array.isArray(selectedOptions)) { // Multi-select
+           const values = selectedOptions ? selectedOptions.map(opt => opt.value) : [];
+           setJobData(prev => ({ ...prev, [field]: values }));
+       } else { // Single select
+           const value = selectedOptions ? selectedOptions.value : "";
+           setJobData(prev => ({ ...prev, [field]: value }));
+       }
+   };
+
+
+  // Handle changes in dynamic text array fields (requirements)
   const handleArrayChange = (field, index, value) => {
     setJobData((prev) => ({
       ...prev,
@@ -604,38 +567,32 @@ export default function JobEditForm() {
     }));
   };
 
-  // Add items to array fields
-  const addArrayItem = (field, defaultValue = "") => {
+  // Add items to dynamic text array fields (requirements)
+  const addArrayItem = (field) => { // Default value "" is handled implicitly
     if (Array.isArray(jobData[field])) {
+      // Prevent adding if the last item is empty for requirements
       if (
-        (field === "requirements" || field === "qualifications") &&
+        field === "requirements" &&
         jobData[field].length > 0 &&
         jobData[field][jobData[field].length - 1].trim() === ""
       ) {
-        return;
-      }
-      if (
-        field === "screeningQuestions" &&
-        jobData[field].length > 0 &&
-        jobData[field][jobData[field].length - 1].question.trim() === ""
-      ) {
+         setNotification({ open: true, message: `Please fill the last ${field.slice(0, -1)} before adding a new one.`, severity: "warning" });
         return;
       }
 
       setJobData((prev) => ({
         ...prev,
-        [field]: [...prev[field], defaultValue],
+        [field]: [...prev[field], ""],
       }));
     }
   };
 
-  // Remove items from array fields
+  // Remove items from dynamic text array fields (requirements)
   const removeArrayItem = (field, index) => {
     if (Array.isArray(jobData[field])) {
-      if (
-        (field === "requirements" || field === "qualifications") &&
-        jobData[field].length <= 1
-      ) {
+        // Prevent removing the last item for requirements
+      if (field === "requirements" && jobData[field].length <= 1) {
+         // setNotification({ open: true, message: "You must have at least one requirement.", severity: "warning" });
         return;
       }
       setJobData((prev) => ({
@@ -645,27 +602,11 @@ export default function JobEditForm() {
     }
   };
 
-  // Handle tag operations
-  const handleTagAdd = () => {
-    const tag = tagInput.trim();
-    if (tag && !jobData.tags.includes(tag)) {
-      setJobData((prev) => ({
-        ...prev,
-        tags: [...prev.tags, tag],
-      }));
-      setTagInput("");
-    }
-  };
 
-  const removeTag = (tagToRemove) => {
-    setJobData((prev) => ({
-      ...prev,
-      tags: prev.tags.filter((tag) => tag !== tagToRemove),
-    }));
-  };
+  // --- Screening Questions Handlers ---
 
-  // Handle screening questions
-  const handleScreeningQuestionObjectChange = (index, updatedQuestion) => {
+   // Handle changes to properties *within* a specific screening question object
+   const handleScreeningQuestionObjectChange = (index, updatedQuestion) => {
     setJobData(prevState => {
       const updatedQuestions = [...prevState.screeningQuestions];
       updatedQuestions[index] = updatedQuestion;
@@ -677,11 +618,12 @@ export default function JobEditForm() {
   const handleOptionChange = (questionIndex, optionIndex, value) => {
     setJobData(prevState => {
       const updatedQuestions = [...prevState.screeningQuestions];
-      const updatedOptions = [...updatedQuestions[questionIndex].options];
-      updatedOptions[optionIndex] = value;
+      // Ensure options array exists and is mutable
+      const currentOptions = Array.isArray(updatedQuestions[questionIndex].options) ? [...updatedQuestions[questionIndex].options] : [];
+      currentOptions[optionIndex] = value; // Update the specific option string
       updatedQuestions[questionIndex] = {
         ...updatedQuestions[questionIndex],
-        options: updatedOptions,
+        options: currentOptions, // Update options array in the question object
       };
       return { ...prevState, screeningQuestions: updatedQuestions };
     });
@@ -691,9 +633,11 @@ export default function JobEditForm() {
   const handleAddOption = (questionIndex) => {
     setJobData(prevState => {
       const updatedQuestions = [...prevState.screeningQuestions];
-      const currentOptions = updatedQuestions[questionIndex].options;
+       // Ensure options array exists and is mutable
+      const currentOptions = Array.isArray(updatedQuestions[questionIndex].options) ? [...updatedQuestions[questionIndex].options] : [];
+
        // Add only if the last option is not empty or if the array is empty
-      if (currentOptions.length === 0 || currentOptions[currentOptions.length - 1].trim() !== "") {
+      if (currentOptions.length === 0 || (currentOptions.length > 0 && currentOptions[currentOptions.length - 1]?.trim() !== "")) {
          updatedQuestions[questionIndex] = {
             ...updatedQuestions[questionIndex],
             options: [...currentOptions, ""], // Add a new empty option string
@@ -710,10 +654,11 @@ export default function JobEditForm() {
   const handleRemoveOption = (questionIndex, optionIndexToRemove) => {
      setJobData(prevState => {
        const updatedQuestions = [...prevState.screeningQuestions];
-       const currentOptions = updatedQuestions[questionIndex].options;
+        // Ensure options array exists and is mutable
+       const currentOptions = Array.isArray(updatedQuestions[questionIndex].options) ? [...updatedQuestions[questionIndex].options] : [];
 
         // Only allow removing if there's more than one option, OR it's the last option but has content
-        if (currentOptions.length > 1 || (currentOptions.length === 1 && currentOptions[0].trim() !== "")) {
+        if (currentOptions.length > 1 || (currentOptions.length === 1 && currentOptions[0]?.trim() !== "")) {
              const updatedOptions = currentOptions.filter((_, index) => index !== optionIndexToRemove);
 
              // If removing the last option results in an empty array, add one empty option field back for UI consistency
@@ -723,9 +668,7 @@ export default function JobEditForm() {
              };
             return { ...prevState, screeningQuestions: updatedQuestions };
         } else {
-             // Optionally alert or do nothing if trying to remove the last empty option
-            // setNotification({ open: true, message: "Cannot remove the last option if it's empty.", severity: "warning" });
-            return prevState; // Return previous state
+            return prevState; // Do nothing if trying to remove the last empty option
         }
      });
   };
@@ -733,19 +676,25 @@ export default function JobEditForm() {
 
   // Add a new empty screening question
   const addScreeningQuestion = () => {
-     // Prevent adding more than 10 questions (arbitrary limit if needed, or based on backend)
-     // Let's assume 10 is a reasonable limit for frontend
-     if (jobData.screeningQuestions.length >= 10) {
+     // Count questions that have at least some text or valid options (for choice types)
+     const currentValidQuestions = jobData.screeningQuestions.filter(q =>
+         q.question.trim() !== "" ||
+         (['single_choice', 'multi_choice'].includes(q.questionType) && Array.isArray(q.options) && q.options.filter(opt => opt.trim() !== "").length > 0)
+     ).length;
+
+     if (currentValidQuestions >= 10) {
         setNotification({ open: true, message: "You can add a maximum of 10 screening questions.", severity: "warning" });
         return;
      }
 
-     // Add only if the last question is not empty (text) OR is a choice type with options
+     // Add only if the last question is valid (has text or valid options if choice type)
      const lastQuestion = jobData.screeningQuestions[jobData.screeningQuestions.length - 1];
-     const isLastQuestionValid = !lastQuestion || // Allow adding if the list is empty (handled by fetch)
+
+     const isLastQuestionValid = !lastQuestion || // Should not happen with initial state, but defensive
                                (lastQuestion.question.trim() !== "" ||
                                 (['single_choice', 'multi_choice'].includes(lastQuestion.questionType) &&
-                                 lastQuestion.options.filter(opt => opt.trim() !== "").length > 0));
+                                 (Array.isArray(lastQuestion.options) && lastQuestion.options.filter(opt => opt.trim() !== "").length > 0))
+                                );
 
 
      if (isLastQuestionValid) {
@@ -766,7 +715,16 @@ export default function JobEditForm() {
    const removeScreeningQuestion = (indexToRemove) => {
       // Allow removing only if more than 1 question, OR if it's the last question but has content
       const questions = jobData.screeningQuestions;
-      const canRemove = questions.length > 1 || (questions.length === 1 && (questions[0].question.trim() !== "" || (['single_choice', 'multi_choice'].includes(questions[0].questionType) && questions[0].options.filter(opt => opt.trim() !== "").length > 0)));
+      const questionToRemove = questions[indexToRemove];
+
+      // A question is considered "removable" if it's not the *only* question OR
+      // if it is the only question but contains some form of meaningful input (text or valid options)
+      const canRemoveLast = questions.length === 1 &&
+                            (questionToRemove.question.trim() !== "" ||
+                             (['single_choice', 'multi_choice'].includes(questionToRemove.questionType) &&
+                              (Array.isArray(questionToRemove.options) && questionToRemove.options.filter(opt => opt.trim() !== "").length > 0)));
+
+      const canRemove = questions.length > 1 || canRemoveLast;
 
       if(canRemove) {
          setJobData(prevState => {
@@ -783,47 +741,49 @@ export default function JobEditForm() {
              return { ...prevState, screeningQuestions: updatedQuestions };
          });
       } else {
-         // Optionally alert or do nothing if trying to remove the last empty question
-         // setNotification({ open: true, message: "Cannot remove the last question if it's empty.", severity: "warning" });
+         // Do nothing if trying to remove the last empty question
       }
    };
 
-// Prepare data for API calls
-  const prepareDataForSave = () => {
 
-    // Basic Frontend Validation before preparing data
+  // --- Validation and Data Preparation ---
+
+  const prepareDataForSave = () => {
+    // --- Frontend Validation ---
     const requiredFields = [
       "jobTitle",
-      "jobLocation",
       "jobDescription",
       "workType",
       "workMode",
       "category",
       "functionalArea",
       "salaryCategory",
-      "courseType",
+      "qualifications", // Multi-select qualifications are required
     ];
+
      for (const field of requiredFields) {
         const value = jobData[field];
+
          if (typeof value === "string" && value.trim() === "") {
-            setNotification({ open: true, message: `Required field is missing: ${field.replace(/([A-Z])/g, ' $1').trim().toLowerCase()}.`, severity: "error" });
-            return null; // Indicate validation failure
+            setNotification({ open: true, message: `Required field is missing or empty: ${field.replace(/([A-Z])/g, ' $1').trim().toLowerCase()}.`, severity: "error" });
+            return null;
          }
-         if (Array.isArray(value) && value.length === 0 && field !== 'requirements') { // Requirements can be empty if not added
+         if (Array.isArray(value) && value.length === 0) {
              setNotification({ open: true, message: `Required multi-select field needs at least one selection: ${field.replace(/([A-Z])/g, ' $1').trim().toLowerCase()}.`, severity: "error" });
-             return null; // Indicate validation failure
+             return null;
          }
           if (value === null) {
             setNotification({ open: true, message: `Required select field is missing: ${field.replace(/([A-Z])/g, ' $1').trim().toLowerCase()}.`, severity: "error" });
-            return null; // Indicate validation failure
+            return null;
          }
     }
 
      // Validate min/max ranges
      const validateRange = (field, label) => {
-        const minVal = jobData[field][`min${field.replace(/./, c => c.toUpperCase())}`];
-        const maxVal = jobData[field][`max${field.replace(/./, c => c.toUpperCase())}`];
-        // Only check if both are provided and not empty
+        const minVal = jobData[field][`min${field.replace(/./, c => c.toUpperCase()).replace('Graduation', 'Batch')}`];
+        const maxVal = jobData[field][`max${field.replace(/./, c => c.toUpperCase()).replace('Graduation', 'Batch')}`];
+
+        // Only check if both are provided (not empty string or null) AND min > max
         if ( minVal !== "" && minVal !== null && maxVal !== "" && maxVal !== null && Number(minVal) > Number(maxVal) ) {
             setNotification({ open: true, message: `Minimum ${label} cannot be greater than maximum ${label}.`, severity: "error" });
             return false;
@@ -840,54 +800,51 @@ export default function JobEditForm() {
      const validScreeningQuestions = jobData.screeningQuestions.filter(q => {
         const hasText = q.question.trim() !== "";
         const hasValidOptions = (q.questionType === 'single_choice' || q.questionType === 'multi_choice') ?
-                                 q.options.filter(opt => opt.trim() !== "").length > 0 : true; // Other types don't require options
-        const hasType = !!q.questionType; // Should always be true with default value/select
+                                 (Array.isArray(q.options) && q.options.filter(opt => opt.trim() !== "").length > 0) : true;
+        const hasType = !!q.questionType;
 
         return hasText && hasValidOptions && hasType;
      });
 
      if (validScreeningQuestions.length === 0) {
         setNotification({ open: true, message: "Please add at least one screening question with text and valid options (if applicable).", severity: "error" });
-        return null; // Indicate validation failure
+        return null;
      }
 
 
-    // Clean up arrays
-    const cleanedRequirements = jobData.requirements
-      .map((req) => req.trim())
-      .filter((req) => req !== "");
-    const cleanedQualifications = jobData.qualifications // Qualifications is multi-select, already handled
-      .map((qual) => qual.trim()) // Ensure any strings from fetch/manual input are trimmed
-      .filter((qual) => qual !== "");
+    const cleanedQualifications = jobData.qualifications.map(q => String(q)?.trim()).filter((qual) => qual !== "");
 
+    const cleanedSkills = jobData.skills.map(s => String(s)?.trim()).filter(s => s !== "");
+    const cleanedTags = jobData.tags.map(t => String(t)?.trim()).filter(t => t !== "");
+
+
+    // Filter out invalid screening questions and clean up their options
     const cleanedScreeningQuestions = jobData.screeningQuestions
-      .filter((q) => q.question.trim() !== "") // Only include questions with text
+      .filter((q) => q.question?.trim() !== "") // Only include questions with text
       .map((q) => {
         const baseQuestion = {
-          question: q.question.trim(),
-          questionType: q.questionType,
-          isMandatory: q.isMandatory,
+          // Use optional chaining for safety
+          question: q.question?.trim() || "",
+          questionType: q.questionType || "short_answer", // Ensure type
+          isMandatory: q.isMandatory ?? false,
         };
-        // Add _id only if it exists (for existing questions)
         if (q._id) {
           baseQuestion._id = q._id;
         }
 
-        // Include options only for choice types, filtered for empty strings
         if (q.questionType === 'single_choice' || q.questionType === 'multi_choice') {
-            baseQuestion.options = q.options.map(opt => opt.trim()).filter(opt => opt !== "");
+            baseQuestion.options = (Array.isArray(q.options) ? q.options : []).map(opt => String(opt)?.trim()).filter(opt => opt !== "");
         } else {
-             // Ensure options is an empty array for other types
             baseQuestion.options = [];
         }
          return baseQuestion;
       })
-       // Final filter to remove choice questions that ended up with no options after trimming
+       // Final filter to remove choice questions that ended up with no options
       .filter(q => {
           if(q.questionType === 'single_choice' || q.questionType === 'multi_choice') {
               return q.options.length > 0;
           }
-          return true; // Keep non-choice questions if they had text
+          return q.question.trim() !== ""; // Keep non-choice if it had text
       });
 
 
@@ -898,23 +855,38 @@ export default function JobEditForm() {
         minSalary: formatNumberField(jobData.salary.minSalary),
         maxSalary: formatNumberField(jobData.salary.maxSalary),
     };
+     if(salaryToSend.minSalary === null && salaryToSend.maxSalary === null) {
+        // Decide if you send an empty object, null, or omit the key
+        // Omitting keys for null values seems reasonable
+        delete salaryToSend.minSalary;
+        delete salaryToSend.maxSalary;
+     }
+
+
     const experienceToSend = {
         minExperience: formatNumberField(jobData.experience.minExperience),
         maxExperience: formatNumberField(jobData.experience.maxExperience),
     };
+    if(experienceToSend.minExperience === null && experienceToSend.maxExperience === null) {
+         delete experienceToSend.minExperience;
+         delete experienceToSend.maxExperience;
+     }
+
+
     const graduationYearToSend = {
         minBatch: formatNumberField(jobData.graduationYear.minBatch),
         maxBatch: formatNumberField(jobData.graduationYear.maxBatch),
     };
+    if(graduationYearToSend.minBatch === null && graduationYearToSend.maxBatch === null) {
+         delete graduationYearToSend.minBatch;
+         delete graduationYearToSend.maxBatch;
+     }
 
 
-     // Clean up diversity preferences - remove fields if all are false? No, send them as boolean.
-     // Ensure object exists even if all are false.
-
-    return {
-      jobId: jobId, // Include jobId for the update endpoint
+    const dataToSend = {
+      jobId: jobId,
       jobTitle: jobData.jobTitle.trim(),
-      jobLocation: jobData.jobLocation.trim(),
+      jobLocation: jobData.jobLocation?.trim() || "", // Handle null location gracefully
       salary: salaryToSend,
       salaryConfidential: jobData.salaryConfidential,
       salaryCategory: jobData.salaryCategory,
@@ -922,88 +894,75 @@ export default function JobEditForm() {
       workType: jobData.workType,
       workMode: jobData.workMode,
       jobDescription: jobData.jobDescription.trim(),
-      skills: jobData.skills.map(s => s.trim()).filter(s => s !== ""), // Ensure skills are trimmed/filtered
-      requirements: cleanedRequirements,
+      skills: cleanedSkills,
       qualifications: cleanedQualifications,
       screeningQuestions: cleanedScreeningQuestions,
       experience: experienceToSend,
-      companyType: jobData.companyType.trim(), // Industry
-      applicationLink: jobData.applicationLink.trim(),
-      duration: jobData.duration,
+      companyType: jobData.companyType?.trim() || "", // Industry, handle null gracefully
+      applicationLink: jobData.applicationLink?.trim() || "", 
       graduationYear: graduationYearToSend,
-      tags: jobData.tags.map((t) => t.trim()).filter((t) => t !== ""), // Ensure tags are trimmed/filtered
-      courseType: jobData.courseType,
-      diversityPreferences: jobData.diversityPreferences, // Send the object as is
+      tags: cleanedTags,
+      diversityPreferences: jobData.diversityPreferences,
       category: jobData.category,
       functionalArea: jobData.functionalArea,
       isPremiumJob: jobData.isPremiumJob,
     };
+
+    console.log("Prepared Data for Save:", dataToSend);
+    return dataToSend;
   };
 
   // Save job
   const handleSave = async () => {
     if (!jobId) {
-      setNotification({
-        open: true,
-        message: "Cannot save: Job ID is missing.",
-        severity: "error",
-      });
+      setNotification({ open: true, message: "Cannot save: Job ID is missing.", severity: "error" });
       return;
     }
 
     const dataToSend = prepareDataForSave();
-    if (!dataToSend) {
-      // Validation failed in prepareDataForSave, notification is already set
-      return;
-    }
+    if (!dataToSend) { return; } // Validation failed
 
-    setSaving(true); // Use saving state for buttons
-    setError(null); // Clear previous error
+    setSaving(true);
+    setError(null);
 
     try {
-      const response = await fetch(`https://highimpacttalent.onrender.com/api-v1/jobs/update-job`, { // Using specific update endpoint
+        const token = localStorage.getItem('token');
+         if (!token) {
+            setNotification({ open: true, message: "Authentication token missing. Please log in again.", severity: "error" });
+             // navigate("/login"); // Consider redirecting
+            return;
+         }
+
+      const response = await fetch(`https://highimpacttalent.onrender.com/api-v1/jobs/update-job`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
-           // Assuming token is needed for authenticated updates
-           "Authorization": `Bearer ${localStorage.getItem('token')}`, // Replace with actual token logic
+           "Authorization": `Bearer ${token}`,
         },
         body: JSON.stringify(dataToSend),
       });
 
-       // Check for network errors first
        if (!response.ok) {
-           const errorText = await response.text(); // Get raw error text
-           console.error("API Error Response:", response.status, errorText);
-            try {
-                const errorJson = JSON.parse(errorText);
-                 throw new Error(errorJson.message || `API Error: ${response.status}`);
-            } catch {
-                throw new Error(`API Error: ${response.status} - ${response.statusText}`);
-            }
+           let errorMessage = `Failed to update job: ${response.status} - ${response.statusText}`;
+           try {
+               const errorJson = await response.json();
+               errorMessage = errorJson.message || errorMessage;
+           } catch { /* ignore */ }
+           console.error("API Error Response:", response.status, errorMessage);
+           throw new Error(errorMessage);
        }
 
       const result = await response.json();
+
       if (result.success) {
-        setNotification({
-          open: true,
-          message: result.message || "Job updated successfully!",
-          severity: "success",
-        });
-        // Re-fetch data to get potential backend updates (like new screening question IDs)
-        fetchJobData();
+        setNotification({ open: true, message: result.message || "Job updated successfully!", severity: "success" });
+        fetchJobData(); // Re-fetch to get latest data including potential new IDs
       } else {
-        // Backend returned success: false
         const errorMessage = result.message || "Failed to update job.";
         setError(errorMessage);
-        setNotification({
-          open: true,
-          message: errorMessage,
-          severity: "error",
-        });
+        setNotification({ open: true, message: errorMessage, severity: "error" });
       }
     } catch (err) {
-      // Catch network errors or errors thrown from parsing response
       console.error("Submission Error:", err);
       const errorMessage = err.message || "An error occurred while updating job.";
       setError(errorMessage);
@@ -1015,44 +974,44 @@ export default function JobEditForm() {
 
   // Publish job
   const handlePublish = async () => {
-     // Perform validation before publishing
      const dataToSend = prepareDataForSave();
-     if (!dataToSend) {
-       // Validation failed in prepareDataForSave, notification is already set
-       return;
-     }
+     if (!dataToSend) { return; } // Validation failed
 
-     // Check if status is already live
       if (jobData.status === 'live') {
           setNotification({ open: true, message: "Job is already published.", severity: "info" });
           return;
       }
 
-    dataToSend.status = "live"; // Set status to live for publishing
+    dataToSend.status = "live";
 
-    setSaving(true); // Use saving state for buttons
-    setError(null); // Clear previous error
+    setSaving(true);
+    setError(null);
 
     try {
-       // Assuming update-job endpoint handles status change
+       const token = localStorage.getItem('token');
+        if (!token) {
+           setNotification({ open: true, message: "Authentication token missing. Please log in again.", severity: "error" });
+           // navigate("/login"); // Consider redirecting
+           return;
+        }
+
       const response = await fetch(`https://highimpacttalent.onrender.com/api-v1/jobs/update-job`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
-           "Authorization": `Bearer ${localStorage.getItem('token')}`, // Replace with actual token logic
+           "Authorization": `Bearer ${token}`,
         },
         body: JSON.stringify(dataToSend),
       });
 
        if (!response.ok) {
-           const errorText = await response.text();
-           console.error("API Error Response:", response.status, errorText);
+           let errorMessage = `Failed to publish job: ${response.status} - ${response.statusText}`;
            try {
-                const errorJson = JSON.parse(errorText);
-                 throw new Error(errorJson.message || `API Error: ${response.status}`);
-            } catch {
-                throw new Error(`API Error: ${response.status} - ${response.statusText}`);
-            }
+               const errorJson = await response.json();
+               errorMessage = errorJson.message || errorMessage;
+           } catch { /* ignore */ }
+           console.error("API Error Response:", response.status, errorMessage);
+           throw new Error(errorMessage);
        }
 
       const result = await response.json();
@@ -1063,9 +1022,8 @@ export default function JobEditForm() {
           message: result.message || "Job published successfully!",
           severity: "success",
         });
-         // Update local state and re-fetch
-        setJobData((prev) => ({ ...prev, status: "live" }));
-        fetchJobData();
+        setJobData((prev) => ({ ...prev, status: "live" })); // Update state immediately
+        fetchJobData(); // Re-fetch to be sure
       } else {
         const errorMessage = result.message || "Failed to publish job.";
         setError(errorMessage);
@@ -1093,8 +1051,10 @@ export default function JobEditForm() {
     setNotification({ ...notification, open: false });
   };
 
-  // Loading state for initial fetch
-  if (loading && !initialLoadError) { // Only show loader if loading and no initial error
+  // --- Render Logic ---
+
+  // Show loading state for initial fetch
+  if (loading && !initialLoadError) {
     return (
       <Box
         sx={{
@@ -1111,7 +1071,7 @@ export default function JobEditForm() {
     );
   }
 
-  // Error state for initial fetch
+  // Show error state for initial fetch failure
   if (initialLoadError) {
     return (
       <Box
@@ -1149,19 +1109,8 @@ export default function JobEditForm() {
             </Typography>
           </Paper>
 
-          {loading && !initialLoadError && (
-            <Box
-              sx={{
-                width: "100%",
-                display: "flex",
-                justifyContent: "center",
-                my: 2,
-              }}
-            >
-              <CircularProgress size={24} />
-            </Box>
-          )}
-          {error && !initialLoadError && (
+          {/* Error Alert for Save/Publish */}
+          {error && (
             <Alert severity="error" sx={{ mb: 2 }}>
               {error}
             </Alert>
@@ -1188,27 +1137,27 @@ export default function JobEditForm() {
 
                   <Grid container spacing={3}>
                     <Grid item xs={12}>
+                        <Typography variant="body2" sx={{ ...formLabelStyle }}>Job Title</Typography>
                       <TextField
                         fullWidth
-                        label="Job Title"
                         value={jobData.jobTitle}
                         onChange={(e) =>
                           handleInputChange("jobTitle", e.target.value)
                         }
                         required
                         variant="outlined"
+                        size="small"
                       />
                     </Grid>
 
                     <Grid item xs={12} md={6}>
+                      <Typography variant="body2" sx={{ ...formLabelStyle }}>Job Location</Typography>
                       <TextField
                         fullWidth
-                        label="Location"
                         value={jobData.jobLocation}
                         onChange={(e) =>
                           handleInputChange("jobLocation", e.target.value)
                         }
-                        required
                         InputProps={{
                           startAdornment: (
                             <InputAdornment position="start">
@@ -1216,87 +1165,77 @@ export default function JobEditForm() {
                             </InputAdornment>
                           ),
                         }}
+                        size="small"
+                         InputLabelProps={{ shrink: !!jobData.jobLocation }} // Shrink label if value exists
                       />
                     </Grid>
 
                     <Grid item xs={12} md={6}>
-                      <TextField
-                        fullWidth
-                        label="Company Type"
-                        value={jobData.companyType}
-                        onChange={(e) =>
-                          handleInputChange("companyType", e.target.value)
-                        }
-                      />
+                       <Box>
+                         <Typography variant="body2" sx={{ ...formLabelStyle }}>Industry</Typography>
+                          <Select
+                              options={industryOptions}
+                              value={
+                                jobData.companyType
+                                  ? industryOptions.find(
+                                      (opt) => opt.value === jobData.companyType
+                                    )
+                                  : null
+                              }
+                               onChange={(selectedOption) => handleSelectChange("companyType", selectedOption)}
+                              placeholder="Select Industry..."
+                              isClearable
+                              isSearchable
+                              styles={customSelectStyle}
+                            />
+                       </Box>
                     </Grid>
 
                     <Grid item xs={12} md={4}>
-                      <FormControl fullWidth required>
-                        <Select
-                          options={workTypes}
-                          value={workTypes.find(
-                            (opt) =>
-                              opt.value.toLowerCase() ===
-                              jobData?.workType?.toLowerCase()
-                          )}
-                          onChange={(selectedOption) =>
-                            handleInputChange(
-                              "workType",
-                              selectedOption ? selectedOption.value : ""
-                            )
-                          }
-                          placeholder="Work Type"
-                          isClearable
-                          isSearchable
-                          styles={customSelectStyle}
-                        />
-                      </FormControl>
+                       <Box>
+                         <Typography variant="body2" sx={{ ...formLabelStyle }}>Work Type <span style={{ color: "red" }}>*</span></Typography>
+                          <Select
+                            options={workTypesList.map(wt => ({value: wt, label: wt}))}
+                            value={workTypesList.map(wt => ({value: wt, label: wt})).find(opt => opt.value?.toLowerCase() === jobData?.workType?.toLowerCase()) || null}
+                            onChange={(selectedOption) => handleSelectChange("workType", selectedOption)}
+                            placeholder="Work Type"
+                            isClearable
+                            isSearchable
+                            styles={customSelectStyle}
+                            required
+                          />
+                       </Box>
                     </Grid>
 
                     <Grid item xs={12} md={4}>
-                      <FormControl fullWidth required>
-                        <Select
-                          options={workMode}
-                          value={workMode.find(
-                            (opt) =>
-                              opt.value.toLowerCase() ===
-                              jobData?.workMode?.toLowerCase()
-                          )}
-                          onChange={(selectedOption) =>
-                            handleInputChange(
-                              "workMode",
-                              selectedOption ? selectedOption.value : ""
-                            )
-                          }
-                          placeholder="Work Mode"
-                          isClearable
-                          isSearchable
-                          styles={customSelectStyle}
-                        />
-                      </FormControl>
+                       <Box>
+                         <Typography variant="body2" sx={{ ...formLabelStyle }}>Work Mode <span style={{ color: "red" }}>*</span></Typography>
+                          <Select
+                             options={workModeList.map(wm => ({value: wm, label: wm}))}
+                            value={workModeList.map(wm => ({value: wm, label: wm})).find(opt => opt.value?.toLowerCase() === jobData?.workMode?.toLowerCase()) || null}
+                            onChange={(selectedOption) => handleSelectChange("workMode", selectedOption)}
+                            placeholder="Work Mode"
+                            isClearable
+                            isSearchable
+                            styles={customSelectStyle}
+                            required
+                          />
+                       </Box>
                     </Grid>
 
                     <Grid item xs={12} md={4}>
-                      <FormControl fullWidth>
-                        <Select
-                          options={statusOptions}
-                          value={statusOptions.find(
-                            (opt) =>
-                              opt.value.toLowerCase() ===
-                              jobData?.status?.toLowerCase()
-                          )}
-                          onChange={(selectedOption) =>
-                            handleInputChange(
-                              "status",
-                              selectedOption ? selectedOption.value : ""
-                            )
-                          }
-                          placeholder="Status"
-                          isClearable
-                          isSearchable
-                          styles={customSelectStyle}
-                        />
-                      </FormControl>
+                       <Box>
+                         <Typography variant="body2" sx={{ ...formLabelStyle }}>Status</Typography>
+                          <Select
+                             options={statusOptionsList.map(s => ({value: s, label: s}))}
+                             value={statusOptionsList.map(s => ({value: s, label: s})).find(opt => opt.value?.toLowerCase() === jobData?.status?.toLowerCase()) || null}
+                            onChange={(selectedOption) => handleSelectChange("status", selectedOption)}
+                            placeholder="Status"
+                            isClearable
+                            isSearchable
+                            styles={customSelectStyle}
+                          />
+                       </Box>
                     </Grid>
                   </Grid>
                 </Box>
@@ -1311,9 +1250,14 @@ export default function JobEditForm() {
 
                   <Grid container spacing={3}>
                     <Grid item xs={12} md={6}>
+                      <Typography
+                          variant="body2"
+                          sx={{ ...formLabelStyle }}
+                        >
+                         Minimum Salary
+                        </Typography>
                       <TextField
                         fullWidth
-                        label="Minimum Salary"
                         type="number"
                         value={jobData.salary.minSalary}
                         onChange={(e) =>
@@ -1323,17 +1267,22 @@ export default function JobEditForm() {
                           startAdornment: (
                             <InputAdornment position="start">₹</InputAdornment>
                           ),
+                          inputProps: { min: 0 },
                         }}
-                        InputLabelProps={{
-                          shrink: jobData.salary.minSalary !== "",
-                        }}
+                        InputLabelProps={{ shrink: !!jobData.salary.minSalary }}
+                         size="small"
                       />
                     </Grid>
 
                     <Grid item xs={12} md={6}>
+                      <Typography
+                          variant="body2"
+                          sx={{ ...formLabelStyle }}
+                        >
+                         Maximum Salary
+                        </Typography>
                       <TextField
                         fullWidth
-                        label="Maximum Salary"
                         type="number"
                         value={jobData.salary.maxSalary}
                         onChange={(e) =>
@@ -1343,56 +1292,34 @@ export default function JobEditForm() {
                           startAdornment: (
                             <InputAdornment position="start">₹</InputAdornment>
                           ),
+                           inputProps: { min: jobData.salary.minSalary !== "" ? Number(jobData.salary.minSalary) : 0 },
                         }}
-                        InputLabelProps={{
-                          shrink: jobData.salary.maxSalary !== "",
-                        }}
+                        InputLabelProps={{ shrink: !!jobData.salary.maxSalary }}
+                        size="small"
                       />
                     </Grid>
 
                     <Grid item xs={12} md={6}>
-                      <Box sx={{ mb: 2 }}>
+                      <Box>
                         <Typography
-                          variant="body1"
-                          sx={{ mb: 0.5, fontWeight: 500 }}
+                          variant="body2"
+                          sx={{ ...formLabelStyle }}
                         >
-                          Salary Category
+                          Salary Category <span style={{ color: "red" }}>*</span>
                         </Typography>
                         <Select
                           options={salaryCategoryOptions}
                           value={salaryCategoryOptions.find(
                             (opt) => opt.value === jobData.salaryCategory
-                          )}
-                          onChange={(selectedOption) =>
-                            handleInputChange(
-                              "salaryCategory",
-                              selectedOption ? selectedOption.value : ""
-                            )
-                          }
+                          ) || null}
+                          onChange={(selectedOption) => handleSelectChange("salaryCategory", selectedOption)}
                           placeholder="Select Salary Category..."
                           isClearable
                           isSearchable
                           styles={customSelectStyle}
+                           required
                         />
                       </Box>
-                    </Grid>
-
-                    <Grid item xs={12} md={6}>
-                      <FormControlLabel
-                        control={
-                          <Switch
-                            checked={jobData.salaryConfidential}
-                            onChange={(e) =>
-                              handleInputChange(
-                                "salaryConfidential",
-                                e.target.checked
-                              )
-                            }
-                            color="primary"
-                          />
-                        }
-                        label="Keep Salary Confidential"
-                      />
                     </Grid>
                   </Grid>
                 </Box>
@@ -1409,13 +1336,15 @@ export default function JobEditForm() {
                     fullWidth
                     multiline
                     rows={6}
-                    label="Job Description"
                     value={jobData.jobDescription}
                     onChange={(e) =>
                       handleInputChange("jobDescription", e.target.value)
                     }
                     required
                     placeholder="Describe the role, responsibilities, and what makes this opportunity exciting..."
+                    variant="outlined"
+                    size="small"
+                     InputLabelProps={{ shrink: !!jobData.jobDescription }}
                   />
                 </Box>
               </Paper>
@@ -1428,151 +1357,54 @@ export default function JobEditForm() {
                     sx={{ display: "flex", alignItems: "center", gap: 1 }}
                   >
                     <PsychologyIcon color="primary" />
-                    Skills & Requirements
+                    Skills
                   </Typography>
                 </AccordionSummary>
                 <AccordionDetails>
                   <Grid container spacing={3}>
                     <Grid item xs={12}>
-                      <Typography variant="subtitle1" sx={{ mb: 2 }}>
-                        Skills Required
-                      </Typography>
-                      <Box sx={{ mb: 2 }}>
-                        <Select
-                          isMulti
-                          options={skillOptions}
-                          value={skillOptions.filter((opt) =>
-                            jobData.skills.includes(opt.value)
-                          )}
-                          onChange={(selectedOptions) =>
-                            handleInputChange(
-                              "skills",
-                              selectedOptions
-                                ? selectedOptions.map((opt) => opt.value)
-                                : []
-                            )
-                          }
-                          placeholder="Select or type skills..."
-                          isClearable
-                          isSearchable
-                          styles={customSelectStyle}
-                        />
-                        
-                      </Box>
-                    </Grid>
-
-                    <Grid item xs={12}>
-                      <Typography variant="subtitle1" sx={{ mb: 2 }}>
-                        Requirements
-                      </Typography>
-                      {jobData.requirements.map((req, index) => (
-                        <Box
-                          key={index}
-                          sx={{
-                            display: "flex",
-                            gap: 1,
-                            mb: 2,
-                            alignItems: "center",
-                          }}
-                        >
-                          <TextField
-                            fullWidth
-                            size="small"
-                            value={req}
-                            onChange={(e) =>
-                              handleArrayChange(
-                                "requirements",
-                                index,
-                                e.target.value
-                              )
-                            }
-                            placeholder={`Requirement ${index + 1}`}
+                       <Box>
+                         <Typography variant="body2" sx={{ ...formLabelStyle }}>Skills Required <span style={{ color: "red" }}>*</span></Typography>
+                          <Select
+                            isMulti
+                            options={skillOptions}
+                            value={skillOptions.filter((opt) =>
+                                jobData.skills.includes(opt.value)
+                            )}
+                            onChange={(selectedOptions) => handleSelectChange("skills", selectedOptions)}
+                            placeholder="Select or type skills..."
+                            isClearable
+                            isSearchable
+                            styles={customSelectStyle}
+                             required
                           />
-                          <IconButton
-                            color="error"
-                            onClick={() =>
-                              removeArrayItem("requirements", index)
-                            }
-                            disabled={jobData.requirements.length === 1}
-                            size="small"
-                          >
-                            <DeleteIcon />
-                          </IconButton>
-                        </Box>
-                      ))}
-                      <Button
-                        variant="outlined"
-                        onClick={() => addArrayItem("requirements", "")}
-                        startIcon={<AddIcon />}
-                        size="small"
-                        disabled={
-                          jobData.requirements.length > 0 &&
-                          jobData.requirements[
-                            jobData.requirements.length - 1
-                          ].trim() === ""
-                        }
-                      >
-                        Add Requirement
-                      </Button>
+                       </Box>
                     </Grid>
 
-                    <Grid item xs={12}>
-                      <Typography variant="subtitle1" sx={{ mb: 2 }}>
-                        Qualifications
-                      </Typography>
-                      {jobData.qualifications.map((qual, index) => (
-                        <Box
-                          key={index}
-                          sx={{
-                            display: "flex",
-                            gap: 1,
-                            mb: 2,
-                            alignItems: "center",
-                          }}
-                        >
-                          <TextField
-                            fullWidth
-                            size="small"
-                            value={qual}
-                            onChange={(e) =>
-                              handleArrayChange(
-                                "qualifications",
-                                index,
-                                e.target.value
-                              )
-                            }
-                            placeholder={`Qualification ${index + 1}`}
+                    {/* Qualifications (Multi-Select) */}
+                     <Grid item xs={12}>
+                       <Box>
+                         <Typography variant="body2" sx={{ ...formLabelStyle }}>Educational Qualifications <span style={{ color: "red" }}>*</span></Typography>
+                          <Select
+                            isMulti
+                            options={qualificationsSelectOptions}
+                            value={qualificationsSelectOptions.filter(opt =>
+                                jobData.qualifications.includes(opt.value)
+                             )}
+                            onChange={(selectedOptions) => handleSelectChange("qualifications", selectedOptions)}
+                            placeholder="Select qualifications..."
+                            isClearable
+                            isSearchable
+                            styles={customSelectStyle}
+                             required
                           />
-                          <IconButton
-                            color="error"
-                            onClick={() =>
-                              removeArrayItem("qualifications", index)
-                            }
-                            disabled={jobData.qualifications.length === 1}
-                            size="small"
-                          >
-                            <DeleteIcon />
-                          </IconButton>
-                        </Box>
-                      ))}
-                      <Button
-                        variant="outlined"
-                        onClick={() => addArrayItem("qualifications", "")}
-                        startIcon={<AddIcon />}
-                        size="small"
-                        disabled={
-                          jobData.qualifications.length > 0 &&
-                          jobData.qualifications[
-                            jobData.qualifications.length - 1
-                          ].trim() === ""
-                        }
-                      >
-                        Add Qualification
-                      </Button>
+                       </Box>
                     </Grid>
 
+
+                    {/* Screening Questions */}
                     <Grid item xs={12}>
-                      <Typography variant="subtitle1" sx={{ mb: 2 }}>
+                      <Typography variant="body2" sx={{ ...formLabelStyle }}>
                         Screening Questions <span style={{color: 'red'}}>*</span>
                       </Typography>
                        <Typography variant="body2" color="text.secondary" sx={{ mb: 2, fontSize: "0.875rem" }}>
@@ -1583,24 +1415,23 @@ export default function JobEditForm() {
                          variant="body2"
                          sx={{ mb: 2, fontWeight: "bold", fontSize: "0.875rem", color: 'text.primary' }}
                        >
-                         Added Questions ({jobData.screeningQuestions.filter(q => q.question.trim() !== "").length}/{10})
+                         Added Questions ({jobData.screeningQuestions.filter(q => q.question?.trim() !== "").length}/{10})
                        </Typography>
 
-                      {/* Screening Questions List (Updated) */}
-                      {jobData.screeningQuestions.map((sq, index) => (
+                      {/* Screening Questions List */}
+                      {(jobData.screeningQuestions.length === 0 ? [{ question: "", questionType: "short_answer", options: [], isMandatory: false }] : jobData.screeningQuestions).map((sq, index) => (
                         <Box
-                          key={sq._id || `new-${index}`} // Use _id if available, fallback to index
+                          key={sq._id || `new-${index}`}
                           sx={{
                             border: "1px solid #eee",
                             p: 2,
-                            mb: 3, // Increased margin bottom
+                            mb: 3,
                             borderRadius: 2,
-                            position: 'relative' // For absolute positioning of remove button
+                            position: 'relative'
                           }}
                         >
-                           {/* Remove Question Button (Positioned top right) */}
-                            {/* Show remove if there is more than 1 question OR if it's the only question but has content/options */}
-                          {(jobData.screeningQuestions.length > 1 || (jobData.screeningQuestions.length === 1 && (sq.question.trim() !== "" || (['single_choice', 'multi_choice'].includes(sq.questionType) && sq.options.filter(opt => opt.trim() !== "").length > 0)))) && (
+                           {/* Remove Question Button */}
+                            {(jobData.screeningQuestions.length > 1 || (jobData.screeningQuestions.length === 1 && (sq.question?.trim() !== "" || (['single_choice', 'multi_choice'].includes(sq.questionType) && (Array.isArray(sq.options) && sq.options.filter(opt => opt?.trim() !== "").length > 0))))) && (
                              <IconButton
                                size="small"
                                color="error"
@@ -1611,16 +1442,16 @@ export default function JobEditForm() {
                                  right: 8,
                                  p: '4px',
                                  bgcolor: 'white',
-                                 zIndex: 1, // Ensure it's clickable
+                                 zIndex: 1,
                                  '&:hover': { bgcolor: '#f9f9f9' }
                                }}
                              >
-                               X
+                               <DeleteIcon fontSize="small" />
                              </IconButton>
                            )}
 
                           {/* Question Text Field */}
-                          <Box mb={2} pr={4}> {/* Add padding-right to avoid conflict with remove button */}
+                          <Box mb={2} pr={jobData.screeningQuestions.length > 1 || (jobData.screeningQuestions.length === 1 && (sq.question?.trim() !== "" || (['single_choice', 'multi_choice'].includes(sq.questionType) && (Array.isArray(sq.options) && sq.options.filter(opt => opt?.trim() !== "").length > 0)))) ? 4 : 0}>
                              <Typography variant="body2" sx={{ ...formLabelStyle }}>Question Text <span style={{color: 'red'}}>*</span></Typography>
                               <TextField
                                 fullWidth
@@ -1631,7 +1462,8 @@ export default function JobEditForm() {
                                   handleScreeningQuestionObjectChange(index, { ...sq, question: e.target.value })
                                 }
                                  variant="outlined"
-                                 required // Frontend required hint
+                                 required
+                                 InputLabelProps={{ shrink: !!sq.question }}
                               />
                           </Box>
 
@@ -1640,26 +1472,22 @@ export default function JobEditForm() {
                             <Typography variant="body2" sx={{ ...formLabelStyle }}>Question Type <span style={{color: 'red'}}>*</span></Typography>
                             <Select
                               options={screeningQuestionTypeOptions}
-                              value={screeningQuestionTypeOptions.find(opt => opt.value === sq.questionType)}
+                              value={screeningQuestionTypeOptions.find(opt => opt.value === sq.questionType) || null}
                               onChange={(selectedOption) => {
-                                const newType = selectedOption ? selectedOption.value : 'short_answer'; // Default if cleared
+                                const newType = selectedOption ? selectedOption.value : 'short_answer';
                                  const updatedQuestion = { ...sq, questionType: newType };
-
-                                 // Clear options if changing TO a type that doesn't use options
                                  if (newType !== 'single_choice' && newType !== 'multi_choice') {
                                      updatedQuestion.options = [];
                                  } else if (updatedQuestion.options.length === 0) {
-                                     // If changing FROM non-choice TO single/multi AND options were empty, add one blank option
                                       updatedQuestion.options = [""];
                                  }
-
                                 handleScreeningQuestionObjectChange(index, updatedQuestion);
                               }}
                               placeholder="Select Type"
-                              isClearable={false} // Type is mandatory
+                              isClearable={false}
                               isSearchable={false}
                               styles={customSelectStyle}
-                               required // Frontend required hint
+                               required
                             />
                           </Box>
 
@@ -1679,15 +1507,14 @@ export default function JobEditForm() {
                             sx={{ mt: 1, mb: 1 }}
                           />
 
-                          {/* Options Input (Conditional Rendering) */}
+                          {/* Options Input (Conditional) */}
                           {(sq.questionType === 'single_choice' || sq.questionType === 'multi_choice') && (
-                            <Box mt={2} pl={2}> {/* Indent options */}
+                            <Box mt={2} pl={2}>
                               <Typography variant="body2" sx={{ ...formLabelStyle, mb: 1 }}>Options <span style={{color: 'red'}}>*</span></Typography>
                                <Typography variant="body2" color="text.secondary" sx={{ mb: 1, fontSize: "0.75rem" }}>
                                 Provide options for candidates to select. At least one non-empty option is required.
                               </Typography>
-                              {/* Ensure at least one option field is shown if options array is empty for UI */}
-                              {(sq.options.length === 0 ? [""] : sq.options).map((option, optIndex) => (
+                              {(Array.isArray(sq.options) && sq.options.length > 0 ? sq.options : [""]).map((option, optIndex) => (
                                 <Box key={`sq-${index}-opt-${optIndex}`} display="flex" alignItems="center" mb={1} gap={1}>
                                    <Typography variant="body2" sx={{ minWidth: 16, flexShrink: 0, textAlign: 'right', color: 'text.primary' }}>{optIndex + 1}.</Typography>
                                    <TextField
@@ -1697,9 +1524,9 @@ export default function JobEditForm() {
                                      value={option}
                                      onChange={(e) => handleOptionChange(index, optIndex, e.target.value)}
                                      placeholder={`Option ${optIndex + 1}`}
+                                      InputLabelProps={{ shrink: !!option }}
                                    />
-                                   {/* Show remove only if more than 1 option OR it's the only option but has text */}
-                                  {(sq.options.length > 1 || (sq.options.length === 1 && option.trim() !== "")) && (
+                                  {(Array.isArray(sq.options) && sq.options.length > 1) && (
                                      <IconButton
                                        size="small"
                                        color="error"
@@ -1711,8 +1538,7 @@ export default function JobEditForm() {
                                    )}
                                 </Box>
                               ))}
-                              {/* Add option button - Show only if the last option is not empty */}
-                               {(sq.options.length === 0 || sq.options[sq.options.length - 1]?.trim() !== "") ? (
+                               {(Array.isArray(sq.options) && sq.options.length > 0 && sq.options[sq.options.length - 1]?.trim() !== "") || (Array.isArray(sq.options) && sq.options.length === 0) ? (
                                 <Button
                                   variant="text"
                                   onClick={() => handleAddOption(index)}
@@ -1723,7 +1549,6 @@ export default function JobEditForm() {
                                   Add Option
                                 </Button>
                                ) : (
-                                 // Optionally disable or hide if the last option is empty
                                  <Button
                                    variant="text"
                                    disabled
@@ -1744,8 +1569,6 @@ export default function JobEditForm() {
                         onClick={addScreeningQuestion}
                         startIcon={<AddIcon />}
                         size="small"
-                         // Disable if 10 questions added OR if the last question is empty
-                        disabled={ jobData.screeningQuestions.length >= 10 || (jobData.screeningQuestions.length > 0 && jobData.screeningQuestions[jobData.screeningQuestions.length - 1].question.trim() === "" && !(['single_choice', 'multi_choice'].includes(jobData.screeningQuestions[jobData.screeningQuestions.length - 1].questionType) && jobData.screeningQuestions[jobData.screeningQuestions.length - 1].options.filter(opt => opt.trim() !== "").length > 0)) }
                       >
                         Add Screening Question
                       </Button>
@@ -1769,9 +1592,14 @@ export default function JobEditForm() {
                 <AccordionDetails>
                   <Grid container spacing={3}>
                     <Grid item xs={12} md={6}>
+                      <Typography
+                          variant="body2"
+                          sx={{ ...formLabelStyle }}
+                        >
+                          Minimum Experience (Years)
+                        </Typography>
                       <TextField
                         fullWidth
-                        label="Minimum Experience (Years)"
                         type="number"
                         value={jobData.experience.minExperience}
                         onChange={(e) =>
@@ -1781,15 +1609,22 @@ export default function JobEditForm() {
                           )
                         }
                         InputLabelProps={{
-                          shrink: jobData.experience.minExperience !== "",
+                          shrink: !!jobData.experience.minExperience,
                         }}
+                        size="small"
+                         inputProps={{ min: 0 }}
                       />
                     </Grid>
 
                     <Grid item xs={12} md={6}>
+                      <Typography
+                          variant="body2"
+                          sx={{ ...formLabelStyle }}
+                        >
+                          Maximum Experience (Years)
+                        </Typography>
                       <TextField
                         fullWidth
-                        label="Maximum Experience (Years)"
                         type="number"
                         value={jobData.experience.maxExperience}
                         onChange={(e) =>
@@ -1799,69 +1634,22 @@ export default function JobEditForm() {
                           )
                         }
                         InputLabelProps={{
-                          shrink: jobData.experience.maxExperience !== "",
+                          shrink: !!jobData.experience.maxExperience,
                         }}
+                        size="small"
+                         inputProps={{ min: jobData.experience.minExperience !== "" ? Number(jobData.experience.minExperience) : 0 }}
                       />
                     </Grid>
 
                     <Grid item xs={12} md={6}>
-                      <Box sx={{ mb: 2 }}>
-                        <Typography
-                          variant="body1"
-                          sx={{ mb: 0.5, fontWeight: 500 }}
+                      <Typography
+                          variant="body2"
+                          sx={{ ...formLabelStyle }}
                         >
-                          Duration
+                          Minimum Graduation Year Batch
                         </Typography>
-                        <Select
-                          options={durationOptions}
-                          value={durationOptions.find(
-                            (opt) => opt.value === jobData.duration
-                          )}
-                          onChange={(selectedOption) =>
-                            handleInputChange(
-                              "duration",
-                              selectedOption ? selectedOption.value : ""
-                            )
-                          }
-                          placeholder="Select Duration..."
-                          isClearable
-                          isSearchable
-                          styles={customSelectStyle}
-                        />
-                      </Box>
-                    </Grid>
-
-                    <Grid item xs={12} md={6}>
-                      <Box sx={{ mb: 2 }}>
-                        <Typography
-                          variant="body1"
-                          sx={{ mb: 0.5, fontWeight: 500 }}
-                        >
-                          Course Type
-                        </Typography>
-                        <Select
-                          options={courseTypeOptions}
-                          value={courseTypeOptions.find(
-                            (opt) => opt.value === jobData.courseType
-                          )}
-                          onChange={(selectedOption) =>
-                            handleInputChange(
-                              "courseType",
-                              selectedOption ? selectedOption.value : ""
-                            )
-                          }
-                          placeholder="Select Course Type..."
-                          isClearable
-                          isSearchable
-                          styles={customSelectStyle}
-                        />
-                      </Box>
-                    </Grid>
-
-                    <Grid item xs={12} md={6}>
                       <TextField
                         fullWidth
-                        label="Minimum Graduation Year Batch"
                         type="number"
                         value={jobData.graduationYear.minBatch}
                         onChange={(e) =>
@@ -1871,15 +1659,22 @@ export default function JobEditForm() {
                           )
                         }
                         InputLabelProps={{
-                          shrink: jobData.graduationYear.minBatch !== "",
+                          shrink: !!jobData.graduationYear.minBatch,
                         }}
+                        size="small"
+                         inputProps={{ min: 1900, max: new Date().getFullYear() + 5 }}
                       />
                     </Grid>
 
                     <Grid item xs={12} md={6}>
+                      <Typography
+                          variant="body2"
+                          sx={{ ...formLabelStyle }}
+                        >
+                         Maximum Graduation Year Batch
+                        </Typography>
                       <TextField
                         fullWidth
-                        label="Maximum Graduation Year Batch"
                         type="number"
                         value={jobData.graduationYear.maxBatch}
                         onChange={(e) =>
@@ -1889,11 +1684,14 @@ export default function JobEditForm() {
                           )
                         }
                         InputLabelProps={{
-                          shrink: jobData.graduationYear.maxBatch !== "",
+                          shrink: !!jobData.graduationYear.maxBatch,
                         }}
+                        size="small"
+                         inputProps={{ min: jobData.graduationYear.minBatch !== "" ? Number(jobData.graduationYear.minBatch) : 1900, max: new Date().getFullYear() + 5 }}
                       />
                     </Grid>
                   </Grid>
+
                 </AccordionDetails>
               </Accordion>
 
@@ -1932,11 +1730,12 @@ export default function JobEditForm() {
                                   )
                                 }
                                 color="primary"
+                                size="small"
                               />
                             }
-                            label={key
-                              .replace(/([A-Z])/g, " $1")
-                              .replace(/^./, (str) => str.toUpperCase())}
+                            label={<Typography variant="body2" sx={{ fontSize: "0.875rem" }}>
+                               {key === 'womenJoiningBackforce' ? 'Women joining back workforce' : key.replace(/([A-Z])/g, " $1").replace(/^./, (str) => str.toUpperCase())}
+                             </Typography>}
                           />
                         </Grid>
                       )
@@ -1967,78 +1766,63 @@ export default function JobEditForm() {
                     }
                     placeholder="https://"
                     sx={{ mb: 2 }}
-                    InputLabelProps={{ shrink: jobData.applicationLink !== "" }}
+                    InputLabelProps={{ shrink: !!jobData.applicationLink }}
+                    size="small"
                   />
 
                   <Box sx={{ mb: 2 }}>
                     <Typography
-                      variant="body1"
-                      sx={{ mb: 0.5, fontWeight: 500 }}
+                      variant="body2"
+                      sx={{ ...formLabelStyle }}
                     >
-                      Category
+                      Category <span style={{ color: "red" }}>*</span>
                     </Typography>
                     <Select
                       options={categoryOptions}
                       value={categoryOptions.find(
                         (opt) => opt.value === jobData.category
-                      )}
-                      onChange={(selectedOption) =>
-                        handleInputChange(
-                          "category",
-                          selectedOption ? selectedOption.value : ""
-                        )
-                      }
+                      ) || null}
+                      onChange={(selectedOption) => handleSelectChange("category", selectedOption)}
                       placeholder="Select Category..."
                       isClearable
                       isSearchable
                       styles={customSelectStyle}
+                       required
                     />
                   </Box>
 
                   <Box sx={{ mb: 2 }}>
                     <Typography
-                      variant="body1"
-                      sx={{ mb: 0.5, fontWeight: 500 }}
+                      variant="body2"
+                      sx={{ ...formLabelStyle }}
                     >
-                      Functional Area
+                      Functional Area <span style={{ color: "red" }}>*</span>
                     </Typography>
                     <Select
                       options={functionalAreaOptions}
                       value={functionalAreaOptions.find(
                         (opt) => opt.value === jobData.functionalArea
-                      )}
-                      onChange={(selectedOption) =>
-                        handleInputChange(
-                          "functionalArea",
-                          selectedOption ? selectedOption.value : ""
-                        )
-                      }
+                      ) || null}
+                      onChange={(selectedOption) => handleSelectChange("functionalArea", selectedOption)}
                       placeholder="Select Functional Area..."
                       isClearable
                       isSearchable
                       styles={customSelectStyle}
+                       required
                     />
                   </Box>
 
+                  {/* Tags (Creatable Multi-select) */}
                   <Box sx={{ mb: 3 }}>
-                    <Typography variant="subtitle1" sx={{ mb: 2 }}>
+                    <Typography variant="body2" sx={{ ...formLabelStyle }}>
                       Tags (Add multiple)
                     </Typography>
-                    <Select
+                    <CreatableSelect
                           isMulti
                           options={tagOptions}
-                          value={tagOptions.filter((opt) =>
-                            jobData.tags.includes(opt.value)
-                          )}
-                          onChange={(selectedOptions) =>
-                            handleInputChange(
-                              "tags",
-                              selectedOptions
-                                ? selectedOptions.map((opt) => opt.value)
-                                : []
-                            )
-                          }
-                          placeholder="Select tags..."
+                          value={jobData.tags.map(tag => ({value: tag, label: tag}))}
+                          onChange={(selectedOptions) => handleSelectChange("tags", selectedOptions)}
+                          placeholder="Select or create tags..."
                           isClearable
                           isSearchable
                           styles={customSelectStyle}
@@ -2046,41 +1830,56 @@ export default function JobEditForm() {
                   </Box>
                 </Box>
 
+                 {/* Is Premium Job Switch */}
+                 <Box sx={{ mb: 3 }}>
+                     <FormControlLabel
+                        control={
+                          <Switch
+                            checked={jobData.isPremiumJob}
+                            onChange={(e) =>
+                              handleInputChange(
+                                "isPremiumJob",
+                                e.target.checked
+                              )
+                            }
+                            color="primary"
+                            size="small"
+                          />
+                        }
+                        label={<Typography variant="body2" sx={{ fontSize: "0.875rem" }}>Make this a Premium Job Post</Typography>}
+                     />
+                 </Box>
+
+
                 <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                  {/* Save Changes Button */}
                   <Button
                     fullWidth
                     variant="contained"
-                    startIcon={<SaveIcon />}
+                    startIcon={saving ? <CircularProgress size={20} color="inherit" /> : <SaveIcon />}
                     onClick={handleSave}
                     size="large"
-                    disabled={loading || initialLoadError !== null}
+                    disabled={saving || loading || initialLoadError !== null}
                   >
-                    {loading ? (
-                      <CircularProgress size={24} color="inherit" />
-                    ) : (
-                      "Save Changes"
-                    )}
+                    {saving && !error ? "Saving..." : "Save Changes"}
                   </Button>
 
+                  {/* Publish Job Button */}
                   <Button
                     fullWidth
                     variant="contained"
                     color="success"
+                    startIcon={saving ? <CircularProgress size={20} color="inherit" /> : (jobData.status === "live" ? null : <AddIcon />)}
                     onClick={handlePublish}
                     size="large"
                     disabled={
+                      saving ||
                       loading ||
                       initialLoadError !== null ||
                       jobData.status === "live"
                     }
                   >
-                    {loading ? (
-                      <CircularProgress size={24} color="inherit" />
-                    ) : jobData.status === "live" ? (
-                      "Published"
-                    ) : (
-                      "Publish Job"
-                    )}
+                    {saving && !error && jobData?.status === 'live' ? "Publishing..." : jobData.status === "live" ? "Published" : "Publish Job"}
                   </Button>
                 </Box>
               </Paper>
