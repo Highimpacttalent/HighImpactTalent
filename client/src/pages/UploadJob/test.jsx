@@ -1165,24 +1165,6 @@ const JobUploadPage = () => {
                 />
               </Grid>
             </Grid>
-
-            {/* Salary Confidential Checkbox */}
-            <FormControlLabel
-              control={
-                <Checkbox
-                  name="salaryConfidential"
-                  checked={formData.salaryConfidential}
-                  onChange={handleCheckboxChange}
-                  size="small"
-                />
-              }
-              label={
-                <Typography variant="body2" sx={{ fontSize: "0.875rem" }}>
-                  Don't show this to candidates
-                </Typography>
-              }
-              sx={{ mt: 1 }}
-            />
           </div>
 
           <div className="mb-4">
