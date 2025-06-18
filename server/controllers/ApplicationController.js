@@ -663,6 +663,50 @@ export const getScreeningFilterOptions = async (req, res) => {
   }
 };
 
+export const getApplicationStageCounts = async (req, res) => {
+  try {
+    const { jobid } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(jobid)) {
+      return res.status(400).json({ 
+        success: false,
+        message: 'Invalid job ID' 
+      });
+    }
+
+    const counts = await Application.aggregate([
+      {
+        $match: { job: new mongoose.Types.ObjectId(jobid) }
+      },
+      {
+        $group: {
+          _id: '$status',
+          count: { $sum: 1 }
+        }
+      }
+    ]);
+
+    // Transform to { "Applied": 5, "Shortlisted": 3 } format
+    const stageCounts = counts.reduce((acc, { _id, count }) => {
+      acc[_id] = count;
+      return acc;
+    }, {});
+
+    res.status(200).json({
+      success: true,
+      stageCounts,
+      generatedAt: new Date() // For debugging
+    });
+
+  } catch (err) {
+    console.error('Error fetching stage counts:', err);
+    res.status(500).json({
+      success: false,
+      message: 'Server error while counting applications'
+    });
+  }
+};
+
 export const  getallApplicationOfApplicant = async(req,res)=>{
   try {
     const id = req.params.applicantid;
