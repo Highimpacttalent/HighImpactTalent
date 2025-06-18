@@ -26,45 +26,48 @@ import { FiEye } from "react-icons/fi";
 
 // Define shared styling for consistency, focusing on TextField-like appearance
 const textFieldStyles = {
-    "& .MuiOutlinedInput-root": {
-      borderRadius: 16, // Original border radius from your code
-      border:"1px solid #404258", // Original border color from your code
-      fontSize: '0.875rem', // Match size small font size
-      fontFamily: "Poppins", // Match surrounding text font
-      color: "#404258", // Match surrounding text color
-      padding: '8px 14px', // Match TextField padding
-       '&.Mui-focused fieldset': { // Remove default blue focus border
-           borderColor: '#404258',
-           borderWidth: '1px',
-       },
-        '&:hover fieldset': { // Keep consistent border on hover
-           borderColor: '#404258',
-       },
-       // Specific padding adjustments for input element itself
-       '& .MuiInputBase-input': {
-            padding: 0, // Reset default input padding
-            fontFamily: "Poppins",
-            fontSize: '0.875rem',
-            color: '#404258',
-       },
+  "& .MuiOutlinedInput-root": {
+    borderRadius: 16, // Original border radius from your code
+    border: "1px solid #404258", // Original border color from your code
+    fontSize: "0.875rem", // Match size small font size
+    fontFamily: "Poppins", // Match surrounding text font
+    color: "#404258", // Match surrounding text color
+    padding: "8px 14px", // Match TextField padding
+    "&.Mui-focused fieldset": {
+      // Remove default blue focus border
+      borderColor: "#404258",
+      borderWidth: "1px",
     },
-     '& .MuiInputLabel-root': { // Style label
-          fontFamily: "Poppins",
-          fontSize: '0.875rem',
-          color: '#404258',
-          '&.Mui-focused': { color: '#404258' }, // Keep color on focus
-          '&.MuiFormLabel-shrink': { // Label when shrunk (input filled)
-             transform: 'translate(14px, -6px) scale(0.8)', // Adjust position
-             bgcolor: 'white', // Add background to prevent text overlap
-             px: 0.5, // Add horizontal padding
-           },
-     },
-      // Add styles for multiline TextField
-      '& .MuiOutlinedInput-multiline': {
-         padding: '14px', // Restore some padding for multiline
-      }
-  };
-
+    "&:hover fieldset": {
+      // Keep consistent border on hover
+      borderColor: "#404258",
+    },
+    // Specific padding adjustments for input element itself
+    "& .MuiInputBase-input": {
+      padding: 0, // Reset default input padding
+      fontFamily: "Poppins",
+      fontSize: "0.875rem",
+      color: "#404258",
+    },
+  },
+  "& .MuiInputLabel-root": {
+    // Style label
+    fontFamily: "Poppins",
+    fontSize: "0.875rem",
+    color: "#404258",
+    "&.Mui-focused": { color: "#404258" }, // Keep color on focus
+    "&.MuiFormLabel-shrink": {
+      // Label when shrunk (input filled)
+      transform: "translate(14px, -6px) scale(0.8)", // Adjust position
+      bgcolor: "white", // Add background to prevent text overlap
+      px: 0.5, // Add horizontal padding
+    },
+  },
+  // Add styles for multiline TextField
+  "& .MuiOutlinedInput-multiline": {
+    padding: "14px", // Restore some padding for multiline
+  },
+};
 
 const ScreeningView = () => {
   const { state } = useLocation(); // state should contain job data including screeningQuestions
@@ -98,7 +101,8 @@ const ScreeningView = () => {
   // Use optional chaining defensively
   const allQuestions = state?.questions || [];
   const filteredQuestions = allQuestions.filter(
-    (question) => question && question.question && question.question.trim() !== ""
+    (question) =>
+      question && question.question && question.question.trim() !== ""
   );
 
   // Initialize formData.answers based on fetched questions or user's existing answers
@@ -106,57 +110,55 @@ const ScreeningView = () => {
     if (filteredQuestions.length > 0) {
       // Check if state includes existing answers (e.g., if navigating back from confirmation)
       // If initial answers exist, use them. Otherwise, initialize based on question type.
-      const initialAnswers = state?.initialAnswers ? state.initialAnswers : filteredQuestions.map(q => {
-          // Initialize answer based on question type
-          switch (q.questionType) {
-            case 'yes/no':
+      const initialAnswers = state?.initialAnswers
+        ? state.initialAnswers
+        : filteredQuestions.map((q) => {
+            // Initialize answer based on question type
+            switch (q.questionType) {
+              case "yes/no":
                 return false; // Boolean (false by default)
-            case 'multi_choice':
+              case "multi_choice":
                 return []; // Array of strings
-            case 'single_choice':
-                 // Using "" as initial value allows radio group to have no default selection
+              case "single_choice":
+                // Using "" as initial value allows radio group to have no default selection
                 return "";
-            case 'short_answer':
-            case 'long_answer':
-            default:
+              case "short_answer":
+              case "long_answer":
+              default:
                 return ""; // Empty string
-          }
-      });
+            }
+          });
       setFormData({ answers: initialAnswers });
-
     } else {
       setFormData({ answers: [] }); // No questions, empty answers
     }
 
     // Also update applied status if provided in state
     if (state?.isApplied !== undefined) {
-        setApplied(state.isApplied);
+      setApplied(state.isApplied);
     }
-
   }, [state?.questions, state?.initialAnswers, state?.isApplied]); // Re-run when questions or initial answers/applied status change in location state
-
 
   // Initialize resume URL from user data and enable apply button if resume exists
   useEffect(() => {
     if (user?.cvUrl) {
       setResumeUrl(user.cvUrl);
       // Enable apply button only if resume is uploaded AND user hasn't already applied
-       // The button will be disabled if 'applied' is true
-       setApplyButton(true);
+      // The button will be disabled if 'applied' is true
+      setApplyButton(true);
     } else {
-       // If user has no resume, apply button starts disabled
-       setApplyButton(false);
-       setResumeUrl("");
+      // If user has no resume, apply button starts disabled
+      setApplyButton(false);
+      setResumeUrl("");
     }
   }, [user]); // Re-run when user state changes
-
 
   // --- Handlers for different question types ---
 
   // Generic handler for updating an answer at a specific index
   // This handler updates the state with the type-specific value (boolean, array, or string)
   const updateAnswer = (index, value) => {
-    setFormData(prev => {
+    setFormData((prev) => {
       const newAnswers = [...prev.answers];
       newAnswers[index] = value;
       return { ...prev, answers: newAnswers };
@@ -169,98 +171,101 @@ const ScreeningView = () => {
   };
 
   // Handler for Yes/No (Radio Group with "Yes"/"No" options)
-   const handleYesNoAnswerChange = (index, value) => {
-       // Store boolean true for "yes", false for "no" in state
-       updateAnswer(index, value === 'yes');
-   };
+  const handleYesNoAnswerChange = (index, value) => {
+    // Store boolean true for "yes", false for "no" in state
+    updateAnswer(index, value === "yes");
+  };
 
   // Handler for Single Choice (Radio Group)
-   const handleSingleChoiceAnswerChange = (index, value) => {
-      // Store the selected option string in state
-       updateAnswer(index, value);
-   };
+  const handleSingleChoiceAnswerChange = (index, value) => {
+    // Store the selected option string in state
+    updateAnswer(index, value);
+  };
 
   // Handler for Multi Choice (Checkbox group)
-   const handleMultiChoiceAnswerChange = (index, optionValue, checked) => {
-      setFormData(prev => {
-          const newAnswers = [...prev.answers];
-          // Ensure the answer at this index is treated as an array
-          let currentOptions = Array.isArray(newAnswers[index]) ? [...newAnswers[index]] : [];
+  const handleMultiChoiceAnswerChange = (index, optionValue, checked) => {
+    setFormData((prev) => {
+      const newAnswers = [...prev.answers];
+      // Ensure the answer at this index is treated as an array
+      let currentOptions = Array.isArray(newAnswers[index])
+        ? [...newAnswers[index]]
+        : [];
 
-          if (checked) {
-              // Add option if checked and not already in array
-              if (!currentOptions.includes(optionValue)) {
-                  currentOptions.push(optionValue);
-              }
-          } else {
-              // Remove option if unchecked
-              currentOptions = currentOptions.filter(opt => opt !== optionValue);
-          }
+      if (checked) {
+        // Add option if checked and not already in array
+        if (!currentOptions.includes(optionValue)) {
+          currentOptions.push(optionValue);
+        }
+      } else {
+        // Remove option if unchecked
+        currentOptions = currentOptions.filter((opt) => opt !== optionValue);
+      }
 
-          newAnswers[index] = currentOptions; // Store array of selected option strings in state
-          return { ...prev, answers: newAnswers };
-      });
-   };
-
+      newAnswers[index] = currentOptions; // Store array of selected option strings in state
+      return { ...prev, answers: newAnswers };
+    });
+  };
 
   // --- Apply Logic ---
   const applyHandler = async () => {
-
     // --- Frontend Validation ---
     // Validate mandatory questions based on their type *as stored in state*
     const allMandatoryAnswered = filteredQuestions.every((question, index) => {
-        if (!question.isMandatory) return true; // Skip non-mandatory
+      if (!question.isMandatory) return true; // Skip non-mandatory
 
-        const answer = formData.answers[index];
+      const answer = formData.answers[index];
 
-        switch (question.questionType) {
-            case 'yes/no':
-                 // A boolean value (true or false) means it's answered
-                return typeof answer === 'boolean';
-            case 'single_choice':
-                 // Must be a string value that is not just whitespace
-                return typeof answer === 'string' && answer.trim() !== "";
-            case 'multi_choice':
-                 // Must be an array with at least one non-empty string selected
-                return Array.isArray(answer) && answer.filter(opt => opt.trim() !== "").length > 0;
-            case 'short_answer':
-            case 'long_answer':
-            default:
-                 // Must be a string that is not just whitespace
-                return typeof answer === 'string' && answer.trim() !== "";
-        }
+      switch (question.questionType) {
+        case "yes/no":
+          // A boolean value (true or false) means it's answered
+          return typeof answer === "boolean";
+        case "single_choice":
+          // Must be a string value that is not just whitespace
+          return typeof answer === "string" && answer.trim() !== "";
+        case "multi_choice":
+          // Must be an array with at least one non-empty string selected
+          return (
+            Array.isArray(answer) &&
+            answer.filter((opt) => opt.trim() !== "").length > 0
+          );
+        case "short_answer":
+        case "long_answer":
+        default:
+          // Must be a string that is not just whitespace
+          return typeof answer === "string" && answer.trim() !== "";
+      }
     });
-
 
     if (!allMandatoryAnswered) {
       setSnackbar({
         open: true,
-        message: "Please answer all mandatory screening questions before submitting.",
+        message:
+          "Please answer all mandatory screening questions before submitting.",
         severity: "error",
       });
       return;
     }
-     // Check if resume is uploaded (this is already controlled by applyButton state, but double-check)
-     if (!resumeUrl) {
-          setSnackbar({
-             open: true,
-             message: "Please upload your resume before submitting.",
-             severity: "error",
-          });
-          return;
-     }
+    // Check if resume is uploaded (this is already controlled by applyButton state, but double-check)
+    if (!resumeUrl) {
+      setSnackbar({
+        open: true,
+        message: "Please upload your resume before submitting.",
+        severity: "error",
+      });
+      return;
+    }
 
     // Prevent multiple submissions (should be disabled by applied state, but safety check)
     if (applied) {
-         // If applied, just navigate to application tracking
-         navigate("/application-tracking");
-         return;
+      // If applied, just navigate to application tracking
+      navigate("/application-tracking");
+      return;
     }
-
 
     // --- Prepare API Payload ---
     try {
-      const screeningAnswersPayload = filteredQuestions.map((question, index) => {
+      const screeningAnswersPayload = filteredQuestions.map(
+        (question, index) => {
           // Get the raw answer value from state
           const answerValue = formData.answers[index];
 
@@ -268,51 +273,64 @@ const ScreeningView = () => {
           // to be compatible with the backend route's trimming logic.
           let formattedAnswerString;
           switch (question.questionType) {
-              case 'yes/no':
-                  // Convert boolean state to "yes" or "no" string
-                  formattedAnswerString = typeof answerValue === 'boolean' ? (answerValue ? "yes" : "no") : ""; // Default to empty string
-                  break;
-              case 'multi_choice':
-                  // Convert array of strings to a comma-separated string
-                   // Ensure it's an array, filter empty, join. Default to empty string.
-                  formattedAnswerString = Array.isArray(answerValue) ? answerValue.filter(opt => typeof opt === 'string' && opt.trim() !== '').map(opt => opt.trim()).join(', ') : "";
-                  break;
-              case 'single_choice':
-              case 'short_answer':
-              case 'long_answer':
-              default:
-                  // Send trimmed string. Handle non-string answers by converting to empty string.
-                   formattedAnswerString = typeof answerValue === 'string' ? answerValue.trim() : "";
-                   break;
+            case "yes/no":
+              // Convert boolean state to "yes" or "no" string
+              formattedAnswerString =
+                typeof answerValue === "boolean"
+                  ? answerValue
+                    ? "yes"
+                    : "no"
+                  : ""; // Default to empty string
+              break;
+            case "multi_choice":
+              // Convert array of strings to a comma-separated string
+              // Ensure it's an array, filter empty, join. Default to empty string.
+              formattedAnswerString = Array.isArray(answerValue)
+                ? answerValue
+                    .filter(
+                      (opt) => typeof opt === "string" && opt.trim() !== ""
+                    )
+                    .map((opt) => opt.trim())
+                    .join(", ")
+                : "";
+              break;
+            case "single_choice":
+            case "short_answer":
+            case "long_answer":
+            default:
+              // Send trimmed string. Handle non-string answers by converting to empty string.
+              formattedAnswerString =
+                typeof answerValue === "string" ? answerValue.trim() : "";
+              break;
           }
 
-        // ************* Include questionType back in the payload *************
-        // Based on the error you received when excluding it, the backend likely needs it.
-        // The backend schema also requires it for the pre-save middleware.
-        // Even if the route handler's filter/map seems inconsistent, including it is necessary.
-        return {
-          questionId: question._id, // Use the _id from the job's question
-          question: question.question, // Include the question text from the job
-          questionType: question.questionType, // <--- INCLUDE questionType
-          answer: formattedAnswerString // The collected answer, now always a string (or empty string)
-        };
-        // *************************************************************************
-      });
+          // ************* Include questionType back in the payload *************
+          // Based on the error you received when excluding it, the backend likely needs it.
+          // The backend schema also requires it for the pre-save middleware.
+          // Even if the route handler's filter/map seems inconsistent, including it is necessary.
+          return {
+            questionId: question._id, // Use the _id from the job's question
+            question: question.question, // Include the question text from the job
+            questionType: question.questionType, // <--- INCLUDE questionType
+            answer: formattedAnswerString, // The collected answer, now always a string (or empty string)
+          };
+          // *************************************************************************
+        }
+      );
 
-       // The backend route's filter is `answer.answer && answer.answer.trim() !== ''`.
-       // This means it will keep items where 'answer' is a non-empty string.
-       // It will filter out items where 'answer' is '', null, undefined, false, [] etc.
-       // Our new `formattedAnswerString` is designed to be either a non-empty string or "".
-       // So, filtering by `item.answer !== ""` should largely align with the backend's filter.
-       const finalScreeningAnswersPayload = screeningAnswersPayload.filter(item =>
-           item.answer !== "" // Keep items where the formatted string answer is not empty
-           // Note: This filter means mandatory multi-choice or yes/no questions that
-           // were answered (e.g., multi-choice array was non-empty, yes/no was 'no')
-           // will be included because their formatted string won't be empty.
-           // Mandatory text/single answers will also be included if non-empty.
-           // Mandatory questions with genuinely empty answers will be caught by frontend validation.
-       );
-
+      // The backend route's filter is `answer.answer && answer.answer.trim() !== ''`.
+      // This means it will keep items where 'answer' is a non-empty string.
+      // It will filter out items where 'answer' is '', null, undefined, false, [] etc.
+      // Our new `formattedAnswerString` is designed to be either a non-empty string or "".
+      // So, filtering by `item.answer !== ""` should largely align with the backend's filter.
+      const finalScreeningAnswersPayload = screeningAnswersPayload.filter(
+        (item) => item.answer !== "" // Keep items where the formatted string answer is not empty
+        // Note: This filter means mandatory multi-choice or yes/no questions that
+        // were answered (e.g., multi-choice array was non-empty, yes/no was 'no')
+        // will be included because their formatted string won't be empty.
+        // Mandatory text/single answers will also be included if non-empty.
+        // Mandatory questions with genuinely empty answers will be caught by frontend validation.
+      );
 
       const res = await axios.post(
         "https://highimpacttalent.onrender.com/api-v1/application/create", // Verify this endpoint
@@ -322,36 +340,37 @@ const ScreeningView = () => {
           applicant: user?._id, // Use user._id from Redux state
           screeningAnswers: finalScreeningAnswersPayload, // Send the prepared payload (now strings)
           // Optionally include resumeUrl here if backend expects it with application creation
-           resumeUrl: resumeUrl, // Pass the resume URL
-           // Include other job/company/applicant info if backend needs it for the application record
-           jobTitle: state?.jobTitle, // Example: assuming jobTitle is passed in state
-           companyName: state?.companyName, // Example: assuming companyName is passed in state
+          resumeUrl: resumeUrl, // Pass the resume URL
+          // Include other job/company/applicant info if backend needs it for the application record
+          jobTitle: state?.jobTitle, // Example: assuming jobTitle is passed in state
+          companyName: state?.companyName, // Example: assuming companyName is passed in state
         },
         {
-             headers: {
-                Authorization: `Bearer ${user?.token}`, // Add authorization token from Redux state
-             },
+          headers: {
+            Authorization: `Bearer ${user?.token}`, // Add authorization token from Redux state
+          },
         }
       );
 
-      if (res.data?.success) { // Check for success flag in response
+      if (res.data?.success) {
+        // Check for success flag in response
         setApplied(true); // Mark as applied on success
         console.log(res.data);
         // Update user state if the response includes updated user data
-         if (res.data.user) {
-             dispatch(UpdateUser(res.data.user));
-         }
+        if (res.data.user) {
+          dispatch(UpdateUser(res.data.user));
+        }
         setSnackbar({
           open: true,
           message: res.data.message || "Application submitted successfully!",
           severity: "success",
         });
-         // Optionally navigate after success or keep showing status message
-         // setTimeout(() => navigate("/application-tracking"), 2000); // Example navigation delay
-
+        // Optionally navigate after success or keep showing status message
+        // setTimeout(() => navigate("/application-tracking"), 2000); // Example navigation delay
       } else {
-         // Handle backend returning success: false
-        const errorMessage = res.data.message || "Failed to apply. Please try again.";
+        // Handle backend returning success: false
+        const errorMessage =
+          res.data.message || "Failed to apply. Please try again.";
         console.error("API Error:", errorMessage);
         setSnackbar({ open: true, message: errorMessage, severity: "error" });
       }
@@ -362,7 +381,6 @@ const ScreeningView = () => {
       setSnackbar({ open: true, message: errorMessage, severity: "error" });
     }
   };
-
 
   // --- Resume Upload Logic (Kept mostly as is, applying original styling) ---
   const handleFileChange = async (e) => {
@@ -400,7 +418,10 @@ const ScreeningView = () => {
       const formData = new FormData();
       formData.append("resume", file);
       // Append filename, perhaps with user ID or timestamp for uniqueness
-      formData.append("filename", `${user?._id || 'user'}-${Date.now()}-${file.name}`);
+      formData.append(
+        "filename",
+        `${user?._id || "user"}-${Date.now()}-${file.name}`
+      );
 
       const response = await axios.post(
         "https://highimpacttalent.onrender.com/api-v1/user/upload-resume", // Verify this endpoint
@@ -417,7 +438,7 @@ const ScreeningView = () => {
         setResumeUrl(response.data.url);
         setApplyButton(true); // Enable apply button
         // Update Redux user state with new CV URL
-         dispatch(UpdateUser({ ...user, cvUrl: response.data.url }));
+        dispatch(UpdateUser({ ...user, cvUrl: response.data.url }));
 
         setSnackbar({
           open: true,
@@ -442,7 +463,8 @@ const ScreeningView = () => {
 
   const openFileDialog = () => {
     // If user already has a resume uploaded, ask for confirmation to replace
-    if (hasUploadedResume && resumeUrl) { // Check resumeUrl state as well
+    if (hasUploadedResume && resumeUrl) {
+      // Check resumeUrl state as well
       setOpenDialog(true);
     } else {
       // Otherwise, directly open the file dialog
@@ -455,12 +477,15 @@ const ScreeningView = () => {
     fileInputRef.current.click(); // Trigger file input after confirmation
   };
 
-
   // --- Render Logic ---
 
   // Determine Apply button state and text
   const isApplyDisabled = !applyButton || applied || uploading; // Disable if no resume, already applied, or uploading
-  const applyButtonText = applied ? "View Application Status" : (uploading ? "Uploading Resume..." : "Submit Application");
+  const applyButtonText = applied
+    ? "View Application Status"
+    : uploading
+    ? "Uploading Resume..."
+    : "Submit Application";
 
   return (
     <Box
@@ -474,8 +499,8 @@ const ScreeningView = () => {
         py: 4,
       }}
     >
-       {/* Title Section */}
-      <Box sx={{ p: { xs: 3, md: 6 }, textAlign: 'center', mb: 4 }}>
+      {/* Title Section */}
+      <Box sx={{ p: { xs: 3, md: 6 }, textAlign: "center", mb: 4 }}>
         <Typography
           sx={{
             color: "#404258",
@@ -497,8 +522,8 @@ const ScreeningView = () => {
         </Typography>
       </Box>
 
-       {/* Main Content Box */}
-       {/* Reverted to original Box structure and styling */}
+      {/* Main Content Box */}
+      {/* Reverted to original Box structure and styling */}
       <Box
         sx={{
           p: 4,
@@ -506,12 +531,12 @@ const ScreeningView = () => {
           borderRadius: "20px",
           mb: 6, // Adjusted margin to give some space below
           maxWidth: 600, // Limited max width for readability as before
-          width: '100%', // Take full width up to max
-          bgcolor: 'white' // Ensure white background inside border
+          width: "100%", // Take full width up to max
+          bgcolor: "white", // Ensure white background inside border
         }}
       >
         {/* Resume Upload Section */}
-        <Box mb={4} sx={{ textAlign: 'center' }}>
+        <Box mb={4} sx={{ textAlign: "center" }}>
           <Typography
             sx={{
               color: "#404258",
@@ -533,19 +558,25 @@ const ScreeningView = () => {
             style={{ display: "none" }}
           />
 
-          <Box mt={2} display="flex" gap={2} justifyContent="center" flexWrap="wrap">
+          <Box
+            mt={2}
+            display="flex"
+            gap={2}
+            justifyContent="center"
+            flexWrap="wrap"
+          >
             {resumeUrl && (
               <Button
                 variant="contained" // Keep original contained style for view
                 href={resumeUrl}
                 target="_blank"
                 sx={{
-                   bgcolor: "#3C7EFC", // Use primary color
-                   color: "white",
-                   fontFamily: "Satoshi",
-                   fontWeight: 700,
-                   borderRadius: 16, // Original border radius
-                   textTransform: "none",
+                  bgcolor: "#3C7EFC", // Use primary color
+                  color: "white",
+                  fontFamily: "Satoshi",
+                  fontWeight: 700,
+                  borderRadius: 16, // Original border radius
+                  textTransform: "none",
                 }}
                 startIcon={<FiEye size={18} />}
               >
@@ -563,10 +594,16 @@ const ScreeningView = () => {
                 fontWeight: 700,
                 borderRadius: 16,
                 textTransform: "none",
-                 '&:hover': { bgcolor: '#3C7EFC' }, // Hover effect
-                 '&:disabled': { bgcolor: '#a0c3fc', color: '#fff' } // Disabled state
+                "&:hover": { bgcolor: "#3C7EFC" }, // Hover effect
+                "&:disabled": { bgcolor: "#a0c3fc", color: "#fff" }, // Disabled state
               }}
-              startIcon={uploading ? <CircularProgress size={20} color="inherit" /> : <CloudUploadIcon />}
+              startIcon={
+                uploading ? (
+                  <CircularProgress size={20} color="inherit" />
+                ) : (
+                  <CloudUploadIcon />
+                )
+              }
             >
               {uploading ? "Uploading..." : "Upload Resume"}
             </Button>
@@ -601,15 +638,17 @@ const ScreeningView = () => {
               Company Screening Questions
             </Typography>
             {filteredQuestions.map((question, index) => (
-               // Keep question Box styling simple like the original TextField structure
-              <Box key={question._id || `q-${index}`} mb={3}> {/* Use _id if available, fallback to index */}
+              // Keep question Box styling simple like the original TextField structure
+              <Box key={question._id || `q-${index}`} mb={3}>
+                {" "}
+                {/* Use _id if available, fallback to index */}
                 <Typography
                   sx={{
                     fontFamily: "Satoshi",
                     fontWeight: 500,
                     fontSize: "14px",
                     color: "#404258",
-                    mb: 1 // Margin below question text
+                    mb: 1, // Margin below question text
                   }}
                 >
                   Question {index + 1}: {question.question}
@@ -617,142 +656,233 @@ const ScreeningView = () => {
                     <span style={{ color: "red", marginLeft: "4px" }}>*</span>
                   )}
                 </Typography>
-
                 {/* --- Conditional Rendering of Answer Input --- */}
                 {/* Apply styling to inputs to visually match the original TextField */}
-
-                {question.questionType === 'yes/no' && (
-                   <RadioGroup
-                     row // Display radios in a row
-                     // value is the string 'yes' or 'no' based on the boolean answer state
-                     value={formData.answers[index] === true ? 'yes' : (formData.answers[index] === false ? 'no' : '')}
-                     onChange={(e) => handleYesNoAnswerChange(index, e.target.value)}
-                      sx={{
-                         '& .MuiFormControlLabel-root': { // Style the radio button container
-                             marginRight: { xs: 1, sm: 3 }, // Spacing between options
-                              // Align radio button visually with TextField input
-                              '& .MuiButtonBase-root': {
-                                 padding: '8px', // Match size of TextField size="small" padding area
-                             },
-                         },
-                          fontFamily: "Poppins", // Match surrounding text font
-                           fontSize: "14px",
-                            color: "#404258", // Match surrounding text color
-                      }}
-                   >
-                      {/* Use Typography in label to control font/size */}
-                     <FormControlLabel
-                          value="yes"
-                          control={<Radio size="small" />}
-                          label={<Typography variant="body2" sx={{ fontSize: '0.875rem', fontFamily: 'Poppins', color: '#404258' }}>Yes</Typography>}
-                     />
-                     <FormControlLabel
-                          value="no"
-                          control={<Radio size="small" />}
-                          label={<Typography variant="body2" sx={{ fontSize: '0.875rem', fontFamily: 'Poppins', color: '#404258' }}>No</Typography>}
-                     />
-                   </RadioGroup>
-                )}
-
-                {question.questionType === 'single_choice' && Array.isArray(question.options) && question.options.length > 0 && (
-                   <RadioGroup
-                     // value should be the selected option string
-                     value={formData.answers[index] || ""}
-                     onChange={(e) => handleSingleChoiceAnswerChange(index, e.target.value)}
-                      sx={{
-                         '& .MuiFormControlLabel-root': { // Style the radio button container
-                             marginBottom: 0.5, // Small margin below each option
-                             '& .MuiButtonBase-root': { // Style the radio button itself
-                                 padding: '8px', // Match size of TextField size="small" padding area
-                             },
-                         },
-                          fontFamily: "Poppins", // Match surrounding text font
-                           fontSize: "14px",
-                            color: "#404258", // Match surrounding text color
-                      }}
-                   >
-                     {question.options.map((option, optIndex) => (
-                         // Use Typography in label to control font/size
-                        <FormControlLabel
-                            key={optIndex}
-                            value={option} // Value is the option text
-                            control={<Radio size="small" />}
-                             label={<Typography variant="body2" sx={{ fontSize: '0.875rem', fontFamily: 'Poppins', color: '#404258' }}>{option}</Typography>}
-                        />
-                     ))}
-                   </RadioGroup>
-                )}
-
-                {question.questionType === 'multi_choice' && Array.isArray(question.options) && question.options.length > 0 && (
-                   <Box sx={{
-                       fontFamily: "Poppins", // Match surrounding text font
-                       fontSize: "14px",
-                       color: "#404258", // Match surrounding text color
-                    }}> {/* Use a Box to group checkboxes */}
-                     {question.options.map((option, optIndex) => (
-                          <FormControlLabel
-                              key={optIndex}
-                              control={
-                                  <Checkbox
-                                      // Check if the option is included in the answer array
-                                      checked={Array.isArray(formData.answers[index]) && formData.answers[index].includes(option)}
-                                      onChange={(e) => handleMultiChoiceAnswerChange(index, option, e.target.checked)}
-                                      color="primary" // Use primary color for checkbox
-                                      size="small" // Match size of TextField size="small" padding area roughly
-                                  />
-                              }
-                              // Use Typography in label to control font/size
-                              label={<Typography variant="body2" sx={{ fontSize: '0.875rem', fontFamily: 'Poppins', color: '#404258' }}>{option}</Typography>}
-                              sx={{ display: 'block', marginBottom: 0.5 }} // Stack checkboxes vertically with small margin
-                          />
-                     ))}
-                   </Box>
-                )}
-
-                {/* Default to TextField for Short/Long Answer or unknown types */}
-                {(question.questionType === 'short_answer' || question.questionType === 'long_answer' || !['yes/no', 'single_choice', 'multi_choice'].includes(question.questionType)) && (
-                    <TextField
-                      fullWidth
-                      variant="outlined"
-                      size="small"
-                       // Apply consistent TextField styles
-                      sx={textFieldStyles}
-                      value={formData.answers[index] || ""}
-                      onChange={(e) => handleTextAnswerChange(index, e.target.value)}
-                       multiline={question.questionType === 'long_answer'} // Enable multiline for long answer
-                       rows={question.questionType === 'long_answer' ? 3 : 1} // Set rows for long answer
-                       placeholder={`Enter your answer...`} // Placeholder text
-                       // Note: Mui TextField required prop adds * visual, actual validation is in handler
-                      required={question.isMandatory}
+                {question.questionType === "yes/no" && (
+                  <RadioGroup
+                    row // Display radios in a row
+                    // value is the string 'yes' or 'no' based on the boolean answer state
+                    value={
+                      formData.answers[index] === true
+                        ? "yes"
+                        : formData.answers[index] === false
+                        ? "no"
+                        : ""
+                    }
+                    onChange={(e) =>
+                      handleYesNoAnswerChange(index, e.target.value)
+                    }
+                    sx={{
+                      "& .MuiFormControlLabel-root": {
+                        // Style the radio button container
+                        marginRight: { xs: 1, sm: 3 }, // Spacing between options
+                        // Align radio button visually with TextField input
+                        "& .MuiButtonBase-root": {
+                          padding: "8px", // Match size of TextField size="small" padding area
+                        },
+                      },
+                      fontFamily: "Poppins", // Match surrounding text font
+                      fontSize: "14px",
+                      color: "#404258", // Match surrounding text color
+                    }}
+                  >
+                    {/* Use Typography in label to control font/size */}
+                    <FormControlLabel
+                      value="yes"
+                      control={<Radio size="small" />}
+                      label={
+                        <Typography
+                          variant="body2"
+                          sx={{
+                            fontSize: "0.875rem",
+                            fontFamily: "Poppins",
+                            color: "#404258",
+                          }}
+                        >
+                          Yes
+                        </Typography>
+                      }
                     />
+                    <FormControlLabel
+                      value="no"
+                      control={<Radio size="small" />}
+                      label={
+                        <Typography
+                          variant="body2"
+                          sx={{
+                            fontSize: "0.875rem",
+                            fontFamily: "Poppins",
+                            color: "#404258",
+                          }}
+                        >
+                          No
+                        </Typography>
+                      }
+                    />
+                  </RadioGroup>
                 )}
-                 {/* Message if choice question has no options */}
-                 {(question.questionType === 'single_choice' || question.questionType === 'multi_choice') && (!Array.isArray(question.options) || question.options.length === 0) && (
-                     <Typography variant="body2" color="error" sx={{ mt: 1, fontSize: '0.75rem' }}>
-                         Error: No options available for this question.
-                     </Typography>
-                 )}
+                {question.questionType === "single_choice" &&
+                  Array.isArray(question.options) &&
+                  question.options.length > 0 && (
+                    <RadioGroup
+                      // value should be the selected option string
+                      value={formData.answers[index] || ""}
+                      onChange={(e) =>
+                        handleSingleChoiceAnswerChange(index, e.target.value)
+                      }
+                      sx={{
+                        "& .MuiFormControlLabel-root": {
+                          // Style the radio button container
+                          marginBottom: 0.5, // Small margin below each option
+                          "& .MuiButtonBase-root": {
+                            // Style the radio button itself
+                            padding: "8px", // Match size of TextField size="small" padding area
+                          },
+                        },
+                        fontFamily: "Poppins", // Match surrounding text font
+                        fontSize: "14px",
+                        color: "#404258", // Match surrounding text color
+                      }}
+                    >
+                      {question.options.map((option, optIndex) => (
+                        // Use Typography in label to control font/size
+                        <FormControlLabel
+                          key={optIndex}
+                          value={option} // Value is the option text
+                          control={<Radio size="small" />}
+                          label={
+                            <Typography
+                              variant="body2"
+                              sx={{
+                                fontSize: "0.875rem",
+                                fontFamily: "Poppins",
+                                color: "#404258",
+                              }}
+                            >
+                              {option}
+                            </Typography>
+                          }
+                        />
+                      ))}
+                    </RadioGroup>
+                  )}
+                {question.questionType === "multi_choice" &&
+                  Array.isArray(question.options) &&
+                  question.options.length > 0 && (
+                    <Box
+                      sx={{
+                        fontFamily: "Poppins",
+                        fontSize: "14px",
+                        color: "#404258",
+                        display: "flex",
+                        flexWrap: "wrap", // Wrap to next line on small screens
+                        gap: 2, // spacing between items
+                        alignItems: "center",
+                      }}
+                    >
+                      {question.options.map((option, optIndex) => (
+                        <FormControlLabel
+                          key={optIndex}
+                          control={
+                            <Checkbox
+                              checked={
+                                Array.isArray(formData.answers[index]) &&
+                                formData.answers[index].includes(option)
+                              }
+                              onChange={(e) =>
+                                handleMultiChoiceAnswerChange(
+                                  index,
+                                  option,
+                                  e.target.checked
+                                )
+                              }
+                              color="primary"
+                              size="small"
+                            />
+                          }
+                          label={
+                            <Typography
+                              variant="body2"
+                              sx={{
+                                fontSize: "0.875rem",
+                                fontFamily: "Poppins",
+                                color: "#404258",
+                              }}
+                            >
+                              {option}
+                            </Typography>
+                          }
+                          sx={{
+                            margin: 0,
+                          }}
+                        />
+                      ))}
+                    </Box>
+                  )}
+                {/* Default to TextField for Short/Long Answer or unknown types */}
+                {(question.questionType === "short_answer" ||
+                  question.questionType === "long_answer" ||
+                  !["yes/no", "single_choice", "multi_choice"].includes(
+                    question.questionType
+                  )) && (
+                  <TextField
+                    fullWidth
+                    variant="outlined"
+                    size="small"
+                    // Apply consistent TextField styles
+                    sx={textFieldStyles}
+                    value={formData.answers[index] || ""}
+                    onChange={(e) =>
+                      handleTextAnswerChange(index, e.target.value)
+                    }
+                    multiline={question.questionType === "long_answer"} // Enable multiline for long answer
+                    rows={question.questionType === "long_answer" ? 3 : 1} // Set rows for long answer
+                    placeholder={`Enter your answer...`} // Placeholder text
+                    // Note: Mui TextField required prop adds * visual, actual validation is in handler
+                    required={question.isMandatory}
+                  />
+                )}
+                {/* Message if choice question has no options */}
+                {(question.questionType === "single_choice" ||
+                  question.questionType === "multi_choice") &&
+                  (!Array.isArray(question.options) ||
+                    question.options.length === 0) && (
+                    <Typography
+                      variant="body2"
+                      color="error"
+                      sx={{ mt: 1, fontSize: "0.75rem" }}
+                    >
+                      Error: No options available for this question.
+                    </Typography>
+                  )}
               </Box>
             ))}
           </Box>
         )}
 
-         {/* Message if no screening questions */}
+        {/* Message if no screening questions */}
         {filteredQuestions?.length === 0 && (
-            <Box mb={4} sx={{ textAlign: 'center', py: 2, border: '1px dashed #ccc', borderRadius: 1}}>
-              <Typography
-                sx={{
-                  fontFamily: "Satoshi",
-                  fontWeight: 500,
-                  fontSize: "14px",
-                  color: "#404258",
-                }}
-              >
-                No screening questions provided for this job.
-              </Typography>
-           </Box>
-         )}
-
+          <Box
+            mb={4}
+            sx={{
+              textAlign: "center",
+              py: 2,
+              border: "1px dashed #ccc",
+              borderRadius: 1,
+            }}
+          >
+            <Typography
+              sx={{
+                fontFamily: "Satoshi",
+                fontWeight: 500,
+                fontSize: "14px",
+                color: "#404258",
+              }}
+            >
+              No screening questions provided for this job.
+            </Typography>
+          </Box>
+        )}
 
         {/* Apply Button */}
         <Button
@@ -770,21 +900,20 @@ const ScreeningView = () => {
             "&:hover": {
               bgcolor: applied ? "success.dark" : "#3C7EFC", // Darker hover for success/primary
             },
-             '&:disabled': { bgcolor: '#a0c3fc', color: '#fff' } // Disabled state style
+            "&:disabled": { bgcolor: "#a0c3fc", color: "#fff" }, // Disabled state style
           }}
         >
-           {/* Show loader and text when uploading/submitting */}
-           {(uploading || (isApplyDisabled && applyButtonText === "Submit Application")) ? (
-               <>
-                 <CircularProgress size={20} color="inherit" sx={{ mr: 1 }} />
-                 {applyButtonText}
-               </>
-             ) : (
-               applyButtonText
-             )}
+          {/* Show loader and text when uploading/submitting */}
+          {uploading ||
+          (isApplyDisabled && applyButtonText === "Submit Application") ? (
+            <>
+              <CircularProgress size={20} color="inherit" sx={{ mr: 1 }} />
+              {applyButtonText}
+            </>
+          ) : (
+            applyButtonText
+          )}
         </Button>
-
-
       </Box>
 
       {/* Resume Upload Confirmation Dialog (Kept original style) */}
@@ -797,8 +926,13 @@ const ScreeningView = () => {
           </Typography>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setOpenDialog(false)} color="primary">Cancel</Button> {/* Keep original color */}
-          <Button onClick={confirmUpload} color="primary" variant="contained"> {/* Keep original color and variant */}
+          <Button onClick={() => setOpenDialog(false)} color="primary">
+            Cancel
+          </Button>{" "}
+          {/* Keep original color */}
+          <Button onClick={confirmUpload} color="primary" variant="contained">
+            {" "}
+            {/* Keep original color and variant */}
             Replace Resume
           </Button>
         </DialogActions>
