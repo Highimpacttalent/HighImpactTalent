@@ -1093,7 +1093,7 @@ const JobUploadPage = () => {
             <Typography sx={{ ...formLabelStyle }}>
               Job Location  
             </Typography>
-            <Select
+            <Select 
               options={filteredCities}
               value={selectedCity}
               styles={customSelectStyle}
@@ -1395,59 +1395,57 @@ const JobUploadPage = () => {
           </div>
 
           {/* Graduation Year Range (Min - Max Batch) - Using Selects matching image & backend structure */}
-          <div className="mb-4">
-            <Typography sx={{ ...formLabelStyle }}>
-              Graduation Year  <span style={{ color: "red" }}>*</span>
-            </Typography>
-            <Grid container spacing={2}>
-              <Grid item xs={12} sm={6}>
-                <Select
-                  options={batchYearOptions}
-                  value={
-                    formData.graduationYear.minBatch !== ""
-                      ? batchYearOptions.find(
-                          (opt) =>
-                            opt.value === formData.graduationYear.minBatch
-                        )
-                      : null
-                  }
-                  onChange={(selectedOption) =>
-                    handleRangeSelectChange(
-                      "graduationYear",
-                      "minBatch",
-                      selectedOption
-                    )
-                  }
-                  placeholder="Min Batch"
-                  isClearable
-                  styles={customSelectStyle}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <Select
-                  options={batchYearOptions}
-                  value={
-                    formData.graduationYear.maxBatch !== ""
-                      ? batchYearOptions.find(
-                          (opt) =>
-                            opt.value === formData.graduationYear.maxBatch
-                        )
-                      : null
-                  }
-                  onChange={(selectedOption) =>
-                    handleRangeSelectChange(
-                      "graduationYear",
-                      "maxBatch",
-                      selectedOption
-                    )
-                  }
-                  placeholder="Max Batch"
-                  isClearable
-                  styles={customSelectStyle}
-                />
-              </Grid>
-            </Grid>
-          </div>
+         <div className="mb-4">
+  <Typography sx={{ ...formLabelStyle }}>
+    Graduation Year <span style={{ color: "red" }}>*</span>
+  </Typography>
+  <Grid container spacing={2}>
+    <Grid item xs={12} sm={6}>
+      <Select
+        options={batchYearOptions}
+        value={
+          formData.graduationYear.minBatch !== ""
+            ? batchYearOptions.find(
+                (opt) => opt.value === formData.graduationYear.minBatch
+              )
+            : null
+        }
+        onChange={(selectedOption) =>
+          handleRangeSelectChange("graduationYear", "minBatch", selectedOption)
+        }
+        placeholder="Min Batch"
+        isClearable
+        styles={customSelectStyle}
+      />
+    </Grid>
+
+    <Grid item xs={12} sm={6}>
+      <Select
+        options={
+          formData.graduationYear.minBatch
+            ? batchYearOptions.filter(
+                (opt) => opt.value >= formData.graduationYear.minBatch
+              )
+            : batchYearOptions
+        }
+        value={
+          formData.graduationYear.maxBatch !== ""
+            ? batchYearOptions.find(
+                (opt) => opt.value === formData.graduationYear.maxBatch
+              )
+            : null
+        }
+        onChange={(selectedOption) =>
+          handleRangeSelectChange("graduationYear", "maxBatch", selectedOption)
+        }
+        placeholder="Max Batch"
+        isClearable
+        styles={customSelectStyle}
+      />
+    </Grid>
+  </Grid>
+</div>
+
 
           {/* Section: Applications */}
           <Typography sx={{ ...sectionTitleStyle }}>Applications</Typography>
