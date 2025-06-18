@@ -44,10 +44,6 @@ export const register = async (req, res, next) => {
     next("Designation is required!");
     return;
   }
-  if (!location) {
-    next("Company Location is required!");
-    return;
-  }
   if (!numberOfEmployees) {
     next("Number of Employees is required!");
     return;
@@ -75,7 +71,7 @@ export const register = async (req, res, next) => {
       copmanyType,
       mobileNumber,
       designation,
-      location,
+      location: location || "",
       numberOfEmployees,
       organizationType,
       profileUrl: profileUrl || "",
