@@ -33,7 +33,6 @@ const companySchema = new Schema({
   },
   location: {
     type: String,
-    required: [true, "Company Location is required"],
   },
   numberOfEmployees: {
     type: String,
