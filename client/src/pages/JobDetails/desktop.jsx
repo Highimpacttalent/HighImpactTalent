@@ -22,6 +22,7 @@ import ReactMarkdown from "react-markdown";
 const JobDetail = () => {
   const { id } = useParams();
   const { user } = useSelector((state) => state.user);
+  let AlreadyApplied = false; 
   const [job, setJob] = useState(null);
   const [similarJobs, setSimilarJobs] = useState([]);
   const [isFetching, setIsFetching] = useState(false);
@@ -38,6 +39,12 @@ const JobDetail = () => {
         if (res?.data) {
           setJob(res.data);
           setSimilarJobs(res.similarJobs);
+          console.log(job._id)
+          console.log(user?.appliedJobs)
+          if(user?.appliedJobs?.includes(job._id)){ 
+            AlreadyApplied = true;
+            console.log(AlreadyApplied)
+          }
         }
       } catch (error) {
         console.error("Error fetching job details:", error);

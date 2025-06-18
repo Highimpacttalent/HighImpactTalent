@@ -480,7 +480,7 @@ const ScreeningView = () => {
   // --- Render Logic ---
 
   // Determine Apply button state and text
-  const isApplyDisabled = !applyButton || applied || uploading; // Disable if no resume, already applied, or uploading
+  const isApplyDisabled = !applyButton || uploading; // Disable if no resume, already applied, or uploading
   const applyButtonText = applied
     ? "View Application Status"
     : uploading
