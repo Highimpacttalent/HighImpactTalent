@@ -46,6 +46,11 @@ const JobCard = ({ job, flag = false, enable = false }) => {
   const navigate = useNavigate();
   const experience = user?.experience;
   let noteligible = false;
+  console.log(user?.appliedJobs)
+  console.log(job._id)
+  const AlreadyApplied = user?.appliedJobs?.includes(job._id);
+
+  
   
   if (job?.experience && job?.experience > experience) {
     noteligible = true;
@@ -376,7 +381,7 @@ const JobCard = ({ job, flag = false, enable = false }) => {
           <Button
             variant="contained"
             color="primary"
-            disabled={noteligible}
+            disabled={noteligible && AlreadyApplied}
             sx={{ borderRadius: 40, fontFamily: "Poppins" }}
             onClick={() => {
               if (job?.applicationLink && job?.applicationLink.trim() !== "") {
@@ -393,7 +398,7 @@ const JobCard = ({ job, flag = false, enable = false }) => {
               }
             }}
           >
-            Apply Now
+            {AlreadyApplied ? "Already Applied" : "Apply Now"}
           </Button>
         ) : null}
       </CardActions>
