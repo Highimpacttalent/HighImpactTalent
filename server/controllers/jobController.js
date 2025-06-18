@@ -39,7 +39,7 @@ export const createJob = async (req, res, next) => {
     } = req.body;
 
     // Validate required fields
-    if (!jobTitle || !jobLocation || !jobDescription || !workType || !workMode) {
+    if (!jobTitle  || !jobDescription || !workType || !workMode) {
       return res
         .status(400)
         .json({ message: "Please Provide All Required Fields" });
@@ -55,7 +55,7 @@ export const createJob = async (req, res, next) => {
     // Create job post object
     const jobPost = {
       jobTitle,
-      jobLocation,
+      jobLocation: jobLocation || 'Hybrid',
       ...(salary && !salaryConfidential && { salary }),
       salaryConfidential,
       salaryCategory,

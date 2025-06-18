@@ -634,7 +634,6 @@ const JobUploadPage = () => {
     // Frontend Basic Validation (based on backend required fields and image *'s)
     const requiredFields = [
       "jobTitle",
-      "jobLocation",
       "jobDescription",
       "workType",
       "workMode",
@@ -1092,7 +1091,7 @@ const JobUploadPage = () => {
           {/* Job Location - Kept existing react-select implementation */}
           <div className="mb-4">
             <Typography sx={{ ...formLabelStyle }}>
-              Job Location  <span style={{ color: "red" }}>*</span>
+              Job Location  
             </Typography>
             <Select
               options={filteredCities}
