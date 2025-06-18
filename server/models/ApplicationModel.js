@@ -58,11 +58,6 @@ const applicationSchema = new Schema({
         type: String,
         required: true
       },
-      questionType: {
-        type: String,
-        enum: ['yes/no', 'single_choice', 'multi_choice', 'short_answer', 'long_answer'],
-        required: true
-      },
       answer: {
         type: mongoose.Schema.Types.Mixed, // Can store String, Array, or Boolean
         required: true

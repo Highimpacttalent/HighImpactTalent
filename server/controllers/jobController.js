@@ -31,7 +31,7 @@ export const createJob = async (req, res, next) => {
       // New fields
       graduationYear,
       tags,
-      courseType,
+      //courseType,
       diversityPreferences,
       category,
       functionalArea,
@@ -72,7 +72,7 @@ export const createJob = async (req, res, next) => {
       // New fields with optional handling
       ...(graduationYear && { graduationYear }),
       tags: Array.isArray(tags) ? tags : [],
-      ...(courseType && { courseType }),
+      //...(courseType && { courseType }),
       ...(diversityPreferences && { diversityPreferences }),
       category: category || "",
       functionalArea: functionalArea || "",

@@ -101,10 +101,6 @@ const jobSchema = new mongoose.Schema(
       type: [String],
       default: [],
     },
-    courseType: {
-      type: String,
-      enum: ["Full time", "Part time", "Distance Learning Program", "Executive Program", "Certification"],
-    },
     // Diversity and inclusion fields
     diversityPreferences: {
       femaleCandidates: { type: Boolean, default: false },

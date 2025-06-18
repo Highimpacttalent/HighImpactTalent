@@ -125,7 +125,7 @@ const Footer = () => {
         </Grid>
 
         <Typography variant="body2" textAlign="center" sx={{ mt: 4, fontFamily: "Poppins", color: "#404258" }}>
-          &copy; 2024 HighImpactTalentEnquiry |{" "}
+          &copy; 2025 HighImpactTalentEnquiry |{" "}
           <a
             href="mailto:highimpacttalentenquiry@gmail.com"
             style={{
