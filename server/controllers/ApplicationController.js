@@ -663,6 +663,63 @@ export const getScreeningFilterOptions = async (req, res) => {
   }
 };
 
+// Add this to your backend controller file
+export const getApplicationStageCounts = async (req, res) => {
+  try {
+    const jobId = req.params.jobid;
+
+    // Validate job ID
+    if (!mongoose.Types.ObjectId.isValid(jobId)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid job ID'
+      });
+    }
+
+    // Get counts grouped by status
+    const pipeline = [
+      {
+        $match: {
+          job: new mongoose.Types.ObjectId(jobId)
+        }
+      },
+      {
+        $group: {
+          _id: '$status',
+          count: { $sum: 1 }
+        }
+      },
+      {
+        $project: {
+          status: '$_id',
+          count: 1,
+          _id: 0
+        }
+      }
+    ];
+
+    const counts = await Application.aggregate(pipeline);
+
+    // Convert array to object with status as keys
+    const stageCounts = {};
+    counts.forEach(item => {
+      stageCounts[item.status] = item.count;
+    });
+
+    res.status(200).json({
+      success: true,
+      stageCounts
+    });
+
+  } catch (error) {
+    console.error('Error getting stage counts:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+};
+
 export const  getallApplicationOfApplicant = async(req,res)=>{
   try {
     const id = req.params.applicantid;
