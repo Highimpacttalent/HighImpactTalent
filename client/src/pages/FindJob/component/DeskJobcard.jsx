@@ -44,7 +44,7 @@ const JobCard = ({ job, flag = false }) => {
   }
   if (job?.experience?.minExperience && job?.experience.minExperience > experience) {
     noteligible = true;
-  } 
+  }
   useEffect(() => {
     setLike(user?.likedJobs?.includes(job._id));
   }, [user, job._id]);

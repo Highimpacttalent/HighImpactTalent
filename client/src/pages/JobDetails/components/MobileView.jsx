@@ -44,10 +44,13 @@ const JobCard = ({ job,flag = false,enable = false }) => {
   const experience = user.experience;
   let noteligible = false;
   console.log(job?.experience, typeof(job?.experience), typeof(user.experience))
-    if(job?.experience && job?.experience > experience){
-      console.log("Ho")
-      noteligible = true;
-      }
+    
+  if (job?.experience && job?.experience > experience) {
+    noteligible = true;
+  }
+  if (job?.experience?.minExperience && job?.experience.minExperience > experience) {
+    noteligible = true;
+  }
 
   useEffect(() => {
     setLike(user?.likedJobs?.includes(job._id));
@@ -112,21 +115,31 @@ const JobCard = ({ job,flag = false,enable = false }) => {
             />
             <Chip
               icon={<WorkOutlineOutlined sx={{color:"#474E68"}}/>}
-              label={`${job?.experience}+ years experience`}
+               label={`${job?.experience?.minExperience || job?.experience }+ years experience`}
               variant="contained"
               sx={{color:"#474E68",fontWeight:"400",bgcolor:"EAEAEA",fontFamily:"Poppins"}}
             />
             </Box>
             <Chip
-              icon={<CurrencyRupee sx={{color:"#474E68"}}/>}
-              label={
-                job.salaryConfidential
-                  ? "Confidential"
-                  : `${job.salary.toLocaleString()} (${job.salaryCategory})`
-              }
-              variant="contained"
-              sx={{color:"#474E68",fontWeight:"400",bgcolor:"EAEAEA",fontFamily:"Poppins"}}
-            />
+                icon={<CurrencyRupee sx={{ color: "#474E68" }} />}
+                label={
+                  job.salaryConfidential
+                    ? "Confidential"
+                    : `${Number(job.salary.maxSalary||job.salary).toLocaleString("en-IN")} (${
+                        job.salaryCategory
+                      }) LPA`
+                }
+                variant="contained"
+                sx={{
+                  color: "#EAEAEA",
+                  fontWeight: "400",
+                  p: 1,
+                  "& .MuiChip-label": {
+                    fontSize: "14px",
+                    color: "#474E68",
+                  },
+                }}
+              />
            </Box>
 
         {/* Job Description */}
