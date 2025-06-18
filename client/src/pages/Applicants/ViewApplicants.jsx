@@ -241,6 +241,7 @@ const JobApplications = () => {
   const [allApplications, setAllApplications] = useState([]);
   const [filteredApps, setFilteredApps] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [filterLoading, setFilterLoading] = useState(false);
   const [error, setError] = useState(null);
   const [activeStep, setActiveStep] = useState(0);
   const [searchKeyword, setSearchKeyword] = useState("");
@@ -279,39 +280,87 @@ const JobApplications = () => {
 
   const [screeningQuestions, setScreeningQuestions] = useState([]);
 
-  useEffect(() => {
-    const fetchApplications = async () => {
-      try {
-        const response = await apiRequest({
-          url: `application/get-applications/${jobId}`,
-          method: "GET",
-        });
-
-        if (!response.success) {
-          throw new Error(response.message || "Failed to fetch applications");
+  // Fetch applications with server-side filtering
+  const fetchApplications = async (filterParams = {}, status = null) => {
+    try {
+      setFilterLoading(true);
+      
+      const queryParams = new URLSearchParams();
+      
+      // Add status if provided
+      if (status) {
+        queryParams.append('status', status);
+      }
+      
+      // Add filter parameters
+      Object.entries(filterParams).forEach(([key, value]) => {
+        if (value && value.toString().trim()) {
+          queryParams.append(key, value.toString().trim());
         }
+      });
 
-        const enriched = response.applications.map((app) => {
-          const { totalScore, breakdown } = computeMatchScore(
-            app.job,
-            app.applicant
-          );
-          return {
-            ...app,
-            matchScore: totalScore,
-            matchBreakdown: breakdown.trim(),
-          };
-        });
+      const response = await apiRequest({
+        url: `application/get-applications/${jobId}?${queryParams.toString()}`,
+        method: "GET",
+      });
 
-        setAllApplications(enriched);
-        setApplications(enriched);
-        setFilteredApps(enriched);
+      if (!response.success) {
+        throw new Error(response.message || "Failed to fetch applications");
+      }
 
-        const counts = enriched.reduce((acc, app) => {
-          acc[app.status] = (acc[app.status] || 0) + 1;
-          return acc;
-        }, {});
-        setStageCounts(counts);
+      const enriched = response.applications.map((app) => {
+        const { totalScore, breakdown } = computeMatchScore(
+          app.job,
+          app.applicant
+        );
+        return {
+          ...app,
+          matchScore: totalScore,
+          matchBreakdown: breakdown.trim(),
+        };
+      });
+
+      return enriched;
+    } catch (err) {
+      setError(err.message);
+      return [];
+    } finally {
+      setFilterLoading(false);
+    }
+  };
+
+  //Fetch stage counts
+  const fetchStageCounts = async () => {
+    try {
+      const response = await apiRequest({
+        url: `application/get-stage-counts/${jobId}`,
+        method: "GET",
+      });
+
+      if (response.success) {
+        setStageCounts(response.stageCounts || {});
+      }
+    } catch (err) {
+      console.error("Error fetching stage counts:", err);
+    }
+  };
+
+  useEffect(() => {
+    const initializeData = async () => {
+      setLoading(true);
+      try {
+        // Fetch all applications for initial load
+        const allApps = await fetchApplications();
+        setAllApplications(allApps);
+        
+        // Filter by current step
+        const currentStatus = steps[activeStep];
+        const filteredByStatus = allApps.filter((app) => app.status === currentStatus);
+        setApplications(filteredByStatus);
+        setFilteredApps(filteredByStatus);
+        
+        // Fetch stage counts
+        await fetchStageCounts();
 
       } catch (err) {
         setError(err.message);
@@ -335,121 +384,75 @@ const JobApplications = () => {
       }
     };
 
-    fetchApplications();
+    initializeData();
     fetchScreeningQuestions();
   }, [jobId]);
 
-  const handleStepClick = (index) => {
+  const handleStepClick = async (index) => {
     setActiveStep(index);
     setSelectedApplications(new Set());
+    
+    const currentStatus = steps[index];
+    
+    // If filters are applied, fetch with filters and status
+    const hasActiveFilters = Object.values(filters).some(value => 
+      value && value.toString().trim()
+    );
+    
+    if (hasActiveFilters) {
+      const filteredApps = await fetchApplications(filters, currentStatus);
+      setApplications(filteredApps);
+      setFilteredApps(filteredApps);
+    } else {
+      // Use cached data if no filters
+      const filtered = allApplications.filter((app) => app.status === currentStatus);
+      setApplications(filtered);
+      setFilteredApps(filtered);
+    }
   };
-
-  useEffect(() => {
-    const status = steps[activeStep];
-    const filtered = allApplications.filter((app) => app.status === status);
-    setApplications(filtered);
-    setFilteredApps(filtered);
-    setSelectedApplications(new Set());
-  }, [activeStep, allApplications]);
 
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
     setFilters({ ...filters, [name]: value });
   };
 
-  const applyFilters = () => {
-    let filtered = applications;
-    
-    if (filters.keywords) {
-      const keywordRegex = new RegExp(filters.keywords, "i");
-      filtered = filtered.filter(app => 
-        keywordRegex.test(app.applicant.firstName) ||
-        keywordRegex.test(app.applicant.lastName) ||
-        keywordRegex.test(app.applicant.email) ||
-        keywordRegex.test(app.applicant.currentDesignation) ||
-        keywordRegex.test(app.applicant.currentCompany) ||
-        (app.applicant.skills && app.applicant.skills.some(skill => 
-          keywordRegex.test(skill)
-        ) ||
-        keywordRegex.test(app.applicant.about)
-      ));
-    }
-    
-    if (filters.location) {
-      const locationValue = filters.location.trim();
-      if (locationValue.includes(",")) {
-        const locations = locationValue.split(",").map(loc => loc.trim());
-        filtered = filtered.filter(app => 
-          locations.some(loc => 
-            new RegExp(loc, "i").test(app.applicant.currentLocation) ||
-            (app.applicant.preferredLocations && 
-             app.applicant.preferredLocations.some(prefLoc => 
-               new RegExp(loc, "i").test(prefLoc)
-             ))
-          )
-        );
-      } else {
-        const locationRegex = new RegExp(locationValue, "i");
-        filtered = filtered.filter(app => 
-          locationRegex.test(app.applicant.currentLocation) ||
-          (app.applicant.preferredLocations && 
-           app.applicant.preferredLocations.some(loc => 
-             locationRegex.test(loc)
-           ))
-        );
-      }
-    }
-    
-    if (filters.currentDesignation) {
-      const designationValue = filters.currentDesignation.trim();
-      if (designationValue.includes(",")) {
-        const designations = designationValue.split(",").map(des => des.trim());
-        filtered = filtered.filter(app => 
-          designations.some(des => 
-            new RegExp(des, "i").test(app.applicant.currentDesignation)
-          )
-        );
-      } else {
-        filtered = filtered.filter(app => 
-          new RegExp(designationValue, "i").test(app.applicant.currentDesignation)
-        );
-      }
-    }
-    
-    if (filters.totalYearsInConsulting) {
-      const [min, max] = filters.totalYearsInConsulting.split("-").map(Number);
-      filtered = filtered.filter(app => {
-        const years = app.applicant.totalYearsInConsulting || 0;
-        return years >= min && (max === 100 || years < max);
-      });
-    }
-    
-    screeningQuestions.forEach(question => {
-      const filterKey = `screening_${question._id}`;
-      if (filters[filterKey]) {
-        filtered = filtered.filter(app => {
-          const answer = app.screeningAnswers?.find(a => 
-            a.questionId === question._id
-          );
-          if (!answer) return false;
-          
-          if (question.questionType === "yes/no") {
-            return answer.answer === (filters[filterKey] === "Yes");
-          }
-          if (question.questionType === "single_choice" || 
-              question.questionType === "multi_choice") {
-            return answer.answer === filters[filterKey];
-          }
-          return true;
-        });
-      }
-    });
-    
-    setFilteredApps(filtered);
-    setSelectedApplications(new Set());
+  const applyFilters = async () => {
+  const currentStatus = steps[activeStep];
+  
+  // Prepare filter parameters for API
+  const filterParams = {
+    keywords: filters.keywords || '',
+    location: filters.location || '',
+    currentDesignation: filters.currentDesignation || '',
+    totalYearsInConsulting: filters.totalYearsInConsulting || ''
   };
+  
+  // Prepare screening filters in the format backend expects
+  const screeningFilters = {};
+  
+  screeningQuestions.forEach(question => {
+    const filterKey = `screening_${question._id}`;
+    if (filters[filterKey] && filters[filterKey].length > 0) {
+      screeningFilters[question._id] = {
+        questionType: question.questionType,
+        expectedAnswer: filters[filterKey]
+      };
+    }
+  });
 
-  const clearFilters = () => {
+  // Only add screeningFilters if there are any
+  if (Object.keys(screeningFilters).length > 0) {
+    filterParams.screeningFilters = JSON.stringify(screeningFilters);
+  }
+  
+  // Fetch filtered applications from server
+  const filteredApps = await fetchApplications(filterParams, currentStatus);
+  setApplications(filteredApps);
+  setFilteredApps(filteredApps);
+  setSelectedApplications(new Set());
+};
+
+  const clearFilters = async () => {
     const resetFilters = {
       keywords: "",
       location: "",
@@ -457,12 +460,18 @@ const JobApplications = () => {
       totalYearsInConsulting: "",
     };
     
+    // Reset screening question filters
     screeningQuestions.forEach(question => {
       resetFilters[`screening_${question._id}`] = "";
     });
     
     setFilters(resetFilters);
-    setFilteredApps(applications);
+    
+    // Fetch applications without filters
+    const currentStatus = steps[activeStep];
+    const unfilteredApps = await fetchApplications({}, currentStatus);
+    setApplications(unfilteredApps);
+    setFilteredApps(unfilteredApps);
     setSelectedApplications(new Set());
   };
 
@@ -567,6 +576,8 @@ const JobApplications = () => {
           variant="contained"
           fullWidth
           onClick={applyFilters}
+          disabled={filterLoading}
+          startIcon={filterLoading ? <CircularProgress size={16} color="inherit" /> : null}
           sx={{ 
             fontFamily: "Satoshi", 
             fontWeight: 600,
@@ -576,12 +587,13 @@ const JobApplications = () => {
             }
           }}
         >
-          Apply Filters
+          {filterLoading ? "Applying..." : "Apply Filters"}
         </Button>
         <Button
           variant="outlined"
           fullWidth
           onClick={clearFilters}
+          disabled={filterLoading}
           sx={{ 
             fontFamily: "Satoshi", 
             fontWeight: 600,
@@ -648,7 +660,20 @@ const JobApplications = () => {
   };
 
   const restoreSearch = async () => {
-    setFilteredApps(applications);
+    // Reset to current filtered applications without AI search
+    const currentStatus = steps[activeStep];
+    const hasActiveFilters = Object.values(filters).some(value => 
+      value && value.toString().trim()
+    );
+    
+    if (hasActiveFilters) {
+      const filteredApps = await fetchApplications(filters, currentStatus);
+      setFilteredApps(filteredApps);
+    } else {
+      const filtered = allApplications.filter((app) => app.status === currentStatus);
+      setFilteredApps(filtered);
+    }
+    
     setSearchKeyword("");
   };
 
@@ -709,7 +734,25 @@ const JobApplications = () => {
           message: `${response.data.modifiedCount} applications advanced successfully`,
           severity: "success",
         });
-        window.location.reload();
+        
+        // Refresh data after bulk action
+        await fetchStageCounts();
+        const currentStatus = steps[activeStep];
+        const hasActiveFilters = Object.values(filters).some(value => 
+          value && value.toString().trim()
+        );
+        
+        if (hasActiveFilters) {
+          const filteredApps = await fetchApplications(filters, currentStatus);
+          setApplications(filteredApps);
+          setFilteredApps(filteredApps);
+        } else {
+          const allApps = await fetchApplications();
+          setAllApplications(allApps);
+          const filtered = allApps.filter((app) => app.status === currentStatus);
+          setApplications(filtered);
+          setFilteredApps(filtered);
+        }
       }
     } catch (err) {
       setSnackbar({
@@ -745,7 +788,25 @@ const JobApplications = () => {
           message: `${response.data.modifiedCount} applications rejected successfully`,
           severity: "success",
         });
-        window.location.reload();
+        
+        // Refresh data after bulk action
+        await fetchStageCounts();
+        const currentStatus = steps[activeStep];
+        const hasActiveFilters = Object.values(filters).some(value => 
+          value && value.toString().trim()
+        );
+        
+        if (hasActiveFilters) {
+          const filteredApps = await fetchApplications(filters, currentStatus);
+          setApplications(filteredApps);
+          setFilteredApps(filteredApps);
+        } else {
+          const allApps = await fetchApplications();
+          setAllApplications(allApps);
+          const filtered = allApps.filter((app) => app.status === currentStatus);
+          setApplications(filtered);
+          setFilteredApps(filtered);
+        }
       }
     } catch (err) {
       setSnackbar({
@@ -780,7 +841,25 @@ const JobApplications = () => {
           message: `All ${response.data.modifiedCount} applications at this stage rejected`,
           severity: "success",
         });
-        window.location.reload();
+        
+        // Refresh data after bulk action
+        await fetchStageCounts();
+        const currentStatus = steps[activeStep];
+        const hasActiveFilters = Object.values(filters).some(value => 
+          value && value.toString().trim()
+        );
+        
+        if (hasActiveFilters) {
+          const filteredApps = await fetchApplications(filters, currentStatus);
+          setApplications(filteredApps);
+          setFilteredApps(filteredApps);
+        } else {
+          const allApps = await fetchApplications();
+          setAllApplications(allApps);
+          const filtered = allApps.filter((app) => app.status === currentStatus);
+          setApplications(filtered);
+          setFilteredApps(filtered);
+        }
       }
     } catch (err) {
       setSnackbar({
