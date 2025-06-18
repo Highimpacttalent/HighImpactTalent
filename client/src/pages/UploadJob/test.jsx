@@ -185,13 +185,6 @@ const JobUploadPage = () => {
   ];
   const workTypeOptions = ["Full-Time", "Part-Time", "Contract", "Temporary"];
   const workModeOptions = ["Work From Office", "Remote", "Hybrid"];
-  const courseTypeOptions = [
-    { value: "Full time", label: "Full time" },
-    { value: "Part time", label: "Part time" },
-    { value: "Distance Learning Program", label: "Distance Learning Program" },
-    { value: "Executive Program", label: "Executive Program" },
-    { value: "Certification", label: "Certification" },
-  ];
 
   const screeningQuestionTypeOptions = [
     { value: "yes/no", label: "Yes/No" },
@@ -264,7 +257,6 @@ const JobUploadPage = () => {
     skills: [], // [string]
     graduationYear: { minBatch: "", maxBatch: "" }, // object
     tags: [], // [string]
-    courseType: "", // string (enum)
     diversityPreferences: {
       // object
       femaleCandidates: false,
@@ -640,7 +632,6 @@ const JobUploadPage = () => {
       "category",
       "functionalArea",
       "salaryCategory",
-      "courseType",
     ];
     for (const field of requiredFields) {
       const value = formData[field];
@@ -1362,36 +1353,6 @@ const JobUploadPage = () => {
               closeMenuOnSelect={false} // Keep menu open for multiple selections
               required // Validation handled in handleSubmit
             />
-          </div>
-
-          {/* Course Type Radio Group */}
-          <div className="mb-4">
-            <Typography sx={{ ...formLabelStyle }}>
-              Course Type  <span style={{ color: "red" }}>*</span>
-            </Typography>
-            <RadioGroup
-              row
-              name="courseType"
-              value={formData.courseType}
-              onChange={handleChange}
-              sx={{
-                "& .MuiFormControlLabel-root": { mr: { xs: 1, sm: 3 } },
-                flexWrap: "wrap",
-              }} // Allow wrapping
-            >
-              {courseTypeOptions.map((option) => (
-                <FormControlLabel
-                  key={option.value}
-                  value={option.value}
-                  control={<Radio size="small" />}
-                  label={
-                    <Typography sx={{ fontSize: "0.875rem", color: "#374151" }}>
-                      {option.label}
-                    </Typography>
-                  }
-                />
-              ))}
-            </RadioGroup>
           </div>
 
           {/* Graduation Year Range (Min - Max Batch) - Using Selects matching image & backend structure */}

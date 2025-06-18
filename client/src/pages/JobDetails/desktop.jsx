@@ -266,7 +266,7 @@ const JobDetail = () => {
               )}
 
               {/* Additional Job Information */}
-              {(job?.duration || job?.companyType || job?.courseType) && (
+              {(job?.duration || job?.companyType) && (
                 <Box sx={{ mb: 3 }}>
                   <Typography
                     sx={{
@@ -342,39 +342,6 @@ const JobDetail = () => {
                             }}
                           >
                             {job.companyType}
-                          </Typography>
-                        </Box>
-                      </Grid>
-                    )}
-                    {job?.courseType && (
-                      <Grid item xs={12} sm={4}>
-                        <Box
-                          sx={{
-                            p: 1.5,
-                            borderRadius: 1.5,
-                            bgcolor: "#f8f9fa",
-                            border: "1px solid #e9ecef",
-                            textAlign: "center",
-                          }}
-                        >
-                          <Typography
-                            sx={{
-                              fontSize: "0.8rem",
-                              color: "#6c757d",
-                              fontFamily: "Poppins",
-                              mb: 0.5,
-                            }}
-                          >
-                            Course Type
-                          </Typography>
-                          <Typography
-                            sx={{
-                              fontWeight: "600",
-                              color: "#404258",
-                              fontFamily: "sans-serif",
-                            }}
-                          >
-                            {job.courseType}
                           </Typography>
                         </Box>
                       </Grid>
