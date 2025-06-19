@@ -7,6 +7,7 @@ import {
   IconButton,
   InputBase,
   Button,
+  Autocomplete,
   FormControl,
   TextField,
   InputLabel,
@@ -215,20 +216,6 @@ const ActionButton = styled(Button)(({ theme, variant: variantProp }) => ({
   }),
 }));
 
-const SelectionChip = styled(Chip)(({ theme }) => ({
-  fontFamily: "Satoshi",
-  fontWeight: 500,
-  fontSize: "13px",
-  height: "28px",
-  backgroundColor: "#e3f2fd",
-  color: "#1976d2",
-  border: "1px solid #bbdefb",
-  "& .MuiChip-deleteIcon": {
-    color: "#1976d2",
-    fontSize: "18px",
-  },
-}));
-
 const JobApplications = () => {
   const steps = [
     "Applied",
@@ -255,6 +242,7 @@ const JobApplications = () => {
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [stageCounts, setStageCounts] = useState({});
+  const [cities, setCities] = useState();
   const currentUser = useSelector((state) => state.user.user);
 
   // Bulk selection states
@@ -346,6 +334,24 @@ const JobApplications = () => {
       console.error("Error fetching stage counts:", err);
     }
   };
+
+   useEffect(() => {
+      const fetchCities = async () => {
+        try {
+          const response = await fetch("/cities.csv");
+          const text = await response.text();
+          const rows = text.split("\n");
+          const cityList = rows.slice(1).map((row) => row.trim()).filter(Boolean).sort();
+  
+          setCities([...new Set(cityList)]);
+        } catch (error) {
+          console.error("Error loading cities:", error);
+          setCities([]);
+        }
+      };
+  
+      fetchCities();
+    }, []);
 
   useEffect(() => {
     const initializeData = async () => {
@@ -549,14 +555,24 @@ const FiltersContent = (
       >
         Location
       </Typography>
+      <Autocomplete
+    freeSolo
+    options={cities}
+    inputValue={filters.location}
+    onInputChange={(event, newValue) =>
+      handleFilterChange({ target: { name: "location", value: newValue } })
+    }
+    onChange={(event, newValue) =>
+      handleFilterChange({ target: { name: "location", value: newValue || "" } })
+    }
+    renderInput={(params) => (
       <TextField
+        {...params}
         name="location"
-        value={filters.location}
-        onChange={handleFilterChange}
         placeholder="City, country or region"
         size="small"
         fullWidth
-        sx={{ 
+         sx={{ 
           "& .MuiOutlinedInput-root": {
             borderRadius: "12px",
             backgroundColor: "#ffffff",
@@ -586,6 +602,8 @@ const FiltersContent = (
           }
         }}
       />
+    )}
+  />
     </Box>
 
     {/* Current Designation Field */}
