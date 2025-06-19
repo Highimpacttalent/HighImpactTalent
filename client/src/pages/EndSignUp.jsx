@@ -32,7 +32,7 @@ const RecruiterRedirectPage = () => {
   }, []);
 
   const handleStartExploring = () => {
-    navigate("/view-jobs")
+    navigate("/upload-a-job")
   };
 
   const getPersonalizationInsight = () => {
