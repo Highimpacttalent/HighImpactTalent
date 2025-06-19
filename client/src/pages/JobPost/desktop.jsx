@@ -113,8 +113,6 @@ const JobPosted = () => {
               selectedJob ? "md:w-1/2" : "md:w-full"
             }`}
             style={{ 
-              maxHeight: "calc(100vh - 120px)", 
-              overflowY: "auto",
               paddingRight: selectedJob ? "16px" : "0",
             }}
           >
@@ -145,12 +143,6 @@ const JobPosted = () => {
                 {jobs.map((job, index) => (
                   <Box 
                     key={job.id || index}
-                    sx={{ 
-                      transition: "all 0.2s ease-in-out",
-                      "&:hover": {
-                        transform: "translateY(-1px)",
-                      }
-                    }}
                   >
                     <JobCardRecriter 
                       job={job} 
