@@ -45,7 +45,6 @@ import SelectAllIcon from "@mui/icons-material/SelectAll";
 import { useSelector } from "react-redux";
 
 const computeMatchScore = (job, applicant) => {
-  // Weights
   const weights = {
     exp: 25,
     skills: 40,
@@ -55,7 +54,6 @@ const computeMatchScore = (job, applicant) => {
     sal: 5,
   };
 
-  // Sub‑scores
   let expScore = 0,
     skillsScore = 0,
     locScore = 0,
@@ -64,8 +62,9 @@ const computeMatchScore = (job, applicant) => {
     salScore = 0;
 
   // 1) Experience
-  if (job.experience) {
-    const ratio = Math.min(applicant.experience / job.experience, 1);
+  const jobMinExp = job.experience?.minExperience ?? job.experience;
+  if (jobMinExp !== undefined && jobMinExp !== null) {
+    const ratio = Math.min(applicant.experience / jobMinExp, 1);
     expScore = ratio * weights.exp;
   } else {
     expScore = weights.exp;
@@ -86,8 +85,8 @@ const computeMatchScore = (job, applicant) => {
   // 3) Location / Relocate
   if (job.jobLocation) {
     if (
-      applicant.currentLocation?.toLowerCase() ===
-        job.jobLocation.toLowerCase() ||
+      job.jobLocation.toLowerCase() === "hybrid" ||
+      applicant.currentLocation?.toLowerCase() === job.jobLocation.toLowerCase() ||
       applicant.openToRelocate?.toLowerCase() === "yes"
     ) {
       locScore = weights.loc;
@@ -115,15 +114,16 @@ const computeMatchScore = (job, applicant) => {
   }
 
   // 6) Salary Expectation
-  if (job.salary) {
+  const jobMinSalary = job.salary?.minSalary ?? job.salary;
+  if (jobMinSalary !== undefined && jobMinSalary !== null) {
     if (
       !applicant.expectedMinSalary ||
-      parseInt(applicant.expectedMinSalary, 10) <= parseInt(job.salary, 10)
+      parseInt(applicant.expectedMinSalary, 10) <= parseInt(jobMinSalary, 10)
     ) {
       salScore = weights.sal;
     }
   } else {
-    salScore = weights.sal; 
+    salScore = weights.sal;
   }
 
   const totalScore = Math.round(
@@ -133,12 +133,12 @@ const computeMatchScore = (job, applicant) => {
   const breakdown = `
 Candidate: ${applicant.firstName} ${applicant.lastName}
 Job Criteria:
-  • Required Exp: ${job.experience ?? "[none specified]"}
+  • Required Exp: ${jobMinExp ?? "[none specified]"}
   • Skills: ${job.skills?.length ? job.skills.join(", ") : "Not Provided"}
   • Location: ${job.jobLocation ?? "[none specified]"}
   • Work Type: ${job.workType || "[none specified]"}
   • Work Mode: ${job.workMode || "[none specified]"}
-  • Salary: ${job.salary ?? "[none specified]"}
+  • Min Salary: ${jobMinSalary ?? "[none specified]"}
 
 Applicant Profile:
   • Exp: ${applicant.experience}
@@ -164,8 +164,10 @@ Score by Category:
 → Total Match Score: ${totalScore}%
 `;
 
+  console.log(totalScore, breakdown);
   return { totalScore, breakdown };
 };
+
 
 const ActionButton = styled(Button)(({ theme, variant: variantProp }) => ({
   fontFamily: "Satoshi",
@@ -475,141 +477,391 @@ const JobApplications = () => {
     setSelectedApplications(new Set());
   };
 
-  const FiltersContent = (
-    <Box sx={{ p: 2, width: isMobile ? 250 : "auto" }}>
-      <FormControl fullWidth sx={{ mb: 2 }}>
-        <TextField
-          label="Keywords"
-          name="keywords"
-          value={filters.keywords}
-          onChange={handleFilterChange}
-          placeholder="Search by name, skills, etc."
-          size="small"
-          sx={{ "& .MuiInputLabel-root": { fontFamily: "Satoshi" } }}
-        />
-      </FormControl>
+const FiltersContent = (
+  <Box sx={{ p: 2, width: isMobile ? 250 : "auto" }}>
 
-      <FormControl fullWidth sx={{ mb: 2 }}>
-        <TextField
-          label="Location"
-          name="location"
-          value={filters.location}
-          onChange={handleFilterChange}
-          placeholder="City, country or region"
-          size="small"
-          sx={{ "& .MuiInputLabel-root": { fontFamily: "Satoshi" } }}
-        />
-      </FormControl>
+    {/* Keywords Field */}
+    <Box sx={{ mb: 3 }}>
+      <Typography 
+        variant="subtitle2" 
+        sx={{ 
+          fontFamily: "Satoshi, sans-serif", 
+          fontWeight: 600,
+          color: "#374151",
+          mb: 1.5,
+          fontSize: "0.875rem",
+          letterSpacing: "-0.01em"
+        }}
+      >
+        Keywords
+      </Typography>
+      <TextField
+        name="keywords"
+        value={filters.keywords}
+        onChange={handleFilterChange}
+        placeholder="Search by name, skills, expertise..."
+        size="small"
+        fullWidth
+        sx={{ 
+          "& .MuiOutlinedInput-root": {
+            borderRadius: "12px",
+            backgroundColor: "#ffffff",
+            border: "1.5px solid #e2e8f0",
+            fontFamily: "Poppins, sans-serif",
+            fontSize: "0.875rem",
+            transition: "all 0.2s ease-in-out",
+            "&:hover": {
+              borderColor: "#cbd5e1",
+              boxShadow: "0 2px 8px rgba(0, 0, 0, 0.04)"
+            },
+            "&.Mui-focused": {
+              borderColor: "#667eea",
+              boxShadow: "0 0 0 3px rgba(102, 126, 234, 0.1)",
+              backgroundColor: "#ffffff"
+            },
+            "& fieldset": {
+              border: "none"
+            }
+          },
+          "& .MuiOutlinedInput-input": {
+            padding: "12px 16px",
+            "&::placeholder": {
+              color: "#94a3b8",
+              opacity: 1
+            }
+          }
+        }}
+      />
+    </Box>
 
-      <FormControl fullWidth sx={{ mb: 2 }}>
-        <TextField
-          label="Current Designation"
-          name="currentDesignation"
-          value={filters.currentDesignation}
-          onChange={handleFilterChange}
-          placeholder="Job title or role"
-          size="small"
-          sx={{ "& .MuiInputLabel-root": { fontFamily: "Satoshi" } }}
-        />
-      </FormControl>
+    {/* Location Field */}
+    <Box sx={{ mb: 3 }}>
+      <Typography 
+        variant="subtitle2" 
+        sx={{ 
+          fontFamily: "Satoshi, sans-serif", 
+          fontWeight: 600,
+          color: "#374151",
+          mb: 1.5,
+          fontSize: "0.875rem",
+          letterSpacing: "-0.01em"
+        }}
+      >
+        Location
+      </Typography>
+      <TextField
+        name="location"
+        value={filters.location}
+        onChange={handleFilterChange}
+        placeholder="City, country or region"
+        size="small"
+        fullWidth
+        sx={{ 
+          "& .MuiOutlinedInput-root": {
+            borderRadius: "12px",
+            backgroundColor: "#ffffff",
+            border: "1.5px solid #e2e8f0",
+            fontFamily: "Poppins, sans-serif",
+            fontSize: "0.875rem",
+            transition: "all 0.2s ease-in-out",
+            "&:hover": {
+              borderColor: "#cbd5e1",
+              boxShadow: "0 2px 8px rgba(0, 0, 0, 0.04)"
+            },
+            "&.Mui-focused": {
+              borderColor: "#667eea",
+              boxShadow: "0 0 0 3px rgba(102, 126, 234, 0.1)",
+              backgroundColor: "#ffffff"
+            },
+            "& fieldset": {
+              border: "none"
+            }
+          },
+          "& .MuiOutlinedInput-input": {
+            padding: "12px 16px",
+            "&::placeholder": {
+              color: "#94a3b8",
+              opacity: 1
+            }
+          }
+        }}
+      />
+    </Box>
 
-      <FormControl fullWidth sx={{ mb: 2 }}>
-        <InputLabel sx={{ fontFamily: "Satoshi" }}>Years in Consulting</InputLabel>
+    {/* Current Designation Field */}
+    <Box sx={{ mb: 3 }}>
+      <Typography 
+        variant="subtitle2" 
+        sx={{ 
+          fontFamily: "Satoshi, sans-serif", 
+          fontWeight: 600,
+          color: "#374151",
+          mb: 1.5,
+          fontSize: "0.875rem",
+          letterSpacing: "-0.01em"
+        }}
+      >
+        Current Designation
+      </Typography>
+      <TextField
+        name="currentDesignation"
+        value={filters.currentDesignation}
+        onChange={handleFilterChange}
+        placeholder="Job title or role"
+        size="small"
+        fullWidth
+        sx={{ 
+          "& .MuiOutlinedInput-root": {
+            borderRadius: "12px",
+            backgroundColor: "#ffffff",
+            border: "1.5px solid #e2e8f0",
+            fontFamily: "Poppins, sans-serif",
+            fontSize: "0.875rem",
+            transition: "all 0.2s ease-in-out",
+            "&:hover": {
+              borderColor: "#cbd5e1",
+              boxShadow: "0 2px 8px rgba(0, 0, 0, 0.04)"
+            },
+            "&.Mui-focused": {
+              borderColor: "#667eea",
+              boxShadow: "0 0 0 3px rgba(102, 126, 234, 0.1)",
+              backgroundColor: "#ffffff"
+            },
+            "& fieldset": {
+              border: "none"
+            }
+          },
+          "& .MuiOutlinedInput-input": {
+            padding: "12px 16px",
+            "&::placeholder": {
+              color: "#94a3b8",
+              opacity: 1
+            }
+          }
+        }}
+      />
+    </Box>
+
+    {/* Years in Consulting Dropdown */}
+    <Box sx={{ mb: 3 }}>
+      <Typography 
+        variant="subtitle2" 
+        sx={{ 
+          fontFamily: "Satoshi, sans-serif", 
+          fontWeight: 600,
+          color: "#374151",
+          mb: 1.5,
+          fontSize: "0.875rem",
+          letterSpacing: "-0.01em"
+        }}
+      >
+        Years in Consulting
+      </Typography>
+      <FormControl fullWidth>
         <Select
           name="totalYearsInConsulting"
           value={filters.totalYearsInConsulting}
           onChange={handleFilterChange}
-          label="Years in Consulting"
           size="small"
+          displayEmpty
+          sx={{
+            borderRadius: "12px",
+            backgroundColor: "#ffffff",
+            border: "1.5px solid #e2e8f0",
+            fontFamily: "Poppins, sans-serif",
+            fontSize: "0.875rem",
+            transition: "all 0.2s ease-in-out",
+            "&:hover": {
+              borderColor: "#cbd5e1",
+              boxShadow: "0 2px 8px rgba(0, 0, 0, 0.04)"
+            },
+            "&.Mui-focused": {
+              borderColor: "#667eea",
+              boxShadow: "0 0 0 3px rgba(102, 126, 234, 0.1)"
+            },
+            "& fieldset": {
+              border: "none"
+            },
+            "& .MuiSelect-select": {
+              padding: "12px 16px",
+              color: filters.totalYearsInConsulting ? "#1f2937" : "#94a3b8"
+            },
+            "& .MuiSelect-icon": {
+              color: "#6b7280",
+              right: "12px"
+            }
+          }}
         >
-          <MenuItem value="">All</MenuItem>
-          <MenuItem value="0-2">0-2 years</MenuItem>
-          <MenuItem value="2-5">2-5 years</MenuItem>
-          <MenuItem value="5-10">5-10 years</MenuItem>
-          <MenuItem value="10-100">10+ years</MenuItem>
+          <MenuItem value="" sx={{ fontFamily: "Poppins, sans-serif", color: "#94a3b8" }}>
+            Select experience level
+          </MenuItem>
+          <MenuItem value="0-2" sx={{ fontFamily: "Poppins, sans-serif" }}>0-2 years</MenuItem>
+          <MenuItem value="2-5" sx={{ fontFamily: "Poppins, sans-serif" }}>2-5 years</MenuItem>
+          <MenuItem value="5-10" sx={{ fontFamily: "Poppins, sans-serif" }}>5-10 years</MenuItem>
+          <MenuItem value="10-100" sx={{ fontFamily: "Poppins, sans-serif" }}>10+ years</MenuItem>
         </Select>
       </FormControl>
+    </Box>
 
-      {screeningQuestions.length > 0 && (
-        <Box sx={{ mb: 2 }}>
+    {/* Screening Questions Section */}
+    {screeningQuestions.length > 0 && (
+      <Box sx={{ mb: 4 }}>
+        <Box 
+          sx={{ 
+            display: "flex", 
+            alignItems: "center", 
+            mb: 3,
+            pb: 2,
+            borderBottom: "1px solid #f1f5f9"
+          }}
+        >
+          <Box
+            sx={{
+              width: 4,
+              height: 20,
+              background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+              borderRadius: "2px",
+              mr: 2
+            }}
+          />
           <Typography 
-            variant="subtitle2" 
+            variant="subtitle1" 
             sx={{ 
-              fontFamily: "Satoshi", 
-              fontWeight: 600, 
-              mb: 1,
-              color: "#24252C"
+              fontFamily: "Satoshi, sans-serif", 
+              fontWeight: 700,
+              color: "#1a1d29",
+              fontSize: "1rem",
+              letterSpacing: "-0.01em"
             }}
           >
             Screening Questions
           </Typography>
-          {screeningQuestions.map((question) => (
-            <FormControl 
-              key={question._id} 
-              fullWidth 
-              sx={{ mb: 2 }}
+        </Box>
+        
+        {screeningQuestions.map((question, index) => (
+          <Box key={question._id} sx={{ mb: 3 }}>
+            <Typography 
+              variant="subtitle2" 
+              sx={{ 
+                fontFamily: "Satoshi, sans-serif", 
+                fontWeight: 600,
+                color: "#374151",
+                mb: 1.5,
+                fontSize: "0.875rem",
+                letterSpacing: "-0.01em"
+              }}
             >
-              <InputLabel sx={{ fontFamily: "Satoshi" }}>
-                {question.question}
-              </InputLabel>
+              {question.question}
+            </Typography>
+            <FormControl fullWidth>
               <Select
                 name={`screening_${question._id}`}
                 value={filters[`screening_${question._id}`] || ""}
                 onChange={handleFilterChange}
-                label={question.question}
                 size="small"
+                displayEmpty
+                sx={{
+                  borderRadius: "12px",
+                  backgroundColor: "#ffffff",
+                  border: "1.5px solid #e2e8f0",
+                  fontFamily: "Poppins, sans-serif",
+                  fontSize: "0.875rem",
+                  transition: "all 0.2s ease-in-out",
+                  "&:hover": {
+                    borderColor: "#cbd5e1",
+                    boxShadow: "0 2px 8px rgba(0, 0, 0, 0.04)"
+                  },
+                  "&.Mui-focused": {
+                    borderColor: "#667eea",
+                    boxShadow: "0 0 0 3px rgba(102, 126, 234, 0.1)"
+                  },
+                  "& fieldset": {
+                    border: "none"
+                  },
+                  "& .MuiSelect-select": {
+                    padding: "12px 16px",
+                    color: filters[`screening_${question._id}`] ? "#1f2937" : "#94a3b8"
+                  },
+                  "& .MuiSelect-icon": {
+                    color: "#6b7280",
+                    right: "12px"
+                  }
+                }}
               >
-                <MenuItem value="">All</MenuItem>
+                <MenuItem value="" sx={{ fontFamily: "Poppins, sans-serif", color: "#94a3b8" }}>
+                  Select an option
+                </MenuItem>
                 {question.options?.map((option, idx) => (
-                  <MenuItem key={idx} value={option}>
+                  <MenuItem key={idx} value={option} sx={{ fontFamily: "Poppins, sans-serif" }}>
                     {option}
                   </MenuItem>
                 ))}
               </Select>
             </FormControl>
-          ))}
-        </Box>
-      )}
-
-      <Box sx={{ display: "flex", gap: 1 }}>
-        <Button
-          variant="contained"
-          fullWidth
-          onClick={applyFilters}
-          disabled={filterLoading}
-          startIcon={filterLoading ? <CircularProgress size={16} color="inherit" /> : null}
-          sx={{ 
-            fontFamily: "Satoshi", 
-            fontWeight: 600,
-            bgcolor: "#1976d2",
-            "&:hover": {
-              bgcolor: "#1565c0"
-            }
-          }}
-        >
-          {filterLoading ? "Applying..." : "Apply Filters"}
-        </Button>
-        <Button
-          variant="outlined"
-          fullWidth
-          onClick={clearFilters}
-          disabled={filterLoading}
-          sx={{ 
-            fontFamily: "Satoshi", 
-            fontWeight: 600,
-            borderColor: "#1976d2",
-            color: "#1976d2",
-            "&:hover": {
-              borderColor: "#1565c0",
-              color: "#1565c0"
-            }
-          }}
-        >
-          Clear All
-        </Button>
+          </Box>
+        ))}
       </Box>
+    )}
+
+    {/* Action Buttons */}
+    <Box sx={{ display: "flex", gap: 2, pt: 3, borderTop: "1px solid #f1f5f9" }}>
+      <Button
+        variant="contained"
+        fullWidth
+        onClick={applyFilters}
+        disabled={filterLoading}
+        startIcon={filterLoading ? <CircularProgress size={16} color="inherit" /> : null}
+        sx={{ 
+          fontFamily: "Satoshi, sans-serif", 
+          fontWeight: 600,
+          fontSize: "0.875rem",
+          textTransform: "none",
+          borderRadius: "12px",
+          padding: "12px 24px",
+          boxShadow: "0 4px 12px rgba(102, 126, 234, 0.3)",
+          transition: "all 0.2s ease-in-out",
+          letterSpacing: "-0.01em",
+          backgroundColor: '#374151',
+          '&:hover': { backgroundColor: '#1f2937' },
+        }}
+      >
+        {filterLoading ? "Applying Filters..." : "Apply Filters"}
+      </Button>
+      
+      <Button
+        variant="outlined"
+        fullWidth
+        onClick={clearFilters}
+        disabled={filterLoading}
+        sx={{ 
+          fontFamily: "Satoshi, sans-serif", 
+          fontWeight: 600,
+          fontSize: "0.875rem",
+          textTransform: "none",
+          borderRadius: "12px",
+          padding: "12px 24px",
+          borderColor: "#e2e8f0",
+          color: "#64748b",
+          backgroundColor: "#ffffff",
+          transition: "all 0.2s ease-in-out",
+          letterSpacing: "-0.01em",
+          "&:hover": {
+            borderColor: "#cbd5e1",
+            backgroundColor: "#f8fafc",
+            color: "#475569",
+            boxShadow: "0 2px 8px rgba(0, 0, 0, 0.04)"
+          },
+          "&:disabled": {
+            borderColor: "#f1f5f9",
+            color: "#cbd5e1"
+          }
+        }}
+      >
+        Clear All
+      </Button>
     </Box>
-  );
+  </Box>
+);
 
   const handleSearchClick = async () => {
     if (!searchKeyword.trim()) return;
@@ -910,33 +1162,6 @@ const JobApplications = () => {
 
   return (
     <Box sx={{ bgcolor: "#fff", minHeight: "100vh", p: { xs: 2, md: 4 } }}>
-      {/* Header Section */}
-      <Box
-        sx={{
-          bgcolor: "white",
-          p: { xs: 1, md: 2 },
-          mb: 3,
-        }}
-      >
-        <Typography
-          sx={{
-            textAlign: "center",
-            color: "#24252C",
-            fontFamily: "Satoshi",
-            fontWeight: 700,
-            fontSize: { xs: "24px", md: "30px" },
-            mb: 1,
-          }}
-        >
-          Job Applications
-        </Typography>
-      </Box>
-
-      {loading && (
-        <Box sx={{ display: "flex", justifyContent: "center", my: 4 }}>
-          <CircularProgress sx={{ color: "#1976d2" }} size={40} />
-        </Box>
-      )}
 
       {error && (
         <Alert
@@ -963,7 +1188,7 @@ const JobApplications = () => {
         {/* Enhanced Filters Sidebar */}
         <Box
           sx={{
-            width: { xs: "100%", md: "300px" },
+            width: { xs: "100%", md: "350px" },
             flexShrink: 0,
           }}
         >
@@ -1053,6 +1278,28 @@ const JobApplications = () => {
 
         {/* Applications Section */}
         <Box sx={{ flex: 1 }}>
+          {/* Header Section */}
+      <Box
+        sx={{
+          bgcolor: "white",
+          p: { xs: 1, md: 2 },
+          mb: 3,
+        }}
+      >
+        <Typography
+          sx={{
+            textAlign: "center",
+            color: "#24252C",
+            fontFamily: "Satoshi",
+            fontWeight: 700,
+            fontSize: { xs: "24px", md: "30px" },
+            mb: 1,
+          }}
+        >
+          Job Applications
+        </Typography>
+      
+      </Box>
           {/* Premium Tab Navigation */}
           <Box
             sx={{
@@ -1432,6 +1679,12 @@ const JobApplications = () => {
               </Box>
             </Box>
           )}
+
+          {loading && (
+        <Box sx={{ display: "flex", justifyContent: "center", my: 4 }}>
+          <CircularProgress sx={{ color: "#1976d2" }} size={40} />
+        </Box>
+      )}
 
           {/* Enhanced Applications Grid */}
           <Box
