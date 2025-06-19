@@ -88,6 +88,11 @@ const SkillCard = ({ userInfo }) => {
     setIsSaving(false);
   };
 
+  const handleCancelEdit = () => {
+  setSkills(userInfo?.skills || []);  // revert to original
+  setIsEditing(false);
+};
+
   return (
     <Box>
       {/* Tabs Section */}
@@ -99,7 +104,7 @@ const SkillCard = ({ userInfo }) => {
               label="Skills"
           />
         </Tabs>
-        <IconButton onClick={() => setIsEditing((prev) => !prev)}>
+        <IconButton onClick={isEditing ? handleCancelEdit : () => setIsEditing(true)}>
           {isEditing ? <CloseIcon sx={{ color: "#D9534F" }} /> : <EditIcon sx={{ color: "#404258" }} />}
         </IconButton>
       </Box>
