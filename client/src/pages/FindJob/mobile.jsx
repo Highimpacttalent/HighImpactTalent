@@ -16,7 +16,7 @@ import {
   Menu,
   MenuItem,
   Chip,
-  Stack
+  Stack,
 } from "@mui/material";
 import { MdLocationOn } from "react-icons/md";
 import { FaSortAmountDown } from "react-icons/fa";
@@ -53,7 +53,7 @@ const mobileView = () => {
         setSort("Recommended");
         setSelectedTab(1);
         break;
-      case "Newest":             // ← handle "Newest" explicitly
+      case "Newest": // ← handle "Newest" explicitly
         setSort("Newest");
         setSelectedTab(0);
         break;
@@ -474,11 +474,21 @@ const mobileView = () => {
           {/* Search Result Chips - Added from desktop version */}
           {(searchQuery || searchLocationQuery) && (
             <Box sx={{ mt: 2, px: 2 }}>
-              <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
-                <Typography variant="body2" color="text.secondary" sx={{ mr: 1, fontSize: "0.875rem" }}>
+              <Stack
+                direction="row"
+                spacing={1}
+                alignItems="center"
+                flexWrap="wrap"
+                useFlexGap
+              >
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{ mr: 1, fontSize: "0.875rem" }}
+                >
                   Active searches:
                 </Typography>
-                
+
                 {searchQuery && (
                   <Chip
                     label={`Title: "${searchQuery}"`}
@@ -497,7 +507,7 @@ const mobileView = () => {
                     }}
                   />
                 )}
-                
+
                 {searchLocationQuery && (
                   <Chip
                     label={`Location: "${searchLocationQuery}"`}
@@ -516,8 +526,8 @@ const mobileView = () => {
                     }}
                   />
                 )}
-                
-                {(searchQuery && searchLocationQuery) && (
+
+                {searchQuery && searchLocationQuery && (
                   <Button
                     variant="text"
                     size="small"
@@ -570,7 +580,7 @@ const mobileView = () => {
                   Filters
                 </Typography>
               </Button>
-               <Box sx={{ mt: 1 }}>
+              <Box sx={{ mt: 1 }}>
                 <Button
                   sx={{
                     color: "#404258",
@@ -585,23 +595,25 @@ const mobileView = () => {
                   </Typography>
                 </Button>
                 <Menu anchorEl={anchorEl} open={open} onClose={handleClose}>
-                <MenuItem onClick={() => handleSelect("All Jobs")}>
-                All Jobs
-              </MenuItem>
-              <MenuItem onClick={() => handleSelect("Recommended")}>
-                Recommended
-              </MenuItem>
-              <MenuItem onClick={() => handleSelect("Newest")}>
-                Newest First
-              </MenuItem>
-              <MenuItem onClick={() => handleSelect("Salary (High to Low)")}>
-                Salary (High to Low)
-              </MenuItem>
-              <MenuItem onClick={() => handleSelect("Saved")}>
-                Saved Jobs
-              </MenuItem> 
-               </Menu> 
-               </Box> 
+                  <MenuItem onClick={() => handleSelect("All Jobs")}>
+                    All Jobs
+                  </MenuItem>
+                  <MenuItem onClick={() => handleSelect("Recommended")}>
+                    Recommended
+                  </MenuItem>
+                  <MenuItem onClick={() => handleSelect("Newest")}>
+                    Newest First
+                  </MenuItem>
+                  <MenuItem
+                    onClick={() => handleSelect("Salary (High to Low)")}
+                  >
+                    Salary (High to Low)
+                  </MenuItem>
+                  <MenuItem onClick={() => handleSelect("Saved")}>
+                    Saved Jobs
+                  </MenuItem>
+                </Menu>
+              </Box>
             </Box>
           </Box>
 
@@ -895,17 +907,29 @@ const mobileView = () => {
             </Box>
 
             {/* Pagination */}
-            <Box display="flex" justifyContent="center" mt={4}>
+            <Box
+              display="flex"
+              justifyContent="center"
+              mt={4}
+              sx={{
+                overflowX: "auto", // allow scroll if it overflows
+                pb: 1, // space for scrollbar on some devices
+                "&::-webkit-scrollbar": {
+                  // hide scrollbar on WebKit without breaking UX
+                  display: "none",
+                },
+              }}
+            >
               <Pagination
                 count={numPage}
                 page={page}
                 onChange={(_, value) => {
-                  setPage(value)
-                  window.scrollTo({ top: 0, behavior: "smooth" }); 
+                  setPage(value);
+                  window.scrollTo({ top: 0, behavior: "smooth" });
                 }}
                 color="primary"
-                size="large"
                 shape="rounded"
+                size="medium"
                 sx={{
                   "& .MuiPaginationItem-root": {
                     borderRadius: "50%",
@@ -923,7 +947,7 @@ const mobileView = () => {
                     color: "white !important",
                     boxShadow: "0px 3px 6px rgba(0, 0, 0, 0.2)",
                   },
-                  mb:4
+                  mb: 4,
                 }}
               />
             </Box>
