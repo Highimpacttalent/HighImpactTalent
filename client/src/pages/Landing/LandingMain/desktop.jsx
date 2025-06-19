@@ -148,7 +148,7 @@ const DesktopLanding = () => {
                       letterSpacing: '-0.02em'
                     }}
                   >
-                    Where the right people meet the{' '}
+                    Where the right People meet the{' '}
                     <Box 
                       component="span" 
                       sx={{
@@ -181,7 +181,7 @@ const DesktopLanding = () => {
                       fontWeight: 400
                     }}
                   >
-                    Most platforms throw thousands of irrelevant profiles your way. We don't. Whether you're hiring or job hunting, we get you to the shortlist faster—with AI, insight, and a human touch.
+                    Most platforms throw thousands of irrelevant profiles your way. We don't. Whether you're hiring or job hunting, we get you to the shortlist faster with AI, insight, and a human touch.
                   </Typography>
 
                   <Stack direction="row" spacing={3} sx={{ mb: 6 }}>
