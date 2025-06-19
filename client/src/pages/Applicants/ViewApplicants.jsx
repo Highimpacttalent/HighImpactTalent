@@ -1536,7 +1536,7 @@ const FiltersContent = (
                     display: "flex",
                     gap: 1.5,
                     alignItems: "center",
-                    flexShrink: 0,
+                    flexWrap:"wrap",
                   }}
                 >
                   {/* Primary Actions */}
