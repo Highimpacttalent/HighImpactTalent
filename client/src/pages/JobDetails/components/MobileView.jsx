@@ -209,8 +209,8 @@ const JobCard = ({ job,flag = false,enable = false }) => {
             {noteligible && (
                     <Box sx={{display:"flex",justifyContent:"flex-start",ml:2,mt:1}}>
                     <ReportProblem color="error" sx={{mb:1}}/>
-                    <Typography variant="body2" color="error" sx={{ px:1,mt:0.5 }}>
-                      You are not eligible for this job
+                    <Typography color="error" sx={{ px:1,mt:0.5,fontSize:"12px" }}>
+                     Your experience isn’t quite a match for this role.
                     </Typography>
                     </Box>
                   )}

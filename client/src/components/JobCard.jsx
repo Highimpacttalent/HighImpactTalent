@@ -403,7 +403,7 @@ const JobCard = ({ job, flag = false, enable = false }) => {
         >
           <ReportProblem color="error" sx={{ mb: 1 }} />
           <Typography variant="body2" color="error" sx={{ px: 1, mt: 0.5 }}>
-            You are not eligible for this job
+           Your experience isn’t quite a match for this role.
           </Typography>
         </Box>
       )}
