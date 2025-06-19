@@ -199,7 +199,6 @@ const PremiumChatbot = () => {
   };
 
   const MessageBubble = ({ message, isBot }) => (
-    <Fade in={true} timeout={600}>
       <Box
         display="flex"
         justifyContent={isBot ? "flex-start" : "flex-end"}
@@ -248,7 +247,6 @@ const PremiumChatbot = () => {
           </Avatar>
         )}
       </Box>
-    </Fade>
   );
 
   return (
