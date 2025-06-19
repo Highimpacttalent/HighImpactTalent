@@ -461,27 +461,43 @@ const JobApplications = () => {
 };
 
   const clearFilters = async () => {
-    const resetFilters = {
-      keywords: "",
-      location: "",
-      currentDesignation: "",
-      totalYearsInConsulting: "",
-    };
-    
-    // Reset screening question filters
-    screeningQuestions.forEach(question => {
-      resetFilters[`screening_${question._id}`] = "";
-    });
-    
-    setFilters(resetFilters);
-    
-    // Fetch applications without filters
-    const currentStatus = steps[activeStep];
-    const unfilteredApps = await fetchApplications({}, currentStatus);
-    setApplications(unfilteredApps);
-    setFilteredApps(unfilteredApps);
-    setSelectedApplications(new Set());
+  // 1. Reset all extra filters (like keywords, location)
+  const resetFilters = {
+    keywords: "",
+    location: "",
+    currentDesignation: "",
+    totalYearsInConsulting: "",
   };
+  screeningQuestions.forEach(question => {
+    resetFilters[`screening_${question._id}`] = "";
+  });
+  setFilters(resetFilters);
+
+  // 2. Go back to the first tab — usually "Applied"
+  const newActiveStep = 0;
+  setActiveStep(newActiveStep);
+
+  // 3. Find the status name (e.g., "Applied")
+  const newStatus = steps[newActiveStep];
+
+  // 4. Filter from the full list we already have (`allApplications`)
+  const filtered = allApplications.filter(app => app.status === newStatus);
+
+  // 5. Update the UI with that filtered list
+  setApplications(filtered);
+  setFilteredApps(filtered);
+
+  // 6. Refresh stage counts (the numbers on tabs)
+  await fetchStageCounts();
+
+  // 7. Clear any selected applicants (used for bulk actions)
+  setSelectedApplications(new Set());
+
+  // 8. Optional: If on mobile, close the filters drawer
+  if (isMobile) {
+    setDrawerOpen(false);
+  }
+};
 
 const FiltersContent = (
   <Box sx={{ p: 2, width: isMobile ? 250 : "auto" }}>
