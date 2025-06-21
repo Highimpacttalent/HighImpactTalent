@@ -66,7 +66,7 @@ const RecruiterRedirectPage = () => {
         html {
           font-family: "Satoshi", -apple-system, BlinkMacSystemFont, sans-serif;
           background: #ffffff;
-          color: #0f172a;
+          color: #3C7EFC;
           line-height: 1.6;
           -webkit-font-smoothing: antialiased;
           -moz-osx-font-smoothing: grayscale;
@@ -109,7 +109,7 @@ const RecruiterRedirectPage = () => {
           font-family: "Poppins", sans-serif;
           font-size: 20px;
           font-weight: 600;
-          color: #0f172a;
+          color: #3C7EFC;
           margin-bottom: 2px;
           letter-spacing: -0.01em;
         }
@@ -121,7 +121,7 @@ const RecruiterRedirectPage = () => {
         }
 
         .status-badge {
-          background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+          background: linear-gradient(135deg, #3C7EFC 0%, #1E5EFF 100%);
           color: white;
           padding: 12px 20px;
           border-radius: 12px;
@@ -152,7 +152,7 @@ const RecruiterRedirectPage = () => {
           font-size: 48px;
           font-weight: 700;
           line-height: 1.1;
-          color: #0f172a;
+          color: #3C7EFC;
           margin-bottom: 24px;
           letter-spacing: -0.02em;
         }
@@ -185,7 +185,7 @@ const RecruiterRedirectPage = () => {
           width: 48px;
           height: 48px;
           border-radius: 12px;
-          background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+          background: linear-gradient(135deg, #3C7EFC 0%, #1E5EFF 100%);
           display: flex;
           align-items: center;
           justify-content: center;
@@ -197,7 +197,7 @@ const RecruiterRedirectPage = () => {
         .founder-info .name {
           font-size: 16px;
           font-weight: 600;
-          color: #0f172a;
+          color: #3C7EFC;
           margin-bottom: 2px;
         }
 
@@ -240,7 +240,7 @@ const RecruiterRedirectPage = () => {
           font-family: "Poppins", sans-serif;
           font-size: 28px;
           font-weight: 700;
-          color: #0f172a;
+          color: #3C7EFC;
           margin-bottom: 8px;
           line-height: 1;
         }
@@ -258,7 +258,7 @@ const RecruiterRedirectPage = () => {
         }
 
         .cta-button {
-          background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+          background: linear-gradient(135deg, #3C7EFC 0%, #1E5EFF 100%);
           color: white;
           border: none;
           padding: 18px 32px;
@@ -281,7 +281,7 @@ const RecruiterRedirectPage = () => {
         .trust-indicators {
           margin-top: 24px;
           font-size: 14px;
-          color: #64748b;
+          color: #3C7EFC;
           display: flex;
           flex-wrap: wrap;
           gap: 32px;
@@ -354,7 +354,7 @@ const RecruiterRedirectPage = () => {
 
         .bar {
           width: 24px;
-          background: linear-gradient(to top, #1e293b, #334155);
+          background: linear-gradient(135deg, #2B66E2 0%, #1A4BCC 100%);
           border-radius: 4px 4px 0 0;
           animation: growBar 1.5s ease-out forwards;
           animation-delay: calc(var(--index) * 0.1s);
@@ -389,7 +389,7 @@ const RecruiterRedirectPage = () => {
           font-family: "Poppins", sans-serif;
           font-size: 24px;
           font-weight: 700;
-          color: #0f172a;
+          color: #3C7EFC;
           margin-bottom: 4px;
         }
 

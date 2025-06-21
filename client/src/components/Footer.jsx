@@ -82,8 +82,8 @@ const Footer = () => {
               Quick Links
             </Typography>
             {[
+              { to: "/contact-us", label: "Contact Us" },
               { to: "/about-us", label: "About" },
-              { to: "/find-jobs", label: "Careers" },
               { to: "/blog", label: "Blogs" },
             ].map(({ to, label }) => (
               <Typography key={to} variant="body2" sx={{ mb: 0.5 }}>
@@ -108,7 +108,6 @@ const Footer = () => {
               { to: "/t&c", label: "Terms and Conditions" },
               { to: "/refund", label: "Refund Policy" },
               { to: "/privacy-policy", label: "Privacy Policy" },
-              { to: "/contact-us", label: "Contact Us" },
             ].map(({ to, label }) => (
               <Typography key={to} variant="body2" sx={{ mb: 0.5 }}>
                 <Link

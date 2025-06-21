@@ -12,7 +12,7 @@ import {
 } from "@mui/material";
 import Slider from "react-slick";
 import axios from "axios";
-import CustomCarosuel from "./Carousel/view"
+import CustomCarosuel from "./Carousel/view";
 import { LinkedIn } from "@mui/icons-material";
 
 const LinkedInCarousel = ({ linkedinProfiles }) => {
@@ -26,7 +26,7 @@ const LinkedInCarousel = ({ linkedinProfiles }) => {
     autoplaySpeed: 3000,
     arrows: true,
   };
-}
+};
 
 const ContactUsDesktop = () => {
   const [formData, setFormData] = useState({
@@ -154,9 +154,23 @@ const ContactUsDesktop = () => {
           <Box
             component="form"
             onSubmit={handleSubmit}
-            sx={{ display: "flex", flexDirection: "column", gap: 2,width:"70%"}}
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              gap: 2,
+              width: "70%",
+            }}
           >
-            <Typography sx={{fontFamily:"Satoshi",fontWeight:"500",fontSize:18,color:"#24252C"}}>Name *</Typography>
+            <Typography
+              sx={{
+                fontFamily: "Satoshi",
+                fontWeight: "500",
+                fontSize: 18,
+                color: "#24252C",
+              }}
+            >
+              Name *
+            </Typography>
             <TextField
               name="name"
               variant="outlined"
@@ -164,11 +178,22 @@ const ContactUsDesktop = () => {
               required
               onChange={handleChange}
               value={formData.name}
-              sx={{'& .MuiOutlinedInput-root': {
-      borderRadius:16, 
-    }}}
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  borderRadius: 16,
+                },
+              }}
             />
-            <Typography sx={{fontFamily:"Satoshi",fontWeight:"500",fontSize:18,color:"#24252C"}}>Email Address *</Typography>
+            <Typography
+              sx={{
+                fontFamily: "Satoshi",
+                fontWeight: "500",
+                fontSize: 18,
+                color: "#24252C",
+              }}
+            >
+              Email Address *
+            </Typography>
             <TextField
               name="email"
               type="email"
@@ -177,11 +202,22 @@ const ContactUsDesktop = () => {
               required
               onChange={handleChange}
               value={formData.email}
-              sx={{'& .MuiOutlinedInput-root': {
-                borderRadius:16,
-              }}}
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  borderRadius: 16,
+                },
+              }}
             />
-             <Typography sx={{fontFamily:"Satoshi",fontWeight:"500",fontSize:18,color:"#24252C"}}>Message *</Typography>
+            <Typography
+              sx={{
+                fontFamily: "Satoshi",
+                fontWeight: "500",
+                fontSize: 18,
+                color: "#24252C",
+              }}
+            >
+              Message *
+            </Typography>
             <TextField
               name="message"
               variant="outlined"
@@ -191,16 +227,24 @@ const ContactUsDesktop = () => {
               required
               onChange={handleChange}
               value={formData.message}
-              sx={{'& .MuiOutlinedInput-root': {
-                borderRadius:4, // Adjust the radius as needed
-              }}}
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  borderRadius: 4, // Adjust the radius as needed
+                },
+              }}
             />
 
             <Button
               variant="contained"
               color="primary"
               size="large"
-              sx={{ mt: 2, borderRadius: "25px", fontWeight: "bold",textTransform:"none",fontFamily:"Satoshi" }}
+              sx={{
+                mt: 2,
+                borderRadius: "25px",
+                fontWeight: "bold",
+                textTransform: "none",
+                fontFamily: "Satoshi",
+              }}
               type="submit"
               disabled={loading}
             >
@@ -213,40 +257,64 @@ const ContactUsDesktop = () => {
           </Box>
         </Box>
 
-       {/* LinkdIn Part */}
-       <Box
-      sx={{
-        p: 4,
-        borderRadius: 3,
-        display: "flex",
-        flexDirection: "column",
-        width:"80%",
-        
-        mx: "auto", // Center align
-      }}
-    >
-      <Typography sx={{fontFamily:"Poppins",fontWeight:500,mb:6,fontSize:"20px",ml:5,color:"#474E68"}}>
-      Connect with us on <LinkedIn color="primary"/>
-      </Typography>
+        {/* LinkdIn Part */}
+        <Box
+          sx={{
+            p: 4,
+            borderRadius: 3,
+            display: "flex",
+            flexDirection: "column",
+            width: "80%",
 
-     {/* Custom Carousel Component */}
-     <CustomCarosuel
-        items={linkedinProfiles.map((link, index) => (
-          <iframe
-            key={index}
-            src={link}
-            width="100%"
-            height="450"
-            style={{
-              border: "none",
-              borderRadius: "10px",
-              boxShadow: "0 5px 15px rgba(0, 0, 0, 0.2)",
+            mx: "auto", // Center align
+          }}
+        >
+          <Typography
+            sx={{
+              fontFamily: "Poppins",
+              fontWeight: 500,
+              mb: 6,
+              fontSize: "20px",
+              ml: 5,
+              color: "#474E68",
             }}
-            allowFullScreen
-          ></iframe>
-        ))}
-      />
-    </Box>
+          >
+            Connect with us on{" "}
+            <span
+              onClick={() =>
+                window.open(
+                  "https://www.linkedin.com/company/highimpacttalent/",
+                  "_blank"
+                )
+              }
+              style={{
+                cursor: "pointer",
+                display: "inline-flex",
+                verticalAlign: "middle",
+              }}
+            >
+              <LinkedIn color="primary" />
+            </span>
+          </Typography>
+
+          {/* Custom Carousel Component */}
+          <CustomCarosuel
+            items={linkedinProfiles.map((link, index) => (
+              <iframe
+                key={index}
+                src={link}
+                width="100%"
+                height="450"
+                style={{
+                  border: "none",
+                  borderRadius: "10px",
+                  boxShadow: "0 5px 15px rgba(0, 0, 0, 0.2)",
+                }}
+                allowFullScreen
+              ></iframe>
+            ))}
+          />
+        </Box>
       </Box>
 
       {/* Success Modal */}

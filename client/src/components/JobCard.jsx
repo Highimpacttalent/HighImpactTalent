@@ -210,7 +210,7 @@ const JobCard = ({ job, flag = false, enable = false }) => {
           <Chip
             icon={<CurrencyRupee sx={{ color: "#474E68" }} />}
              label={
-                  job.salaryConfidential
+                  (job.salaryConfidential || job.salaryCategory === "Confidential")
                     ? "Confidential"
                     : `${Number(job.salary.maxSalary||job.salary).toLocaleString("en-IN")} (${
                         job.salaryCategory
@@ -330,7 +330,7 @@ const JobCard = ({ job, flag = false, enable = false }) => {
             <Chip
               icon={<CurrencyRupee sx={{ color: "#474E68" }} />}
                label={
-                  job.salaryConfidential
+                   (job.salaryConfidential || job.salaryCategory === "Confidential")
                     ? "Confidential"
                     : `${Number(job.salary.maxSalary||job.salary).toLocaleString("en-IN")} (${
                         job.salaryCategory

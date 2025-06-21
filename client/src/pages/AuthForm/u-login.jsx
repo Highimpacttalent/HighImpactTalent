@@ -40,45 +40,30 @@ const LINKEDIN_CONFIG = {
 const testimonials = [
   {
     id: 1,
-    name: "Sarah Johnson",
-    role: "Marketing Director",
-    avatar: "SJ",
-    comment: "This platform has revolutionized how we manage our projects. The interface is intuitive and the results are outstanding!",
+    name: "Manas Singh",
+    role: "Full Stack Developer",
+    avatar: "MS",
+    comment: "From frontend UI decisions to backend performance tuning, this platform made my development process remarkably efficient. The built-in automation and clean APIs helped me ship features faster without compromising on quality. Truly a developer-friendly experience!",
     rating: 5
   },
   {
     id: 2,
-    name: "Michael Chen",
+    name: "Anuradha",
     role: "Tech Lead",
-    avatar: "MC",
-    comment: "Incredible experience! The automation features saved us countless hours and improved our workflow efficiency.",
+    avatar: "A",
+    comment: "What impressed me most was how seamlessly the platform scaled with our engineering needs. Managing sprints, integrating new tools, and overseeing multiple developers became smoother than ever. It’s built with tech leadership in mind — reliable, flexible, and insightful.",
     rating: 5
   },
   {
     id: 3,
-    name: "Emily Rodriguez",
-    role: "Product Manager",
-    avatar: "ER",
-    comment: "Best decision we made this year. The analytics and insights provided are game-changing for our business.",
-    rating: 5
-  },
-  {
-    id: 4,
-    name: "David Thompson",
-    role: "CEO",
-    avatar: "DT",
-    comment: "Outstanding platform with exceptional support. Our team productivity increased by 40% since implementation.",
-    rating: 5
-  },
-  {
-    id: 5,
-    name: "Lisa Wang",
-    role: "Operations Manager",
-    avatar: "LW",
-    comment: "The seamless integration and user-friendly design make this platform stand out from the competition.",
+    name: "Divija",
+    role: "Marketing Expert",
+    avatar: "D",
+    comment: "This platform helped me identify and engage the right talent 10x faster. The clarity in profile insights and AI-powered recommendations made campaign planning and execution a breeze. It’s more than a hiring tool — it’s a marketer’s secret weapon.",
     rating: 5
   }
 ];
+
 
 const TestimonialCard = ({ testimonial, isVisible }) => (
   <Card

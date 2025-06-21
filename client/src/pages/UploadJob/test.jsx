@@ -165,6 +165,10 @@ const addRemoveButtonStyle = {
 const JobUploadPage = () => {
   const { user } = useSelector((state) => state.user);
   const [analysing, setAnalysing] = useState(false);
+  const [salaryErrors, setSalaryErrors] = useState({
+    minSalary: "",
+    maxSalary: "",
+  });
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
@@ -329,22 +333,62 @@ const JobUploadPage = () => {
 
   // Handler for TextField based Min/Max Range fields (salary)
   const handleRangeInputChange = (field, type, value) => {
-    // Allow empty string or valid number
     const numValue = value === "" ? "" : Number(value);
 
-    // Basic validation: prevent setting non-numeric or negative values (except empty string)
+    // Prevent invalid values
     if (value !== "" && (isNaN(numValue) || numValue < 0)) {
       console.warn(`Invalid input for ${field} ${type}:`, value);
-      return; // Do not update state for invalid input
+      return;
     }
 
-    setFormData((prevState) => ({
-      ...prevState,
+    // Update the form data first
+    const updatedFormData = {
+      ...formData,
       [field]: {
-        ...prevState[field],
+        ...formData[field],
         [type]: numValue,
       },
-    }));
+    };
+
+    setFormData(updatedFormData);
+
+    // Validation: for salary only
+    if (field === "salary") {
+      const otherField = type === "minSalary" ? "maxSalary" : "minSalary";
+      const currentMin =
+        type === "minSalary" ? numValue : updatedFormData.salary.minSalary;
+      const currentMax =
+        type === "maxSalary" ? numValue : updatedFormData.salary.maxSalary;
+
+      const newErrors = { ...salaryErrors };
+
+      // Max cap validation
+      if (numValue > 1000) {
+        newErrors[type] = "Cannot exceed 1000. Please mention in INR Lakhs & not INR";
+      } else {
+        newErrors[type] = "";
+      }
+
+      // Min > Max check
+      if (
+        currentMin !== "" &&
+        currentMax !== "" &&
+        Number(currentMin) > Number(currentMax)
+      ) {
+        newErrors.minSalary = "Min salary cannot be greater than max salary";
+        newErrors.maxSalary = "Max salary cannot be less than min salary";
+      } else {
+        // Clear if previously errored and now valid
+        if (
+          newErrors.minSalary === "Min salary cannot be greater than max salary"
+        )
+          newErrors.minSalary = "";
+        if (newErrors.maxSalary === "Max salary cannot be less than min salary")
+          newErrors.maxSalary = "";
+      }
+
+      setSalaryErrors(newErrors);
+    }
   };
 
   // Handler for React-Select Multi-Select fields (Skills, Tags, Qualifications)
@@ -885,7 +929,7 @@ const JobUploadPage = () => {
           {/* Job Title */}
           <div className="mb-4">
             <Typography sx={{ ...formLabelStyle }}>
-              Enter Job Title  <span style={{ color: "red" }}>*</span>
+              Enter Job Title <span style={{ color: "red" }}>*</span>
             </Typography>
             <TextField
               type="text"
@@ -904,7 +948,7 @@ const JobUploadPage = () => {
           {/* Years of Experience Range (Min - Max) - Using Selects matching image & backend structure */}
           <div className="mb-4">
             <Typography sx={{ ...formLabelStyle }}>
-              Years of experience  <span style={{ color: "red" }}>*</span>
+              Years of experience <span style={{ color: "red" }}>*</span>
             </Typography>
             <Grid container spacing={2}>
               <Grid item xs={12} sm={6}>
@@ -1081,10 +1125,8 @@ const JobUploadPage = () => {
 
           {/* Job Location - Kept existing react-select implementation */}
           <div className="mb-4">
-            <Typography sx={{ ...formLabelStyle }}>
-              Job Location  
-            </Typography>
-            <Select 
+            <Typography sx={{ ...formLabelStyle }}>Job Location (Optional — skip this if you're hiring for a remote position)</Typography>
+            <Select
               options={filteredCities}
               value={selectedCity}
               styles={customSelectStyle}
@@ -1121,7 +1163,7 @@ const JobUploadPage = () => {
           {/* Annual Salary Range (Min - Max) + Confidential Checkbox - Using TextFields */}
           <div className="mb-4">
             <Typography sx={{ ...formLabelStyle }}>
-              Annual Salary (INR Lakh)  <span style={{ color: "red" }}>*</span>
+              Annual Salary (INR Lakh) <span style={{ color: "red" }}>*</span>
             </Typography>
             <Grid container spacing={2}>
               <Grid item xs={12} sm={6}>
@@ -1140,8 +1182,10 @@ const JobUploadPage = () => {
                   fullWidth
                   size="small"
                   variant="outlined"
-                  inputProps={{ min: 0, max: 1000 }} // Added max cap
+                  inputProps={{ min: 0, max: 1000 }}
                   sx={{ ...textFieldStyle }}
+                  error={!!salaryErrors.minSalary}
+                  helperText={salaryErrors.minSalary}
                 />
               </Grid>
               <Grid item xs={12} sm={6}>
@@ -1160,8 +1204,10 @@ const JobUploadPage = () => {
                   fullWidth
                   size="small"
                   variant="outlined"
-                  inputProps={{ min: 0, max: 1000 }} // Assuming max salary is capped at 1000 lakhs
+                  inputProps={{ min: 0, max: 1000 }}
                   sx={{ ...textFieldStyle }}
+                  error={!!salaryErrors.maxSalary}
+                  helperText={salaryErrors.maxSalary}
                 />
               </Grid>
             </Grid>
@@ -1201,7 +1247,9 @@ const JobUploadPage = () => {
 
           {/* Company Type - Added as per backend schema */}
           <div className="mb-4">
-            <Typography sx={{ ...formLabelStyle }}>Industry  <span style={{ color: "red" }}>*</span></Typography>{" "}
+            <Typography sx={{ ...formLabelStyle }}>
+              Industry <span style={{ color: "red" }}>*</span>
+            </Typography>{" "}
             {/* Not required in image or backend */}
             <Select
               options={industrySelectOptions}
@@ -1232,7 +1280,7 @@ const JobUploadPage = () => {
           <Grid container spacing={2} className="mb-4">
             <Grid item xs={12} sm={6}>
               <Typography sx={{ ...formLabelStyle }}>
-                Category  <span style={{ color: "red" }}>*</span>
+                Category <span style={{ color: "red" }}>*</span>
               </Typography>
               <Select
                 options={categorySelectOptions}
@@ -1260,7 +1308,7 @@ const JobUploadPage = () => {
             </Grid>
             <Grid item xs={12} sm={6}>
               <Typography sx={{ ...formLabelStyle }}>
-                Functional Area  <span style={{ color: "red" }}>*</span>
+                Functional Area <span style={{ color: "red" }}>*</span>
               </Typography>
               <Select
                 options={functionalAreaSelectOptions}
@@ -1338,57 +1386,66 @@ const JobUploadPage = () => {
           </div>
 
           {/* Graduation Year Range (Min - Max Batch) - Using Selects matching image & backend structure */}
-         <div className="mb-4">
-  <Typography sx={{ ...formLabelStyle }}>
-    Graduation Year <span style={{ color: "red" }}>*</span>
-  </Typography>
-  <Grid container spacing={2}>
-    <Grid item xs={12} sm={6}>
-      <Select
-        options={batchYearOptions}
-        value={
-          formData.graduationYear.minBatch !== ""
-            ? batchYearOptions.find(
-                (opt) => opt.value === formData.graduationYear.minBatch
-              )
-            : null
-        }
-        onChange={(selectedOption) =>
-          handleRangeSelectChange("graduationYear", "minBatch", selectedOption)
-        }
-        placeholder="Min Batch"
-        isClearable
-        styles={customSelectStyle}
-      />
-    </Grid>
+          <div className="mb-4">
+            <Typography sx={{ ...formLabelStyle }}>
+              Graduation Year <span style={{ color: "red" }}>*</span>
+            </Typography>
+            <Grid container spacing={2}>
+              <Grid item xs={12} sm={6}>
+                <Select
+                  options={batchYearOptions}
+                  value={
+                    formData.graduationYear.minBatch !== ""
+                      ? batchYearOptions.find(
+                          (opt) =>
+                            opt.value === formData.graduationYear.minBatch
+                        )
+                      : null
+                  }
+                  onChange={(selectedOption) =>
+                    handleRangeSelectChange(
+                      "graduationYear",
+                      "minBatch",
+                      selectedOption
+                    )
+                  }
+                  placeholder="Min Batch"
+                  isClearable
+                  styles={customSelectStyle}
+                />
+              </Grid>
 
-    <Grid item xs={12} sm={6}>
-      <Select
-        options={
-          formData.graduationYear.minBatch
-            ? batchYearOptions.filter(
-                (opt) => opt.value >= formData.graduationYear.minBatch
-              )
-            : batchYearOptions
-        }
-        value={
-          formData.graduationYear.maxBatch !== ""
-            ? batchYearOptions.find(
-                (opt) => opt.value === formData.graduationYear.maxBatch
-              )
-            : null
-        }
-        onChange={(selectedOption) =>
-          handleRangeSelectChange("graduationYear", "maxBatch", selectedOption)
-        }
-        placeholder="Max Batch"
-        isClearable
-        styles={customSelectStyle}
-      />
-    </Grid>
-  </Grid>
-</div>
-
+              <Grid item xs={12} sm={6}>
+                <Select
+                  options={
+                    formData.graduationYear.minBatch
+                      ? batchYearOptions.filter(
+                          (opt) => opt.value >= formData.graduationYear.minBatch
+                        )
+                      : batchYearOptions
+                  }
+                  value={
+                    formData.graduationYear.maxBatch !== ""
+                      ? batchYearOptions.find(
+                          (opt) =>
+                            opt.value === formData.graduationYear.maxBatch
+                        )
+                      : null
+                  }
+                  onChange={(selectedOption) =>
+                    handleRangeSelectChange(
+                      "graduationYear",
+                      "maxBatch",
+                      selectedOption
+                    )
+                  }
+                  placeholder="Max Batch"
+                  isClearable
+                  styles={customSelectStyle}
+                />
+              </Grid>
+            </Grid>
+          </div>
 
           {/* Section: Applications */}
           <Typography sx={{ ...sectionTitleStyle }}>Applications</Typography>
@@ -1411,7 +1468,7 @@ const JobUploadPage = () => {
 
             <Typography
               variant="body2"
-              sx={{ mb: 2, fontWeight: "bold", fontSize: "0.875rem" }}
+              sx={{ mb: 2, fontSize: "0.875rem" ,color:"textSecondary"}}
             >
               Added Questions (
               {
@@ -1464,7 +1521,7 @@ const JobUploadPage = () => {
                     variant="body2"
                     sx={{ ...formLabelStyle, mb: 0.5 }}
                   >
-                    Question Text  <span style={{ color: "red" }}>*</span>
+                    Question Text <span style={{ color: "red" }}>*</span>
                   </Typography>
                   <TextField
                     fullWidth
@@ -1491,7 +1548,7 @@ const JobUploadPage = () => {
                     variant="body2"
                     sx={{ ...formLabelStyle, mb: 0.5 }}
                   >
-                    Question Type  <span style={{ color: "red" }}>*</span>
+                    Question Type <span style={{ color: "red" }}>*</span>
                   </Typography>
                   <Select
                     options={screeningQuestionTypeOptions}
@@ -1563,7 +1620,7 @@ const JobUploadPage = () => {
                       variant="body2"
                       sx={{ ...formLabelStyle, mb: 1 }}
                     >
-                      Options  <span style={{ color: "red" }}>*</span>
+                      Options <span style={{ color: "red" }}>*</span>
                     </Typography>
                     <Typography
                       variant="body2"
