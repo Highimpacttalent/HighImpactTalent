@@ -874,6 +874,7 @@ const JobUploadPage = () => {
         sx={{
           display: "flex",
           flexDirection: { xs: "column", md: "row" },
+          justifyContent: "center", 
           gap: { xs: 3, md: 4 },
           mb: 6,
         }}
@@ -885,6 +886,7 @@ const JobUploadPage = () => {
           sx={{
             flexGrow: 1,
             minWidth: 0,
+            maxWidth: { xs: "100%", md: "70%" },
             backgroundColor: "white",
             p: { xs: 2, md: 4 },
             borderRadius: 2,
@@ -1933,7 +1935,7 @@ const JobUploadPage = () => {
         {/* Guidelines Box - Positioned next to form on medium+ screens */}
         <Box
           sx={{
-            display: { sm: "none", lg: "block", md: "block", xs: "none" },
+            display: 'none',
             width: "40%",
             flexShrink: 0,
             mt: { xs: 0, md: "4rem" },
