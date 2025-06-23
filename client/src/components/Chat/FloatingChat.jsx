@@ -1,5 +1,18 @@
 import { useState, useEffect } from "react";
-import { Box, IconButton, Paper, Typography, Button, Avatar, TextField, CircularProgress, Stack, Fade, Slide, Divider } from "@mui/material";
+import {
+  Box,
+  IconButton,
+  Paper,
+  Typography,
+  Button,
+  Avatar,
+  TextField,
+  CircularProgress,
+  Stack,
+  Fade,
+  Slide,
+  Divider,
+} from "@mui/material";
 import ChatIcon from "@mui/icons-material/Chat";
 import CloseIcon from "@mui/icons-material/Close";
 import PersonIcon from "@mui/icons-material/Person";
@@ -9,7 +22,7 @@ import FlashOnIcon from "@mui/icons-material/FlashOn";
 import axios from "axios";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import ChatbotAvatar from "../../assets/ChatbotAvatar.png"; 
+import ChatbotAvatar from "../../assets/ChatbotAvatar.png";
 
 const PremiumChatbot = () => {
   const navigate = useNavigate();
@@ -35,23 +48,26 @@ const PremiumChatbot = () => {
     };
 
     checkUserInfo();
-    
+
     const handleStorageChange = () => {
       checkUserInfo();
     };
 
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
   }, [user]);
 
   const addMessage = (content, isBot = true, delay = 0) => {
     setTimeout(() => {
-      setMessages(prev => [...prev, {
-        id: Date.now() + Math.random(),
-        content,
-        isBot,
-        timestamp: new Date()
-      }]);
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: Date.now() + Math.random(),
+          content,
+          isBot,
+          timestamp: new Date(),
+        },
+      ]);
     }, delay);
   };
 
@@ -60,7 +76,7 @@ const PremiumChatbot = () => {
     const welcomeMessages = [
       `Hey ${firstName}! 👋 Koustubh here, your career concierge.`,
       "I'm here to make your hiring journey as smooth as your morning coffee ☕",
-      "What brings you to our corner of the talent universe today?"
+      "What brings you to our corner of the talent universe today?",
     ];
 
     setMessages([]);
@@ -80,7 +96,7 @@ const PremiumChatbot = () => {
       openWhatsApp();
       return;
     }
-    
+
     setOpen(!open);
     if (!open) {
       setTimeout(initializeChat, 300);
@@ -97,38 +113,46 @@ const PremiumChatbot = () => {
 
     const userMessage = currentInput.trim();
     setCurrentInput("");
-    
+
     // Add user message
     addMessage(userMessage, false);
 
     // Remove the input placeholder
-    setMessages(prev => prev.filter(msg => msg.content !== ""));
+    setMessages((prev) => prev.filter((msg) => msg.content !== ""));
 
     // Bot responses based on conversation flow
     if (currentStep === "listening") {
       setTimeout(() => {
-        addMessage("Ah, I see! 🤔 Let me put on my problem-solving cape...", true);
+        addMessage(
+          "Ah, I see! 🤔 Let me put on my problem-solving cape...",
+          true
+        );
       }, 800);
 
       setTimeout(() => {
-        addMessage("Could you paint me a clearer picture? The more details you share, the better I can assist you.", true);
+        addMessage(
+          "Could you paint me a clearer picture? The more details you share, the better I can assist you.",
+          true
+        );
       }, 2300);
 
       setTimeout(() => {
         addMessage("", false);
         setCurrentStep("gathering");
-        setUserData({...userData, issue: userMessage});
+        setUserData({ ...userData, issue: userMessage });
       }, 3800);
-
     } else if (currentStep === "gathering") {
-      setUserData({...userData, issue: userData.issue + " " + userMessage});
-      
+      setUserData({ ...userData, issue: userData.issue + " " + userMessage });
+
       setTimeout(() => {
         addMessage("Perfect! 🎯 I've got all the intel I need.", true);
       }, 800);
 
       setTimeout(() => {
-        addMessage("I'm connecting you with our talent wizards who'll work their magic on your request.", true);
+        addMessage(
+          "I'm connecting you with our talent wizards who'll work their magic on your request.",
+          true
+        );
       }, 2300);
 
       setTimeout(() => {
@@ -144,9 +168,11 @@ const PremiumChatbot = () => {
       const currentUser = JSON.parse(localStorage.getItem("userInfo")) || user;
       const requestData = {
         subject: "Premium Support Request - Talent Acquisition",
-        name: `${currentUser.firstName} ${currentUser.lastName || ''}`.trim(),
+        name: `${currentUser.firstName} ${currentUser.lastName || ""}`.trim(),
         email: currentUser.email,
-        message: `Career Consultation Request:\n\n${fullIssue}\n\nClient: ${currentUser.firstName} ${currentUser.lastName || ''}\nEmail: ${currentUser.email}`,
+        message: `Career Consultation Request:\n\n${fullIssue}\n\nClient: ${
+          currentUser.firstName
+        } ${currentUser.lastName || ""}\nEmail: ${currentUser.email}`,
       };
 
       const response = await axios.post(
@@ -156,11 +182,17 @@ const PremiumChatbot = () => {
 
       if (response.data.success) {
         setTimeout(() => {
-          addMessage("🎉 Mission accomplished! Your request has been delivered to our expert team.", true);
+          addMessage(
+            "🎉 Mission accomplished! Your request has been delivered to our expert team.",
+            true
+          );
         }, 1000);
 
         setTimeout(() => {
-          addMessage(`We'll reach out to you at ${currentUser.email} faster than you can say 'dream job'!`, true);
+          addMessage(
+            `We'll reach out to you at ${currentUser.email} faster than you can say 'dream job'!`,
+            true
+          );
         }, 2500);
 
         setTimeout(() => {
@@ -171,9 +203,12 @@ const PremiumChatbot = () => {
       }
     } catch (error) {
       setTimeout(() => {
-        addMessage("Oops! Seems like our digital wires got crossed. Mind giving it another shot?", true);
+        addMessage(
+          "Oops! Seems like our digital wires got crossed. Mind giving it another shot?",
+          true
+        );
       }, 1000);
-      
+
       setTimeout(() => {
         addMessage("", false);
       }, 2000);
@@ -199,78 +234,107 @@ const PremiumChatbot = () => {
   };
 
   const MessageBubble = ({ message, isBot }) => (
-      <Box
-        display="flex"
-        justifyContent={isBot ? "flex-start" : "flex-end"}
-        mb={2}
-        alignItems="flex-end"
-      >
-        {isBot && (
-          <Avatar
-            sx={{
-              bgcolor: "#1976d2",
-              width: 32,
-              height: 32,
-              mr: 1,
-              fontSize: "14px"
-            }}
-          >
-            K
-          </Avatar>
-        )}
-        <Paper
+    <Box
+      display="flex"
+      justifyContent={isBot ? "flex-start" : "flex-end"}
+      mb={2}
+      alignItems="flex-end"
+    >
+      {isBot && (
+        <Avatar
           sx={{
-            p: 2,
-            maxWidth: "75%",
-            bgcolor: isBot ? "#f8f9fa" : "#1976d2",
-            color: isBot ? "#333" : "white",
-            borderRadius: isBot ? "18px 18px 18px 4px" : "18px 18px 4px 18px",
-            boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-            border: isBot ? "1px solid #e0e0e0" : "none"
+            bgcolor: "#1976d2",
+            width: 32,
+            height: 32,
+            mr: 1,
+            fontSize: "14px",
           }}
         >
-          <Typography variant="body1" sx={{ lineHeight: 1.4 }}>
-            {message.content}
-          </Typography>
-        </Paper>
-        {!isBot && (
-          <Avatar
-            sx={{
-              bgcolor: "#666",
-              width: 32,
-              height: 32,
-              ml: 1,
-              fontSize: "14px"
-            }}
-          >
-            {storedUser?.firstName?.charAt(0) || "U"}
-          </Avatar>
-        )}
-      </Box>
+          K
+        </Avatar>
+      )}
+      <Paper
+        sx={{
+          p: 2,
+          maxWidth: "75%",
+          bgcolor: isBot ? "#f8f9fa" : "#1976d2",
+          color: isBot ? "#333" : "white",
+          borderRadius: isBot ? "18px 18px 18px 4px" : "18px 18px 4px 18px",
+          boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+          border: isBot ? "1px solid #e0e0e0" : "none",
+        }}
+      >
+        <Typography variant="body1" sx={{ lineHeight: 1.4 }}>
+          {message.content}
+        </Typography>
+      </Paper>
+      {!isBot && (
+        <Avatar
+          sx={{
+            bgcolor: "#666",
+            width: 32,
+            height: 32,
+            ml: 1,
+            fontSize: "14px",
+          }}
+        >
+          {storedUser?.firstName?.charAt(0) || "U"}
+        </Avatar>
+      )}
+    </Box>
   );
 
   return (
-    <Box position="fixed" bottom={20} right={20} zIndex={1000} textAlign="center">
+    <Box
+      position="fixed"
+      bottom={20}
+      right={20}
+      zIndex={1000}
+      textAlign="center"
+    >
       {!open && (
-        <Box>
+        <Box
+          display="flex"
+          flexDirection="column"
+          alignItems="center"
+          sx={{
+            position: "fixed", // Optional: if it's meant to stay at a specific position
+            bottom: 20, // adjust as needed
+            right: 20, // adjust as needed
+            zIndex: 9999,
+          }}
+        >
           <IconButton
             onClick={toggleChat}
             sx={{
-              width: 120,
-              height: 120,
+              width: { xs: 60, sm: 80, md: 100, lg: 120 },
+              height: { xs: 60, sm: 80, md: 100, lg: 120 },
+              p: 0,
             }}
           >
-            <img src={ChatbotAvatar} alt="" />
+            <img
+              src={ChatbotAvatar}
+              alt="Chatbot"
+              style={{
+                width: "100%",
+                height: "100%",
+                objectFit: "cover",
+                borderRadius: "50%",
+              }}
+            />
           </IconButton>
-          <Typography 
-            fontSize="12px" 
-            fontWeight="600" 
-            mt={1} 
+
+          <Typography
+            fontSize={{ xs: "10px", sm: "11px", md: "12px" }}
+            fontWeight="600"
+            mt={1}
             color="black"
+            textAlign="center"
             fontFamily="Satoshi, sans-serif"
             sx={{ letterSpacing: "0.5px" }}
           >
-            Facing an issue?<br/> Ask Koustubh for help
+            Facing an issue?
+            <br /> Ask Koustubh for help
           </Typography>
         </Box>
       )}
@@ -278,30 +342,39 @@ const PremiumChatbot = () => {
       {/* Main Chat Interface */}
       {open && storedUser?.email && (
         <Slide direction="up" in={open} mountOnEnter unmountOnExit>
-          <Paper sx={{ 
-            width: {md:380,lg:380,sm: 300, xs: 300}, 
-            height: 520,
-            boxShadow: "0 12px 48px rgba(0,0,0,0.15)",
-            borderRadius: 4, 
-            bgcolor: "white",
-            border: "2px solid #1976d2",  
-            display: "flex",
-            flexDirection: "column"
-          }}>
+          <Paper
+            sx={{
+              width: { md: 380, lg: 380, sm: 300, xs: 300 },
+              height: 520,
+              boxShadow: "0 12px 48px rgba(0,0,0,0.15)",
+              borderRadius: 4,
+              bgcolor: "white",
+              border: "2px solid #1976d2",
+              display: "flex",
+              flexDirection: "column",
+            }}
+          >
             {/* Header */}
-            <Box 
-              display="flex" 
-              alignItems="center" 
+            <Box
+              display="flex"
+              alignItems="center"
               justifyContent="space-between"
               p={3}
               sx={{
                 background: "linear-gradient(135deg, #1976d2 0%, #1565c0 100%)",
                 color: "white",
-                borderRadius: "14px 14px 0 0"
+                borderRadius: "14px 14px 0 0",
               }}
             >
               <Box display="flex" alignItems="center">
-                <Avatar sx={{ bgcolor: "rgba(255,255,255,0.2)", mr: 2, width: 44, height: 44 }}>
+                <Avatar
+                  sx={{
+                    bgcolor: "rgba(255,255,255,0.2)",
+                    mr: 2,
+                    width: 44,
+                    height: 44,
+                  }}
+                >
                   <PersonIcon />
                 </Avatar>
                 <Box>
@@ -313,31 +386,44 @@ const PremiumChatbot = () => {
                   </Typography>
                 </Box>
               </Box>
-              <IconButton 
-                size="small" 
+              <IconButton
+                size="small"
                 onClick={toggleChat}
-                sx={{ color: "white", "&:hover": { bgcolor: "rgba(255,255,255,0.1)" } }}
+                sx={{
+                  color: "white",
+                  "&:hover": { bgcolor: "rgba(255,255,255,0.1)" },
+                }}
               >
                 <CloseIcon />
               </IconButton>
             </Box>
 
             {/* Messages Area */}
-            <Box 
+            <Box
               flex={1}
-              overflow="auto" 
+              overflow="auto"
               p={2}
               sx={{
                 bgcolor: "#fafafa",
-                '&::-webkit-scrollbar': { width: 6 },
-                '&::-webkit-scrollbar-track': { bgcolor: 'transparent' },
-                '&::-webkit-scrollbar-thumb': { bgcolor: '#ccc', borderRadius: 3 }
+                "&::-webkit-scrollbar": { width: 6 },
+                "&::-webkit-scrollbar-track": { bgcolor: "transparent" },
+                "&::-webkit-scrollbar-thumb": {
+                  bgcolor: "#ccc",
+                  borderRadius: 3,
+                },
               }}
             >
-              {messages.map((message) => (
-                message.content && <MessageBubble key={message.id} message={message} isBot={message.isBot} />
-              ))}
-              
+              {messages.map(
+                (message) =>
+                  message.content && (
+                    <MessageBubble
+                      key={message.id}
+                      message={message}
+                      isBot={message.isBot}
+                    />
+                  )
+              )}
+
               {loading && (
                 <Box display="flex" justifyContent="center" my={2}>
                   <CircularProgress size={24} sx={{ color: "#1976d2" }} />
@@ -355,14 +441,16 @@ const PremiumChatbot = () => {
                       placeholder="Type your message..."
                       value={currentInput}
                       onChange={(e) => setCurrentInput(e.target.value)}
-                      onKeyPress={(e) => e.key === 'Enter' && handleUserMessage()}
+                      onKeyPress={(e) =>
+                        e.key === "Enter" && handleUserMessage()
+                      }
                       variant="outlined"
                       size="small"
                       sx={{
-                        '& .MuiOutlinedInput-root': {
+                        "& .MuiOutlinedInput-root": {
                           borderRadius: 6,
-                          bgcolor: "#f8f9fa"
-                        }
+                          bgcolor: "#f8f9fa",
+                        },
                       }}
                     />
                     <IconButton
@@ -374,14 +462,14 @@ const PremiumChatbot = () => {
                         width: 40,
                         height: 40,
                         "&:hover": { bgcolor: "#1565c0" },
-                        "&:disabled": { bgcolor: "#ccc" }
+                        "&:disabled": { bgcolor: "#ccc" },
                       }}
                     >
                       <SendIcon fontSize="small" />
                     </IconButton>
                   </Box>
                 </Box>
-                
+
                 {/* WhatsApp Quick Connect */}
                 <Box>
                   <Divider sx={{ borderColor: "#e8f4fd" }} />
@@ -402,13 +490,13 @@ const PremiumChatbot = () => {
                         bgcolor: "white",
                         textTransform: "none",
                         boxShadow: "0 2px 8px rgba(25, 118, 210, 0.1)",
-                        "&:hover": { 
-                          bgcolor: "#e3f2fd", 
+                        "&:hover": {
+                          bgcolor: "#e3f2fd",
                           borderColor: "#1976d2",
                           transform: "translateY(-1px)",
-                          boxShadow: "0 4px 12px rgba(25, 118, 210, 0.15)"
+                          boxShadow: "0 4px 12px rgba(25, 118, 210, 0.15)",
                         },
-                        transition: "all 0.3s ease"
+                        transition: "all 0.3s ease",
                       }}
                     >
                       Something Urgent? Connect via WhatsApp
@@ -432,13 +520,13 @@ const PremiumChatbot = () => {
                       fontWeight: "600",
                       color: "#1976d2",
                       borderColor: "#1976d2",
-                      mb: 1
+                      mb: 1,
                     }}
                   >
                     Close Chat
                   </Button>
                 </Box>
-                
+
                 {/* WhatsApp Quick Connect for Completed State */}
                 <Box>
                   <Divider sx={{ borderColor: "#e8f4fd" }} />
@@ -459,13 +547,13 @@ const PremiumChatbot = () => {
                         bgcolor: "white",
                         textTransform: "none",
                         boxShadow: "0 2px 8px rgba(25, 118, 210, 0.1)",
-                        "&:hover": { 
-                          bgcolor: "#e3f2fd", 
+                        "&:hover": {
+                          bgcolor: "#e3f2fd",
                           borderColor: "#1976d2",
                           transform: "translateY(-1px)",
-                          boxShadow: "0 4px 12px rgba(25, 118, 210, 0.15)"
+                          boxShadow: "0 4px 12px rgba(25, 118, 210, 0.15)",
                         },
-                        transition: "all 0.3s ease"
+                        transition: "all 0.3s ease",
                       }}
                     >
                       Need More Help? Connect via WhatsApp
