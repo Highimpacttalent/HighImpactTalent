@@ -148,7 +148,7 @@ const DesktopLanding = () => {
                       letterSpacing: '-0.02em'
                     }}
                   >
-                    Where the right People meet the{' '}
+                    Where the right talent meet the{' '}
                     <Box 
                       component="span" 
                       sx={{
@@ -256,14 +256,14 @@ const DesktopLanding = () => {
                         Companies
                       </Typography>
                     </Box>
-                    <Box sx={{ textAlign: 'center' }}>
+                    {/* <Box sx={{ textAlign: 'center' }}>
                       <Typography variant="h4" sx={{ fontWeight: 700, color: '#0a0a0a', mb: 0.5 }}>
                         90%
                       </Typography>
                       <Typography variant="body2" sx={{ color: '#64748b', fontSize: '0.875rem' }}>
                         Success Rate
                       </Typography>
-                    </Box>
+                    </Box> */}
                   </Box>
                 </Box>
               </AnimatedSection>
@@ -332,10 +332,11 @@ const DesktopLanding = () => {
                       py: 1,
                       bgcolor: '#eff6ff',
                       color: '#2563eb',
-                      fontSize: '0.875rem',
-                      fontWeight: 600,
+                      fontSize: '1.125rem',
+                      fontWeight: 700,
                       borderRadius: '50px',
-                      border: '1px solid #dbeafe'
+                      border: '1px solid #dbeafe',
+                      fontStyle:'bold'
                     }}
                   />
                   
@@ -412,10 +413,11 @@ const DesktopLanding = () => {
                       py: 1,
                       bgcolor: '#f0f9ff',
                       color: '#0284c7',
-                      fontSize: '0.875rem',
-                      fontWeight: 600,
+                      fontSize: '1.125rem',
+                      fontWeight: 700,
                       borderRadius: '50px',
-                      border: '1px solid #e0f2fe'
+                      border: '1px solid #e0f2fe',
+                      fontStyle:'bold'
                     }}
                   />
                   
