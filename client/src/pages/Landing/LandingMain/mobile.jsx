@@ -1,5 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { CheckCircle, Mail, ArrowRight, Briefcase, Users, Search } from 'lucide-react';
+import {
+  CheckCircle,
+  Mail,
+  ArrowRight,
+  Briefcase,
+  Users,
+  Search,
+} from "lucide-react";
 import { Link } from "lucide-react";
 
 import Hero from "../../../assets/Landing/Hero.png";
@@ -8,11 +15,10 @@ import Comp2 from "../../../assets/Landing/Comp2.svg";
 import Comp3 from "../../../assets/Landing/Comp3.png";
 import Bottom from "../../../assets/Landing/Bottom.svg";
 import PremiumSubscribeSection from "./Subscribe";
-import { useNavigate } from 'react-router-dom';
-
+import { useNavigate } from "react-router-dom";
 
 const MobileLanding = () => {
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState("");
   const [user, setUser] = useState({}); // Mock user state
   const [isOpen, setIsOpen] = useState(false);
   const navigate = useNavigate();
@@ -25,10 +31,8 @@ const MobileLanding = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log('Subscribing:', email);
+    console.log("Subscribing:", email);
   };
-
-  
 
   return (
     <div className="min-h-screen bg-white">
@@ -38,34 +42,34 @@ const MobileLanding = () => {
           <div className="text-center">
             {/* Hero Image */}
             <div className="mb-2">
-              <img 
-                src={Hero} 
-                alt="Hero" 
+              <img
+                src={Hero}
+                alt="Hero"
                 className="h-48 md:h-64 mx-auto object-contain"
               />
             </div>
 
             {/* CTA Buttons */}
-            <div className="flex justify-center gap-4 ">
+            <div className="flex justify-center gap-4">
               <button
-                onClick={() => navigate('/u-login')}
-                className="bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium min-w-32"
+                onClick={() => navigate("/u-login")}
+                className="bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-blue-600/30 transition-all duration-300 font-medium min-w-32"
               >
                 Get a job
               </button>
               <button
-                onClick={() => navigate('/r-login')}
-                className="border border-blue-600 text-blue-600 px-8 py-3 rounded-lg hover:bg-blue-50 transition-colors font-medium min-w-32"
+                onClick={() => navigate("/r-login")}
+                className="bg-emerald-500 text-white px-8 py-3 rounded-lg hover:bg-emerald-600 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-emerald-500/30 transition-all duration-300 font-medium min-w-32"
               >
                 Hire Now
               </button>
             </div>
 
             {/* Bottom Image */}
-            <div >
-              <img 
-                src={Bottom} 
-                alt="Bottom section" 
+            <div>
+              <img
+                src={Bottom}
+                alt="Bottom section"
                 className="w-full max-w-4xl mx-auto object-contain"
               />
             </div>
@@ -78,11 +82,11 @@ const MobileLanding = () => {
         <div className="max-w-6xl mx-auto">
           <div className="text-center">
             {/* Badge */}
-          
-      <div className="inline-flex items-center bg-blue-100 text-blue-700 px-4 py-2 rounded-full text-sm font-medium mb-6 cursor-pointer hover:bg-blue-200 transition">
-        <Briefcase className="w-4 h-4 mr-2" />
-        Get Hired
-      </div>
+
+            <div className="inline-flex items-center bg-blue-100 text-blue-700 px-4 py-2 rounded-full text-sm font-medium mb-6 cursor-pointer hover:bg-blue-200 transition">
+              <Briefcase className="w-4 h-4 mr-2" />
+              Get Hired
+            </div>
 
             {/* Main Heading */}
             <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-6 leading-tight">
@@ -91,16 +95,16 @@ const MobileLanding = () => {
 
             {/* Description */}
             <p className="text-lg md:text-xl text-gray-600 mb-12 max-w-4xl mx-auto leading-relaxed">
-              Tired of job hunts that lead nowhere? Tell us what you do
-              best—and what you won't settle for. We'll match you with roles
-              that truly fit.
+              Tired of job hunts that lead nowhere? Tell us what you do best—and
+              what you won't settle for. We'll match you with roles that truly
+              fit.
             </p>
 
             {/* Component Image */}
             <div className="mb-8">
-              <img 
-                src={Comp1} 
-                alt="Job matching component" 
+              <img
+                src={Comp1}
+                alt="Job matching component"
                 className="h-48 md:h-64 mx-auto object-contain"
               />
             </div>
@@ -119,25 +123,25 @@ const MobileLanding = () => {
 
             {/* Description */}
             <p className="text-lg md:text-xl text-gray-600 mb-12 max-w-4xl mx-auto leading-relaxed">
-              Our AI-driven platform helps you identify the right candidates
-              — faster, smarter, and more effectively. Focus on what
-              matters: hiring talent that sticks.
+              Our AI-driven platform helps you identify the right candidates —
+              faster, smarter, and more effectively. Focus on what matters:
+              hiring talent that sticks.
             </p>
 
             {/* Component Images */}
             <div className="space-y-8">
               <div className="flex justify-center">
-                <img 
-                  src={Comp2} 
-                  alt="Hiring dashboard" 
+                <img
+                  src={Comp2}
+                  alt="Hiring dashboard"
                   className="max-w-full h-auto object-contain"
                 />
               </div>
-              
+
               <div className="flex justify-center">
-                <img 
-                  src={Comp3} 
-                  alt="Talent matching" 
+                <img
+                  src={Comp3}
+                  alt="Talent matching"
                   className="h-56 md:h-72 mx-auto object-contain"
                 />
               </div>
