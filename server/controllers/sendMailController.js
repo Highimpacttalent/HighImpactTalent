@@ -430,14 +430,6 @@ export const sendStatusUpdateEmail = async (email, status, name = 'Candidate', j
                   <!-- Main Content -->
                   ${content.content}
 
-                  <!-- Call to Action Button -->
-                  <div style="text-align: center; margin: 30px 0;">
-                    <a href="https://www.highimpacttalent.com/dashboard" 
-                       style="display: inline-block; background-color: ${content.cta.color}; color: #ffffff; text-decoration: none; padding: 16px 32px; border-radius: 50px; font-weight: 600; font-size: 16px; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3); transition: all 0.3s ease; text-transform: uppercase; letter-spacing: 0.5px;">
-                      ${content.cta.text} →
-                    </a>
-                  </div>
-
                   <!-- Divider -->
                   <hr style="border: none; height: 1px; background: linear-gradient(to right, transparent, #e2e8f0, transparent); margin: 40px 0;">
 
