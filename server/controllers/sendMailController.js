@@ -410,7 +410,7 @@ export const sendStatusUpdateEmail = async (email, status, name = 'Candidate', j
               <tr>
                 <td style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px 40px 30px 40px; text-align: center;">
                   <!-- Logo Placeholder - Replace with your actual logo -->
-                  <img src="YOUR_COMPANY_LOGO_URL" alt="High Impact Talent" style="max-width: 180px; height: auto; margin-bottom: 20px; display: block; margin-left: auto; margin-right: auto;" />
+                  <img src="https://www.highimpacttalent.com/assets/tlogo-BljjaXz3.png" alt="High Impact Talent" style="max-width: 180px; height: auto; margin-bottom: 20px; display: block; margin-left: auto; margin-right: auto;" />
                   
                   <h1 style="color: #ffffff; font-size: 28px; font-weight: 700; margin: 0; text-shadow: 0 2px 4px rgba(0,0,0,0.1);">
                     ${content.title}
