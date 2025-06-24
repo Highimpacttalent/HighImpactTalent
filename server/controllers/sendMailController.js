@@ -202,6 +202,7 @@ export const sendPasswordResetOTP = async (req, res, next) => {
   `,
     };
 
+
     await transporter.sendMail(mailOptions);
     res.status(200).json({ success: true, message: "OTP sent successfully!" });
   } catch (error) {
@@ -211,5 +212,80 @@ export const sendPasswordResetOTP = async (req, res, next) => {
       message: "Failed to send OTP email",
       details: error.message,
     });
+  }
+};
+
+
+export const sendStatusUpdateEmail = async (email, status, name = 'Candidate') => {
+  if (!email || !status) return;
+
+  const messages = {
+    "Applied": {
+      subject: "Application Received",
+      body: `Thank you for applying! Your application has been successfully received and is currently under review.`
+    },
+    "Application Viewed": {
+      subject: "Your Application Was Viewed",
+      body: `A recruiter has viewed your application. We’ll keep you posted as the review process progresses.`
+    },
+    "Shortlisted": {
+      subject: "You're Shortlisted!",
+      body: `Congratulations! You’ve been shortlisted for the next stage. We’ll be reaching out with further details soon.`
+    },
+    "Interviewing": {
+      subject: "Interview Stage Started",
+      body: `You're now in the interview stage. Be prepared and stay confident! We'll update you on the next steps shortly.`
+    },
+    "Hired": {
+      subject: "You’ve Been Hired!",
+      body: `Fantastic news! You've been selected for the role. The company will be in touch to discuss onboarding.`
+    },
+    "Not Progressing": {
+      subject: "Application Update: Not Progressing",
+      body: `Thank you for your interest. Unfortunately, your application is not progressing further at this time. We encourage you to apply for other roles in the future.`
+    }
+  };
+
+  const content = messages[status];
+
+  if (!content) return;
+
+  const mailOptions = {
+    from: "developerhighimpact@gmail.com",
+    to: email,
+    subject: content.subject,
+    html: `
+      <div style="font-family: Arial, sans-serif; color: #333; line-height: 1.5; max-width: 600px; margin: auto;">
+        <h2 style="color: #2E86DE;">Hi ${name},</h2>
+        <p>${content.body}</p>
+        <p>
+          Visit <a href="https://www.highimpacttalent.com" style="color: #2E86DE;">our website</a> to track your application status.
+        </p>
+        <hr style="border: none; border-top: 1px solid #EEE; margin: 2em 0;">
+        <p style="font-size: 0.9em; color: #555;">
+          At <strong>High Impact Talent</strong>, we help you land your ideal role <strong>twice as fast</strong>.
+        </p>
+        <p style="margin-top: 2em;">
+          Kind regards,<br>
+          <strong>Koustubh</strong><br>
+          Co-founder & CEO<br>
+          <a href="https://www.highimpacttalent.com" style="color: #2E86DE; text-decoration: none;">www.highimpacttalent.com</a>
+        </p>
+      </div>
+    `
+  };
+
+  try {
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: "developerhighimpact@gmail.com",
+        pass: "lpyu zhks kpne qrsc",
+      },
+    });
+    await transporter.sendMail(mailOptions);
+    console.log(`Email sent to ${email} for status: ${status}`);
+  } catch (error) {
+    console.error(`Failed to send status update email to ${email}:`, error.message);
   }
 };
