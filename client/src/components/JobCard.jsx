@@ -45,14 +45,18 @@ const JobCard = ({ job, flag = false, enable = false }) => {
   const [saving, setSaving] = useState(false);
   const navigate = useNavigate();
   const experience = user?.experience;
+  const { minExperience, maxExperience } = job.experience || {};
   let noteligible = false;
-  
-  if (job?.experience && job?.experience > experience) {
+
+  // if the candidate has _too little_ experience…
+  if (minExperience != null && experience < minExperience) {
     noteligible = true;
   }
-  if (job?.experience?.minExperience && job?.experience.minExperience > experience) {
-    noteligible = true;
-  } 
+
+  // // …or the candidate has _too much_ (i.e. you only want juniors)…
+  // if (maxExperience != null && experience > maxExperience) {
+  //   noteligible = true;
+  // }
 
   useEffect(() => {
     setLike(user?.likedJobs?.includes(job._id));
@@ -83,7 +87,6 @@ const JobCard = ({ job, flag = false, enable = false }) => {
     }
   };
 
-
   const renderLikeButton = () => {
     if (saving) {
       return <CircularProgress size={24} />; // Show circular progress while loading
@@ -95,31 +98,41 @@ const JobCard = ({ job, flag = false, enable = false }) => {
       <BookmarkBorder color="action" />
     );
   };
-  
+
   // Match percentage display for desktop and mobile
   const renderMatchPercentage = () => {
     // Only show if user is logged in and matchPercentage exists
     if (!user?.token || job.matchPercentage === undefined) return null;
-    
+
     const matchValue = job.matchPercentage || 0;
-    
+
     return (
-      <Box sx={{
-        position: 'absolute',
-        top: 8,
-        right: 8,
-        display: 'flex',
-        alignItems: 'center',
-        gap: 1,
-        backgroundColor: 'rgba(255, 255, 255, 0.8)',
-        padding: '2px 8px',
-        borderRadius: 1
-      }}>
-        <Typography variant="caption" fontWeight="bold" color={
-          matchValue > 75 ? 'success.main' : 
-          matchValue > 50 ? 'primary.main' : 
-          matchValue > 25 ? 'warning.main' : 'text.secondary'
-        }>
+      <Box
+        sx={{
+          position: "absolute",
+          top: 8,
+          right: 8,
+          display: "flex",
+          alignItems: "center",
+          gap: 1,
+          backgroundColor: "rgba(255, 255, 255, 0.8)",
+          padding: "2px 8px",
+          borderRadius: 1,
+        }}
+      >
+        <Typography
+          variant="caption"
+          fontWeight="bold"
+          color={
+            matchValue > 75
+              ? "success.main"
+              : matchValue > 50
+              ? "primary.main"
+              : matchValue > 25
+              ? "warning.main"
+              : "text.secondary"
+          }
+        >
           {matchValue}% Match
         </Typography>
         <LinearProgress
@@ -129,13 +142,17 @@ const JobCard = ({ job, flag = false, enable = false }) => {
             width: 60,
             height: 6,
             borderRadius: 3,
-            '& .MuiLinearProgress-bar': {
+            "& .MuiLinearProgress-bar": {
               borderRadius: 3,
-              backgroundColor: 
-                matchValue > 75 ? 'success.main' : 
-                matchValue > 50 ? 'primary.main' : 
-                matchValue > 25 ? 'warning.main' : 'text.secondary'
-            }
+              backgroundColor:
+                matchValue > 75
+                  ? "success.main"
+                  : matchValue > 50
+                  ? "primary.main"
+                  : matchValue > 25
+                  ? "warning.main"
+                  : "text.secondary",
+            },
           }}
         />
       </Box>
@@ -151,13 +168,13 @@ const JobCard = ({ job, flag = false, enable = false }) => {
         height: "100%",
         boxShadow: "0px 0px 4px 0px #00000040",
         borderRadius: 2,
-        position: 'relative', // Add this for match percentage positioning
+        position: "relative", // Add this for match percentage positioning
       }}
       onClick={() => navigate(`/job-detail/${job?._id}`)}
     >
       {/* Add match percentage to mobile view */}
       {/* {renderMatchPercentage()} */}
-      
+
       <CardContent
         sx={{ flexGrow: 1, display: "flex", flexDirection: "column" }}
       >
@@ -202,20 +219,22 @@ const JobCard = ({ job, flag = false, enable = false }) => {
             />
             <Chip
               icon={<WorkOutlineOutlined sx={{ color: "#474E68" }} />}
-               label={`${job?.experience?.minExperience || job?.experience }+ years experience`}
+              label={`${
+                job?.experience?.minExperience || job?.experience
+              }+ years experience`}
               variant="contained"
               sx={{ color: "#474E68", fontWeight: "400" }}
             />
           </Box>
           <Chip
             icon={<CurrencyRupee sx={{ color: "#474E68" }} />}
-             label={
-                  (job.salaryConfidential || job.salaryCategory === "Confidential")
-                    ? "Confidential"
-                    : `${Number(job.salary.maxSalary||job.salary).toLocaleString("en-IN")} (${
-                        job.salaryCategory
-                      }) LPA`
-                }
+            label={
+              job.salaryConfidential || job.salaryCategory === "Confidential"
+                ? "Confidential"
+                : `${Number(job.salary.maxSalary || job.salary).toLocaleString(
+                    "en-IN"
+                  )} (${job.salaryCategory}) LPA`
+            }
             variant="contained"
             sx={{ color: "#474E68", fontWeight: "400" }}
           />
@@ -246,7 +265,7 @@ const JobCard = ({ job, flag = false, enable = false }) => {
         boxShadow: "0px 0px 4px 0px #00000040",
         borderRadius: 2,
         p: 0.5,
-        position: 'relative', // Needed for absolute positioning of match percentage
+        position: "relative", // Needed for absolute positioning of match percentage
       }}
     >
       {/* Match percentage bar (top right) */}
@@ -273,7 +292,7 @@ const JobCard = ({ job, flag = false, enable = false }) => {
           </Typography>
 
           <Box sx={{ display: "flex", alignItems: "center" }}>
-          <IconButton
+            <IconButton
               onClick={(e) => handleLikeClick(e, job._id)}
               sx={{
                 display: "flex",
@@ -323,19 +342,21 @@ const JobCard = ({ job, flag = false, enable = false }) => {
             />
             <Chip
               icon={<WorkOutlineOutlined sx={{ color: "#474E68" }} />}
-               label={`${job?.experience?.minExperience || job?.experience }+ years experience`}
+              label={`${
+                job?.experience?.minExperience || job?.experience
+              }+ years experience`}
               variant="contained"
               sx={{ color: "#474E68", fontWeight: "400" }}
             />
             <Chip
               icon={<CurrencyRupee sx={{ color: "#474E68" }} />}
-               label={
-                   (job.salaryConfidential || job.salaryCategory === "Confidential")
-                    ? "Confidential"
-                    : `${Number(job.salary.maxSalary||job.salary).toLocaleString("en-IN")} (${
-                        job.salaryCategory
-                      }) LPA`
-                }
+              label={
+                job.salaryConfidential || job.salaryCategory === "Confidential"
+                  ? "Confidential"
+                  : `${Number(
+                      job.salary.maxSalary || job.salary
+                    ).toLocaleString("en-IN")} (${job.salaryCategory}) LPA`
+              }
               variant="contained"
               sx={{ color: "#474E68", fontWeight: "400" }}
             />
@@ -368,7 +389,11 @@ const JobCard = ({ job, flag = false, enable = false }) => {
             variant="contained"
             color="primary"
             sx={{ borderRadius: 40, fontFamily: "Poppins" }}
-            onClick={() => navigate("/u-login", { state: { refer: `/job-detail/${job._id}` } })} 
+            onClick={() =>
+              navigate("/u-login", {
+                state: { refer: `/job-detail/${job._id}` },
+              })
+            }
           >
             Login/Register To Apply
           </Button>
@@ -403,7 +428,7 @@ const JobCard = ({ job, flag = false, enable = false }) => {
         >
           <ReportProblem color="error" sx={{ mb: 1 }} />
           <Typography variant="body2" color="error" sx={{ px: 1, mt: 0.5 }}>
-           Your experience isn’t quite a match for this role.
+            Your experience isn’t quite a match for this role.
           </Typography>
         </Box>
       )}

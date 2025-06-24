@@ -125,7 +125,13 @@ const AppliedJobMenuCard = ({ job, flag = false, enable = false }) => {
         {/* Job Details Chips */}
         <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, mb: 2 }}>
           <Chip
-            label={`${job?.job?.salary} LPA` || "Salary"}
+            label={
+              job?.job.salaryConfidential || job?.job.salaryCategory === "Confidential"
+                ? "Confidential"
+                : `${Number(job.job.salary.maxSalary || job.job.salary).toLocaleString(
+                    "en-IN"
+                  )} (${job.job.salaryCategory}) LPA`
+            }
             variant="outlined"
             size="small"
             sx={{ 
@@ -149,7 +155,9 @@ const AppliedJobMenuCard = ({ job, flag = false, enable = false }) => {
             }}
           />
           <Chip
-            label={`${job?.job?.experience} years` || "Full time"}
+            label={`${
+                job?.job?.experience?.minExperience || job?.job?.experience
+              }+ years experience`}
             variant="outlined"
             size="small"
             sx={{ 
