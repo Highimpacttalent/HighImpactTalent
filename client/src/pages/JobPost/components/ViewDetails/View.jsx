@@ -45,6 +45,7 @@ import {
   categoryOptions as categoryOptionsList,
   IndustryCategory,
 } from "../../../../assets/functionalarea";
+import { useSelector } from "react-redux";
 
 const formLabelStyle = {
   fontSize: "0.875rem", // 14px
@@ -163,6 +164,7 @@ export default function JobEditForm() {
   const location = useLocation();
   const navigate = useNavigate();
   const jobId = location.state?.job?._id;
+  const token = useSelector((state) => state.user.user.token);
   const muiTheme = useTheme();
   const [saving, setSaving] = useState(false);
 
@@ -357,7 +359,6 @@ export default function JobEditForm() {
     setInitialLoadError(null);
 
     try {
-      const token = localStorage.getItem('token');
        if (!token) {
             setLoading(false);
             setInitialLoadError("Authentication token missing. Please log in again.");
@@ -926,7 +927,9 @@ export default function JobEditForm() {
     setError(null);
 
     try {
-        const token = localStorage.getItem('token');
+        const userInfo = JSON.parse(localStorage.getItem('userInfo'));
+        const token = userInfo?.token;
+
          if (!token) {
             setNotification({ open: true, message: "Authentication token missing. Please log in again.", severity: "error" });
              // navigate("/login"); // Consider redirecting
