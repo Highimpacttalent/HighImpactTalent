@@ -665,10 +665,10 @@ export const getScreeningFilterOptions = async (req, res) => {
           availableAnswers: [],
         };
 
-        // Set default options based on question type
+        // Handle different question types
         switch (question.questionType) {
           case "yes/no":
-            // Always provide Yes/No options for boolean questions
+            // For yes/no questions, always provide Yes/No options regardless of job definition
             filterOptions[questionId].availableAnswers = [
               { label: "Yes", value: true },
               { label: "No", value: false }
@@ -677,15 +677,12 @@ export const getScreeningFilterOptions = async (req, res) => {
 
           case "single_choice":
           case "multi_choice":
-            // For choice questions, use predefined options if available
-            if (question.options && Array.isArray(question.options) && question.options.length > 0) {
+            // For choice questions, use predefined options from the job
+            if (question.options && Array.isArray(question.options)) {
               filterOptions[questionId].availableAnswers = question.options.map(option => ({
                 label: option,
                 value: option
               }));
-            } else {
-              // If no predefined options, we'll populate from actual answers later
-              filterOptions[questionId].availableAnswers = [];
             }
             break;
 
@@ -693,7 +690,6 @@ export const getScreeningFilterOptions = async (req, res) => {
           case "long_answer":
             // For text answers, indicate it's searchable
             filterOptions[questionId].searchable = true;
-            filterOptions[questionId].availableAnswers = [];
             break;
         }
       });
@@ -705,42 +701,20 @@ export const getScreeningFilterOptions = async (req, res) => {
 
       // If we already have this question from job definition, enhance it
       if (filterOptions[questionId]) {
-        // Process answers based on question type
-        switch (group.questionType) {
-          case "yes/no":
-            // Keep the default Yes/No options, but we could add statistics here
-            // Example: count how many Yes vs No answers exist
-            const yesCount = group.uniqueAnswers.filter(ans => ans === true || ans === 'Yes').length;
-            const noCount = group.uniqueAnswers.filter(ans => ans === false || ans === 'No').length;
-            
-            filterOptions[questionId].statistics = {
-              yesCount,
-              noCount,
-              totalResponses: yesCount + noCount
-            };
-            break;
-
-          case "single_choice":
-          case "multi_choice":
-            // For choice questions, merge with actual answers if not already set
-            if (filterOptions[questionId].availableAnswers.length === 0) {
-              const choiceAnswers = group.uniqueAnswers.filter(
-                (answer) =>
-                  typeof answer === "string" || typeof answer === "boolean"
-              );
-              filterOptions[questionId].availableAnswers = [...new Set(choiceAnswers)].map(answer => ({
-                label: answer,
-                value: answer
-              }));
-            }
-            break;
-
-          case "short_answer":
-          case "long_answer":
-            // For text answers, we don't provide filter options but indicate it's searchable
-            filterOptions[questionId].searchable = true;
-            filterOptions[questionId].sampleAnswers = group.answerTexts.slice(0, 3); // First 3 sample answers
-            break;
+        // For yes/no questions, we keep the default options but can add statistics
+        if (group.questionType === "yes/no") {
+          const yesCount = group.uniqueAnswers.filter(ans => ans === true || ans === 'Yes').length;
+          const noCount = group.uniqueAnswers.filter(ans => ans === false || ans === 'No').length;
+          
+          filterOptions[questionId].statistics = {
+            yesCount,
+            noCount,
+            totalResponses: yesCount + noCount
+          };
+        }
+        // For other question types, we might want to add additional info
+        else if (group.questionType === "short_answer" || group.questionType === "long_answer") {
+          filterOptions[questionId].sampleAnswers = group.answerTexts.slice(0, 3);
         }
       } else {
         // If question wasn't in job definition, create from application data
@@ -761,8 +735,7 @@ export const getScreeningFilterOptions = async (req, res) => {
           case "single_choice":
           case "multi_choice":
             const choiceAnswers = group.uniqueAnswers.filter(
-              (answer) =>
-                typeof answer === "string" || typeof answer === "boolean"
+              (answer) => typeof answer === "string"
             );
             filterOptions[questionId].availableAnswers = [...new Set(choiceAnswers)].map(answer => ({
               label: answer,
