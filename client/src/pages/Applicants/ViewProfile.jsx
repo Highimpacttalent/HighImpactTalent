@@ -35,7 +35,7 @@ const ViewProfile = () => {
   const location = useLocation();
   const userData = location.state?.applicant || {};
   const ScreeningQues = location.state?.screeningAnswers || [];
-  console.log(ScreeningQues)
+  console.log(userData)
   const applicationId = location.state?.applicationId || "";
   const [expanded, setExpanded] = useState({});
   const [expandedExperience, setExpandedExperience] = useState({});
@@ -441,18 +441,39 @@ const ViewProfile = () => {
               >
                 <Grid container spacing={3}>
                   <Grid item xs={12} sm={6}>
+                    <InfoField label="Current Company" value={`${userData?.currentCompany}` || "Not Provided"} />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
                     <InfoField label="Current Salary" value={`${userData?.currentSalary} LPA` || "Not disclosed"} />
                   </Grid>
                   <Grid item xs={12} sm={6}>
-                    <InfoField label="Expected Salary" value={`${userData?.expectedMinSalary} LPA` || "Not specified"} />
+                    <InfoField label="Current Designation" value={`${userData?.currentDesignation}` || "Not Provided"} />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <InfoField label="Current Location" value={`${userData?.currentLocation}` || "Not Provided"} />
                   </Grid>
                   <Grid item xs={12} sm={6}>
                     <InfoField label="Open to Relocate" value={userData?.openToRelocate || "Not specified"} />
                   </Grid>
+                </Grid>
+              </ProfileSection>
+
+              {/* Preferences Summary */}
+              <ProfileSection
+                title="Preferences"
+                icon={<BusinessCenterIcon sx={{ fontSize: 20, color: "#6B7280" }} />}
+              >
+                <Grid container spacing={3}>
+                  <Grid item xs={12} sm={6}>
+                    <InfoField label="Expected Salary" value={`${userData?.expectedMinSalary} LPA` || "Not specified"} />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <InfoField label="Work Type Preference" value={userData?.preferredWorkTypes?.join(", ") || "Not specified"} />
+                  </Grid>
                   <Grid item xs={12} sm={6}>
                     <InfoField label="Work Mode Preference" value={userData?.preferredWorkModes?.join(", ") || "Not specified"} />
                   </Grid>
-                  <Grid item xs={12}>
+                  <Grid item xs={12} sm={6}>
                     <InfoField label="Preferred Locations" value={userData?.preferredLocations?.join(", ") || "Any location"} />
                   </Grid>
                 </Grid>
