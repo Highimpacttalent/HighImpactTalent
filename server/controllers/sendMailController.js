@@ -216,154 +216,133 @@ export const sendPasswordResetOTP = async (req, res, next) => {
 };
 
 
-export const sendStatusUpdateEmail = async (email, status, name = 'Candidate', jobTitle = 'Position', companyName = 'Company') => {
+export const sendStatusUpdateEmail = async (email, status, name = 'Candidate', jobTitle = 'Position', companyName = 'High Impact Talent') => {
   if (!email || !status) return;
 
   const messages = {
     "Applied": {
-      subject: "Application Received ✓ Next Steps Inside",
+      subject: "Application Received - Next Steps Inside",
       preheader: "Your journey with us begins now...",
-      title: "Your Application is Live!",
+      title: "Application Confirmed",
+      icon: "✓",
+      primaryColor: "#2563eb", // Blue
+      secondaryColor: "#eff6ff", // Light blue
       content: `
-        <p style="font-size: 16px; line-height: 1.6; margin-bottom: 20px;">
+        <p style="font-size: 16px; line-height: 1.6; margin-bottom: 20px; color: #374151;">
           Thank you for choosing <strong>High Impact Talent</strong> as your career partner. Your application for the <strong>${jobTitle}</strong> role has been successfully received and is now in our talent pipeline.
         </p>
-        <p style="font-size: 16px; line-height: 1.6; margin-bottom: 20px;">
-          Our experienced recruitment team will carefully review your profile within the next <strong>24-48 hours</strong>. We believe in quality over speed, so rest assured your application will get the attention it deserves.
+        <p style="font-size: 16px; line-height: 1.6; margin-bottom: 20px; color: #374151;">
+          Our experienced recruitment team will carefully review your profile within the next <strong>24-48 hours</strong>. We believe in quality over speed, so rest assured your application will receive the attention it deserves.
         </p>
-        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; border-radius: 12px; margin: 25px 0; text-align: center;">
-          <p style="color: white; margin: 0; font-size: 14px; font-weight: 500;">
-            💡 <strong>Pro Tip:</strong> Keep your phone handy - great opportunities move fast!
-          </p>
-        </div>
       `,
-      cta: {
-        text: "Track Application Status",
-        color: "#667eea"
+      highlight: {
+        title: "What's Next?",
+        content: "Keep your phone handy - great opportunities move fast! We'll notify you as soon as there's an update."
       }
     },
 
     "Application Viewed": {
-      subject: "👀 Your Profile Caught Our Attention",
-      preheader: "A recruiter is reviewing your application right now...",
-      title: "You're On Our Radar!",
+      subject: "You're On Our Radar - Profile Under Review",
+      preheader: "Our recruiter just reviewed your application...",
+      title: "You're On Our Radar",
+      icon: "👁️",
+      primaryColor: "#1d4ed8", // Darker blue
+      secondaryColor: "#dbeafe", // Light blue
       content: `
-        <p style="font-size: 16px; line-height: 1.6; margin-bottom: 20px;">
-          Exciting news! A senior recruiter has just reviewed your profile for the <strong>${jobTitle}</strong> position, and we're impressed with what we see.
+        <p style="font-size: 16px; line-height: 1.6; margin-bottom: 20px; color: #374151;">
+          <em>(Cue spotlight...)</em> Our experienced recruiter just took center stage, reviewing your profile for the <strong>${jobTitle}</strong> position and let out a resounding "Bravo!" Your expertise in <strong>[relevant skills]</strong> truly stole the show.
         </p>
-        <p style="font-size: 16px; line-height: 1.6; margin-bottom: 20px;">
-          Your experience in <em>[relevant skills will be highlighted here]</em> aligns well with what we're looking for. We're currently assessing the best next steps for your application.
+        <p style="font-size: 16px; line-height: 1.6; margin-bottom: 20px; color: #374151;">
+          We are now transitioning you to your next act—your official "call to the wings" (next steps) will arrive shortly in a follow-up message.
         </p>
-        <div style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); padding: 20px; border-radius: 12px; margin: 25px 0; text-align: center;">
-          <p style="color: white; margin: 0; font-size: 14px; font-weight: 500;">
-            📈 <strong>Status Update:</strong> You're in the top 30% of applicants for this role
-          </p>
-        </div>
       `,
-      cta: {
-        text: "View Application Details",
-        color: "#11998e"
+      highlight: {
+        title: "Status Update",
+        content: "You're in the top 30% of applicants for this role. Outstanding work!"
       }
     },
 
     "Shortlisted": {
-      subject: "🎉 Congratulations! You've Been Shortlisted",
-      preheader: "You're one step closer to your dream role...",
-      title: "Welcome to the Shortlist!",
+      subject: "Curtain Up! You're Center Stage for the Role",
+      preheader: "Welcome to our exclusive shortlist...",
+      title: "Welcome to the Shortlist",
+      icon: "🎭",
+      primaryColor: "#1e40af", // Blue
+      secondaryColor: "#dbeafe", // Light blue
       content: `
-        <p style="font-size: 16px; line-height: 1.6; margin-bottom: 20px;">
-          Fantastic news! After careful evaluation, you've been <strong>shortlisted</strong> for the <strong>${jobTitle}</strong> role. Your profile stood out among hundreds of applications.
+        <p style="font-size: 16px; line-height: 1.6; margin-bottom: 20px; color: #374151;">
+          <em>(Imagine a cheering crowd...)</em> You have just received a standing ovation from our talent scouts for the <strong>${jobTitle}</strong> role—you've been <strong>shortlisted</strong> from hundreds of applicants! Your presentation of skills was truly outstanding.
         </p>
-        <p style="font-size: 16px; line-height: 1.6; margin-bottom: 20px;">
-          This means you're now in the exclusive group of candidates moving to the next stage. Our hiring team is excited to learn more about your aspirations and how you can contribute to the team.
+        <p style="font-size: 16px; line-height: 1.6; margin-bottom: 20px; color: #374151;">
+          Congratulations, you are part of an exclusive cast moving to the next act. Our casting team is excited to learn about your aspirations and discover what makes you shine on stage.
         </p>
-        <div style="background: linear-gradient(135deg, #ffeaa7 0%, #fab1a0 100%); padding: 20px; border-radius: 12px; margin: 25px 0; text-align: center;">
-          <p style="color: #2d3436; margin: 0; font-size: 14px; font-weight: 500;">
-            🏆 <strong>Achievement Unlocked:</strong> You're now in the top 10% of candidates
-          </p>
-        </div>
       `,
-      cta: {
-        text: "Prepare for Next Round",
-        color: "#e17055"
+      highlight: {
+        title: "Achievement Unlocked",
+        content: "You're now in the top 10% of candidates. Watch your inbox for your next steps!"
       }
     },
 
     "Interviewing": {
-      subject: "📅 Interview Invitation - Action Required",
+      subject: "Your Next Big Scene: Interview Time!",
       preheader: "It's time to showcase your brilliance...",
-      title: "Your Interview Awaits!",
+      title: "Your Interview Awaits",
+      icon: "🎬",
+      primaryColor: "#1e3a8a", // Darker blue
+      secondaryColor: "#dbeafe", // Light blue
       content: `
-        <p style="font-size: 16px; line-height: 1.6; margin-bottom: 20px;">
-          The moment you've been waiting for is here! We're delighted to invite you for an interview for the <strong>${jobTitle}</strong> position.
+        <p style="font-size: 16px; line-height: 1.6; margin-bottom: 20px; color: #374151;">
+          <em>(Roll out the drumroll...)</em> You've been spotlighted! We're delighted to roll out the red carpet and invite you to an interview for the <strong>${jobTitle}</strong> position.
         </p>
-        <p style="font-size: 16px; line-height: 1.6; margin-bottom: 20px;">
-          This is your opportunity to shine and demonstrate why you're the perfect fit for this role. Our hiring manager is genuinely excited to meet you and discuss your career journey.
+        <p style="font-size: 16px; line-height: 1.6; margin-bottom: 20px; color: #374151;">
+          This is your moment to shine under the marquee lights and show us why you're the headliner we've been seeking. Our Casting Director (hiring manager) is excited to meet you and discover the magic you'll bring to our production.
         </p>
-        <div style="background: linear-gradient(135deg, #a29bfe 0%, #6c5ce7 100%); padding: 20px; border-radius: 12px; margin: 25px 0;">
-          <h4 style="color: white; margin: 0 0 10px 0; font-size: 16px;">📋 Interview Preparation Checklist:</h4>
-          <ul style="color: white; margin: 0; padding-left: 20px; font-size: 14px;">
-            <li>Research the company and role thoroughly</li>
-            <li>Prepare specific examples of your achievements</li>
-            <li>Have questions ready about the team and culture</li>
-            <li>Test your tech setup (if virtual interview)</li>
-          </ul>
-        </div>
       `,
-      cta: {
-        text: "Schedule Interview",
-        color: "#6c5ce7"
+      highlight: {
+        title: "Interview Preparation Tips",
+        content: "Research the company thoroughly • Prepare specific examples • Have questions ready • Test your tech setup"
       }
     },
 
     "Hired": {
-      subject: "🎊 Welcome to the Team! Offer Letter Inside",
+      subject: "Your Final Act: Welcome to the Team!",
       preheader: "Your new career chapter begins now...",
       title: "Congratulations, You're Hired!",
+      icon: "🎉",
+      primaryColor: "#1e40af", // Blue
+      secondaryColor: "#dbeafe", // Light blue
       content: `
-        <p style="font-size: 16px; line-height: 1.6; margin-bottom: 20px;">
-          We're absolutely <strong>thrilled</strong> to extend an offer for the <strong>${jobTitle}</strong> position! Your skills, experience, and passion made you the standout choice.
+        <p style="font-size: 16px; line-height: 1.6; margin-bottom: 20px; color: #374151;">
+          <em>(Spotlights on you...)</em> We are absolutely thrilled to offer you the leading role of <strong>${jobTitle}</strong> at <strong>${companyName}</strong>! Your outstanding skills and show-stopping enthusiasm made you our headline attraction.
         </p>
-        <p style="font-size: 16px; line-height: 1.6; margin-bottom: 20px;">
-          Welcome to the <strong>High Impact Talent</strong> family! We can't wait to see the incredible contributions you'll make and the success we'll achieve together.
+        <p style="font-size: 16px; line-height: 1.6; margin-bottom: 20px; color: #374151;">
+          Welcome to the High Impact Talent family—where brainstorming sessions are like improv nights, and coffee breaks are perfect for backstage insights. We can't wait to see you shine bright on our stage!
         </p>
-        <div style="background: linear-gradient(135deg, #fd79a8 0%, #fdcb6e 100%); padding: 25px; border-radius: 12px; margin: 25px 0; text-align: center;">
-          <h3 style="color: white; margin: 0 0 10px 0; font-size: 18px;">🚀 What's Next?</h3>
-          <p style="color: white; margin: 0; font-size: 14px; line-height: 1.5;">
-            Check your email for the official offer letter and onboarding details.<br>
-            Your new journey starts soon!
-          </p>
-        </div>
       `,
-      cta: {
-        text: "Access Onboarding Portal",
-        color: "#e84393"
+      highlight: {
+        title: "What's Next?",
+        content: "Check your email for the official offer letter and onboarding details. Your journey starts soon!"
       }
     },
 
     "Not Progressing": {
-      subject: "Thank You for Your Interest - Future Opportunities",
-      preheader: "Every 'no' brings you closer to the right 'yes'...",
+      subject: "Bravo! Your Next Act Awaits",
+      preheader: "Thank you for your outstanding audition...",
       title: "Thank You for Your Application",
+      icon: "🎭",
+      primaryColor: "#2563eb", // Blue
+      secondaryColor: "#eff6ff", // Light blue
       content: `
-        <p style="font-size: 16px; line-height: 1.6; margin-bottom: 20px;">
-          Thank you for your interest in the <strong>${jobTitle}</strong> role and for taking the time to share your impressive background with us.
+        <p style="font-size: 16px; line-height: 1.6; margin-bottom: 20px; color: #374151;">
+          <em>(Spotlight fade...)</em> Thank you for auditioning for our <strong>${jobTitle}</strong> role—your performance was impressive! After a highly competitive casting process, we've chosen to move forward with someone whose experience more closely matches our current script requirements.
         </p>
-        <p style="font-size: 16px; line-height: 1.6; margin-bottom: 20px;">
-          After careful consideration, we've decided to move forward with candidates whose experience more closely aligns with our current specific requirements. This decision was not easy, given the high caliber of applicants.
+        <p style="font-size: 16px; line-height: 1.6; margin-bottom: 20px; color: #374151;">
+          But don't close the curtain just yet: we'd love to keep you as part of our talent troupe for future leading roles. Keep watching—your next big scene might be just around the corner!
         </p>
-        <p style="font-size: 16px; line-height: 1.6; margin-bottom: 20px;">
-          However, we were genuinely impressed by your profile and would love to keep you in our talent network for future opportunities that might be a perfect match.
-        </p>
-        <div style="background: linear-gradient(135deg, #74b9ff 0%, #0984e3 100%); padding: 20px; border-radius: 12px; margin: 25px 0; text-align: center;">
-          <p style="color: white; margin: 0; font-size: 14px; font-weight: 500;">
-            💼 <strong>Stay Connected:</strong> We'll notify you about relevant positions that match your profile
-          </p>
-        </div>
       `,
-      cta: {
-        text: "Join Our Talent Network",
-        color: "#0984e3"
+      highlight: {
+        title: "Stay Connected",
+        content: "We'll notify you about relevant positions that match your profile. Your talent deserves the right stage!"
       }
     }
   };
@@ -390,29 +369,41 @@ export const sendStatusUpdateEmail = async (email, status, name = 'Candidate', j
         </xml>
       </noscript>
       <![endif]-->
+      <style>
+        @media screen and (max-width: 600px) {
+          .mobile-padding { padding: 20px !important; }
+          .mobile-text { font-size: 14px !important; }
+          .mobile-title { font-size: 24px !important; }
+        }
+      </style>
     </head>
-    <body style="margin: 0; padding: 0; background-color: #f8f9ff; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
+    <body style="margin: 0; padding: 0; background-color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
       
       <!-- Preheader -->
-      <div style="display: none; max-height: 0; overflow: hidden; font-size: 1px; line-height: 1px; color: #f8f9ff;">
+      <div style="display: none; max-height: 0; overflow: hidden; font-size: 1px; line-height: 1px; color: #f8fafc;">
         ${content.preheader}
       </div>
 
       <!-- Email Container -->
-      <table role="presentation" style="width: 100%; border-collapse: collapse; background-color: #f8f9ff;">
+      <table role="presentation" style="width: 100%; border-collapse: collapse; background-color: #f8fafc;">
         <tr>
-          <td style="padding: 40px 20px;">
+          <td style="padding: 40px 20px;" class="mobile-padding">
             
             <!-- Main Email Content -->
-            <table role="presentation" style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 16px; box-shadow: 0 10px 30px rgba(102, 126, 234, 0.1); overflow: hidden;">
+            <table role="presentation" style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; box-shadow: 0 4px 20px rgba(37, 99, 235, 0.08); overflow: hidden; border: 1px solid #e5e7eb;">
               
               <!-- Header -->
               <tr>
-                <td style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px 40px 30px 40px; text-align: center;">
-                  <!-- Logo Placeholder - Replace with your actual logo -->
-                  <img src="https://www.highimpacttalent.com/assets/tlogo-BljjaXz3.png" alt="High Impact Talent" style="max-width: 180px; height: auto; margin-bottom: 20px; display: block; margin-left: auto; margin-right: auto;" />
+                <td style="background: linear-gradient(135deg, ${content.primaryColor} 0%, ${content.primaryColor}dd 100%); padding: 40px 40px 30px 40px; text-align: center;">
+                  <!-- Logo -->
+                  <img src="https://www.highimpacttalent.com/assets/tlogo-BljjaXz3.png" alt="High Impact Talent" style="max-width: 160px; height: auto; margin-bottom: 24px; display: block; margin-left: auto; margin-right: auto;" />
                   
-                  <h1 style="color: #ffffff; font-size: 28px; font-weight: 700; margin: 0; text-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                  <!-- Status Icon -->
+                  <div style="background: rgba(255, 255, 255, 0.2); width: 60px; height: 60px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 20px; font-size: 24px;">
+                    ${content.icon}
+                  </div>
+                  
+                  <h1 style="color: #ffffff; font-size: 28px; font-weight: 700; margin: 0; letter-spacing: -0.5px;" class="mobile-title">
                     ${content.title}
                   </h1>
                 </td>
@@ -420,33 +411,48 @@ export const sendStatusUpdateEmail = async (email, status, name = 'Candidate', j
 
               <!-- Content Body -->
               <tr>
-                <td style="padding: 40px;">
+                <td style="padding: 40px;" class="mobile-padding">
                   
                   <!-- Greeting -->
-                  <h2 style="color: #2d3748; font-size: 22px; font-weight: 600; margin: 0 0 25px 0; border-bottom: 2px solid #e2e8f0; padding-bottom: 15px;">
-                    Hello ${name} 👋
-                  </h2>
+                  <div style="margin-bottom: 30px;">
+                    <h2 style="color: #1f2937; font-size: 20px; font-weight: 600; margin: 0 0 8px 0;">
+                      Hello ${name} 👋
+                    </h2>
+                    <div style="width: 60px; height: 3px; background: ${content.primaryColor}; border-radius: 2px;"></div>
+                  </div>
 
                   <!-- Main Content -->
-                  ${content.content}
+                  <div style="margin-bottom: 30px;">
+                    ${content.content}
+                  </div>
 
-                  <!-- Divider -->
-                  <hr style="border: none; height: 1px; background: linear-gradient(to right, transparent, #e2e8f0, transparent); margin: 40px 0;">
+                  <!-- Highlight Box -->
+                  <div style="background: ${content.secondaryColor}; border-left: 4px solid ${content.primaryColor}; padding: 20px; border-radius: 8px; margin: 30px 0;">
+                    <h3 style="color: ${content.primaryColor}; font-size: 16px; font-weight: 600; margin: 0 0 10px 0;">
+                      💡 ${content.highlight.title}
+                    </h3>
+                    <p style="color: #374151; font-size: 14px; line-height: 1.5; margin: 0;">
+                      ${content.highlight.content}
+                    </p>
+                  </div>
 
                   <!-- Company Info -->
-                  <div style="background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%); padding: 25px; border-radius: 12px; margin: 30px 0;">
-                    <h3 style="color: #2d3748; font-size: 18px; margin: 0 0 15px 0; font-weight: 600;">
+                  <div style="background: #f9fafb; border: 1px solid #e5e7eb; padding: 24px; border-radius: 8px; margin: 30px 0;">
+                    <h3 style="color: #1f2937; font-size: 16px; margin: 0 0 12px 0; font-weight: 600;">
                       Why Choose High Impact Talent?
                     </h3>
-                    <div style="display: flex; flex-wrap: wrap; gap: 15px;">
-                      <div style="flex: 1; min-width: 150px;">
-                        <div style="color: #4a5568; font-size: 14px; line-height: 1.6;">
-                          <strong>2x Faster Placements</strong><br>
-                          <strong>Perfect Role Matching</strong><br>
-                          <strong>Personal Career Support</strong>
-                        </div>
-                      </div>
+                    <div style="color: #6b7280; font-size: 14px; line-height: 1.6;">
+                      <strong style="color: ${content.primaryColor};">✨ 2x Faster Placements</strong> - We accelerate your career journey<br>
+                      <strong style="color: ${content.primaryColor};">🎯 Perfect Role Matching</strong> - Find your ideal position<br>
+                      <strong style="color: ${content.primaryColor};">🤝 Personal Career Support</strong> - Dedicated guidance throughout
                     </div>
+                  </div>
+
+                  <!-- CTA Button -->
+                  <div style="text-align: center; margin: 30px 0;">
+                    <a href="https://www.highimpacttalent.com" style="display: inline-block; background: ${content.primaryColor}; color: white; padding: 14px 32px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px; box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);">
+                      Visit Our Portal
+                    </a>
                   </div>
 
                 </td>
@@ -454,27 +460,27 @@ export const sendStatusUpdateEmail = async (email, status, name = 'Candidate', j
 
               <!-- Footer -->
               <tr>
-                <td style="background-color: #2d3748; padding: 30px 40px; text-align: center;">
+                <td style="background-color: #1f2937; padding: 30px 40px; text-align: center;" class="mobile-padding">
                   
                   <!-- Signature -->
-                  <div style="margin-bottom: 25px;">
-                    <p style="color: #ffffff; margin: 0 0 10px 0; font-size: 16px; font-weight: 500;">
-                      Best regards,
+                  <div style="margin-bottom: 24px;">
+                    <p style="color: #ffffff; margin: 0 0 8px 0; font-size: 16px; font-weight: 500;">
+                      Encore-worthy regards,
                     </p>
-                    <p style="color: #ffffff; margin: 0 0 5px 0; font-size: 18px; font-weight: 700;">
+                    <p style="color: #ffffff; margin: 0 0 4px 0; font-size: 18px; font-weight: 700;">
                       Koustubh
                     </p>
-                    <p style="color: #a0aec0; margin: 0; font-size: 14px;">
-                      Co-founder & CEO, High Impact Talent
+                    <p style="color: #9ca3af; margin: 0; font-size: 14px;">
+                      Talent Director & Stage Manager<br>High Impact Talent
                     </p>
                   </div>
 
                   <!-- Company Details -->
-                  <div style="border-top: 1px solid #4a5568; padding-top: 20px; margin-top: 20px;">
-                    <p style="color: #a0aec0; margin: 0; font-size: 12px; line-height: 1.5;">
+                  <div style="border-top: 1px solid #374151; padding-top: 20px;">
+                    <p style="color: #9ca3af; margin: 0; font-size: 12px; line-height: 1.6;">
                       High Impact Talent Private Limited<br>
-                      📧 <a href="mailto:highimpacttalentenquiry@gmail.com" style="color: #667eea; text-decoration: none;">highimpacttalentenquiry@gmail.com</a> | 
-                      🌐 <a href="https://www.highimpacttalent.com" style="color: #667eea; text-decoration: none;">www.highimpacttalent.com</a><br>
+                      📧 <a href="mailto:highimpacttalentenquiry@gmail.com" style="color: #60a5fa; text-decoration: none;">highimpacttalentenquiry@gmail.com</a><br>
+                      🌐 <a href="https://www.highimpacttalent.com" style="color: #60a5fa; text-decoration: none;">www.highimpacttalent.com</a><br>
                       © ${currentYear} High Impact Talent. All rights reserved.
                     </p>
                   </div>
@@ -486,10 +492,10 @@ export const sendStatusUpdateEmail = async (email, status, name = 'Candidate', j
 
             <!-- Footer Note -->
             <div style="text-align: center; margin-top: 30px;">
-              <p style="color: #718096; font-size: 12px; margin: 0;">
+              <p style="color: #6b7280; font-size: 12px; margin: 0; line-height: 1.5;">
                 You're receiving this email because you applied for a position through High Impact Talent.<br>
-                <a href="#" style="color: #667eea; text-decoration: none;">Update preferences</a> | 
-                <a href="#" style="color: #667eea; text-decoration: none;">Unsubscribe</a>
+                <a href="#" style="color: #2563eb; text-decoration: none;">Update preferences</a> | 
+                <a href="#" style="color: #2563eb; text-decoration: none;">Unsubscribe</a>
               </p>
             </div>
 
@@ -503,35 +509,35 @@ export const sendStatusUpdateEmail = async (email, status, name = 'Candidate', j
   const mailOptions = {
     from: {
       name: "High Impact Talent",
-      address: "hello@highimpacttalent.com" // Use a more professional email
+      address: "hello@highimpacttalent.com"
     },
     to: email,
     subject: content.subject,
     html: htmlTemplate,
-    // Add text version for better deliverability
     text: `
       Hello ${name},
       
       ${content.content.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim()}
       
+      ${content.highlight.title}: ${content.highlight.content}
+      
       Visit https://www.highimpacttalent.com to track your application status.
       
-      Best regards,
+      Encore-worthy regards,
       Koustubh
-      Co-founder & CEO
+      Talent Director & Stage Manager
       High Impact Talent
       www.highimpacttalent.com
     `
   };
 
   try {
-    const transporter = nodemailer.createTransport({
+    const transporter = nodemailer.createTransporter({
       service: "gmail",
       auth: {
-        user: "developerhighimpact@gmail.com",
-        pass: "lpyu zhks kpne qrsc", // Consider using environment variables
+        user: process.env.EMAIL_USER || "developerhighimpact@gmail.com",
+        pass: process.env.EMAIL_PASS || "lpyu zhks kpne qrsc",
       },
-      // Add these for better deliverability
       pool: true,
       maxConnections: 1,
       rateDelta: 20000,
@@ -539,14 +545,9 @@ export const sendStatusUpdateEmail = async (email, status, name = 'Candidate', j
     });
 
     await transporter.sendMail(mailOptions);
-    console.log(`Premium email sent to ${email} for status: ${status}`);
-    
-    // Optional: Add analytics tracking
-    // await trackEmailSent(email, status, 'sent');
+    console.log(`Professional email sent to ${email} for status: ${status}`);
     
   } catch (error) {
     console.error(`Failed to send email to ${email}:`, error.message);
-    // Optional: Add error tracking
-    // await trackEmailSent(email, status, 'failed', error.message);
   }
 };
