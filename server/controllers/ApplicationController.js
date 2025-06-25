@@ -336,28 +336,40 @@ export const getApplicationsOfAjob = async (req, res) => {
     // Apply filters using $match stages for better performance
     const filterConditions = [];
 
-    // Keywords filter - search in applicant details
+    // Enhanced Keywords filter - support multiple keywords separated by commas
     if (keywords && keywords.trim()) {
-      const keywordRegex = new RegExp(keywords.trim(), "i");
-      filterConditions.push({
-        $or: [
-          { "applicant.currentDesignation": keywordRegex },
-          { "applicant.currentCompany": keywordRegex },
-          { "applicant.skills": { $in: [keywordRegex] } },
-          { "applicant.about": keywordRegex },
-          { "applicant.firstName": keywordRegex },
-          { "applicant.lastName": keywordRegex },
-        ],
-      });
+      const keywordsList = keywords.split(',').map(k => k.trim()).filter(k => k);
+      
+      if (keywordsList.length > 0) {
+        const keywordConditions = keywordsList.map(keyword => {
+          const keywordRegex = new RegExp(keyword, "i");
+          return {
+            $or: [
+              { "applicant.currentDesignation": keywordRegex },
+              { "applicant.currentCompany": keywordRegex },
+              { "applicant.skills": { $in: [keywordRegex] } },
+              { "applicant.about": keywordRegex },
+              { "applicant.firstName": keywordRegex },
+              { "applicant.lastName": keywordRegex },
+            ],
+          };
+        });
+
+        // Use $or to match ANY of the keywords (OR logic)
+        // Use $and to match ALL keywords (AND logic) - uncomment if needed
+        filterConditions.push({
+          $or: keywordConditions  // Change to $and: keywordConditions for AND logic
+        });
+      }
     }
 
-    // Location filter - current location + preferred locations
+    // Enhanced Location filter - support multiple locations separated by commas
     if (location && location.trim()) {
-      const locationValue = location.trim();
-      if (locationValue.includes(",")) {
-        const locations = locationValue.split(",").map((loc) => loc.trim());
-        const locationRegexes = locations.map((loc) => new RegExp(loc, "i"));
-
+      const locationsList = location.split(',').map(loc => loc.trim()).filter(loc => loc);
+      
+      if (locationsList.length > 0) {
+        const locationRegexes = locationsList.map(loc => new RegExp(loc, "i"));
+        
         filterConditions.push({
           $or: [
             { "applicant.currentLocation": { $in: locationRegexes } },
@@ -368,37 +380,17 @@ export const getApplicationsOfAjob = async (req, res) => {
             },
           ],
         });
-      } else {
-        const locationRegex = new RegExp(locationValue, "i");
-        filterConditions.push({
-          $or: [
-            { "applicant.currentLocation": locationRegex },
-            {
-              "applicant.preferredLocations": {
-                $elemMatch: { $regex: locationRegex },
-              },
-            },
-          ],
-        });
       }
     }
 
-    // Current designation filter
+    // Enhanced Current designation filter - support multiple designations
     if (currentDesignation && currentDesignation.trim()) {
-      const designationValue = currentDesignation.trim();
-      if (designationValue.includes(",")) {
-        const designations = designationValue
-          .split(",")
-          .map((des) => des.trim());
-        const designationRegexes = designations.map(
-          (des) => new RegExp(des, "i")
-        );
+      const designationsList = currentDesignation.split(',').map(des => des.trim()).filter(des => des);
+      
+      if (designationsList.length > 0) {
+        const designationRegexes = designationsList.map(des => new RegExp(des, "i"));
         filterConditions.push({
           "applicant.currentDesignation": { $in: designationRegexes },
-        });
-      } else {
-        filterConditions.push({
-          "applicant.currentDesignation": new RegExp(designationValue, "i"),
         });
       }
     }
@@ -457,13 +449,22 @@ export const getApplicationsOfAjob = async (req, res) => {
 
               switch (questionType) {
                 case "yes/no":
-                  // Boolean matching for yes/no questions
+                  // Enhanced Boolean matching for yes/no questions
+                  let booleanValue;
+                  if (typeof expectedAnswer === 'boolean') {
+                    booleanValue = expectedAnswer;
+                  } else if (typeof expectedAnswer === 'string') {
+                    booleanValue = expectedAnswer.toLowerCase() === 'yes' || expectedAnswer.toLowerCase() === 'true';
+                  } else {
+                    // Skip if invalid format
+                    return;
+                  }
+                  
                   filterConditions.push({
                     screeningAnswers: {
                       $elemMatch: {
                         questionId: new mongoose.Types.ObjectId(questionId),
-                        answer:
-                          expectedAnswer === "Yes" || expectedAnswer === true,
+                        answer: booleanValue,
                       },
                     },
                   });
@@ -520,7 +521,7 @@ export const getApplicationsOfAjob = async (req, res) => {
 
                 case "short_answer":
                 case "long_answer":
-                  // Text search for answer text (these are not typically filtered but included for completeness)
+                  // Text search for answer text
                   if (searchText && searchText.trim()) {
                     const textRegex = new RegExp(searchText.trim(), "i");
                     filterConditions.push({
@@ -651,42 +652,125 @@ export const getScreeningFilterOptions = async (req, res) => {
 
     const filterOptions = {};
 
-    // Process each question's answers
+    // Process screening questions from job definition first
+    if (job.screeningQuestions && job.screeningQuestions.length > 0) {
+      job.screeningQuestions.forEach((question) => {
+        const questionId = question._id.toString();
+        
+        filterOptions[questionId] = {
+          question: question.question,
+          questionType: question.questionType,
+          availableAnswers: [],
+        };
+
+        // Set default options based on question type
+        switch (question.questionType) {
+          case "yes/no":
+            // Always provide Yes/No options for boolean questions
+            filterOptions[questionId].availableAnswers = [
+              { label: "Yes", value: true },
+              { label: "No", value: false }
+            ];
+            break;
+
+          case "single_choice":
+          case "multi_choice":
+            // For choice questions, use predefined options if available
+            if (question.options && question.options.length > 0) {
+              filterOptions[questionId].availableAnswers = question.options.map(option => ({
+                label: option,
+                value: option
+              }));
+            }
+            break;
+
+          case "short_answer":
+          case "long_answer":
+            // For text answers, indicate it's searchable
+            filterOptions[questionId].searchable = true;
+            filterOptions[questionId].availableAnswers = [];
+            break;
+        }
+      });
+    }
+
+    // Now enhance with actual answers from applications
     answerGroups.forEach((group) => {
       const questionId = group._id.toString();
 
-      filterOptions[questionId] = {
-        question: group.question,
-        questionType: group.questionType,
-        availableAnswers: [],
-      };
+      // If we already have this question from job definition, enhance it
+      if (filterOptions[questionId]) {
+        // Process answers based on question type
+        switch (group.questionType) {
+          case "yes/no":
+            // Keep the default Yes/No options, but we could add statistics here
+            // Example: count how many Yes vs No answers exist
+            const yesCount = group.uniqueAnswers.filter(ans => ans === true || ans === 'Yes').length;
+            const noCount = group.uniqueAnswers.filter(ans => ans === false || ans === 'No').length;
+            
+            filterOptions[questionId].statistics = {
+              yesCount,
+              noCount,
+              totalResponses: yesCount + noCount
+            };
+            break;
 
-      // Process answers based on question type
-      switch (group.questionType) {
-        case "yes/no":
-          filterOptions[questionId].availableAnswers = ["Yes", "No"];
-          break;
+          case "single_choice":
+          case "multi_choice":
+            // For choice questions, merge with actual answers if not already set
+            if (filterOptions[questionId].availableAnswers.length === 0) {
+              const choiceAnswers = group.uniqueAnswers.filter(
+                (answer) =>
+                  typeof answer === "string" || typeof answer === "boolean"
+              );
+              filterOptions[questionId].availableAnswers = [...new Set(choiceAnswers)].map(answer => ({
+                label: answer,
+                value: answer
+              }));
+            }
+            break;
 
-        case "single_choice":
-        case "multi_choice":
-          // For choice questions, get unique string answers
-          const choiceAnswers = group.uniqueAnswers.filter(
-            (answer) =>
-              typeof answer === "string" || typeof answer === "boolean"
-          );
-          filterOptions[questionId].availableAnswers = [
-            ...new Set(choiceAnswers),
-          ];
-          break;
+          case "short_answer":
+          case "long_answer":
+            // For text answers, we don't provide filter options but indicate it's searchable
+            filterOptions[questionId].searchable = true;
+            filterOptions[questionId].sampleAnswers = group.answerTexts.slice(0, 3); // First 3 sample answers
+            break;
+        }
+      } else {
+        // If question wasn't in job definition, create from application data
+        filterOptions[questionId] = {
+          question: group.question,
+          questionType: group.questionType,
+          availableAnswers: [],
+        };
 
-        case "short_answer":
-        case "long_answer":
-          // For text answers, we don't provide filter options but indicate it's searchable
-          filterOptions[questionId].searchable = true;
-          filterOptions[questionId].availableAnswers = [
-            "[Text Search Available]",
-          ];
-          break;
+        switch (group.questionType) {
+          case "yes/no":
+            filterOptions[questionId].availableAnswers = [
+              { label: "Yes", value: true },
+              { label: "No", value: false }
+            ];
+            break;
+
+          case "single_choice":
+          case "multi_choice":
+            const choiceAnswers = group.uniqueAnswers.filter(
+              (answer) =>
+                typeof answer === "string" || typeof answer === "boolean"
+            );
+            filterOptions[questionId].availableAnswers = [...new Set(choiceAnswers)].map(answer => ({
+              label: answer,
+              value: answer
+            }));
+            break;
+
+          case "short_answer":
+          case "long_answer":
+            filterOptions[questionId].searchable = true;
+            filterOptions[questionId].sampleAnswers = group.answerTexts.slice(0, 3);
+            break;
+        }
       }
     });
 
@@ -694,6 +778,7 @@ export const getScreeningFilterOptions = async (req, res) => {
       success: true,
       filterOptions,
       jobScreeningQuestions: job.screeningQuestions,
+      totalQuestions: Object.keys(filterOptions).length,
     });
   } catch (error) {
     console.error("Error getting screening filter options:", error);
