@@ -532,7 +532,7 @@ export const sendStatusUpdateEmail = async (email, status, name = 'Candidate', j
   };
 
   try {
-    const transporter = nodemailer.createTransporter({
+    const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
         user: process.env.EMAIL_USER || "developerhighimpact@gmail.com",
