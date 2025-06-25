@@ -172,7 +172,7 @@ export const updateApplicationStatus = async (req, res) => {
       return res.status(404).json({ message: "Application not found" });
     }
 
-    if (companyId != application.company.toString()) {
+    if (companyId != application.company._id) {
       return res.status(401).json({
         success: false,
         message: "Not authorized to update status",
@@ -909,7 +909,7 @@ export const bulkRejectApplications = async (req, res) => {
 
     // Check authorization - ensure all applications belong to the company
     for (let application of applications) {
-      if (companyId != application.company.toString()) {
+      if (companyId != application.company._id) {
         return res.status(401).json({
           success: false,
           message: "Not authorized to update status",
