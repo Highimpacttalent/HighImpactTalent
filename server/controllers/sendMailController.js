@@ -398,11 +398,6 @@ export const sendStatusUpdateEmail = async (email, status, name = 'Candidate', j
                   <!-- Logo -->
                   <img src="https://www.highimpacttalent.com/assets/tlogo-BljjaXz3.png" alt="High Impact Talent" style="max-width: 160px; height: auto; margin-bottom: 24px; display: block; margin-left: auto; margin-right: auto;" />
                   
-                  <!-- Status Icon -->
-                  <div style="background: rgba(255, 255, 255, 0.2); width: 60px; height: 60px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 20px; font-size: 24px;">
-                    ${content.icon}
-                  </div>
-                  
                   <h1 style="color: #ffffff; font-size: 28px; font-weight: 700; margin: 0; letter-spacing: -0.5px;" class="mobile-title">
                     ${content.title}
                   </h1>
@@ -429,7 +424,7 @@ export const sendStatusUpdateEmail = async (email, status, name = 'Candidate', j
                   <!-- Highlight Box -->
                   <div style="background: ${content.secondaryColor}; border-left: 4px solid ${content.primaryColor}; padding: 20px; border-radius: 8px; margin: 30px 0;">
                     <h3 style="color: ${content.primaryColor}; font-size: 16px; font-weight: 600; margin: 0 0 10px 0;">
-                      💡 ${content.highlight.title}
+                      ${content.highlight.title}
                     </h3>
                     <p style="color: #374151; font-size: 14px; line-height: 1.5; margin: 0;">
                       ${content.highlight.content}
@@ -442,9 +437,9 @@ export const sendStatusUpdateEmail = async (email, status, name = 'Candidate', j
                       Why Choose High Impact Talent?
                     </h3>
                     <div style="color: #6b7280; font-size: 14px; line-height: 1.6;">
-                      <strong style="color: ${content.primaryColor};">✨ 2x Faster Placements</strong> - We accelerate your career journey<br>
-                      <strong style="color: ${content.primaryColor};">🎯 Perfect Role Matching</strong> - Find your ideal position<br>
-                      <strong style="color: ${content.primaryColor};">🤝 Personal Career Support</strong> - Dedicated guidance throughout
+                      <strong style="color: ${content.primaryColor};">2x Faster Placements</strong> - We accelerate your career journey<br>
+                      <strong style="color: ${content.primaryColor};">Perfect Role Matching</strong> - Find your ideal position<br>
+                      <strong style="color: ${content.primaryColor};">Personal Career Support</strong> - Dedicated guidance throughout
                     </div>
                   </div>
 
