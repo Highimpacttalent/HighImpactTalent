@@ -660,6 +660,8 @@ export const getScreeningFilterOptions = async (req, res) => {
         filterOptions[questionId] = {
           question: question.question,
           questionType: question.questionType,
+          isMandatory: question.isMandatory || false,
+          order: question.order || 0,
           availableAnswers: [],
         };
 
@@ -676,11 +678,14 @@ export const getScreeningFilterOptions = async (req, res) => {
           case "single_choice":
           case "multi_choice":
             // For choice questions, use predefined options if available
-            if (question.options && question.options.length > 0) {
+            if (question.options && Array.isArray(question.options) && question.options.length > 0) {
               filterOptions[questionId].availableAnswers = question.options.map(option => ({
                 label: option,
                 value: option
               }));
+            } else {
+              // If no predefined options, we'll populate from actual answers later
+              filterOptions[questionId].availableAnswers = [];
             }
             break;
 
