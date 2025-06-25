@@ -4,8 +4,8 @@ import {
   Typography,
   Card,
   IconButton,
-  TextField,
   Button,
+  TextField,
   Tabs,
   Tab,
 } from "@mui/material";
@@ -74,6 +74,7 @@ const AboutSection = ({ userInfo }) => {
                 fontWeight: 700,
                 fontFamily: "Poppins",
                 textTransform: "none",
+                ml:2
               },
             }}
             label="About"
@@ -85,17 +86,14 @@ const AboutSection = ({ userInfo }) => {
             onClick={handleSaveClick}
             disabled={isSaving}
             sx={{
-              width: 40,
-              height: 40,
-              borderRadius: "50%",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              minWidth: 0,
-              padding: 0,
-            }}
+                height: '35px',
+                mt:2,
+                bgcolor: isSaving ? "grey.400" : "#3C7EFC",
+                color: "white",
+                "&:hover": { bgcolor: "#3361cb" },
+              }}
           >
-            <SaveIcon />
+            Save
           </Button>
         ) : (
           <IconButton onClick={handleEditClick}>

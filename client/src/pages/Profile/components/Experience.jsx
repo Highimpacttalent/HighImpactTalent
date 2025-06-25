@@ -112,18 +112,15 @@ const Experience = ({ experienceData }) => {
             variant="outlined"
             onClick={handleSaveClick}
             disabled={isSaving}
-            sx={{
-              width: 40,
-              height: 40,
-              borderRadius: "50%",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              minWidth: 0,
-              padding: 0,
-            }}
+             sx={{
+                height: "35px",
+                bgcolor: isSaving ? "grey.400" : "#3C7EFC",
+                color: "white",
+                "&:hover": { bgcolor: "#3361cb" },
+                mt:2
+              }}
           >
-            <SaveIcon />
+            Save
           </Button>
         ) : (
           <IconButton onClick={handleEditClick}>

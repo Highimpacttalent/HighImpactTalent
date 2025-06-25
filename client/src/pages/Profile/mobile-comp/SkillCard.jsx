@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Box, Typography, Tabs, Tab, Chip, Card, IconButton } from "@mui/material";
+import { Box, Typography, Tabs, Tab, Chip, Card, IconButton, Button } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import CloseIcon from "@mui/icons-material/Close";
 import SaveIcon from "@mui/icons-material/Save";
@@ -124,20 +124,17 @@ const SkillCard = ({ userInfo }) => {
             />
           </Box>
           <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
-            <IconButton
+            <Button
               onClick={handleSaveSkills}
               disabled={isSaving}
               sx={{
                 bgcolor: isSaving ? "grey.400" : "#3C7EFC",
                 color: "white",
-                borderRadius: "50%",
-                width: 40,
-                height: 40,
                 "&:hover": { bgcolor: "#3361cb" },
               }}
             >
-              <SaveIcon />
-            </IconButton>
+              Save
+            </Button>
           </Box>
         </Box>
       ) : (
