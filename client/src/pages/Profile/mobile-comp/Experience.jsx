@@ -56,7 +56,10 @@ const Experience = ({ experienceData }) => {
   };
 
   const handleChange = (e) => {
-    console.log("Updated formData:", { ...formData, [e.target.name]: e.target.value });
+    console.log("Updated formData:", {
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
@@ -69,8 +72,8 @@ const Experience = ({ experienceData }) => {
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ 
-            userId: experienceData?._id, 
+          body: JSON.stringify({
+            userId: experienceData?._id,
             ...formData,
             // experience: Number(formData.experience)
           }),
@@ -113,17 +116,14 @@ const Experience = ({ experienceData }) => {
             onClick={handleSaveClick}
             disabled={isSaving}
             sx={{
-              width: 40,
-              height: 40,
-              borderRadius: "50%",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              minWidth: 0,
-              padding: 0,
+              height: "35px",
+              mt: 2,
+              bgcolor: isSaving ? "grey.400" : "#3C7EFC",
+              color: "white",
+              "&:hover": { bgcolor: "#3361cb" },
             }}
           >
-            <SaveIcon />
+            Save
           </Button>
         ) : (
           <IconButton onClick={handleEditClick}>
@@ -273,7 +273,9 @@ const Experience = ({ experienceData }) => {
                 color="#808195"
                 fontFamily="Poppins"
               >
-                {formData.currentSalary ? `${formData.currentSalary} Lakhs` : "N/A"}
+                {formData.currentSalary
+                  ? `${formData.currentSalary} Lakhs`
+                  : "N/A"}
               </Typography>
             )}
           </Grid>

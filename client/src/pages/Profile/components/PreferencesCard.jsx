@@ -6,6 +6,7 @@ import {
   Tab,
   Card,
   IconButton,
+  Button,
   TextField,
   Grid,
   Chip, // Import Chip component
@@ -267,24 +268,21 @@ const PreferencesCard = ({ userInfo }) => {
         </Tabs>
         {isEditing ? (
           <Box sx={{ display: "flex", gap: 1 }}>
-            <IconButton
+            <Button
               onClick={handleSaveClick}
               disabled={isSaving}
               sx={{
                 bgcolor: isSaving ? "grey.400" : "#3C7EFC",
                 color: "white",
-                borderRadius: "50%",
-                width: 40,
-                height: 40,
                 "&:hover": { bgcolor: "#3361cb" },
               }}
             >
               {isSaving ? (
                 <CircularProgress size={24} color="inherit" />
               ) : (
-                <SaveIcon />
+                'Save'
               )}
-            </IconButton>
+            </Button>
             <IconButton onClick={handleCancelClick}>
               <CloseIcon sx={{ color: "#D9534F" }} />
             </IconButton>
