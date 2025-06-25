@@ -164,10 +164,9 @@ export const updateApplicationStatus = async (req, res) => {
 
   try {
     const companyId = req.body.user.userId;
-    let application = await Application.findById(req.params.id).populate(
-      "applicant",
-      "email name"
-    );
+    let application = await Application.findById(req.params.id).populate("applicant", "email firstName")
+      .populate("job", "jobTitle")
+      .populate("company", "name");
 
     if (!application) {
       return res.status(404).json({ message: "Application not found" });
@@ -189,11 +188,12 @@ export const updateApplicationStatus = async (req, res) => {
 
     await application.save();
 
-    await sendStatusUpdateEmail(
-      application.applicant.email,
-      status,
-      application.applicant.name
-    );
+    const email = application.applicant.email;
+    const name = application.applicant.firstName;
+    const jobTitle = application.job?.jobTitle || "Position";
+    const companyName = application.company?.name || "Company";
+
+    await sendStatusUpdateEmail(email, status, name, jobTitle, companyName);
 
     res.status(200).json({
       success: true,
@@ -837,10 +837,9 @@ export const ApplicationStatusUpdate = async (req, res) => {
   }
 
   try {
-    const application = await Application.findById(applicationId).populate(
-      "applicant",
-      "email name"
-    );
+    const application = await Application.findById(applicationId).populate("applicant", "email firstName")
+      .populate("job", "jobTitle")
+      .populate("company", "name");
 
     if (!application) {
       return res.status(404).json({ message: "Application not found" });
@@ -856,11 +855,12 @@ export const ApplicationStatusUpdate = async (req, res) => {
 
     await application.save();
 
-    await sendStatusUpdateEmail(
-      application.applicant.email,
-      status,
-      application.applicant.name
-    );
+    const email = application.applicant.email;
+    const name = application.applicant.firstName;
+    const jobTitle = application.job?.jobTitle || "Position";
+    const companyName = application.company?.name || "Company";
+
+    await sendStatusUpdateEmail(email, status, name, jobTitle, companyName);
 
     res.status(200).json({
       success: true,
@@ -895,7 +895,10 @@ export const bulkRejectApplications = async (req, res) => {
     // Find all applications
     const applications = await Application.find({
       _id: { $in: applicationIds },
-    }).populate("applicant", "email name");
+    }) .populate("applicant", "email firstName")
+      .populate("job", "jobTitle")
+      .populate("company", "name");
+
 
     if (applications.length === 0) {
       return res.status(404).json({
@@ -916,13 +919,14 @@ export const bulkRejectApplications = async (req, res) => {
 
     // send emails in parallel
     await Promise.all(
-      applications.map((app) =>
-        sendStatusUpdateEmail(
-          app.applicant.email,
-          "Not Progressing",
-          app.applicant.name
-        )
-      )
+      applications.map((app) => {
+        const email = app.applicant.email;
+        const name = app.applicant.firstName;
+        const jobTitle = app.job?.jobTitle || "Position";
+        const companyName = app.company?.name || "Company";
+
+        return sendStatusUpdateEmail(email, "Not Progressing", name, jobTitle, companyName);
+      })
     );
 
     // Bulk update applications
@@ -979,7 +983,10 @@ export const bulkAdvanceApplications = async (req, res) => {
     // Find all applications
     const applications = await Application.find({
       _id: { $in: applicationIds },
-    }).populate("applicant", "email name");
+    })
+      .populate("applicant", "email firstName")
+      .populate("job", "jobTitle")
+      .populate("company", "name");
 
     if (applications.length === 0) {
       return res.status(404).json({
@@ -1013,11 +1020,12 @@ export const bulkAdvanceApplications = async (req, res) => {
     await Promise.all(
       applications.map((app) => {
         const nextStatus = getNextStatus(app.status);
-        return sendStatusUpdateEmail(
-          app.applicant.email,
-          nextStatus,
-          app.applicant.name
-        );
+        const email = app.applicant.email;
+        const name = app.applicant.firstName;
+        const jobTitle = app.job?.jobTitle || "Position";
+        const companyName = app.company?.name || "Company";
+
+        return sendStatusUpdateEmail(email, nextStatus, name, jobTitle, companyName);
       })
     );
 

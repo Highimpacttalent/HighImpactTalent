@@ -475,7 +475,7 @@ export const sendStatusUpdateEmail = async (email, status, name = 'Candidate', j
                     </p>
                   </div>
 
-                  <!-- Company Details -->
+                  <!-- Company Details -->  
                   <div style="border-top: 1px solid #374151; padding-top: 20px;">
                     <p style="color: #9ca3af; margin: 0; font-size: 12px; line-height: 1.6;">
                       High Impact Talent Private Limited<br>
