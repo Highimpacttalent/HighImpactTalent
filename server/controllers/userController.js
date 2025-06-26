@@ -1,15 +1,16 @@
 import mongoose from "mongoose";
 import Users from "../models/userModel.js";
 import { application } from "express";
+import CountTracker from "../models/Count.js";
 import Application from "../models/ApplicationModel.js";
 import bcrypt from "bcryptjs";
 import { uploadFileToS3 } from "../s3Config/s3.js";
 import multer from "multer";
 
 const uploadresume = multer({
-  storage: multer.memoryStorage(), 
+  storage: multer.memoryStorage(),
   limits: {
-    fileSize: 2 * 1024 * 1024, 
+    fileSize: 2 * 1024 * 1024,
   },
 });
 
@@ -27,7 +28,7 @@ export const uploadResume = async (req, res) => {
     }
 
     const file = req.file;
-    const userId = req.uploaderId; 
+    const userId = req.uploaderId;
 
     // Validate file type
     if (file.mimetype !== "application/pdf") {
@@ -41,7 +42,11 @@ export const uploadResume = async (req, res) => {
     const filename = `resumes/${Date.now()}-${file.originalname}`;
 
     // Upload to S3
-    const s3Response = await uploadFileToS3(file.buffer, filename, file.mimetype);
+    const s3Response = await uploadFileToS3(
+      file.buffer,
+      filename,
+      file.mimetype
+    );
 
     //Update user's cvUrl in database
     const updatedUser = await Users.findByIdAndUpdate(
@@ -100,13 +105,19 @@ export const uploadImage = async (req, res) => {
     }
 
     const file = req.file;
-    const userId = req.uploaderId; 
+    const userId = req.uploaderId;
 
     // Generate unique filename
-    const filename = `profile-pictures/${userId}/${Date.now()}-${file.originalname}`;
+    const filename = `profile-pictures/${userId}/${Date.now()}-${
+      file.originalname
+    }`;
 
     // Upload to S3
-    const s3Response = await uploadFileToS3(file.buffer, filename, file.mimetype);
+    const s3Response = await uploadFileToS3(
+      file.buffer,
+      filename,
+      file.mimetype
+    );
 
     // Update user's cvUrl in database
     const updatedUser = await Users.findByIdAndUpdate(
@@ -150,10 +161,16 @@ export const uploadCompanyLogo = async (req, res) => {
     const file = req.file;
 
     // Generate unique filename
-    const filename = `profile-pictures/company-Logo/${Date.now()}-${file.originalname}`;
+    const filename = `profile-pictures/company-Logo/${Date.now()}-${
+      file.originalname
+    }`;
 
     // Upload to S3
-    const s3Response = await uploadFileToS3(file.buffer, filename, file.mimetype);
+    const s3Response = await uploadFileToS3(
+      file.buffer,
+      filename,
+      file.mimetype
+    );
 
     res.status(200).json({
       success: true,
@@ -168,7 +185,6 @@ export const uploadCompanyLogo = async (req, res) => {
     });
   }
 };
-
 
 // update user details
 export const updateUser = async (req, res, next) => {
@@ -233,13 +249,15 @@ export const updateUser = async (req, res, next) => {
       skills: Array.isArray(skills) ? skills : [],
     };
 
-    if (highestQualification) updateUser.highestQualification = highestQualification;
-    if (lastConsultingCompany) updateUser.lastConsultingCompany = lastConsultingCompany;
-    if (typeof totalYearsInConsulting === "number") updateUser.totalYearsInConsulting = totalYearsInConsulting;
+    if (highestQualification)
+      updateUser.highestQualification = highestQualification;
+    if (lastConsultingCompany)
+      updateUser.lastConsultingCompany = lastConsultingCompany;
+    if (typeof totalYearsInConsulting === "number")
+      updateUser.totalYearsInConsulting = totalYearsInConsulting;
     if (!isNaN(Number(totalYearsInConsulting))) {
       updateUser.totalYearsInConsulting = Number(totalYearsInConsulting);
     }
-    
 
     const user = await Users.findByIdAndUpdate(id, updateUser, { new: true });
 
@@ -358,6 +376,19 @@ export const register = async (req, res, next) => {
       password,
     });
 
+    let tracker = await CountTracker.findOne();
+
+    if (!tracker) {
+      tracker = await CountTracker.create({
+        count: 1,
+        userIds: [user._id],
+      });
+    } else {
+      tracker.count += 1;
+      tracker.userIds.push(user._id);
+      await tracker.save();
+    }
+
     // user token
     const token = await user.createJWT();
     user.password = null;
@@ -460,7 +491,9 @@ export const toggleJobLike = async (req, res) => {
     console.log("Received jobId:", jobId);
 
     if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
-      return res.status(400).json({ success: false, message: "Invalid userId" });
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid userId" });
     }
 
     if (!jobId || !mongoose.Types.ObjectId.isValid(jobId)) {
@@ -471,11 +504,15 @@ export const toggleJobLike = async (req, res) => {
     const user = await Users.findById(userId);
 
     if (!user) {
-      return res.status(404).json({ success: false, message: "User not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
     }
 
     // Ensure jobId is properly compared
-    const jobIndex = user.likedJobs.findIndex((job) => job.toString() === jobId);
+    const jobIndex = user.likedJobs.findIndex(
+      (job) => job.toString() === jobId
+    );
 
     if (jobIndex > -1) {
       // Remove from liked jobs
@@ -485,7 +522,7 @@ export const toggleJobLike = async (req, res) => {
         success: true,
         message: "Job removed from liked jobs",
         likedJobs: user.likedJobs,
-        user
+        user,
       });
     } else {
       // Add jobId as ObjectId
@@ -495,22 +532,22 @@ export const toggleJobLike = async (req, res) => {
         success: true,
         message: "Job added to liked jobs",
         likedJobs: user.likedJobs,
-        user
+        user,
       });
     }
   } catch (error) {
     console.error("Error in toggleJobLike:", error);
-    return res.status(500).json({ success: false, message: "Server error", error: error.message });
+    return res
+      .status(500)
+      .json({ success: false, message: "Server error", error: error.message });
   }
 };
-
-
 
 export const updateProfileUrl = async (req, res, next) => {
   try {
     const id = req.body.user.userId;
-    const {profileUrl}=req.body;
-    console.log(profileUrl)
+    const { profileUrl } = req.body;
+    console.log(profileUrl);
     console.log(id);
     const user = await Users.findById({ _id: id });
 
@@ -520,11 +557,11 @@ export const updateProfileUrl = async (req, res, next) => {
         success: false,
       });
     }
-    user.profileUrl=profileUrl
+    user.profileUrl = profileUrl;
     await user.save();
     res.status(200).json({
       success: true,
-      user
+      user,
     });
   } catch (error) {
     console.log(error);
@@ -536,14 +573,14 @@ export const updateProfileUrl = async (req, res, next) => {
   }
 };
 
-
 export const changePassword = async (req, res, next) => {
-
   const { email, newPassword } = req.body;
 
   try {
     if (!email || !newPassword) {
-      return res.status(400).json({ message: "Email and new password are required" });
+      return res
+        .status(400)
+        .json({ message: "Email and new password are required" });
     }
 
     const user = await Users.findOne({ email });
@@ -561,7 +598,9 @@ export const changePassword = async (req, res, next) => {
     });
   } catch (error) {
     console.error("Error updating password:", error);
-    res.status(500).json({ message: "Internal Server Error", details: error.message });
+    res
+      .status(500)
+      .json({ message: "Internal Server Error", details: error.message });
   }
 };
 
@@ -605,7 +644,6 @@ export const updateSkills = async (req, res) => {
       message: "Skills updated successfully!",
       skills: updatedUser.skills, // Return updated skills array
     });
-
   } catch (error) {
     console.error(error);
     res.status(500).json({
@@ -655,7 +693,6 @@ export const updateUserDetails = async (req, res) => {
       message: "User details updated successfully!",
       user: updatedUser,
     });
-
   } catch (error) {
     console.error(error);
     res.status(500).json({
@@ -686,12 +723,17 @@ export const updateWorkDetails = async (req, res) => {
     }
 
     const updateFields = {};
-    if (openToRelocate !== undefined) updateFields.openToRelocate = openToRelocate;
-    if (currentCompany !== undefined) updateFields.currentCompany = currentCompany;
-    if (currentDesignation !== undefined) updateFields.currentDesignation = currentDesignation;
+    if (openToRelocate !== undefined)
+      updateFields.openToRelocate = openToRelocate;
+    if (currentCompany !== undefined)
+      updateFields.currentCompany = currentCompany;
+    if (currentDesignation !== undefined)
+      updateFields.currentDesignation = currentDesignation;
     if (currentSalary !== undefined) updateFields.currentSalary = currentSalary;
-    if (isItConsultingCompany !== undefined) updateFields.isItConsultingCompany = isItConsultingCompany;
-    if (joinConsulting !== undefined) updateFields.joinConsulting = joinConsulting;
+    if (isItConsultingCompany !== undefined)
+      updateFields.isItConsultingCompany = isItConsultingCompany;
+    if (joinConsulting !== undefined)
+      updateFields.joinConsulting = joinConsulting;
     if (experience !== undefined) updateFields.experience = experience;
 
     const updatedUser = await Users.findOneAndUpdate(
@@ -721,8 +763,6 @@ export const updateWorkDetails = async (req, res) => {
   }
 };
 
-
-
 export const updateLinkedIn = async (req, res) => {
   try {
     const { userId, linkedIn } = req.body;
@@ -747,7 +787,7 @@ export const updateLinkedIn = async (req, res) => {
     const updatedUser = await Users.findOneAndUpdate(
       { _id: userId },
       { linkedinLink: linkedIn },
-      { new: true } 
+      { new: true }
     );
 
     // Check if user exists
@@ -764,7 +804,6 @@ export const updateLinkedIn = async (req, res) => {
       message: "LinkedIn link updated successfully!",
       user: updatedUser,
     });
-
   } catch (error) {
     console.error(error);
     res.status(500).json({
@@ -774,7 +813,6 @@ export const updateLinkedIn = async (req, res) => {
     });
   }
 };
-
 
 export const updateExperienceHistory = async (req, res) => {
   try {
@@ -816,7 +854,6 @@ export const updateExperienceHistory = async (req, res) => {
       message: "Experience history updated successfully!",
       user: updatedUser,
     });
-
   } catch (error) {
     console.error("Error updating experience history:", error);
     res.status(500).json({
@@ -826,8 +863,6 @@ export const updateExperienceHistory = async (req, res) => {
     });
   }
 };
-
-
 
 export const updateAbout = async (req, res) => {
   try {
@@ -845,7 +880,7 @@ export const updateAbout = async (req, res) => {
     const updatedUser = await Users.findOneAndUpdate(
       { _id: userId },
       { about: about },
-      { new: true } 
+      { new: true }
     );
 
     // Check if user exists
@@ -862,7 +897,6 @@ export const updateAbout = async (req, res) => {
       message: "About updated successfully!",
       user: updatedUser,
     });
-
   } catch (error) {
     console.error(error);
     res.status(500).json({
@@ -954,7 +988,6 @@ export const updateJobPreferences = async (req, res) => {
   }
 };
 
-
 export const checkEmail = async (req, res) => {
   const { email } = req.body;
   if (!email) {
@@ -968,8 +1001,6 @@ export const checkEmail = async (req, res) => {
     return res.json({ success: true, exists: Boolean(user) });
   } catch (err) {
     console.error("Error checking email existence:", err);
-    return res
-      .status(500)
-      .json({ success: false, message: "Server error" });
+    return res.status(500).json({ success: false, message: "Server error" });
   }
 };
