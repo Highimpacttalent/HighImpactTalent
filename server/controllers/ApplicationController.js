@@ -819,6 +819,7 @@ export const getScreeningFilterOptions = async (req, res) => {
   }
 };
 
+
 // Add this to your backend controller file
 export const getApplicationStageCounts = async (req, res) => {
   try {
