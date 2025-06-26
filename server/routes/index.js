@@ -10,6 +10,7 @@ import aiRoutes from "./aiRoutes.js";
 import resumepool from "./resumepool.js"
 import paymentRoute from "./paymentRoutes.js"
 import verifyRoute from "./verifyToken.js";
+import Waitlist from "./Waitlist.js";
 
 const router = express.Router();
 
@@ -27,6 +28,7 @@ router.use(`${path}ai`, aiRoutes);
 router.use(`${path}resume`, resumepool);
 router.use(`${path}payment`, paymentRoute);
 router.use(`${path}verify`, verifyRoute);
+router.use(`${path}waitlist`, Waitlist);
 
 
 export default router;
