@@ -342,6 +342,17 @@ const LoggedInDrawer = ({ user, handleLogout, setDrawerOpen }) => (
         primary={user?.accountType === "seeker" ? "Find Job" : "Job Posts"}
       />
     </ListItem>
+    {user?.accountType === "seeker" && (
+      <ListItem
+        button
+        component={Link}
+        to="/application-tracking"
+        onClick={() => setDrawerOpen(false)}
+      >
+        <ListItemText primary=" Job Tracker" />
+        
+      </ListItem>
+    )}
     {user?.accountType !== "seeker" && (
       <ListItem
         button
@@ -414,17 +425,7 @@ const LoggedInDrawer = ({ user, handleLogout, setDrawerOpen }) => (
     >
       <ListItemText primary="Change Password" />
     </ListItem>
-    {user?.accountType === "seeker" && (
-      <ListItem
-        button
-        component={Link}
-        to="/application-tracking"
-        onClick={() => setDrawerOpen(false)}
-      >
-        <ListItemText primary=" Job Tracker" />
-        
-      </ListItem>
-    )}
+    
     <ListItem
       button
       onClick={() => {

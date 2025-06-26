@@ -668,10 +668,11 @@ export const getScreeningFilterOptions = async (req, res) => {
         // Handle different question types
         switch (question.questionType) {
           case "yes/no":
-            // For yes/no questions, always provide Yes/No options regardless of actual answers
+            // For yes/no questions, ALWAYS provide Yes/No options by default
+            // Frontend doesn't send options for yes/no - they're always the same
             filterOptions[questionId].availableAnswers = [
-              { label: "Yes", value: true },
-              { label: "No", value: false }
+              { label: "Yes", value: "Yes" },
+              { label: "No", value: "No" }
             ];
             break;
 
@@ -703,15 +704,13 @@ export const getScreeningFilterOptions = async (req, res) => {
       if (filterOptions[questionId]) {
         // For yes/no questions, we keep the default options but can add statistics
         if (group.questionType === "yes/no") {
-          // More flexible yes/no detection - handle various formats
+          // Count actual responses for statistics
           const yesAnswers = group.uniqueAnswers.filter(ans => {
-            if (typeof ans === 'boolean') return ans === true;
             if (typeof ans === 'string') return ans.toLowerCase() === 'yes';
             return false;
           });
           
           const noAnswers = group.uniqueAnswers.filter(ans => {
-            if (typeof ans === 'boolean') return ans === false;
             if (typeof ans === 'string') return ans.toLowerCase() === 'no';
             return false;
           });
@@ -722,13 +721,11 @@ export const getScreeningFilterOptions = async (req, res) => {
             totalResponses: yesAnswers.length + noAnswers.length
           };
           
-          // Ensure availableAnswers is still set (shouldn't be overridden)
-          if (!filterOptions[questionId].availableAnswers || filterOptions[questionId].availableAnswers.length === 0) {
-            filterOptions[questionId].availableAnswers = [
-              { label: "Yes", value: true },
-              { label: "No", value: false }
-            ];
-          }
+          // ALWAYS ensure Yes/No options are available - don't rely on job definition
+          filterOptions[questionId].availableAnswers = [
+            { label: "Yes", value: "Yes" },
+            { label: "No", value: "No" }
+          ];
         }
         // For other question types, we might want to add additional info
         else if (group.questionType === "short_answer" || group.questionType === "long_answer") {
@@ -744,21 +741,19 @@ export const getScreeningFilterOptions = async (req, res) => {
 
         switch (group.questionType) {
           case "yes/no":
-            // Always provide Yes/No options for yes/no questions
+            // ALWAYS provide Yes/No options for yes/no questions - no matter what
             filterOptions[questionId].availableAnswers = [
-              { label: "Yes", value: true },
-              { label: "No", value: false }
+              { label: "Yes", value: "Yes" },
+              { label: "No", value: "No" }
             ];
             
             // Add statistics if we have actual answers
             const yesAnswers = group.uniqueAnswers.filter(ans => {
-              if (typeof ans === 'boolean') return ans === true;
               if (typeof ans === 'string') return ans.toLowerCase() === 'yes';
               return false;
             });
             
             const noAnswers = group.uniqueAnswers.filter(ans => {
-              if (typeof ans === 'boolean') return ans === false;
               if (typeof ans === 'string') return ans.toLowerCase() === 'no';
               return false;
             });
@@ -790,15 +785,14 @@ export const getScreeningFilterOptions = async (req, res) => {
       }
     });
 
-    // Final check: Ensure all yes/no questions have availableAnswers
+    // Final check: Ensure ALL yes/no questions have availableAnswers (most important part!)
     Object.keys(filterOptions).forEach(questionId => {
       if (filterOptions[questionId].questionType === "yes/no") {
-        if (!filterOptions[questionId].availableAnswers || filterOptions[questionId].availableAnswers.length === 0) {
-          filterOptions[questionId].availableAnswers = [
-            { label: "Yes", value: true },
-            { label: "No", value: false }
-          ];
-        }
+        // FORCE Yes/No options for all yes/no questions regardless of any other logic
+        filterOptions[questionId].availableAnswers = [
+          { label: "Yes", value: "Yes" },
+          { label: "No", value: "No" }
+        ];
       }
     });
 
@@ -818,7 +812,6 @@ export const getScreeningFilterOptions = async (req, res) => {
     });
   }
 };
-
 
 // Add this to your backend controller file
 export const getApplicationStageCounts = async (req, res) => {
