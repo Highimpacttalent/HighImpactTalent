@@ -1,5 +1,6 @@
 import WaitlistUser from "../models/Waitlist.js";
 import validator from 'validator';
+import CountTracker from "../models/Count.js";
 
 export const addToWaitlist = async (req, res) => {
   const { email } = req.body;
@@ -19,5 +20,25 @@ export const addToWaitlist = async (req, res) => {
   } catch (error) {
     console.error("Waitlist Error:", error);
     res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+//Return Count
+export const getCurrentSignupCount = async (req, res) => {
+  try {
+    // Count how many documents exist in countTracker collection
+    const currentCount = await CountTracker.countDocuments();
+
+    res.status(200).json({
+      success: true,
+      count: currentCount,
+      message: `Current signup count is ${currentCount}`,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch signup count",
+    });
   }
 };
