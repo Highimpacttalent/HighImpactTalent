@@ -164,7 +164,8 @@ export const updateApplicationStatus = async (req, res) => {
 
   try {
     const companyId = req.body.user.userId;
-    let application = await Application.findById(req.params.id).populate("applicant", "email firstName")
+    let application = await Application.findById(req.params.id)
+      .populate("applicant", "email firstName")
       .populate("job", "jobTitle")
       .populate("company", "name");
 
@@ -212,6 +213,7 @@ export const getApplicationsOfAjob = async (req, res) => {
     const {
       keywords,
       location,
+      status,
       currentDesignation,
       totalYearsInConsulting,
       screeningFilters, // Updated from questionnaire
@@ -242,6 +244,10 @@ export const getApplicationsOfAjob = async (req, res) => {
     const matchStage = {
       job: new mongoose.Types.ObjectId(jobId),
     };
+
+    if (status) {
+      matchStage.status = status; 
+    }
 
     pipeline.push({ $match: matchStage });
 
@@ -338,10 +344,13 @@ export const getApplicationsOfAjob = async (req, res) => {
 
     // Enhanced Keywords filter - support multiple keywords separated by commas
     if (keywords && keywords.trim()) {
-      const keywordsList = keywords.split(',').map(k => k.trim()).filter(k => k);
-      
+      const keywordsList = keywords
+        .split(",")
+        .map((k) => k.trim())
+        .filter((k) => k);
+
       if (keywordsList.length > 0) {
-        const keywordConditions = keywordsList.map(keyword => {
+        const keywordConditions = keywordsList.map((keyword) => {
           const keywordRegex = new RegExp(keyword, "i");
           return {
             $or: [
@@ -358,18 +367,23 @@ export const getApplicationsOfAjob = async (req, res) => {
         // Use $or to match ANY of the keywords (OR logic)
         // Use $and to match ALL keywords (AND logic) - uncomment if needed
         filterConditions.push({
-          $or: keywordConditions  // Change to $and: keywordConditions for AND logic
+          $or: keywordConditions, // Change to $and: keywordConditions for AND logic
         });
       }
     }
 
     // Enhanced Location filter - support multiple locations separated by commas
     if (location && location.trim()) {
-      const locationsList = location.split(',').map(loc => loc.trim()).filter(loc => loc);
-      
+      const locationsList = location
+        .split(",")
+        .map((loc) => loc.trim())
+        .filter((loc) => loc);
+
       if (locationsList.length > 0) {
-        const locationRegexes = locationsList.map(loc => new RegExp(loc, "i"));
-        
+        const locationRegexes = locationsList.map(
+          (loc) => new RegExp(loc, "i")
+        );
+
         filterConditions.push({
           $or: [
             { "applicant.currentLocation": { $in: locationRegexes } },
@@ -385,10 +399,15 @@ export const getApplicationsOfAjob = async (req, res) => {
 
     // Enhanced Current designation filter - support multiple designations
     if (currentDesignation && currentDesignation.trim()) {
-      const designationsList = currentDesignation.split(',').map(des => des.trim()).filter(des => des);
-      
+      const designationsList = currentDesignation
+        .split(",")
+        .map((des) => des.trim())
+        .filter((des) => des);
+
       if (designationsList.length > 0) {
-        const designationRegexes = designationsList.map(des => new RegExp(des, "i"));
+        const designationRegexes = designationsList.map(
+          (des) => new RegExp(des, "i")
+        );
         filterConditions.push({
           "applicant.currentDesignation": { $in: designationRegexes },
         });
@@ -451,15 +470,17 @@ export const getApplicationsOfAjob = async (req, res) => {
                 case "yes/no":
                   // Enhanced Boolean matching for yes/no questions
                   let booleanValue;
-                  if (typeof expectedAnswer === 'boolean') {
+                  if (typeof expectedAnswer === "boolean") {
                     booleanValue = expectedAnswer;
-                  } else if (typeof expectedAnswer === 'string') {
-                    booleanValue = expectedAnswer.toLowerCase() === 'yes' || expectedAnswer.toLowerCase() === 'true';
+                  } else if (typeof expectedAnswer === "string") {
+                    booleanValue =
+                      expectedAnswer.toLowerCase() === "yes" ||
+                      expectedAnswer.toLowerCase() === "true";
                   } else {
                     // Skip if invalid format
                     return;
                   }
-                  
+
                   filterConditions.push({
                     screeningAnswers: {
                       $elemMatch: {
@@ -596,6 +617,7 @@ export const getApplicationsOfAjob = async (req, res) => {
       applications,
       totalApplications,
       page: pageNum,
+
       numOfPage,
       filters: {
         keywords,
@@ -656,7 +678,7 @@ export const getScreeningFilterOptions = async (req, res) => {
     if (job.screeningQuestions && job.screeningQuestions.length > 0) {
       job.screeningQuestions.forEach((question) => {
         const questionId = question._id.toString();
-        
+
         filterOptions[questionId] = {
           question: question.question,
           questionType: question.questionType,
@@ -671,7 +693,7 @@ export const getScreeningFilterOptions = async (req, res) => {
             // For yes/no questions, always provide Yes/No options regardless of job definition
             filterOptions[questionId].availableAnswers = [
               { label: "Yes", value: true },
-              { label: "No", value: false }
+              { label: "No", value: false },
             ];
             break;
 
@@ -679,10 +701,12 @@ export const getScreeningFilterOptions = async (req, res) => {
           case "multi_choice":
             // For choice questions, use predefined options from the job
             if (question.options && Array.isArray(question.options)) {
-              filterOptions[questionId].availableAnswers = question.options.map(option => ({
-                label: option,
-                value: option
-              }));
+              filterOptions[questionId].availableAnswers = question.options.map(
+                (option) => ({
+                  label: option,
+                  value: option,
+                })
+              );
             }
             break;
 
@@ -703,18 +727,28 @@ export const getScreeningFilterOptions = async (req, res) => {
       if (filterOptions[questionId]) {
         // For yes/no questions, we keep the default options but can add statistics
         if (group.questionType === "yes/no") {
-          const yesCount = group.uniqueAnswers.filter(ans => ans === true || ans === 'Yes').length;
-          const noCount = group.uniqueAnswers.filter(ans => ans === false || ans === 'No').length;
-          
+          const yesCount = group.uniqueAnswers.filter(
+            (ans) => ans === true || ans === "Yes"
+          ).length;
+          const noCount = group.uniqueAnswers.filter(
+            (ans) => ans === false || ans === "No"
+          ).length;
+
           filterOptions[questionId].statistics = {
             yesCount,
             noCount,
-            totalResponses: yesCount + noCount
+            totalResponses: yesCount + noCount,
           };
         }
         // For other question types, we might want to add additional info
-        else if (group.questionType === "short_answer" || group.questionType === "long_answer") {
-          filterOptions[questionId].sampleAnswers = group.answerTexts.slice(0, 3);
+        else if (
+          group.questionType === "short_answer" ||
+          group.questionType === "long_answer"
+        ) {
+          filterOptions[questionId].sampleAnswers = group.answerTexts.slice(
+            0,
+            3
+          );
         }
       } else {
         // If question wasn't in job definition, create from application data
@@ -728,7 +762,7 @@ export const getScreeningFilterOptions = async (req, res) => {
           case "yes/no":
             filterOptions[questionId].availableAnswers = [
               { label: "Yes", value: true },
-              { label: "No", value: false }
+              { label: "No", value: false },
             ];
             break;
 
@@ -737,16 +771,21 @@ export const getScreeningFilterOptions = async (req, res) => {
             const choiceAnswers = group.uniqueAnswers.filter(
               (answer) => typeof answer === "string"
             );
-            filterOptions[questionId].availableAnswers = [...new Set(choiceAnswers)].map(answer => ({
+            filterOptions[questionId].availableAnswers = [
+              ...new Set(choiceAnswers),
+            ].map((answer) => ({
               label: answer,
-              value: answer
+              value: answer,
             }));
             break;
 
           case "short_answer":
           case "long_answer":
             filterOptions[questionId].searchable = true;
-            filterOptions[questionId].sampleAnswers = group.answerTexts.slice(0, 3);
+            filterOptions[questionId].sampleAnswers = group.answerTexts.slice(
+              0,
+              3
+            );
             break;
         }
       }
@@ -900,7 +939,8 @@ export const ApplicationStatusUpdate = async (req, res) => {
   }
 
   try {
-    const application = await Application.findById(applicationId).populate("applicant", "email firstName")
+    const application = await Application.findById(applicationId)
+      .populate("applicant", "email firstName")
       .populate("job", "jobTitle")
       .populate("company", "name");
 
@@ -958,10 +998,10 @@ export const bulkRejectApplications = async (req, res) => {
     // Find all applications
     const applications = await Application.find({
       _id: { $in: applicationIds },
-    }) .populate("applicant", "email firstName")
+    })
+      .populate("applicant", "email firstName")
       .populate("job", "jobTitle")
       .populate("company", "name");
-
 
     if (applications.length === 0) {
       return res.status(404).json({
@@ -988,7 +1028,13 @@ export const bulkRejectApplications = async (req, res) => {
         const jobTitle = app.job?.jobTitle || "Position";
         const companyName = app.company?.name || "Company";
 
-        return sendStatusUpdateEmail(email, "Not Progressing", name, jobTitle, companyName);
+        return sendStatusUpdateEmail(
+          email,
+          "Not Progressing",
+          name,
+          jobTitle,
+          companyName
+        );
       })
     );
 
@@ -1088,7 +1134,13 @@ export const bulkAdvanceApplications = async (req, res) => {
         const jobTitle = app.job?.jobTitle || "Position";
         const companyName = app.company?.name || "Company";
 
-        return sendStatusUpdateEmail(email, nextStatus, name, jobTitle, companyName);
+        return sendStatusUpdateEmail(
+          email,
+          nextStatus,
+          name,
+          jobTitle,
+          companyName
+        );
       })
     );
 
