@@ -690,10 +690,16 @@ export const getScreeningFilterOptions = async (req, res) => {
         // Handle different question types
         switch (question.questionType) {
           case "yes/no":
-            // For yes/no questions, always provide Yes/No options regardless of job definition
+            // For yes/no questions, ALWAYS provide Yes/No options by default
+            // Frontend doesn't send options for yes/no - they're always the same
             filterOptions[questionId].availableAnswers = [
+<<<<<<< HEAD
               { label: "Yes", value: true },
               { label: "No", value: false },
+=======
+              { label: "Yes", value: "Yes" },
+              { label: "No", value: "No" }
+>>>>>>> ff09e881a1a830dae68f446770146607a0a5df98
             ];
             break;
 
@@ -727,6 +733,7 @@ export const getScreeningFilterOptions = async (req, res) => {
       if (filterOptions[questionId]) {
         // For yes/no questions, we keep the default options but can add statistics
         if (group.questionType === "yes/no") {
+<<<<<<< HEAD
           const yesCount = group.uniqueAnswers.filter(
             (ans) => ans === true || ans === "Yes"
           ).length;
@@ -738,9 +745,33 @@ export const getScreeningFilterOptions = async (req, res) => {
             yesCount,
             noCount,
             totalResponses: yesCount + noCount,
+=======
+          // Count actual responses for statistics
+          const yesAnswers = group.uniqueAnswers.filter(ans => {
+            if (typeof ans === 'string') return ans.toLowerCase() === 'yes';
+            return false;
+          });
+          
+          const noAnswers = group.uniqueAnswers.filter(ans => {
+            if (typeof ans === 'string') return ans.toLowerCase() === 'no';
+            return false;
+          });
+          
+          filterOptions[questionId].statistics = {
+            yesCount: yesAnswers.length,
+            noCount: noAnswers.length,
+            totalResponses: yesAnswers.length + noAnswers.length
+>>>>>>> ff09e881a1a830dae68f446770146607a0a5df98
           };
+          
+          // ALWAYS ensure Yes/No options are available - don't rely on job definition
+          filterOptions[questionId].availableAnswers = [
+            { label: "Yes", value: "Yes" },
+            { label: "No", value: "No" }
+          ];
         }
         // For other question types, we might want to add additional info
+<<<<<<< HEAD
         else if (
           group.questionType === "short_answer" ||
           group.questionType === "long_answer"
@@ -749,6 +780,10 @@ export const getScreeningFilterOptions = async (req, res) => {
             0,
             3
           );
+=======
+        else if (group.questionType === "short_answer" || group.questionType === "long_answer") {
+          filterOptions[questionId].sampleAnswers = group.answerTexts ? group.answerTexts.slice(0, 3) : [];
+>>>>>>> ff09e881a1a830dae68f446770146607a0a5df98
         }
       } else {
         // If question wasn't in job definition, create from application data
@@ -760,16 +795,39 @@ export const getScreeningFilterOptions = async (req, res) => {
 
         switch (group.questionType) {
           case "yes/no":
+            // ALWAYS provide Yes/No options for yes/no questions - no matter what
             filterOptions[questionId].availableAnswers = [
+<<<<<<< HEAD
               { label: "Yes", value: true },
               { label: "No", value: false },
+=======
+              { label: "Yes", value: "Yes" },
+              { label: "No", value: "No" }
+>>>>>>> ff09e881a1a830dae68f446770146607a0a5df98
             ];
+            
+            // Add statistics if we have actual answers
+            const yesAnswers = group.uniqueAnswers.filter(ans => {
+              if (typeof ans === 'string') return ans.toLowerCase() === 'yes';
+              return false;
+            });
+            
+            const noAnswers = group.uniqueAnswers.filter(ans => {
+              if (typeof ans === 'string') return ans.toLowerCase() === 'no';
+              return false;
+            });
+            
+            filterOptions[questionId].statistics = {
+              yesCount: yesAnswers.length,
+              noCount: noAnswers.length,
+              totalResponses: yesAnswers.length + noAnswers.length
+            };
             break;
 
           case "single_choice":
           case "multi_choice":
             const choiceAnswers = group.uniqueAnswers.filter(
-              (answer) => typeof answer === "string"
+              (answer) => typeof answer === "string" && answer.trim() !== ""
             );
             filterOptions[questionId].availableAnswers = [
               ...new Set(choiceAnswers),
@@ -782,14 +840,33 @@ export const getScreeningFilterOptions = async (req, res) => {
           case "short_answer":
           case "long_answer":
             filterOptions[questionId].searchable = true;
+<<<<<<< HEAD
             filterOptions[questionId].sampleAnswers = group.answerTexts.slice(
               0,
               3
             );
+=======
+            filterOptions[questionId].sampleAnswers = group.answerTexts ? group.answerTexts.slice(0, 3) : [];
+>>>>>>> ff09e881a1a830dae68f446770146607a0a5df98
             break;
         }
       }
     });
+
+    // Final check: Ensure ALL yes/no questions have availableAnswers (most important part!)
+    Object.keys(filterOptions).forEach(questionId => {
+      if (filterOptions[questionId].questionType === "yes/no") {
+        // FORCE Yes/No options for all yes/no questions regardless of any other logic
+        filterOptions[questionId].availableAnswers = [
+          { label: "Yes", value: "Yes" },
+          { label: "No", value: "No" }
+        ];
+      }
+    });
+
+    console.log("Filter options for debugging:", JSON.stringify(filterOptions, null, 2));
+    console.log("Job Screening Questions:", job.screeningQuestions);
+    console.log("Total Questions:", Object.keys(filterOptions).length);
 
     res.status(200).json({
       success: true,
