@@ -461,7 +461,7 @@ const JobApplications = () => {
       location: filters.location || "",
       currentDesignation: filters.currentDesignation || "",
       totalYearsInConsulting: filters.totalYearsInConsulting || "",
-      status: currentStatus,
+      status: steps[activeStep],
     };
 
     // Prepare screening filters in the format backend expects
