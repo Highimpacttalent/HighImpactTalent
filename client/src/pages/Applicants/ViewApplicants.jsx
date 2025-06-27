@@ -403,6 +403,7 @@ const JobApplications = () => {
   }, [jobId]);
 
   const handleStepClick = async (index) => {
+    await clearFilters();
     setActiveStep(index);
     setSelectedApplications(new Set());
 
@@ -460,6 +461,7 @@ const JobApplications = () => {
       location: filters.location || "",
       currentDesignation: filters.currentDesignation || "",
       totalYearsInConsulting: filters.totalYearsInConsulting || "",
+      status: currentStatus,
     };
 
     // Prepare screening filters in the format backend expects
@@ -481,14 +483,7 @@ const JobApplications = () => {
 
     const filtered = await fetchApplications(filterParams, currentStatus);
     setApplications(filtered);
-    const filteredByStatus = filtered.filter(
-      (app) => app.status === currentStatus
-    );
-    setApplications(filteredByStatus);
-    setFilteredApps(filteredByStatus);
-
-    // Fetch stage counts
-    await fetchStageCounts();
+    setFilteredApps(filtered);
     setSelectedApplications(new Set());
     setFilterLoading(false);
   };

@@ -693,13 +693,8 @@ export const getScreeningFilterOptions = async (req, res) => {
             // For yes/no questions, ALWAYS provide Yes/No options by default
             // Frontend doesn't send options for yes/no - they're always the same
             filterOptions[questionId].availableAnswers = [
-<<<<<<< HEAD
-              { label: "Yes", value: true },
-              { label: "No", value: false },
-=======
               { label: "Yes", value: "Yes" },
               { label: "No", value: "No" }
->>>>>>> ff09e881a1a830dae68f446770146607a0a5df98
             ];
             break;
 
@@ -733,19 +728,6 @@ export const getScreeningFilterOptions = async (req, res) => {
       if (filterOptions[questionId]) {
         // For yes/no questions, we keep the default options but can add statistics
         if (group.questionType === "yes/no") {
-<<<<<<< HEAD
-          const yesCount = group.uniqueAnswers.filter(
-            (ans) => ans === true || ans === "Yes"
-          ).length;
-          const noCount = group.uniqueAnswers.filter(
-            (ans) => ans === false || ans === "No"
-          ).length;
-
-          filterOptions[questionId].statistics = {
-            yesCount,
-            noCount,
-            totalResponses: yesCount + noCount,
-=======
           // Count actual responses for statistics
           const yesAnswers = group.uniqueAnswers.filter(ans => {
             if (typeof ans === 'string') return ans.toLowerCase() === 'yes';
@@ -761,7 +743,6 @@ export const getScreeningFilterOptions = async (req, res) => {
             yesCount: yesAnswers.length,
             noCount: noAnswers.length,
             totalResponses: yesAnswers.length + noAnswers.length
->>>>>>> ff09e881a1a830dae68f446770146607a0a5df98
           };
           
           // ALWAYS ensure Yes/No options are available - don't rely on job definition
@@ -771,19 +752,8 @@ export const getScreeningFilterOptions = async (req, res) => {
           ];
         }
         // For other question types, we might want to add additional info
-<<<<<<< HEAD
-        else if (
-          group.questionType === "short_answer" ||
-          group.questionType === "long_answer"
-        ) {
-          filterOptions[questionId].sampleAnswers = group.answerTexts.slice(
-            0,
-            3
-          );
-=======
         else if (group.questionType === "short_answer" || group.questionType === "long_answer") {
           filterOptions[questionId].sampleAnswers = group.answerTexts ? group.answerTexts.slice(0, 3) : [];
->>>>>>> ff09e881a1a830dae68f446770146607a0a5df98
         }
       } else {
         // If question wasn't in job definition, create from application data
@@ -797,13 +767,8 @@ export const getScreeningFilterOptions = async (req, res) => {
           case "yes/no":
             // ALWAYS provide Yes/No options for yes/no questions - no matter what
             filterOptions[questionId].availableAnswers = [
-<<<<<<< HEAD
-              { label: "Yes", value: true },
-              { label: "No", value: false },
-=======
               { label: "Yes", value: "Yes" },
               { label: "No", value: "No" }
->>>>>>> ff09e881a1a830dae68f446770146607a0a5df98
             ];
             
             // Add statistics if we have actual answers
@@ -840,14 +805,7 @@ export const getScreeningFilterOptions = async (req, res) => {
           case "short_answer":
           case "long_answer":
             filterOptions[questionId].searchable = true;
-<<<<<<< HEAD
-            filterOptions[questionId].sampleAnswers = group.answerTexts.slice(
-              0,
-              3
-            );
-=======
             filterOptions[questionId].sampleAnswers = group.answerTexts ? group.answerTexts.slice(0, 3) : [];
->>>>>>> ff09e881a1a830dae68f446770146607a0a5df98
             break;
         }
       }
