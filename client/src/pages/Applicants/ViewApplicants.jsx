@@ -87,7 +87,8 @@ const computeMatchScore = (job, applicant) => {
   if (job.jobLocation) {
     if (
       job.jobLocation.toLowerCase() === "hybrid" ||
-      applicant.currentLocation?.toLowerCase() === job.jobLocation.toLowerCase() ||
+      applicant.currentLocation?.toLowerCase() ===
+        job.jobLocation.toLowerCase() ||
       applicant.openToRelocate?.toLowerCase() === "yes"
     ) {
       locScore = weights.loc;
@@ -168,7 +169,6 @@ Score by Category:
   console.log(totalScore, breakdown);
   return { totalScore, breakdown };
 };
-
 
 const ActionButton = styled(Button)(({ theme, variant: variantProp }) => ({
   fontFamily: "Satoshi",
@@ -261,12 +261,13 @@ const JobApplications = () => {
   });
 
   // Filter states
-  const [filters, setFilters] = useState({
-    keywords: "",
+  const [filters, setFilters] = useState(() => ({
+    keywords: [],
     location: "",
     currentDesignation: "",
     totalYearsInConsulting: "",
-  });
+  }));
+  const [keywordInput, setKeywordInput] = useState("");
 
   const [screeningQuestions, setScreeningQuestions] = useState([]);
 
@@ -274,14 +275,14 @@ const JobApplications = () => {
   const fetchApplications = async (filterParams = {}, status = null) => {
     try {
       setFilterLoading(true);
-      
+
       const queryParams = new URLSearchParams();
-      
+
       // Add status if provided
       if (status) {
-        queryParams.append('status', status);
+        queryParams.append("status", status);
       }
-      
+
       // Add filter parameters
       Object.entries(filterParams).forEach(([key, value]) => {
         if (value && value.toString().trim()) {
@@ -335,23 +336,27 @@ const JobApplications = () => {
     }
   };
 
-   useEffect(() => {
-      const fetchCities = async () => {
-        try {
-          const response = await fetch("/cities.csv");
-          const text = await response.text();
-          const rows = text.split("\n");
-          const cityList = rows.slice(1).map((row) => row.trim()).filter(Boolean).sort();
-  
-          setCities([...new Set(cityList)]);
-        } catch (error) {
-          console.error("Error loading cities:", error);
-          setCities([]);
-        }
-      };
-  
-      fetchCities();
-    }, []);
+  useEffect(() => {
+    const fetchCities = async () => {
+      try {
+        const response = await fetch("/cities.csv");
+        const text = await response.text();
+        const rows = text.split("\n");
+        const cityList = rows
+          .slice(1)
+          .map((row) => row.trim())
+          .filter(Boolean)
+          .sort();
+
+        setCities([...new Set(cityList)]);
+      } catch (error) {
+        console.error("Error loading cities:", error);
+        setCities([]);
+      }
+    };
+
+    fetchCities();
+  }, []);
 
   useEffect(() => {
     const initializeData = async () => {
@@ -360,16 +365,17 @@ const JobApplications = () => {
         // Fetch all applications for initial load
         const allApps = await fetchApplications();
         setAllApplications(allApps);
-        
+
         // Filter by current step
         const currentStatus = steps[activeStep];
-        const filteredByStatus = allApps.filter((app) => app.status === currentStatus);
+        const filteredByStatus = allApps.filter(
+          (app) => app.status === currentStatus
+        );
         setApplications(filteredByStatus);
         setFilteredApps(filteredByStatus);
-        
+
         // Fetch stage counts
         await fetchStageCounts();
-
       } catch (err) {
         setError(err.message);
       } finally {
@@ -383,7 +389,7 @@ const JobApplications = () => {
           url: `application/get-screening-filter-options/${jobId}`,
           method: "GET",
         });
-        
+
         if (response.success && response.jobScreeningQuestions) {
           setScreeningQuestions(response.jobScreeningQuestions);
         }
@@ -397,23 +403,26 @@ const JobApplications = () => {
   }, [jobId]);
 
   const handleStepClick = async (index) => {
+    await clearFilters();
     setActiveStep(index);
     setSelectedApplications(new Set());
-    
+
     const currentStatus = steps[index];
-    
+
     // If filters are applied, fetch with filters and status
-    const hasActiveFilters = Object.values(filters).some(value => 
-      value && value.toString().trim()
+    const hasActiveFilters = Object.values(filters).some(
+      (value) => value && value.toString().trim()
     );
-    
+
     if (hasActiveFilters) {
       const filteredApps = await fetchApplications(filters, currentStatus);
       setApplications(filteredApps);
       setFilteredApps(filteredApps);
     } else {
       // Use cached data if no filters
-      const filtered = allApplications.filter((app) => app.status === currentStatus);
+      const filtered = allApplications.filter(
+        (app) => app.status === currentStatus
+      );
       setApplications(filtered);
       setFilteredApps(filtered);
     }
@@ -424,377 +433,211 @@ const JobApplications = () => {
     setFilters({ ...filters, [name]: value });
   };
 
-  const applyFilters = async () => {
-  const currentStatus = steps[activeStep];
-  
-  // Prepare filter parameters for API
-  const filterParams = {
-    keywords: filters.keywords || '',
-    location: filters.location || '',
-    currentDesignation: filters.currentDesignation || '',
-    totalYearsInConsulting: filters.totalYearsInConsulting || ''
-  };
-  
-  // Prepare screening filters in the format backend expects
-  const screeningFilters = {};
-  
-  screeningQuestions.forEach(question => {
-    const filterKey = `screening_${question._id}`;
-    if (filters[filterKey] && filters[filterKey].length > 0) {
-      screeningFilters[question._id] = {
-        questionType: question.questionType,
-        expectedAnswer: filters[filterKey]
-      };
+  const handleKeywordKeyDown = (e) => {
+    if (e.key === "Enter" && keywordInput.trim()) {
+      e.preventDefault();
+      setFilters((prev) => ({
+        ...prev,
+        keywords: [...prev.keywords, keywordInput.trim()],
+      }));
+      setKeywordInput("");
     }
-  });
+  };
 
-  // Only add screeningFilters if there are any
-  if (Object.keys(screeningFilters).length > 0) {
-    filterParams.screeningFilters = JSON.stringify(screeningFilters);
-  }
-  
-  // Fetch filtered applications from server
-  const filteredApps = await fetchApplications(filterParams, currentStatus);
-  setApplications(filteredApps);
-  setFilteredApps(filteredApps);
-  setSelectedApplications(new Set());
-};
+  const handleRemoveKeyword = (index) => {
+    setFilters((prev) => {
+      const newKeywords = [...prev.keywords];
+      newKeywords.splice(index, 1);
+      return { ...prev, keywords: newKeywords };
+    });
+  };
+
+  const applyFilters = async () => {
+    const currentStatus = steps[activeStep];
+
+    // Prepare filter parameters for API
+    const filterParams = {
+      keywords: filters.keywords,
+      location: filters.location || "",
+      currentDesignation: filters.currentDesignation || "",
+      totalYearsInConsulting: filters.totalYearsInConsulting || "",
+      status: steps[activeStep],
+    };
+
+    // Prepare screening filters in the format backend expects
+    const screeningFilters = {};
+    screeningQuestions.forEach((question) => {
+      const key = `screening_${question._id}`;
+      const val = filters[key];
+      if (val && (Array.isArray(val) ? val.length > 0 : val)) {
+        screeningFilters[question._id] = {
+          questionType: question.questionType,
+          expectedAnswer: val,
+        };
+      }
+    });
+
+    if (Object.keys(screeningFilters).length) {
+      filterParams.screeningFilters = JSON.stringify(screeningFilters);
+    }
+
+    const filtered = await fetchApplications(filterParams, currentStatus);
+    setApplications(filtered);
+    setFilteredApps(filtered);
+    setSelectedApplications(new Set());
+    setFilterLoading(false);
+  };
 
   const clearFilters = async () => {
-  // 1. Reset all extra filters (like keywords, location)
-  const resetFilters = {
-    keywords: "",
-    location: "",
-    currentDesignation: "",
-    totalYearsInConsulting: "",
+    // 1. Reset all extra filters (like keywords, location)
+    const resetFilters = {
+      keywords: [],
+      location: "",
+      currentDesignation: "",
+      totalYearsInConsulting: "",
+    };
+    screeningQuestions.forEach((q) => {
+      const key = `screening_${q._id}`;
+      if (q.questionType === "multi_choice") {
+        resetFilters[key] = [];
+      } else {
+        resetFilters[key] = "";
+      }
+    });
+    setFilters(resetFilters);
+    setKeywordInput("");
+
+    // 2. Go back to the first tab — usually "Applied"
+    const newActiveStep = 0;
+    setActiveStep(newActiveStep);
+
+    // 3. Find the status name (e.g., "Applied")
+    const newStatus = steps[newActiveStep];
+
+    // 4. Filter from the full list we already have (`allApplications`)
+    const filtered = allApplications.filter((app) => app.status === newStatus);
+
+    // 5. Update the UI with that filtered list
+    setApplications(filtered);
+    setFilteredApps(filtered);
+
+    // 6. Refresh stage counts (the numbers on tabs)
+    await fetchStageCounts();
+
+    // 7. Clear any selected applicants (used for bulk actions)
+    setSelectedApplications(new Set());
+
+    // 8. Optional: If on mobile, close the filters drawer
+    if (isMobile) {
+      setDrawerOpen(false);
+    }
   };
-  screeningQuestions.forEach(question => {
-    resetFilters[`screening_${question._id}`] = "";
-  });
-  setFilters(resetFilters);
 
-  // 2. Go back to the first tab — usually "Applied"
-  const newActiveStep = 0;
-  setActiveStep(newActiveStep);
-
-  // 3. Find the status name (e.g., "Applied")
-  const newStatus = steps[newActiveStep];
-
-  // 4. Filter from the full list we already have (`allApplications`)
-  const filtered = allApplications.filter(app => app.status === newStatus);
-
-  // 5. Update the UI with that filtered list
-  setApplications(filtered);
-  setFilteredApps(filtered);
-
-  // 6. Refresh stage counts (the numbers on tabs)
-  await fetchStageCounts();
-
-  // 7. Clear any selected applicants (used for bulk actions)
-  setSelectedApplications(new Set());
-
-  // 8. Optional: If on mobile, close the filters drawer
-  if (isMobile) {
-    setDrawerOpen(false);
-  }
-};
-
-const FiltersContent = (
-  <Box sx={{ p: 2, width: isMobile ? 250 : "auto" }}>
-
-    {/* Keywords Field */}
-    <Box sx={{ mb: 3 }}>
-      <Typography 
-        variant="subtitle2" 
-        sx={{ 
-          fontFamily: "Satoshi, sans-serif", 
-          fontWeight: 600,
-          color: "#374151",
-          mb: 1.5,
-          fontSize: "0.875rem",
-          letterSpacing: "-0.01em"
-        }}
-      >
-        Keywords
-      </Typography>
-      <TextField
-        name="keywords"
-        value={filters.keywords}
-        onChange={handleFilterChange}
-        placeholder="Search by name, skills, expertise..."
-        size="small"
-        fullWidth
-        sx={{ 
-          "& .MuiOutlinedInput-root": {
-            borderRadius: "12px",
-            backgroundColor: "#ffffff",
-            border: "1.5px solid #e2e8f0",
-            fontFamily: "Poppins, sans-serif",
-            fontSize: "0.875rem",
-            transition: "all 0.2s ease-in-out",
-            "&:hover": {
-              borderColor: "#cbd5e1",
-              boxShadow: "0 2px 8px rgba(0, 0, 0, 0.04)"
-            },
-            "&.Mui-focused": {
-              borderColor: "#667eea",
-              boxShadow: "0 0 0 3px rgba(102, 126, 234, 0.1)",
-              backgroundColor: "#ffffff"
-            },
-            "& fieldset": {
-              border: "none"
-            }
-          },
-          "& .MuiOutlinedInput-input": {
-            padding: "12px 16px",
-            "&::placeholder": {
-              color: "#94a3b8",
-              opacity: 1
-            }
-          }
-        }}
-      />
-    </Box>
-
-    {/* Location Field */}
-    <Box sx={{ mb: 3 }}>
-      <Typography 
-        variant="subtitle2" 
-        sx={{ 
-          fontFamily: "Satoshi, sans-serif", 
-          fontWeight: 600,
-          color: "#374151",
-          mb: 1.5,
-          fontSize: "0.875rem",
-          letterSpacing: "-0.01em"
-        }}
-      >
-        Location
-      </Typography>
-      <Autocomplete
-    freeSolo
-    options={cities}
-    inputValue={filters.location}
-    onInputChange={(event, newValue) =>
-      handleFilterChange({ target: { name: "location", value: newValue } })
-    }
-    onChange={(event, newValue) =>
-      handleFilterChange({ target: { name: "location", value: newValue || "" } })
-    }
-    renderInput={(params) => (
-      <TextField
-        {...params}
-        name="location"
-        placeholder="City, country or region"
-        size="small"
-        fullWidth
-         sx={{ 
-          "& .MuiOutlinedInput-root": {
-            borderRadius: "12px",
-            backgroundColor: "#ffffff",
-            border: "1.5px solid #e2e8f0",
-            fontFamily: "Poppins, sans-serif",
-            fontSize: "0.875rem",
-            transition: "all 0.2s ease-in-out",
-            "&:hover": {
-              borderColor: "#cbd5e1",
-              boxShadow: "0 2px 8px rgba(0, 0, 0, 0.04)"
-            },
-            "&.Mui-focused": {
-              borderColor: "#667eea",
-              boxShadow: "0 0 0 3px rgba(102, 126, 234, 0.1)",
-              backgroundColor: "#ffffff"
-            },
-            "& fieldset": {
-              border: "none"
-            }
-          },
-          "& .MuiOutlinedInput-input": {
-            padding: "12px 16px",
-            "&::placeholder": {
-              color: "#94a3b8",
-              opacity: 1
-            }
-          }
-        }}
-      />
-    )}
-  />
-    </Box>
-
-    {/* Current Designation Field */}
-    <Box sx={{ mb: 3 }}>
-      <Typography 
-        variant="subtitle2" 
-        sx={{ 
-          fontFamily: "Satoshi, sans-serif", 
-          fontWeight: 600,
-          color: "#374151",
-          mb: 1.5,
-          fontSize: "0.875rem",
-          letterSpacing: "-0.01em"
-        }}
-      >
-        Current Designation
-      </Typography>
-      <TextField
-        name="currentDesignation"
-        value={filters.currentDesignation}
-        onChange={handleFilterChange}
-        placeholder="Job title or role"
-        size="small"
-        fullWidth
-        sx={{ 
-          "& .MuiOutlinedInput-root": {
-            borderRadius: "12px",
-            backgroundColor: "#ffffff",
-            border: "1.5px solid #e2e8f0",
-            fontFamily: "Poppins, sans-serif",
-            fontSize: "0.875rem",
-            transition: "all 0.2s ease-in-out",
-            "&:hover": {
-              borderColor: "#cbd5e1",
-              boxShadow: "0 2px 8px rgba(0, 0, 0, 0.04)"
-            },
-            "&.Mui-focused": {
-              borderColor: "#667eea",
-              boxShadow: "0 0 0 3px rgba(102, 126, 234, 0.1)",
-              backgroundColor: "#ffffff"
-            },
-            "& fieldset": {
-              border: "none"
-            }
-          },
-          "& .MuiOutlinedInput-input": {
-            padding: "12px 16px",
-            "&::placeholder": {
-              color: "#94a3b8",
-              opacity: 1
-            }
-          }
-        }}
-      />
-    </Box>
-
-    {/* Years in Consulting Dropdown */}
-    <Box sx={{ mb: 3 }}>
-      <Typography 
-        variant="subtitle2" 
-        sx={{ 
-          fontFamily: "Satoshi, sans-serif", 
-          fontWeight: 600,
-          color: "#374151",
-          mb: 1.5,
-          fontSize: "0.875rem",
-          letterSpacing: "-0.01em"
-        }}
-      >
-        Years in Consulting
-      </Typography>
-      <FormControl fullWidth>
-        <Select
-          name="totalYearsInConsulting"
-          value={filters.totalYearsInConsulting}
-          onChange={handleFilterChange}
-          size="small"
-          displayEmpty
+  const FiltersContent = (
+    <Box sx={{  width: isMobile ? 250 : "auto" }}>
+      {/* Keywords Field */}
+      <Box sx={{ mb: 3 }}>
+        <Typography
+          variant="subtitle2"
           sx={{
-            borderRadius: "12px",
-            backgroundColor: "#ffffff",
-            border: "1.5px solid #e2e8f0",
-            fontFamily: "Poppins, sans-serif",
+            fontFamily: "Satoshi, sans-serif",
+            fontWeight: 600,
+            color: "#374151",
+            mb: 1.5,
             fontSize: "0.875rem",
-            transition: "all 0.2s ease-in-out",
-            "&:hover": {
-              borderColor: "#cbd5e1",
-              boxShadow: "0 2px 8px rgba(0, 0, 0, 0.04)"
+            letterSpacing: "-0.01em",
+          }}
+        >
+          Keywords
+        </Typography>
+        <TextField
+          placeholder="Press enter to add multiple keywords"
+          value={keywordInput}
+          onChange={(e) => setKeywordInput(e.target.value)}
+          onKeyDown={handleKeywordKeyDown}
+          size="small"
+          fullWidth
+          sx={{
+            "& .MuiOutlinedInput-root": {
+              borderRadius: "12px",
+              backgroundColor: "#ffffff",
+              border: "1.5px solid #e2e8f0",
+              fontFamily: "Poppins, sans-serif",
+              fontSize: "0.875rem",
+              transition: "all 0.2s ease-in-out",
+              "&:hover": {
+                borderColor: "#cbd5e1",
+                boxShadow: "0 2px 8px rgba(0, 0, 0, 0.04)",
+              },
+              "&.Mui-focused": {
+                borderColor: "#667eea",
+                boxShadow: "0 0 0 3px rgba(102, 126, 234, 0.1)",
+                backgroundColor: "#ffffff",
+              },
+              "& fieldset": {
+                border: "none",
+              },
             },
-            "&.Mui-focused": {
-              borderColor: "#667eea",
-              boxShadow: "0 0 0 3px rgba(102, 126, 234, 0.1)"
-            },
-            "& fieldset": {
-              border: "none"
-            },
-            "& .MuiSelect-select": {
+            "& .MuiOutlinedInput-input": {
               padding: "12px 16px",
-              color: filters.totalYearsInConsulting ? "#1f2937" : "#94a3b8"
+              "&::placeholder": {
+                color: "#94a3b8",
+                opacity: 1,
+              },
             },
-            "& .MuiSelect-icon": {
-              color: "#6b7280",
-              right: "12px"
-            }
           }}
-        >
-          <MenuItem value="" sx={{ fontFamily: "Poppins, sans-serif", color: "#94a3b8" }}>
-            Select experience level
-          </MenuItem>
-          <MenuItem value="0-2" sx={{ fontFamily: "Poppins, sans-serif" }}>0-2 years</MenuItem>
-          <MenuItem value="2-5" sx={{ fontFamily: "Poppins, sans-serif" }}>2-5 years</MenuItem>
-          <MenuItem value="5-10" sx={{ fontFamily: "Poppins, sans-serif" }}>5-10 years</MenuItem>
-          <MenuItem value="10-100" sx={{ fontFamily: "Poppins, sans-serif" }}>10+ years</MenuItem>
-        </Select>
-      </FormControl>
-    </Box>
-
-    {/* Screening Questions Section */}
-    {screeningQuestions.length > 0 && (
-      <Box sx={{ mb: 4 }}>
-        <Box 
-          sx={{ 
-            display: "flex", 
-            alignItems: "center", 
-            mb: 3,
-            pb: 2,
-            borderBottom: "1px solid #f1f5f9"
-          }}
-        >
-          <Box
-            sx={{
-              width: 4,
-              height: 20,
-              background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-              borderRadius: "2px",
-              mr: 2
-            }}
-          />
-          <Typography 
-            variant="subtitle1" 
-            sx={{ 
-              fontFamily: "Satoshi, sans-serif", 
-              fontWeight: 700,
-              color: "#1a1d29",
-              fontSize: "1rem",
-              letterSpacing: "-0.01em"
-            }}
-          >
-            Screening Questions
-          </Typography>
-        </Box>
-        
-        {screeningQuestions.map((question, index) => (
-          <Box key={question._id} sx={{ mb: 3 }}>
-            <Typography 
-              variant="subtitle2" 
-              sx={{ 
-                fontFamily: "Satoshi, sans-serif", 
-                fontWeight: 600,
-                color: "#374151",
-                mb: 1.5,
-                fontSize: "0.875rem",
-                letterSpacing: "-0.01em"
-              }}
+        />
+        <Box sx={{ mt: 1, display: "flex", flexWrap: "wrap", gap: 1 }}>
+          {filters.keywords.map((kw, idx) => (
+            <Button
+              key={idx}
+              size="small"
+              onClick={() => handleRemoveKeyword(idx)}
             >
-              {question.question}
-            </Typography>
-            <FormControl fullWidth>
-              <Select
-                name={`screening_${question._id}`}
-                value={filters[`screening_${question._id}`] || ""}
-                onChange={handleFilterChange}
-                size="small"
-                displayEmpty
-                sx={{
+              {kw} &times;
+            </Button>
+          ))}
+        </Box>
+      </Box>
+
+      {/* Location Field */}
+      <Box sx={{ mb: 3 }}>
+        <Typography
+          variant="subtitle2"
+          sx={{
+            fontFamily: "Satoshi, sans-serif",
+            fontWeight: 600,
+            color: "#374151",
+            mb: 1.5,
+            fontSize: "0.875rem",
+            letterSpacing: "-0.01em",
+          }}
+        >
+          Location
+        </Typography>
+        <Autocomplete
+          freeSolo
+          options={cities}
+          inputValue={filters.location}
+          onInputChange={(event, newValue) =>
+            handleFilterChange({
+              target: { name: "location", value: newValue },
+            })
+          }
+          onChange={(event, newValue) =>
+            handleFilterChange({
+              target: { name: "location", value: newValue || "" },
+            })
+          }
+          renderInput={(params) => (
+            <TextField
+              {...params}
+              name="location"
+              placeholder="City, country or region"
+              size="small"
+              fullWidth
+              sx={{
+                "& .MuiOutlinedInput-root": {
                   borderRadius: "12px",
                   backgroundColor: "#ffffff",
                   border: "1.5px solid #e2e8f0",
@@ -803,99 +646,340 @@ const FiltersContent = (
                   transition: "all 0.2s ease-in-out",
                   "&:hover": {
                     borderColor: "#cbd5e1",
-                    boxShadow: "0 2px 8px rgba(0, 0, 0, 0.04)"
+                    boxShadow: "0 2px 8px rgba(0, 0, 0, 0.04)",
                   },
                   "&.Mui-focused": {
                     borderColor: "#667eea",
-                    boxShadow: "0 0 0 3px rgba(102, 126, 234, 0.1)"
+                    boxShadow: "0 0 0 3px rgba(102, 126, 234, 0.1)",
+                    backgroundColor: "#ffffff",
                   },
                   "& fieldset": {
-                    border: "none"
+                    border: "none",
                   },
-                  "& .MuiSelect-select": {
-                    padding: "12px 16px",
-                    color: filters[`screening_${question._id}`] ? "#1f2937" : "#94a3b8"
+                },
+                "& .MuiOutlinedInput-input": {
+                  padding: "12px 16px",
+                  "&::placeholder": {
+                    color: "#94a3b8",
+                    opacity: 1,
                   },
-                  "& .MuiSelect-icon": {
-                    color: "#6b7280",
-                    right: "12px"
-                  }
-                }}
-              >
-                <MenuItem value="" sx={{ fontFamily: "Poppins, sans-serif", color: "#94a3b8" }}>
-                  Select an option
-                </MenuItem>
-                {question.options?.map((option, idx) => (
-                  <MenuItem key={idx} value={option} sx={{ fontFamily: "Poppins, sans-serif" }}>
-                    {option}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Box>
-        ))}
+                },
+              }}
+            />
+          )}
+        />
       </Box>
-    )}
 
-    {/* Action Buttons */}
-    <Box sx={{ display: "flex", gap: 2, pt: 3, borderTop: "1px solid #f1f5f9" }}>
-      <Button
-        variant="contained"
-        fullWidth
-        onClick={applyFilters}
-        disabled={filterLoading}
-        startIcon={filterLoading ? <CircularProgress size={16} color="inherit" /> : null}
-        sx={{ 
-          fontFamily: "Satoshi, sans-serif", 
-          fontWeight: 600,
-          fontSize: "0.875rem",
-          textTransform: "none",
-          borderRadius: "12px",
-          padding: "12px 24px",
-          boxShadow: "0 4px 12px rgba(102, 126, 234, 0.3)",
-          transition: "all 0.2s ease-in-out",
-          letterSpacing: "-0.01em",
-          backgroundColor: '#374151',
-          '&:hover': { backgroundColor: '#1f2937' },
-        }}
+      {/* Current Designation Field */}
+      <Box sx={{ mb: 3 }}>
+        <Typography
+          variant="subtitle2"
+          sx={{
+            fontFamily: "Satoshi, sans-serif",
+            fontWeight: 600,
+            color: "#374151",
+            mb: 1.5,
+            fontSize: "0.875rem",
+            letterSpacing: "-0.01em",
+          }}
+        >
+          Current Designation
+        </Typography>
+        <TextField
+          name="currentDesignation"
+          value={filters.currentDesignation}
+          onChange={handleFilterChange}
+          placeholder="Job title or role"
+          size="small"
+          fullWidth
+          sx={{
+            "& .MuiOutlinedInput-root": {
+              borderRadius: "12px",
+              backgroundColor: "#ffffff",
+              border: "1.5px solid #e2e8f0",
+              fontFamily: "Poppins, sans-serif",
+              fontSize: "0.875rem",
+              transition: "all 0.2s ease-in-out",
+              "&:hover": {
+                borderColor: "#cbd5e1",
+                boxShadow: "0 2px 8px rgba(0, 0, 0, 0.04)",
+              },
+              "&.Mui-focused": {
+                borderColor: "#667eea",
+                boxShadow: "0 0 0 3px rgba(102, 126, 234, 0.1)",
+                backgroundColor: "#ffffff",
+              },
+              "& fieldset": {
+                border: "none",
+              },
+            },
+            "& .MuiOutlinedInput-input": {
+              padding: "12px 16px",
+              "&::placeholder": {
+                color: "#94a3b8",
+                opacity: 1,
+              },
+            },
+          }}
+        />
+      </Box>
+
+      {/* Years in Consulting Dropdown */}
+      <Box sx={{ mb: 3 }}>
+        <Typography
+          variant="subtitle2"
+          sx={{
+            fontFamily: "Satoshi, sans-serif",
+            fontWeight: 600,
+            color: "#374151",
+            mb: 1.5,
+            fontSize: "0.875rem",
+            letterSpacing: "-0.01em",
+          }}
+        >
+          Years in Consulting
+        </Typography>
+        <FormControl fullWidth>
+          <Select
+            name="totalYearsInConsulting"
+            value={filters.totalYearsInConsulting}
+            onChange={handleFilterChange}
+            size="small"
+            displayEmpty
+            sx={{
+              borderRadius: "12px",
+              backgroundColor: "#ffffff",
+              border: "1.5px solid #e2e8f0",
+              fontFamily: "Poppins, sans-serif",
+              fontSize: "0.875rem",
+              transition: "all 0.2s ease-in-out",
+              "&:hover": {
+                borderColor: "#cbd5e1",
+                boxShadow: "0 2px 8px rgba(0, 0, 0, 0.04)",
+              },
+              "&.Mui-focused": {
+                borderColor: "#667eea",
+                boxShadow: "0 0 0 3px rgba(102, 126, 234, 0.1)",
+              },
+              "& fieldset": {
+                border: "none",
+              },
+              "& .MuiSelect-select": {
+                padding: "12px 16px",
+                color: filters.totalYearsInConsulting ? "#1f2937" : "#94a3b8",
+              },
+              "& .MuiSelect-icon": {
+                color: "#6b7280",
+                right: "12px",
+              },
+            }}
+          >
+            <MenuItem
+              value=""
+              sx={{ fontFamily: "Poppins, sans-serif", color: "#94a3b8" }}
+            >
+              Select experience level
+            </MenuItem>
+            <MenuItem value="0-2" sx={{ fontFamily: "Poppins, sans-serif" }}>
+              0-2 years
+            </MenuItem>
+            <MenuItem value="2-5" sx={{ fontFamily: "Poppins, sans-serif" }}>
+              2-5 years
+            </MenuItem>
+            <MenuItem value="5-10" sx={{ fontFamily: "Poppins, sans-serif" }}>
+              5-10 years
+            </MenuItem>
+            <MenuItem value="10-100" sx={{ fontFamily: "Poppins, sans-serif" }}>
+              10+ years
+            </MenuItem>
+          </Select>
+        </FormControl>
+      </Box>
+
+      {/* Screening Questions Section */}
+      {screeningQuestions.length > 0 && (
+        <Box sx={{ mb: 4 }}>
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              mb: 3,
+              pb: 2,
+              borderBottom: "1px solid #f1f5f9",
+            }}
+          >
+            <Box
+              sx={{
+                width: 4,
+                height: 20,
+                background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                borderRadius: "2px",
+                mr: 2,
+              }}
+            />
+            <Typography
+              variant="subtitle1"
+              sx={{
+                fontFamily: "Satoshi, sans-serif",
+                fontWeight: 700,
+                color: "#1a1d29",
+                fontSize: "1rem",
+                letterSpacing: "-0.01em",
+              }}
+            >
+              Screening Questions
+            </Typography>
+          </Box>
+
+          {screeningQuestions.map((question) => {
+            const key = `screening_${question._id}`;
+            const type = question.questionType;
+            const isYesNo = type === "yes/no";
+            const isMulti = type === "multi_choice";
+
+            // choose the right options array
+            const options = isYesNo ? ["yes", "no"] : question.options || [];
+
+            return (
+              <Box key={question._id} sx={{ mb: 3 }}>
+                <Typography
+                  variant="subtitle2"
+                  sx={{
+                    fontFamily: "Satoshi, sans-serif",
+                    fontWeight: 600,
+                    color: "#374151",
+                    mb: 1.5,
+                    fontSize: "0.875rem",
+                  }}
+                >
+                  {question.question}
+                </Typography>
+
+                <FormControl fullWidth>
+                  <Select
+                    name={key}
+                    value={filters[key] ?? (isMulti ? [] : "")}
+                    onChange={handleFilterChange}
+                    size="small"
+                    displayEmpty
+                    multiple={isMulti}
+                    renderValue={(val) => {
+                      if (isMulti && (!val || val.length === 0)) {
+                        return (
+                          <span style={{ color: "#94a3b8" }}>Select…</span>
+                        ); // Custom placeholder for multi
+                      }
+                      if (!isMulti && !val) {
+                        return (
+                          <span style={{ color: "#94a3b8" }}>Select…</span>
+                        );
+                      }
+                      return Array.isArray(val) ? val.join(", ") : val;
+                    }}
+                    sx={{
+                      borderRadius: "12px",
+                      backgroundColor: "#fff",
+                      border: "1.5px solid #e2e8f0",
+                      fontFamily: "Poppins, sans-serif",
+                      fontSize: "0.875rem",
+                      transition: "all 0.2s ease-in-out",
+                      "&:hover": {
+                        borderColor: "#cbd5e1",
+                        boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
+                      },
+                      "&.Mui-focused": {
+                        borderColor: "#667eea",
+                        boxShadow: "0 0 0 3px rgba(102,126,234,0.1)",
+                      },
+                      "& fieldset": { border: "none" },
+                      "& .MuiSelect-select": {
+                        padding: "12px 16px",
+                        color: filters[key] ? "#1f2937" : "#94a3b8",
+                      },
+                      "& .MuiSelect-icon": { color: "#6b7280", right: 12 },
+                    }}
+                  >
+                    <MenuItem value="" disabled>
+                      Select…
+                    </MenuItem>
+                    {options.map((opt, idx) => (
+                      <MenuItem key={idx} value={opt}>
+                        {opt}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Box>
+            );
+          })}
+        </Box>
+      )}
+
+      {/* Action Buttons */}
+      <Box
+        sx={{ display: "flex", gap: 2, pt: 3, borderTop: "1px solid #f1f5f9" }}
       >
-        {filterLoading ? "Applying Filters..." : "Apply Filters"}
-      </Button>
-      
-      <Button
-        variant="outlined"
-        fullWidth
-        onClick={clearFilters}
-        disabled={filterLoading}
-        sx={{ 
-          fontFamily: "Satoshi, sans-serif", 
-          fontWeight: 600,
-          fontSize: "0.875rem",
-          textTransform: "none",
-          borderRadius: "12px",
-          padding: "12px 24px",
-          borderColor: "#e2e8f0",
-          color: "#64748b",
-          backgroundColor: "#ffffff",
-          transition: "all 0.2s ease-in-out",
-          letterSpacing: "-0.01em",
-          "&:hover": {
-            borderColor: "#cbd5e1",
-            backgroundColor: "#f8fafc",
-            color: "#475569",
-            boxShadow: "0 2px 8px rgba(0, 0, 0, 0.04)"
-          },
-          "&:disabled": {
-            borderColor: "#f1f5f9",
-            color: "#cbd5e1"
+        <Button
+          variant="contained"
+          fullWidth
+          onClick={applyFilters}
+          disabled={filterLoading}
+          startIcon={
+            filterLoading ? (
+              <CircularProgress size={16} color="inherit" />
+            ) : null
           }
-        }}
-      >
-        Clear All
-      </Button>
+          sx={{
+            fontFamily: "Satoshi, sans-serif",
+            fontWeight: 600,
+            fontSize: "0.875rem",
+            textTransform: "none",
+            borderRadius: "12px",
+            padding: "12px 24px",
+            boxShadow: "0 4px 12px rgba(102, 126, 234, 0.3)",
+            transition: "all 0.2s ease-in-out",
+            letterSpacing: "-0.01em",
+            backgroundColor: "#374151",
+            "&:hover": { backgroundColor: "#1f2937" },
+          }}
+        >
+          {filterLoading ? "Applying Filters..." : "Apply Filters"}
+        </Button>
+
+        <Button
+          variant="outlined"
+          fullWidth
+          onClick={clearFilters}
+          disabled={filterLoading}
+          sx={{
+            fontFamily: "Satoshi, sans-serif",
+            fontWeight: 600,
+            fontSize: "0.875rem",
+            textTransform: "none",
+            borderRadius: "12px",
+            padding: "12px 24px",
+            borderColor: "#e2e8f0",
+            color: "#64748b",
+            backgroundColor: "#ffffff",
+            transition: "all 0.2s ease-in-out",
+            letterSpacing: "-0.01em",
+            "&:hover": {
+              borderColor: "#cbd5e1",
+              backgroundColor: "#f8fafc",
+              color: "#475569",
+              boxShadow: "0 2px 8px rgba(0, 0, 0, 0.04)",
+            },
+            "&:disabled": {
+              borderColor: "#f1f5f9",
+              color: "#cbd5e1",
+            },
+          }}
+        >
+          Clear All
+        </Button>
+      </Box>
     </Box>
-  </Box>
-);
+  );
 
   const handleSearchClick = async () => {
     if (!searchKeyword.trim()) return;
@@ -948,18 +1032,20 @@ const FiltersContent = (
   const restoreSearch = async () => {
     // Reset to current filtered applications without AI search
     const currentStatus = steps[activeStep];
-    const hasActiveFilters = Object.values(filters).some(value => 
-      value && value.toString().trim()
+    const hasActiveFilters = Object.values(filters).some(
+      (value) => value && value.toString().trim()
     );
-    
+
     if (hasActiveFilters) {
       const filteredApps = await fetchApplications(filters, currentStatus);
       setFilteredApps(filteredApps);
     } else {
-      const filtered = allApplications.filter((app) => app.status === currentStatus);
+      const filtered = allApplications.filter(
+        (app) => app.status === currentStatus
+      );
       setFilteredApps(filtered);
     }
-    
+
     setSearchKeyword("");
   };
 
@@ -1020,14 +1106,14 @@ const FiltersContent = (
           message: `${response.data.modifiedCount} applications advanced successfully`,
           severity: "success",
         });
-        
+
         // Refresh data after bulk action
         await fetchStageCounts();
         const currentStatus = steps[activeStep];
-        const hasActiveFilters = Object.values(filters).some(value => 
-          value && value.toString().trim()
+        const hasActiveFilters = Object.values(filters).some(
+          (value) => value && value.toString().trim()
         );
-        
+
         if (hasActiveFilters) {
           const filteredApps = await fetchApplications(filters, currentStatus);
           setApplications(filteredApps);
@@ -1035,7 +1121,9 @@ const FiltersContent = (
         } else {
           const allApps = await fetchApplications();
           setAllApplications(allApps);
-          const filtered = allApps.filter((app) => app.status === currentStatus);
+          const filtered = allApps.filter(
+            (app) => app.status === currentStatus
+          );
           setApplications(filtered);
           setFilteredApps(filtered);
         }
@@ -1074,14 +1162,14 @@ const FiltersContent = (
           message: `${response.data.modifiedCount} applications rejected successfully`,
           severity: "success",
         });
-        
+
         // Refresh data after bulk action
         await fetchStageCounts();
         const currentStatus = steps[activeStep];
-        const hasActiveFilters = Object.values(filters).some(value => 
-          value && value.toString().trim()
+        const hasActiveFilters = Object.values(filters).some(
+          (value) => value && value.toString().trim()
         );
-        
+
         if (hasActiveFilters) {
           const filteredApps = await fetchApplications(filters, currentStatus);
           setApplications(filteredApps);
@@ -1089,7 +1177,9 @@ const FiltersContent = (
         } else {
           const allApps = await fetchApplications();
           setAllApplications(allApps);
-          const filtered = allApps.filter((app) => app.status === currentStatus);
+          const filtered = allApps.filter(
+            (app) => app.status === currentStatus
+          );
           setApplications(filtered);
           setFilteredApps(filtered);
         }
@@ -1127,14 +1217,14 @@ const FiltersContent = (
           message: `All ${response.data.modifiedCount} applications at this stage rejected`,
           severity: "success",
         });
-        
+
         // Refresh data after bulk action
         await fetchStageCounts();
         const currentStatus = steps[activeStep];
-        const hasActiveFilters = Object.values(filters).some(value => 
-          value && value.toString().trim()
+        const hasActiveFilters = Object.values(filters).some(
+          (value) => value && value.toString().trim()
         );
-        
+
         if (hasActiveFilters) {
           const filteredApps = await fetchApplications(filters, currentStatus);
           setApplications(filteredApps);
@@ -1142,7 +1232,9 @@ const FiltersContent = (
         } else {
           const allApps = await fetchApplications();
           setAllApplications(allApps);
-          const filtered = allApps.filter((app) => app.status === currentStatus);
+          const filtered = allApps.filter(
+            (app) => app.status === currentStatus
+          );
           setApplications(filtered);
           setFilteredApps(filtered);
         }
@@ -1196,7 +1288,6 @@ const FiltersContent = (
 
   return (
     <Box sx={{ bgcolor: "#fff", minHeight: "100vh", p: { xs: 2, md: 4 } }}>
-
       {error && (
         <Alert
           severity="error"
@@ -1313,27 +1404,26 @@ const FiltersContent = (
         {/* Applications Section */}
         <Box sx={{ flex: 1 }}>
           {/* Header Section */}
-      <Box
-        sx={{
-          bgcolor: "white",
-          p: { xs: 1, md: 2 },
-          mb: 3,
-        }}
-      >
-        <Typography
-          sx={{
-            textAlign: "center",
-            color: "#24252C",
-            fontFamily: "Satoshi",
-            fontWeight: 700,
-            fontSize: { xs: "24px", md: "30px" },
-            mb: 1,
-          }}
-        >
-          Job Applications
-        </Typography>
-      
-      </Box>
+          <Box
+            sx={{
+              bgcolor: "white",
+              p: { xs: 1, md: 2 },
+              mb: 3,
+            }}
+          >
+            <Typography
+              sx={{
+                textAlign: "center",
+                color: "#24252C",
+                fontFamily: "Satoshi",
+                fontWeight: 700,
+                fontSize: { xs: "24px", md: "30px" },
+                mb: 1,
+              }}
+            >
+              Job Applications
+            </Typography>
+          </Box>
           {/* Premium Tab Navigation */}
           <Box
             sx={{
@@ -1363,8 +1453,8 @@ const FiltersContent = (
               }}
             >
               {steps.map((step, index) => {
-                 const isActive = activeStep === index;
-                 const candidateCount = stageCounts[step] || 0;
+                const isActive = activeStep === index;
+                const candidateCount = stageCounts[step] || 0;
 
                 return (
                   <Box
@@ -1570,7 +1660,7 @@ const FiltersContent = (
                     display: "flex",
                     gap: 1.5,
                     alignItems: "center",
-                    flexWrap:"wrap",
+                    flexWrap: "wrap",
                   }}
                 >
                   {/* Primary Actions */}
@@ -1715,10 +1805,10 @@ const FiltersContent = (
           )}
 
           {loading && (
-        <Box sx={{ display: "flex", justifyContent: "center", my: 4 }}>
-          <CircularProgress sx={{ color: "#1976d2" }} size={40} />
-        </Box>
-      )}
+            <Box sx={{ display: "flex", justifyContent: "center", my: 4 }}>
+              <CircularProgress sx={{ color: "#1976d2" }} size={40} />
+            </Box>
+          )}
 
           {/* Enhanced Applications Grid */}
           <Box
@@ -1739,7 +1829,7 @@ const FiltersContent = (
                       overflow: "hidden",
                       transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
                       "&:hover": {
-                        transform: "translateY(-2px)",  
+                        transform: "translateY(-2px)",
                       },
                     }}
                   >
