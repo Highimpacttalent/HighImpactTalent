@@ -1,6 +1,8 @@
 import express from "express";
 import {createApplication, getApplication,updateApplicationStatus,getApplicationsOfAjob,getallApplicationOfApplicant, getApplicationsWithJobs, ApplicationStatusUpdate, bulkRejectApplications, bulkAdvanceApplications,getScreeningFilterOptions, getApplicationStageCounts} from "../controllers/ApplicationController.js";
 import userAuth from "../middlewares/authMiddleware.js";
+import { uploadApplicationResume, uploadResumeMiddleware } from "../controllers/ApplicationController.js";
+import uploadAuth from "../middlewares/uploadAuthMiddleware.js";
 
 
 const router = express.Router();
@@ -26,6 +28,8 @@ router.put('/bulk-advance', bulkAdvanceApplications);
 router.get('/get-screening-filter-options/:jobid', getScreeningFilterOptions);
 
 router.get('/get-stage-counts/:jobid', getApplicationStageCounts);
+
+router.post("/upload-application-resume",uploadAuth,uploadResumeMiddleware,uploadApplicationResume);
 
 
 export default router;

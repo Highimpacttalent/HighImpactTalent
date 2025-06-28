@@ -3,6 +3,8 @@ import mongoose from "mongoose";
 import Jobs from "../models/jobsModel.js";
 import Users from "../models/userModel.js";
 import { sendStatusUpdateEmail } from "./sendMailController.js";
+import { uploadFileToS3 } from "../s3Config/s3.js";
+import multer from "multer";
 
 // Create a new application
 export const createApplication = async (req, res) => {
@@ -1226,6 +1228,93 @@ export const bulkAdvanceApplications = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Server error",
+    });
+  }
+};
+
+const uploadresume = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 2 * 1024 * 1024,
+  },
+});
+
+// Middleware to handle file upload
+export const uploadResumeMiddleware = uploadresume.single("resume");
+
+export const uploadApplicationResume = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: "No file uploaded",
+      });
+    }
+
+    const file = req.file;
+    const userId = req.uploaderId;
+
+    // Define allowed MIME types for PDF and DOC/DOCX files
+    const allowedMimeTypes = [
+      "application/pdf",
+      "application/msword", // .doc files
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document", // .docx files
+    ];
+
+    // Validate file type
+    if (!allowedMimeTypes.includes(file.mimetype)) {
+      return res.status(400).json({
+        success: false,
+        message: "Only PDF, DOC, and DOCX files are allowed",
+      });
+    }
+
+    // Validate file size (5MB limit)
+    const maxFileSize = 2 * 1024 * 1024; // 5MB in bytes
+    if (file.size > maxFileSize) {
+      return res.status(400).json({
+        success: false,
+        message: "File size must be less than 5MB",
+      });
+    }
+
+    // Verify user exists
+    const user = await Users.findById(userId);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    // Generate unique filename for application-specific resume
+    // Use a different folder structure to separate application resumes from profile resumes
+    const filename = `application-resumes/${userId}/${Date.now()}-${file.originalname}`;
+
+    // Upload to S3
+    const s3Response = await uploadFileToS3(
+      file.buffer,
+      filename,
+      file.mimetype
+    );
+
+    // Return the resume URL without updating the user's profile resume
+    res.status(200).json({
+      success: true,
+      message: "Resume uploaded successfully for job application",
+      resumeUrl: s3Response.Location,
+      fileInfo: {
+        originalName: file.originalname,
+        mimeType: file.mimetype,
+        size: file.size,
+        uploadedAt: new Date(),
+      },
+    });
+  } catch (error) {
+    console.error("Error uploading application resume:", error);
+    res.status(500).json({
+      success: false,
+      message: error.message || "Error uploading resume for application",
     });
   }
 };
