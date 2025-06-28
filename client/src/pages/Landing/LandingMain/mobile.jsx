@@ -45,10 +45,10 @@ const MobileLanding = () => {
             {/* Hero Image */}
             <div className="mb-2">
               <img
-                src={Landing}
-                alt="Hero"
-                className="h-48 md:h-64 mx-auto object-contain"
-              />
+    src={Landing}
+    alt="Hero"
+    className="w-full h-64 md:h-80 lg:h-96 object-cover rounded-lg"
+  />
             </div>
 
             {/* CTA Buttons */}
