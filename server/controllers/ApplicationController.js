@@ -7,7 +7,15 @@ import { sendStatusUpdateEmail } from "./sendMailController.js";
 // Create a new application
 export const createApplication = async (req, res) => {
   try {
-    const { job, company, applicant, screeningAnswers } = req.body;
+    const { job, company, applicant, screeningAnswers, cvUrl } = req.body;
+
+    // Check if cvUrl is provided
+    if (!cvUrl) {
+      return res.status(400).json({
+        success: false,
+        message: "Resume URL is required",
+      });
+    }
 
     // Check if job exists
     const jobex = await Jobs.findById(job);
@@ -88,11 +96,12 @@ export const createApplication = async (req, res) => {
       });
     }
 
-    // Create application with screening answers if provided
+    // Create application with screening answers and cvUrl
     const newApplication = await Application.create({
       job,
       company,
       applicant,
+      cvUrl, // Store the resume URL for this specific application
       screeningAnswers: formattedScreeningAnswers,
       statusHistory: [{ status: "Applied", changedAt: new Date() }],
     });
