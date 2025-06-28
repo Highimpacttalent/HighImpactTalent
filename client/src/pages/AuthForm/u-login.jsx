@@ -242,10 +242,19 @@ function UserLoginForm() {
         data: newData,
       });
 
-      if (res?.success !== true) {
-        setErrMsg(res?.message);
-        return;
+            if (res?.success !== true) {
+        // Check if the specific error message was returned
+        let messageToDisplay = res?.message;
+        if (messageToDisplay === "Invalid email or password") {
+          messageToDisplay = "That email isn't registered with us.";
+        }
+
+        // Set the error message state (use fallback in case message is null/undefined)
+        setErrMsg(messageToDisplay || "An unexpected error occurred.");
+
+        return; // Stop execution here
       } else {
+        // This is the success case, keep it as is
         setErrMsg("");
         const userData = { token: res?.token, ...res?.user };
         dispatch(Login(userData));
