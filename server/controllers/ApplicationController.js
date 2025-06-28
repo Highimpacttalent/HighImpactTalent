@@ -1269,12 +1269,11 @@ export const uploadApplicationResume = async (req, res) => {
       });
     }
 
-    // Validate file size (5MB limit)
-    const maxFileSize = 2 * 1024 * 1024; // 5MB in bytes
-    if (file.size > maxFileSize) {
+    // Validate file size (2MB limit as defined in multer config)
+    if (file.size > 2 * 1024 * 1024) {
       return res.status(400).json({
         success: false,
-        message: "File size must be less than 5MB",
+        message: "File size must be less than 2MB",
       });
     }
 
@@ -1288,7 +1287,6 @@ export const uploadApplicationResume = async (req, res) => {
     }
 
     // Generate unique filename for application-specific resume
-    // Use a different folder structure to separate application resumes from profile resumes
     const filename = `application-resumes/${userId}/${Date.now()}-${file.originalname}`;
 
     // Upload to S3
@@ -1298,7 +1296,7 @@ export const uploadApplicationResume = async (req, res) => {
       file.mimetype
     );
 
-    // Return the resume URL without updating the user's profile resume
+    // Return just the resume URL and file info
     res.status(200).json({
       success: true,
       message: "Resume uploaded successfully for job application",
