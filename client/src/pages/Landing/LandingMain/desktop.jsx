@@ -25,6 +25,7 @@ import Comp3 from "../../../assets/Landing/Comp3.png";
 import { CheckCircle, Mail, ArrowRight } from "lucide-react";
 import Bottom from "../../../assets/Landing/Bottom.svg";
 import PremiumSubscribeSection from "./Subscribe";
+import Landing from "../../../assets/Landing/Landing.svg";
 
 // Minimal animation hook for subtle effects
 const useInView = (options = {}) => {
@@ -256,7 +257,7 @@ const DesktopLanding = () => {
                         variant="h4"
                         sx={{ fontWeight: 700, color: "#0a0a0a", mb: 0.5 }}
                       >
-                        1K+
+                        500+
                       </Typography>
                       <Typography
                         variant="body2"
@@ -309,7 +310,7 @@ const DesktopLanding = () => {
                   }}
                 >
                   <img
-                    src={Hero}
+                    src={Landing}
                     alt="Professional hiring platform"
                     style={{
                       maxWidth: "100%",
@@ -375,7 +376,7 @@ const DesktopLanding = () => {
                     variant="h2"
                     sx={{
                       fontSize: { md: "2.5rem", lg: "2.5rem" },
-                      fontWeight: 700,
+                      fontWeight: 600,
                       fontFamily: "Satoshi",
                       lineHeight: 1.2,
                       color: "#0a0a0a",
@@ -384,7 +385,7 @@ const DesktopLanding = () => {
                     }}
                   >
                     Your career deserves better{" "}
-                    <Box component="span" sx={{ color: "#3C7EFC" }}>
+                    <Box component="span" sx={{ color: "#3C7EFC",fontWeight: 700 }}>
                       than job boards.
                     </Box>
                   </Typography>
@@ -463,7 +464,7 @@ const DesktopLanding = () => {
                     variant="h2"
                     sx={{
                       fontSize: { md: "2.5rem", lg: "2.5rem" },
-                      fontWeight: 700,
+                      fontWeight: 600,
                       fontFamily: "Satoshi",
                       lineHeight: 1.2,
                       color: "#0a0a0a",
@@ -472,7 +473,7 @@ const DesktopLanding = () => {
                     }}
                   >
                     Find candidates{" "}
-                    <Box component="span" sx={{ color: "#1BA5EA" }}>
+                    <Box component="span" sx={{ color: "#1BA5EA",fontWeight: 700 }}>
                       you won’t want to lose.
                     </Box>
                   </Typography>

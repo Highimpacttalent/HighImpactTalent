@@ -334,52 +334,62 @@ const UserInfoForm = () => {
   };
 
   // Custom styles for Select components
-  const customStyles = {
-    control: (provided, state) => ({
-      ...provided,
-      padding: 4,
-      width: "100%",
-      fontSize: "0.875rem",
-      borderRadius: 50,
-      border: "1px solid #24252C",
-      boxShadow: state.isFocused ? "0 0 0 2px #3b82f6" : "none",
+ const customStyles = {
+  control: (provided, state) => ({
+    ...provided,
+    padding: 4,
+    width: "100%",
+    fontSize: "0.875rem",
+    borderRadius: 50,
+    border: "1px solid #24252C",
+    boxShadow: state.isFocused ? "0 0 0 2px #3b82f6" : "none",
+    minHeight: "48px",
+    maxHeight: "120px",
+    overflowY: "auto",
+  }),
 
-      // let the control grow vertically if needed, but cap it
-      minHeight: "48px",
-      maxHeight: "120px", // max height of the entire control
-      overflowY: "auto", // scroll if too many chips
-    }),
+  valueContainer: (provided) => ({
+    ...provided,
+    display: "flex",
+    flexWrap: "wrap",
+    gap: "4px",
+    overflowY: "auto",
+    maxHeight: "80px",
+    padding: "4px 8px",
+  }),
 
-    valueContainer: (provided) => ({
-      ...provided,
-      display: "flex",
-      flexWrap: "wrap", // allow chips to wrap onto new lines
-      gap: "4px",
-      overflowY: "auto", // scroll if wrapped lines exceed space
-      maxHeight: "80px", // cap wrapping area
-      padding: "4px 8px", // inner padding
-    }),
+  multiValue: (provided) => ({
+    ...provided,
+    margin: "2px",
+    borderRadius: "999px", // ← apply only curve
+  }),
 
-    multiValue: (provided) => ({
-      ...provided,
-      margin: "2px", // tighten up chip margins
-    }),
+  multiValueLabel: (provided) => ({
+    ...provided,
+    borderRadius: "999px", // ← rounded inner label too
+  }),
 
-    menu: (provided) => ({
-      ...provided,
-      boxShadow: "0 2px 10px rgba(0, 0, 0, 0.1)",
-      border: "1px solid #d1d5db",
-    }),
+  multiValueRemove: (provided) => ({
+    ...provided,
+    borderRadius: "999px", // ← rounded remove icon
+  }),
 
-    option: (provided, state) => ({
-      ...provided,
-      backgroundColor: state.isSelected ? "#3b82f6" : "white",
-      color: state.isSelected ? "white" : "black",
-      "&:hover": {
-        backgroundColor: "#f3f4f6",
-      },
-    }),
-  };
+  menu: (provided) => ({
+    ...provided,
+    boxShadow: "0 2px 10px rgba(0, 0, 0, 0.1)",
+    border: "1px solid #d1d5db",
+  }),
+
+  option: (provided, state) => ({
+    ...provided,
+    backgroundColor: state.isSelected ? "#3b82f6" : "white",
+    color: state.isSelected ? "white" : "black",
+    "&:hover": {
+      backgroundColor: "#f3f4f6",
+    },
+  }),
+};
+
 
   // Prepare city options with "Other" at the bottom
   const filteredCities = [
@@ -551,7 +561,7 @@ const UserInfoForm = () => {
                       <option key={i + 1} value={(i + 1).toString()}>{`${
                         i + 1
                       }+`}</option>
-                    ))}
+                    ))} 
                   </select>
                 </div>
                 <div className="mb-6">
@@ -1006,8 +1016,8 @@ const UserInfoForm = () => {
                         <option value="">Select experience</option>
                         {Array.from({ length: 15 }, (_, i) => (
                           <option key={i + 1} value={(i + 1).toString()}>{`${
-                            i + 1
-                          } year${i === 0 ? "" : "s"}`}</option>
+                        i + 1
+                      }+`}</option>
                         ))}
                       </select>
                     </div>

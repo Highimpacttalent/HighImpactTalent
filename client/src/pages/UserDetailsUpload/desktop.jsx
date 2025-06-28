@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   Box,
   Button,
@@ -8,16 +8,241 @@ import {
   useMediaQuery,
   useTheme,
   Modal,
+  LinearProgress,
 } from "@mui/material";
 import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
 import { useSelector } from "react-redux";
 import axios from "axios";
 import { motion } from "framer-motion";
-import Lottie from "lottie-react";
-import hiringAnimation from "../../assets/hiring.json";
 import AlertModal from "../../components/Alerts/view.jsx"
 import { useNavigate } from "react-router-dom";
 import { useLocation } from "react-router-dom";
+
+// Premium Loading Component
+const PremiumLoader = ({ open, onClose }) => {
+  const [progress, setProgress] = useState(0);
+  const [currentMessage, setCurrentMessage] = useState("");
+
+  const loadingMessages = [
+    { percentage: 10, message: "Wow, impressive formatting..." },
+    { percentage: 25, message: "Analyzing your experience..." },
+    { percentage: 45, message: "Matching with hiring signals..." },
+    { percentage: 65, message: "Extracting key achievements..." },
+    { percentage: 87, message: "Almost there. We see impact..." },
+    { percentage: 100, message: "Let's get you hired 🔥" }
+  ];
+
+  useEffect(() => {
+    if (!open) {
+      setProgress(0);
+      setCurrentMessage("");
+      return;
+    }
+
+    let currentIndex = 0;
+    const interval = setInterval(() => {
+      if (currentIndex < loadingMessages.length) {
+        const targetPercentage = loadingMessages[currentIndex].percentage;
+        const message = loadingMessages[currentIndex].message;
+        
+        // Smooth progress animation
+        const progressInterval = setInterval(() => {
+          setProgress(prev => {
+            if (prev >= targetPercentage) {
+              clearInterval(progressInterval);
+              setCurrentMessage(message);
+              return targetPercentage;
+            }
+            return prev + 1;
+          });
+        }, 50);
+
+        currentIndex++;
+      } else {
+        clearInterval(interval);
+      }
+    }, 1500);
+
+    return () => clearInterval(interval);
+  }, [open]);
+
+  return (
+    <Modal 
+      open={open} 
+      onClose={onClose}
+      BackdropProps={{
+        style: {
+          backgroundColor: 'rgba(0, 0, 0, 0.7)',
+          backdropFilter: 'blur(8px)'
+        }
+      }}
+    >
+      <Box
+        sx={{
+          position: "absolute",
+          top: "50%",
+          left: "50%",
+          transform: "translate(-50%, -50%)",
+          bgcolor: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+          background: "linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)",
+          boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
+          p: 6,
+          borderRadius: 4,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          width: "90%",
+          maxWidth: 500,
+          border: "1px solid rgba(255, 255, 255, 0.2)",
+        }}
+      >
+        {/* Premium Header */}
+        <Box sx={{ textAlign: "center", mb: 4 }}>
+          <Typography 
+            variant="h5" 
+            sx={{ 
+              fontWeight: 700,
+              background: "linear-gradient(135deg, #1976d2 0%, #42a5f5 100%)",
+              backgroundClip: "text",
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+              mb: 1
+            }}
+          >
+            Processing Your Resume
+          </Typography>
+          <Typography 
+            variant="body2" 
+            sx={{ 
+              color: "#64748b",
+              fontWeight: 500
+            }}
+          >
+            Our AI is analyzing your profile
+          </Typography>
+        </Box>
+
+        {/* Premium Progress Bar */}
+        <Box sx={{ width: "100%", mb: 4 }}>
+          <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}>
+            <Typography 
+              variant="h3" 
+              sx={{ 
+                fontWeight: 800,
+                color: "#1976d2",
+                fontSize: "2.5rem"
+              }}
+            >
+              {progress}%
+            </Typography>
+            <Box sx={{ 
+              display: "flex", 
+              alignItems: "center",
+              bgcolor: "#e3f2fd",
+              px: 2,
+              py: 0.5,
+              borderRadius: 2
+            }}>
+              <Box sx={{
+                width: 8,
+                height: 8,
+                borderRadius: "50%",
+                bgcolor: "#1976d2",
+                mr: 1,
+                animation: "pulse 2s infinite"
+              }} />
+              <Typography variant="body2" sx={{ color: "#1976d2", fontWeight: 600 }}>
+                LIVE
+              </Typography>
+            </Box>
+          </Box>
+
+          {/* Custom Progress Bar */}
+          <Box sx={{ 
+            width: "100%", 
+            height: 12, 
+            bgcolor: "#e5e7eb", 
+            borderRadius: 6,
+            overflow: "hidden",
+            position: "relative"
+          }}>
+            <Box sx={{
+              width: `${progress}%`,
+              height: "100%",
+              background: "linear-gradient(90deg, #1976d2 0%, #42a5f5 50%, #1976d2 100%)",
+              borderRadius: 6,
+              transition: "width 0.3s ease-in-out",
+              position: "relative",
+              "&::after": {
+                content: '""',
+                position: "absolute",
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                background: "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.3) 50%, transparent 100%)",
+                animation: "shimmer 2s infinite"
+              }
+            }} />
+          </Box>
+        </Box>
+
+        {/* Dynamic Message */}
+        <motion.div
+          key={currentMessage}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          style={{ textAlign: "center", minHeight: 60 }}
+        >
+          <Typography 
+            variant="h6" 
+            sx={{ 
+              color: "#1e293b",
+              fontWeight: 600,
+              fontSize: "1.1rem",
+              lineHeight: 1.4
+            }}
+          >
+            {currentMessage}
+          </Typography>
+        </motion.div>
+
+        {/* Premium Footer */}
+        <Box sx={{ 
+          mt: 3, 
+          display: "flex", 
+          alignItems: "center",
+          gap: 1,
+          opacity: 0.7
+        }}>
+          <Box sx={{
+            width: 4,
+            height: 4,
+            borderRadius: "50%",
+            bgcolor: "#22c55e"
+          }} />
+          <Typography variant="caption" sx={{ color: "#64748b", fontWeight: 500 }}>
+            Secured with enterprise-grade encryption
+          </Typography>
+        </Box>
+
+        {/* CSS Animations */}
+        <style jsx>{`
+          @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+          }
+          @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+          }
+        `}</style>
+      </Box>
+    </Modal>
+  );
+};
 
 const ResumeUpload = () => {
   const location = useLocation();
@@ -316,33 +541,12 @@ const ResumeUpload = () => {
         </motion.div>
       )}
 
-      {/* Modal for Animation */}
-      <Modal open={openModal} onClose={() => setOpenModal(false)}>
-        <Box
-          sx={{
-            position: "absolute",
-            top: "50%", 
-            left: "50%",
-            transform: "translate(-50%, -50%)",
-            bgcolor: "rgba(255, 255, 255, 0.8)",
-            boxShadow: 24,
-            p: 4,
-            borderRadius: 3,
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            width: "90%",
-            maxWidth: 400,
-            backdropFilter: "blur(10px)",
-          }}
-        >
-          <Lottie animationData={hiringAnimation} loop />
-          <Typography variant="h6" color="primary" sx={{ mt: 2 }}>
-            Processing your resume...
-          </Typography>
-        </Box>
-      </Modal>
+       <PremiumLoader 
+        open={openModal} 
+        onClose={() => setOpenModal(false)}   
+      />
+
+
       <AlertModal
               open={alert.open}
               onClose={() => setAlert({ ...alert, open: false })}
