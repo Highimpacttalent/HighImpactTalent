@@ -21,11 +21,11 @@ import { Snackbar, Alert } from "@mui/material";
 
 const PremiumSubscribeSection = () => {
   const theme = useTheme();
-  const isSm = useMediaQuery(theme.breakpoints.down('md'));
-  const [email, setEmail] = useState('');
+  const isSm = useMediaQuery(theme.breakpoints.down("md"));
+  const [email, setEmail] = useState("");
   const [hover, setHover] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [successMessage, setSuccessMessage] = useState('');
+  const [successMessage, setSuccessMessage] = useState("");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -33,27 +33,27 @@ const PremiumSubscribeSection = () => {
 
     try {
       const formData = new FormData();
-      formData.append('EMAIL', email);
-      formData.append('email_address_check', '');
-      formData.append('locale', 'en');
+      formData.append("EMAIL", email);
+      formData.append("email_address_check", "");
+      formData.append("locale", "en");
 
       const response = await fetch(
-        'https://feb3b4bd.sibforms.com/serve/MUIFADuynwjYKMzhbXR3lcod0vsaRiXf1dgp7Ouf4wUS__zbtLywaZJKl9DerZ4S_coIR9xQkcb25NCCSZTNhRisYs27VALmXZEYYzkHRpFapr4Xe7slq6ir4su2gTeOxUKba0yb5rXHeh7xzh1y3G4_01O6C0OM6eQib8BqvZ7jlAIbZ88R5mFEItYw0P68AcTcwMIz-gDk9jJO?isAjax=1',
-        { method: 'POST', body: formData }
+        "https://feb3b4bd.sibforms.com/serve/MUIFADuynwjYKMzhbXR3lcod0vsaRiXf1dgp7Ouf4wUS__zbtLywaZJKl9DerZ4S_coIR9xQkcb25NCCSZTNhRisYs27VALmXZEYYzkHRpFapr4Xe7slq6ir4su2gTeOxUKba0yb5rXHeh7xzh1y3G4_01O6C0OM6eQib8BqvZ7jlAIbZ88R5mFEItYw0P68AcTcwMIz-gDk9jJO?isAjax=1",
+        { method: "POST", body: formData }
       );
 
       const data = await response.json();
       if (data.success) {
-        setSuccessMessage('Thank you for joining');
-        setEmail('');
+        setSuccessMessage("Thank you for joining");
+        setEmail("");
         setTimeout(() => {
-            setSuccessMessage('');
+          setSuccessMessage("");
         }, 3000);
       } else {
-        setSuccessMessage('Something went wrong. Please try again.');
+        setSuccessMessage("Something went wrong. Please try again.");
       }
     } catch (error) {
-      setSuccessMessage('Failed to subscribe. Please try again later.');
+      setSuccessMessage("Failed to subscribe. Please try again later.");
     } finally {
       setIsSubmitting(false);
     }
@@ -151,7 +151,8 @@ const PremiumSubscribeSection = () => {
                 fontSize={{ xs: "1rem", md: "1.25rem" }}
                 mb={4}
               >
-                Join 2,500+ ambitious professionals getting handpicked job drops, market moves, and no-fluff career advice—every week.
+                Join 2,500+ ambitious professionals getting handpicked job
+                drops, market moves, and no-fluff career advice—every week.
               </Typography>
 
               {/* Subscribe Form */}
@@ -167,63 +168,85 @@ const PremiumSubscribeSection = () => {
                   </Typography>
                 )}
                 <Box
-                  component="form"
-                  onSubmit={handleSubmit}
                   sx={{
                     display: "flex",
-                    flexDirection: { xs: "column", sm: "row" },
-                    gap: 2,
-                    mb: 3,
-                    p: 1,
-                    bgcolor: "grey.50",
-                    borderRadius: 3,
-                    border: `1px solid ${theme.palette.grey[200]}`,
-                    transition: "all 0.3s",
-                    "&:focus-within": {
-                      bgcolor: "background.paper",
-                      borderColor: "primary.main",
-                    },
+                    justifyContent: "center",
+                    alignItems: "center",
+                    width: "100%",
+                    mt: 5, // optional top margin
                   }}
                 >
-                  <TextField
-                    fullWidth
-                    variant="standard"
-                    placeholder="Enter your email address"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    InputProps={{
-                      disableUnderline: true,
-                      startAdornment: (
-                        <InputAdornment position="start">
-                          <MailOutlineIcon color="action" />
-                        </InputAdornment>
-                      ),
-                    }}
-                  />
-                  <Button
-                    type="submit"
-                    variant="contained"
-                    endIcon={<ArrowForwardIcon />}
-                    onMouseEnter={() => setHover(true)}
-                    onMouseLeave={() => setHover(false)}
+                  <Box
+                    component="form"
+                    onSubmit={handleSubmit}
                     sx={{
-                      whiteSpace: "nowrap",
-                      textTransform: "none",
-                      px: 4,
-                      py: 1.5,
-                      backgroundImage:
-                        "linear-gradient(to right, #1e40af, #1e3a8a)",
-                      boxShadow: hover
-                        ? `0 8px 16px ${theme.palette.primary.main}40`
-                        : "none",
-                      transform: hover ? "scale(1.05)" : "none",
+                      display: "flex",
+                      flexDirection: { xs: "column", sm: "row" },
+                      justifyContent: "center",
+                      alignItems: "center",
+                      gap: 2,
+                      mb: 3,
+                      p: 2,
+                      maxWidth: 500,
+                      width: "100%",
+                      bgcolor: "grey.50",
+                      borderRadius: 3,
+                      border: `1px solid ${theme.palette.grey[200]}`,
                       transition: "all 0.3s",
-                      fontFamily: "Poppins, sans-serif",
-                      fontWeight: 600,
+                      "&:focus-within": {
+                        bgcolor: "background.paper",
+                        borderColor: "primary.main",
+                      },
                     }}
                   >
-                    Subscribe
-                  </Button>
+                    <TextField
+                      fullWidth
+                      variant="standard"
+                      placeholder="Enter your email address"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      InputProps={{
+                        disableUnderline: true,
+                        startAdornment: (
+                          <InputAdornment position="start" sx={{ mr: 0 }}>
+                            <MailOutlineIcon color="action" />
+                          </InputAdornment>
+                        ),
+                      }}
+                      sx={{
+                        "& .MuiInputBase-root": {
+                          justifyContent: "center", // center icon and input text
+                        },
+                        "& input": {
+                          textAlign: "center",
+                        },
+                      }}
+                    />
+
+                    <Button
+                      type="submit"
+                      variant="contained"
+                      endIcon={<ArrowForwardIcon />}
+                      onMouseEnter={() => setHover(true)}
+                      onMouseLeave={() => setHover(false)}
+                      sx={{
+                        whiteSpace: "nowrap",
+                        textTransform: "none",
+                        px: 4,
+                        backgroundImage:
+                          "linear-gradient(to right, #1e40af, #1e3a8a)",
+                        boxShadow: hover
+                          ? `0 8px 16px ${theme.palette.primary.main}40`
+                          : "none",
+                        transform: hover ? "scale(1.05)" : "none",
+                        transition: "all 0.3s",
+                        fontFamily: "Poppins, sans-serif",
+                        fontWeight: 600,
+                      }}
+                    >
+                      Subscribe
+                    </Button>
+                  </Box>
                 </Box>
 
                 {/* Trust Indicators */}
@@ -254,50 +277,47 @@ const PremiumSubscribeSection = () => {
                   pt={4}
                   borderTop={`1px solid ${theme.palette.grey[100]}`}
                 >
-                  <Box
-                    display="flex"
-                    flexDirection={{ xs: "column", sm: "row" }}
-                    alignItems="center"
-                    justifyContent="center"
-                    gap={4}
-                  >
-                    <Box textAlign={{ xs: "center", sm: "left" }}>
-                      <Typography
-                        fontFamily="Satoshi, sans-serif"
-                        color="text.secondary"
-                      >
-                        <Box
-                          component="span"
-                          fontWeight={700}
-                          color="text.primary"
-                        >
-                          2500+
-                        </Box>{" "}
-                        professionals already joined
-                      </Typography>
-                      <Box
-                        display="flex"
-                        alignItems="center"
-                        justifyContent={{ xs: "center", sm: "flex-start" }}
-                        gap={0.5}
-                        mt={0.5}
-                      >
-                        {Array.from({ length: 5 }).map((_, i) => (
-                          <Typography key={i} fontSize="1rem" color="#facc15">
-                            ★
-                          </Typography>
-                        ))}
-                        <Typography
-                          fontFamily="Satoshi, sans-serif"
-                          fontSize="0.875rem"
-                          color="text.secondary"
-                          ml={0.5}
-                        >
-                          4.9/5 rating
-                        </Typography>
-                      </Box>
-                    </Box>
-                  </Box>
+                 <Box
+  display="flex"
+  flexDirection={{ xs: "column", sm: "row" }}
+  alignItems="center"
+  justifyContent="center"
+  gap={4}
+  textAlign="center" // Default to center for all content
+  width="100%"
+>
+  <Box textAlign={{ xs: "center", sm: "center" }} maxWidth={400}>
+    <Typography fontFamily="Satoshi, sans-serif" color="text.secondary">
+      <Box component="span" fontWeight={700} color="text.primary">
+        2500+
+      </Box>{" "}
+      professionals already joined
+    </Typography>
+
+    <Box
+      display="flex"
+      alignItems="center"
+      justifyContent="center" // Always center the stars row
+      gap={0.5}
+      mt={0.5}
+    >
+      {Array.from({ length: 5 }).map((_, i) => (
+        <Typography key={i} fontSize="1rem" color="#facc15">
+          ★
+        </Typography>
+      ))}
+      <Typography
+        fontFamily="Satoshi, sans-serif"
+        fontSize="0.875rem"
+        color="text.secondary"
+        ml={0.5}
+      >
+        4.9/5 rating
+      </Typography>
+    </Box>
+  </Box>
+</Box>
+
                 </Box>
               </Box>
             </Box>
