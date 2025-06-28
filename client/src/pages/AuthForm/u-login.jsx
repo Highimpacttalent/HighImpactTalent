@@ -237,7 +237,7 @@ function UserLoginForm() {
       setLoading(true);
       const newData = { email, password };
       const res = await apiRequest({
-        url: "/user/login",
+        url: "user/login",
         method: "POST",
         data: newData,
       });
