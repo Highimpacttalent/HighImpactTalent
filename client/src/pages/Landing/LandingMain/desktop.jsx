@@ -155,7 +155,7 @@ const DesktopLanding = () => {
                       letterSpacing: "-0.02em",
                     }}
                   >
-                    Where the right talent meet the{" "}
+                    Where the right talent meets the{" "}
                     <Box
                       component="span"
                       sx={{
