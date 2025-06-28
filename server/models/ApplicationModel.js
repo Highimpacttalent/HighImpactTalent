@@ -1,3 +1,4 @@
+// Application Schema
 import mongoose, { Schema } from "mongoose";
 import validator from "validator";
 import bcrypt from "bcryptjs";
@@ -15,6 +16,10 @@ const applicationSchema = new Schema({
   applicant: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Users'
+  },
+  cvUrl: {
+    type: String,
+    required: true,
   },
   status: {
     type: String,
@@ -68,6 +73,8 @@ const applicationSchema = new Schema({
       }
     }
   ]
+}, {
+  timestamps: true // This will add createdAt and updatedAt fields
 });
 
 // Pre-save middleware to normalize answers for better searching
