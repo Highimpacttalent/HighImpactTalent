@@ -551,7 +551,7 @@ const UserInfoForm = () => {
                       <option key={i + 1} value={(i + 1).toString()}>{`${
                         i + 1
                       }+`}</option>
-                    ))}
+                    ))} 
                   </select>
                 </div>
                 <div className="mb-6">
@@ -1006,8 +1006,8 @@ const UserInfoForm = () => {
                         <option value="">Select experience</option>
                         {Array.from({ length: 15 }, (_, i) => (
                           <option key={i + 1} value={(i + 1).toString()}>{`${
-                            i + 1
-                          } year${i === 0 ? "" : "s"}`}</option>
+                        i + 1
+                      }+`}</option>
                         ))}
                       </select>
                     </div>
