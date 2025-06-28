@@ -25,6 +25,7 @@ import Comp3 from "../../../assets/Landing/Comp3.png";
 import { CheckCircle, Mail, ArrowRight } from "lucide-react";
 import Bottom from "../../../assets/Landing/Bottom.svg";
 import PremiumSubscribeSection from "./Subscribe";
+import Landing from "../../../assets/Landing/Landing.svg";
 
 // Minimal animation hook for subtle effects
 const useInView = (options = {}) => {
@@ -309,7 +310,7 @@ const DesktopLanding = () => {
                   }}
                 >
                   <img
-                    src={Hero}
+                    src={Landing}
                     alt="Professional hiring platform"
                     style={{
                       maxWidth: "100%",
