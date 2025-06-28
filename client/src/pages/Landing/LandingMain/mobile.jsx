@@ -9,12 +9,14 @@ import {
 } from "lucide-react";
 import { Link } from "lucide-react";
 
+
 import Hero from "../../../assets/Landing/Hero.png";
 import Comp1 from "../../../assets/Landing/COmp1.svg";
 import Comp2 from "../../../assets/Landing/Comp2.svg";
 import Comp3 from "../../../assets/Landing/Comp3.png";
 import Bottom from "../../../assets/Landing/Bottom.svg";
 import PremiumSubscribeSection from "./Subscribe";
+import Landing from "../../../assets/Landing/Landing.svg";
 import { useNavigate } from "react-router-dom";
 
 const MobileLanding = () => {
@@ -43,9 +45,10 @@ const MobileLanding = () => {
             {/* Hero Image */}
             <div className="mb-2">
               <img
-                src={Hero}
+                src={Landing}
                 alt="Hero"
-                className="h-48 md:h-64 mx-auto object-contain"
+                className="w-full max-w-xl h-56 md:h-80 lg:h-90 object-cover rounded-lg mx-auto"
+                
               />
             </div>
 
