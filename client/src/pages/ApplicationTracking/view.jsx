@@ -2,7 +2,14 @@ import { useEffect, useState } from "react";
 import { Grid, Box, Typography, Button, Chip, Badge } from "@mui/material";
 import { useSelector } from "react-redux";
 import axios from "axios";
-import { CheckCircle, Visibility, Assignment, Person, WorkOutline, Block } from "@mui/icons-material";
+import {
+  CheckCircle,
+  Visibility,
+  Assignment,
+  Person,
+  WorkOutline,
+  Block,
+} from "@mui/icons-material";
 import Loader from "../Landing/LandingMain/loader";
 import AppliedJobMenuCard from "./AppliedJobMenuCard";
 
@@ -18,10 +25,30 @@ const DesktopView = () => {
   // Processing stages configuration
   const processingStages = [
     { key: "ALL", label: "All", icon: null, color: "#6366f1" },
-    { key: "applied", label: "Applied", icon: <CheckCircle />, color: "#10b981" },
-    { key: "application viewed", label: "Viewed", icon: <Visibility />, color: "#3b82f6" },
-    { key: "shortlisted", label: "Shortlisted", icon: <Assignment />, color: "#f59e0b" },
-    { key: "interviewing", label: "Interviewed", icon: <Person />, color: "#8b5cf6" },
+    {
+      key: "applied",
+      label: "Applied",
+      icon: <CheckCircle />,
+      color: "#10b981",
+    },
+    {
+      key: "application viewed",
+      label: "Viewed",
+      icon: <Visibility />,
+      color: "#3b82f6",
+    },
+    {
+      key: "shortlisted",
+      label: "Shortlisted",
+      icon: <Assignment />,
+      color: "#f59e0b",
+    },
+    {
+      key: "interviewing",
+      label: "Interviewed",
+      icon: <Person />,
+      color: "#8b5cf6",
+    },
     { key: "hired", label: "Hired", icon: <WorkOutline />, color: "#059669" },
   ];
 
@@ -62,10 +89,24 @@ const DesktopView = () => {
   const getStageCount = (stageKey) => {
     return appliedJobs.filter((job) => {
       const status = job.status?.toLowerCase();
+      const jobDeleted = job.job?.status?.toLowerCase() === "deleted";
+
       if (stageKey === "ALL") {
-        return status !== "not progressing";
+        // Count all jobs except not progressing and deleted
+        return status !== "not progressing" && !jobDeleted;
       }
-      return status === stageKey.toLowerCase() && status !== "not progressing";
+
+      if (stageKey === "not progressing") {
+        // Count both not progressing + deleted jobs
+        return status === "not progressing" || jobDeleted;
+      }
+
+      // Count regular status (excluding not progressing and deleted)
+      return (
+        status === stageKey.toLowerCase() &&
+        status !== "not progressing" &&
+        !jobDeleted
+      );
     }).length;
   };
 
@@ -74,22 +115,28 @@ const DesktopView = () => {
     let filtered = [];
 
     if (activeTab === "inProgress") {
-      filtered = appliedJobs.filter(
-        (job) => job.status?.toLowerCase() !== "not progressing"
-      );
+      filtered = appliedJobs.filter((job) => {
+        const status = job.status?.toLowerCase();
+        const jobDeleted = job.job?.status?.toLowerCase() === "deleted";
+        return status !== "not progressing" && !jobDeleted;
+      });
+
       if (activeProcessingStage !== "ALL") {
         filtered = filtered.filter(
-          (job) => job.status?.toLowerCase() === activeProcessingStage.toLowerCase()
+          (job) =>
+            job.status?.toLowerCase() === activeProcessingStage.toLowerCase()
         );
       }
     } else {
-      filtered = appliedJobs.filter(
-        (job) => job.status?.toLowerCase() === "not progressing"
-      );
+      filtered = appliedJobs.filter((job) => {
+        const status = job.status?.toLowerCase();
+        const jobDeleted = job.job?.status?.toLowerCase() === "deleted";
+        return status === "not progressing" || jobDeleted;
+      });
     }
 
     return filtered;
-  };  
+  };
 
   const filteredJobs = getFilteredJobs();
 
@@ -124,8 +171,8 @@ const DesktopView = () => {
       {/* Professional Tab Navigation */}
       <Box sx={{ maxWidth: "1200px", mx: "auto", mb: 4 }}>
         {/* Parent Tabs */}
-        <Box 
-          sx={{ 
+        <Box
+          sx={{
             display: "flex",
             borderBottom: "1px solid #e5e7eb",
             mb: 3,
@@ -145,13 +192,16 @@ const DesktopView = () => {
               px: 3,
               py: 1.5,
               cursor: "pointer",
-              borderBottom: activeTab === "inProgress"
-                ? "3px solid #1976d2"
-                : "3px solid transparent",
+              borderBottom:
+                activeTab === "inProgress"
+                  ? "3px solid #1976d2"
+                  : "3px solid transparent",
               transition: "all 0.3s ease",
-              backgroundColor: activeTab === "inProgress" ? "#f0f7ff" : "transparent",
+              backgroundColor:
+                activeTab === "inProgress" ? "#f0f7ff" : "transparent",
               "&:hover": {
-                backgroundColor: activeTab === "inProgress" ? "#e3f2fd" : "#f8fafc",
+                backgroundColor:
+                  activeTab === "inProgress" ? "#e3f2fd" : "#f8fafc",
               },
             }}
           >
@@ -166,17 +216,24 @@ const DesktopView = () => {
               In Progress
             </Typography>
             <Chip
-              label={appliedJobs.filter(job => job.status !== "Not Progressing").length}
+              label={
+                appliedJobs.filter(
+                  (job) =>
+                    job.status?.toLowerCase() !== "not progressing" &&
+                    job.job?.status?.toLowerCase() !== "deleted"
+                ).length
+              }
               size="small"
               sx={{
-                backgroundColor: activeTab === "inProgress" ? "#1976d2" : "#e5e7eb",
+                backgroundColor:
+                  activeTab === "inProgress" ? "#1976d2" : "#e5e7eb",
                 color: activeTab === "inProgress" ? "white" : "#6b7280",
                 fontWeight: "600",
                 fontSize: "12px",
                 height: "20px",
                 "& .MuiChip-label": {
                   px: 1,
-                }
+                },
               }}
             />
           </Box>
@@ -191,13 +248,16 @@ const DesktopView = () => {
               px: 3,
               py: 1.5,
               cursor: "pointer",
-              borderBottom: activeTab === "notProgressing"
-                ? "3px solid #dc2626"
-                : "3px solid transparent",
+              borderBottom:
+                activeTab === "notProgressing"
+                  ? "3px solid #dc2626"
+                  : "3px solid transparent",
               transition: "all 0.3s ease",
-              backgroundColor: activeTab === "notProgressing" ? "#fef2f2" : "transparent",
+              backgroundColor:
+                activeTab === "notProgressing" ? "#fef2f2" : "transparent",
               "&:hover": {
-                backgroundColor: activeTab === "notProgressing" ? "#fee2e2" : "#f8fafc",
+                backgroundColor:
+                  activeTab === "notProgressing" ? "#fee2e2" : "#f8fafc",
               },
             }}
           >
@@ -212,17 +272,24 @@ const DesktopView = () => {
               Not Progressing
             </Typography>
             <Chip
-              label={appliedJobs.filter(job => job.status === "Not Progressing").length}
+              label={
+                appliedJobs.filter(
+                  (job) =>
+                    job.status?.toLowerCase() === "not progressing" ||
+                    job.job?.status?.toLowerCase() === "deleted"
+                ).length
+              }
               size="small"
               sx={{
-                backgroundColor: activeTab === "notProgressing" ? "#dc2626" : "#e5e7eb",
+                backgroundColor:
+                  activeTab === "notProgressing" ? "#dc2626" : "#e5e7eb",
                 color: activeTab === "notProgressing" ? "white" : "#6b7280",
                 fontWeight: "600",
                 fontSize: "12px",
                 height: "20px",
                 "& .MuiChip-label": {
                   px: 1,
-                }
+                },
               }}
             />
           </Box>
@@ -243,12 +310,12 @@ const DesktopView = () => {
             >
               Filter by Status
             </Typography>
-            
-            <Box 
-              sx={{ 
-                display: "flex", 
-                flexWrap: "wrap", 
-                justifyContent: "center", 
+
+            <Box
+              sx={{
+                display: "flex",
+                flexWrap: "wrap",
+                justifyContent: "center",
                 gap: 0,
                 backgroundColor: "#f8fafc",
                 borderRadius: "8px",
@@ -259,7 +326,7 @@ const DesktopView = () => {
               {processingStages.map((stage) => {
                 const count = getStageCount(stage.key);
                 const isActive = activeProcessingStage === stage.key;
-                
+
                 return (
                   <Box
                     key={stage.key}
@@ -275,8 +342,12 @@ const DesktopView = () => {
                       borderRadius: "6px",
                       transition: "all 0.3s ease",
                       backgroundColor: isActive ? "white" : "transparent",
-                      boxShadow: isActive ? "0 2px 4px rgba(0,0,0,0.1)" : "none",
-                      border: isActive ? "1px solid #e5e7eb" : "1px solid transparent",
+                      boxShadow: isActive
+                        ? "0 2px 4px rgba(0,0,0,0.1)"
+                        : "none",
+                      border: isActive
+                        ? "1px solid #e5e7eb"
+                        : "1px solid transparent",
                       "&:hover": {
                         backgroundColor: isActive ? "white" : "#f1f5f9",
                       },
@@ -285,12 +356,14 @@ const DesktopView = () => {
                     }}
                   >
                     {stage.icon && (
-                      <Box sx={{ 
-                        color: isActive ? stage.color : "#6b7280",
-                        display: "flex",
-                        alignItems: "center",
-                        fontSize: isMobile ? "16px" : "18px",
-                      }}>
+                      <Box
+                        sx={{
+                          color: isActive ? stage.color : "#6b7280",
+                          display: "flex",
+                          alignItems: "center",
+                          fontSize: isMobile ? "16px" : "18px",
+                        }}
+                      >
                         {stage.icon}
                       </Box>
                     )}
@@ -315,7 +388,7 @@ const DesktopView = () => {
                         height: "18px",
                         "& .MuiChip-label": {
                           px: 0.5,
-                        }
+                        },
                       }}
                     />
                   </Box>
@@ -336,13 +409,17 @@ const DesktopView = () => {
             fontWeight: "500",
           }}
         >
-          {filteredJobs.length > 0 
-            ? `Showing ${filteredJobs.length} ${filteredJobs.length === 1 ? 'application' : 'applications'}`
-            : 'No applications found'
-          }
-          {activeTab === "inProgress" && activeProcessingStage !== "ALL" && 
-            ` in ${processingStages.find(s => s.key === activeProcessingStage)?.label} stage`
-          }
+          {filteredJobs.length > 0
+            ? `Showing ${filteredJobs.length} ${
+                filteredJobs.length === 1 ? "application" : "applications"
+              }`
+            : "No applications found"}
+          {activeTab === "inProgress" &&
+            activeProcessingStage !== "ALL" &&
+            ` in ${
+              processingStages.find((s) => s.key === activeProcessingStage)
+                ?.label
+            } stage`}
         </Typography>
       </Box>
 
@@ -353,7 +430,7 @@ const DesktopView = () => {
             <Typography
               variant="h6"
               color="textSecondary"
-              sx={{ 
+              sx={{
                 fontFamily: "Poppins",
                 fontSize: isMobile ? 16 : 18,
               }}
@@ -381,15 +458,15 @@ const DesktopView = () => {
                 lg={3}
                 key={index}
                 onClick={() => setAppliedSelect(job)}
-                sx={{ 
+                sx={{
                   cursor: "pointer",
                   "& > *": {
                     transition: "all 0.3s ease",
                     "&:hover": {
                       transform: "translateY(-4px)",
                       boxShadow: "0 12px 30px rgba(0,0,0,0.12)",
-                    }
-                  }
+                    },
+                  },
                 }}
               >
                 <AppliedJobMenuCard job={job} />
@@ -397,8 +474,7 @@ const DesktopView = () => {
             ))}
           </Grid>
         ) : (
-          <>
-          </>
+          <></>
         )}
       </Box>
     </Box>
