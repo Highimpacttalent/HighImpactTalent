@@ -31,10 +31,17 @@ export const uploadResume = async (req, res) => {
     const userId = req.uploaderId;
 
     // Validate file type
-    if (file.mimetype !== "application/pdf") {
+    const allowedMimeTypes = [
+      "application/pdf",
+      "application/msword", // .doc files
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document", // .docx files
+    ];
+
+    // Validate file type
+    if (!allowedMimeTypes.includes(file.mimetype)) {
       return res.status(400).json({
         success: false,
-        message: "Only PDF files are allowed",
+        message: "Only PDF, DOC, and DOCX files are allowed",
       });
     }
 
