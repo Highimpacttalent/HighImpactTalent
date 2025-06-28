@@ -1302,7 +1302,7 @@ export const uploadApplicationResume = async (req, res) => {
     res.status(200).json({
       success: true,
       message: "Resume uploaded successfully for job application",
-      resumeUrl: s3Response.Location,
+      cvUrl: s3Response.Location,
       fileInfo: {
         originalName: file.originalname,
         mimeType: file.mimetype,
