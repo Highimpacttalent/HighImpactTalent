@@ -29,7 +29,5 @@ router.get('/get-screening-filter-options/:jobid', getScreeningFilterOptions);
 
 router.get('/get-stage-counts/:jobid', getApplicationStageCounts);
 
-router.post("/upload-application-resume",uploadAuth,uploadResumeMiddleware,uploadApplicationResume);
-
 
 export default router;
