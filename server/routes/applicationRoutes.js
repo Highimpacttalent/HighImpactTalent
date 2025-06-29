@@ -1,9 +1,6 @@
 import express from "express";
 import {createApplication, getApplication,updateApplicationStatus,getApplicationsOfAjob,getallApplicationOfApplicant, getApplicationsWithJobs, ApplicationStatusUpdate, bulkRejectApplications, bulkAdvanceApplications,getScreeningFilterOptions, getApplicationStageCounts} from "../controllers/ApplicationController.js";
 import userAuth from "../middlewares/authMiddleware.js";
-import { uploadApplicationResume, uploadResumeMiddleware } from "../controllers/ApplicationController.js";
-import { uploadAuth } from "../middlewares/uploadAuth.js";
-
 
 const router = express.Router();
 
