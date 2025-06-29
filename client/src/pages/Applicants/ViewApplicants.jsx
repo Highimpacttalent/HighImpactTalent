@@ -412,8 +412,8 @@ const JobApplications = () => {
   }, [jobId]);
 
   const handleStepClick = async (index) => {
-    await clearFilters();
     setActiveStep(index);
+    await clearFilters();
     setSelectedApplications(new Set());
 
     const currentStatus = steps[index];

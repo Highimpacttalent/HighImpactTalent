@@ -224,6 +224,7 @@ export const getApplicationsOfAjob = async (req, res) => {
     const {
       keywords,
       locations,
+      status,
       designations,
       totalYearsInConsulting,
       screeningFilters,
@@ -243,6 +244,7 @@ export const getApplicationsOfAjob = async (req, res) => {
     console.log("Raw Query Params:", req.query);
     console.log("Keywords:", keywords);
     console.log("Locations:", locations);
+    console.log("Status:", status);
     console.log("Designations:", designations);
     console.log("Total Years in Consulting:", totalYearsInConsulting);
     console.log("Screening Filters (raw):", screeningFilters);
@@ -251,10 +253,14 @@ export const getApplicationsOfAjob = async (req, res) => {
     // Build aggregation pipeline
     const pipeline = [];
 
-    // Initial match stage - filter by job ID only
+    // Initial match stage - filter by job ID
     const matchStage = {
       job: new mongoose.Types.ObjectId(jobId),
     };
+
+    if (status) {
+      matchStage.status = status; 
+    }
 
     pipeline.push({ $match: matchStage });
 
@@ -455,7 +461,7 @@ export const getApplicationsOfAjob = async (req, res) => {
       }
     }
 
-    // Total years in consulting filter
+    // Total years in consulting filter (unchanged)
     if (totalYearsInConsulting) {
       console.log("Processing years in consulting:", totalYearsInConsulting);
       
