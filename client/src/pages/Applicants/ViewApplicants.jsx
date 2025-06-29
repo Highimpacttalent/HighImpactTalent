@@ -331,20 +331,24 @@ const JobApplications = () => {
 
   //Fetch stage counts
   const fetchStageCounts = async () => {
-    try {
-      const response = await apiRequest({
-        url: `application/get-stage-counts/${jobId}`,
-        method: "GET",
-      });
+  try {
+    const response = await apiRequest({
+      url: `application/get-stage-counts/${jobId}`,
+      method: "GET",
+    });
 
-      if (response.success) {
-        setStageCounts(response.stageCounts || {});
-      }
-    } catch (err) {
-      console.error("Error fetching stage counts:", err);
+    if (response.success) {
+      // Ensure all steps have counts, defaulting to 0 if not present
+      const countsWithDefaults = steps.reduce((acc, step) => {
+        acc[step] = response.stageCounts[step] || 0;
+        return acc;
+      }, {});
+      setStageCounts(countsWithDefaults);
     }
-  };
-
+  } catch (err) {
+    console.error("Error fetching stage counts:", err);
+  }
+};
   useEffect(() => {
     const fetchCities = async () => {
       try {
@@ -412,30 +416,30 @@ const JobApplications = () => {
   }, [jobId]);
 
   const handleStepClick = async (index) => {
-    setActiveStep(index);
-    await clearFilters();
-    setSelectedApplications(new Set());
-
-    const currentStatus = steps[index];
-
-    // If filters are applied, fetch with filters and status
-    const hasActiveFilters = Object.values(filters).some(
-      (value) => value && value.toString().trim()
+  setActiveStep(index); // Update the active step first
+  setSelectedApplications(new Set()); // Clear selections
+  
+  const currentStatus = steps[index];
+  
+  // Check if we have any active filters
+  const hasActiveFilters = Object.values(filters).some(
+    (value) => value && value.toString().trim()
+  );
+  
+  if (hasActiveFilters) {
+    // If filters are active, fetch with both filters and status
+    const filteredApps = await fetchApplications(filters, currentStatus);
+    setApplications(filteredApps);
+    setFilteredApps(filteredApps);
+  } else {
+    // If no filters, filter from the existing allApplications
+    const filtered = allApplications.filter(
+      (app) => app.status === currentStatus
     );
-
-    if (hasActiveFilters) {
-      const filteredApps = await fetchApplications(filters, currentStatus);
-      setApplications(filteredApps);
-      setFilteredApps(filteredApps);
-    } else {
-      // Use cached data if no filters
-      const filtered = allApplications.filter(
-        (app) => app.status === currentStatus
-      );
-      setApplications(filtered);
-      setFilteredApps(filtered);
-    }
-  };
+    setApplications(filtered);
+    setFilteredApps(filtered);
+  }
+};
 
   // Keyword handling
   const handleKeywordKeyDown = (e) => {
