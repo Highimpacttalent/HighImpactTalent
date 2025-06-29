@@ -42,7 +42,7 @@ import {useTheme} from "@mui/material";
 import {useMediaQuery} from "@mui/material";
 
 const ApplicationCard = ({ app, navigate, markAsViewed }) => {
-  const { applicant, matchScore, status, screeningAnswers } = app;
+  const { applicant, matchScore, status, screeningAnswers ,cvUrl } = app;
   const [showAll, setShowAll] = useState(false);
   const [resumeOpen, setResumeOpen] = useState(false);
   const theme = useTheme();
@@ -68,7 +68,7 @@ const ApplicationCard = ({ app, navigate, markAsViewed }) => {
   const matchColor = getMatchColor(matchScore);
 
   const handleViewResume = () => {
-    if (applicant?.cvUrl) {
+    if (cvUrl) {
       setResumeOpen(true);
     } else {
       alert("Resume link not available...");
