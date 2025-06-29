@@ -300,7 +300,7 @@ const DesktopLanding = () => {
             </Grid>
 
             {/* Right Column - Hero Image */}
-            <Grid item xs={12} md={6}>
+            <Grid item xs={12} md={6} sx={{ display: "flex", justifyContent: "center", pb:12}}>
               <AnimatedSection delay={200}>
                 <Box
                   sx={{

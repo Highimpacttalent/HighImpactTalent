@@ -340,8 +340,7 @@ const ScreeningView = () => {
           applicant: user?._id, // Use user._id from Redux state
           screeningAnswers: finalScreeningAnswersPayload, // Send the prepared payload (now strings)
           // Optionally include resumeUrl here if backend expects it with application creation
-          resumeUrl: resumeUrl, // Pass the resume URL
-          // Include other job/company/applicant info if backend needs it for the application record
+          cvUrl: resumeUrl, // Pass the resume URL
           jobTitle: state?.jobTitle, // Example: assuming jobTitle is passed in state
           companyName: state?.companyName, // Example: assuming companyName is passed in state
         },
