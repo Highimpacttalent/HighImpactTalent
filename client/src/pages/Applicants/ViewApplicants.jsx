@@ -275,29 +275,34 @@ const JobApplications = () => {
 
   // Fetch applications with server-side filtering
   const fetchApplications = async (filterParams = {}, status = null) => {
-    try {
-      setFilterLoading(true);
+  try {
+    setFilterLoading(true);
 
-      const queryParams = new URLSearchParams();
+    const queryParams = new URLSearchParams();
 
-      // Add status if provided
-      if (status) {
-        queryParams.append("status", status);
-      }
+    // Add status if provided
+    if (status) {
+      queryParams.append("status", status);
+    }
 
-      // Add filter parameters
-      Object.entries(filterParams).forEach(([key, value]) => {
-        if (value && value.toString().trim()) {
+    // Add filter parameters
+    Object.entries(filterParams).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        // Special handling for screeningFilters
+        if (key === 'screeningFilters' && typeof value === 'object') {
+          queryParams.append(key, JSON.stringify(value));
+        } else {
           queryParams.append(key, value.toString().trim());
         }
-      });
+      }
+    });
 
-      console.log("Fetching applications with params:", queryParams.toString());
+    console.log("Fetching applications with params:", queryParams.toString());
 
-      const response = await apiRequest({
-        url: `application/get-applications/${jobId}?${queryParams.toString()}`,
-        method: "GET",
-      });
+    const response = await apiRequest({
+      url: `application/get-applications/${jobId}?${queryParams.toString()}`,
+      method: "GET",
+    });
 
       if (!response.success) {
         throw new Error(response.message || "Failed to fetch applications");
@@ -511,7 +516,7 @@ const JobApplications = () => {
       locations: filters.locations.join(','),
       designations: filters.designations.join(','),
       totalYearsInConsulting: filters.totalYearsInConsulting,
-      screeningFilters: JSON.stringify(filters.screeningFilters),
+      screeningFilters: filters.screeningFilters,
       status: currentStatus,
     };
 
