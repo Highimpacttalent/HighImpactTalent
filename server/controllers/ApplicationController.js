@@ -223,9 +223,9 @@ export const getApplicationsOfAjob = async (req, res) => {
     const jobId = req.params.jobid;
     const {
       keywords,
-      location,
+      locations,
       status,
-      currentDesignation,
+      designations,
       totalYearsInConsulting,
       screeningFilters,
       page = 1,
@@ -243,9 +243,9 @@ export const getApplicationsOfAjob = async (req, res) => {
     console.log("Job ID:", jobId);
     console.log("Raw Query Params:", req.query);
     console.log("Keywords:", keywords);
-    console.log("Location:", location);
+    console.log("Locations:", locations);
     console.log("Status:", status);
-    console.log("Current Designation:", currentDesignation);
+    console.log("Designations:", designations);
     console.log("Total Years in Consulting:", totalYearsInConsulting);
     console.log("Screening Filters (raw):", screeningFilters);
     console.log("========================");
@@ -339,42 +339,49 @@ export const getApplicationsOfAjob = async (req, res) => {
     // Apply filters using $match stages
     const filterConditions = [];
 
-    // FIXED: Keywords filter - handle both array and string from frontend
+    // Enhanced Keywords filter - search across all relevant fields using OR
     if (keywords && keywords.trim()) {
       console.log("Processing keywords:", keywords);
       
-      // Handle keywords sent as comma-separated string OR array
       let keywordsList;
       try {
-        // Try to parse as JSON array first (in case frontend sends array)
         keywordsList = JSON.parse(keywords);
         if (!Array.isArray(keywordsList)) {
           keywordsList = [keywordsList];
         }
       } catch (e) {
-        // If not JSON, treat as comma-separated string
         keywordsList = keywords.split(",").map(k => k.trim()).filter(k => k);
       }
 
       console.log("Keywords list:", keywordsList);
 
       if (keywordsList.length > 0) {
-        const keywordConditions = keywordsList.map((keyword) => {
+        // Create OR conditions for all keywords across all searchable fields
+        const allKeywordConditions = [];
+        
+        keywordsList.forEach((keyword) => {
           const keywordRegex = new RegExp(keyword, "i");
-          return {
-            $or: [
-              { "applicant.currentDesignation": keywordRegex },
-              { "applicant.currentCompany": keywordRegex },
-              { "applicant.skills": { $elemMatch: { $regex: keyword, $options: "i" } } },
-              { "applicant.about": keywordRegex },
-              { "applicant.firstName": keywordRegex },
-              { "applicant.lastName": keywordRegex },
-            ],
-          };
+          allKeywordConditions.push(
+            { "applicant.currentDesignation": keywordRegex },
+            { "applicant.currentCompany": keywordRegex },
+            { "applicant.lastConsultingCompany": keywordRegex },
+            { "applicant.skills": { $elemMatch: { $regex: keyword, $options: "i" } } },
+            { "applicant.about": keywordRegex },
+            { "applicant.firstName": keywordRegex },
+            { "applicant.lastName": keywordRegex },
+            { "applicant.email": keywordRegex },
+            { "applicant.currentLocation": keywordRegex },
+            { "applicant.preferredLocations": { $elemMatch: { $regex: keyword, $options: "i" } } },
+            { "applicant.highestQualification": keywordRegex },
+            // Search in experience history
+            { "applicant.experienceHistory.jobTitle": keywordRegex },
+            { "applicant.experienceHistory.companyName": keywordRegex },
+            { "applicant.experienceHistory.description": keywordRegex }
+          );
         });
 
         const keywordFilter = {
-          $or: keywordConditions,
+          $or: allKeywordConditions,
         };
         
         console.log("Keyword filter condition:", JSON.stringify(keywordFilter, null, 2));
@@ -382,14 +389,19 @@ export const getApplicationsOfAjob = async (req, res) => {
       }
     }
 
-    // Location filter
-    if (location && location.trim()) {
-      console.log("Processing location:", location);
+    // Enhanced Multiple Locations filter
+    if (locations && locations.trim()) {
+      console.log("Processing locations:", locations);
       
-      const locationsList = location
-        .split(",")
-        .map((loc) => loc.trim())
-        .filter((loc) => loc);
+      let locationsList;
+      try {
+        locationsList = JSON.parse(locations);
+        if (!Array.isArray(locationsList)) {
+          locationsList = [locationsList];
+        }
+      } catch (e) {
+        locationsList = locations.split(",").map(loc => loc.trim()).filter(loc => loc);
+      }
 
       console.log("Locations list:", locationsList);
 
@@ -414,22 +426,34 @@ export const getApplicationsOfAjob = async (req, res) => {
       }
     }
 
-    // Current designation filter
-    if (currentDesignation && currentDesignation.trim()) {
-      console.log("Processing current designation:", currentDesignation);
+    // Enhanced Multiple Designations filter
+    if (designations && designations.trim()) {
+      console.log("Processing designations:", designations);
       
-      const designationsList = currentDesignation
-        .split(",")
-        .map((des) => des.trim())
-        .filter((des) => des);
+      let designationsList;
+      try {
+        designationsList = JSON.parse(designations);
+        if (!Array.isArray(designationsList)) {
+          designationsList = [designationsList];
+        }
+      } catch (e) {
+        designationsList = designations.split(",").map(des => des.trim()).filter(des => des);
+      }
 
       if (designationsList.length > 0) {
-        const designationRegexes = designationsList.map(
-          (des) => new RegExp(des, "i")
-        );
+        // Create OR conditions for designations - search in multiple fields
+        const designationConditions = [];
+        
+        designationsList.forEach(designation => {
+          const designationRegex = new RegExp(designation, "i");
+          designationConditions.push(
+            { "applicant.currentDesignation": designationRegex },
+            { "applicant.experienceHistory.jobTitle": designationRegex }
+          );
+        });
         
         const designationFilter = {
-          "applicant.currentDesignation": { $in: designationRegexes },
+          $or: designationConditions,
         };
         
         console.log("Designation filter condition:", JSON.stringify(designationFilter, null, 2));
@@ -437,7 +461,7 @@ export const getApplicationsOfAjob = async (req, res) => {
       }
     }
 
-    // Total years in consulting filter
+    // Total years in consulting filter (unchanged)
     if (totalYearsInConsulting) {
       console.log("Processing years in consulting:", totalYearsInConsulting);
       
@@ -475,7 +499,7 @@ export const getApplicationsOfAjob = async (req, res) => {
       }
     }
 
-    // COMPLETELY REWRITTEN: Screening Filters to match your actual data model
+    // Enhanced Screening Filters - support multiple selections per question
     if (screeningFilters && screeningFilters.trim()) {
       console.log("Processing screening filters:", screeningFilters);
       
@@ -495,64 +519,63 @@ export const getApplicationsOfAjob = async (req, res) => {
           console.log("Processing screening filter entries...");
           
           Object.entries(screeningFiltersParsed).forEach(
-            ([questionId, filterValue]) => {
-              console.log(`Processing question ${questionId}:`, filterValue);
+            ([questionId, filterValues]) => {
+              console.log(`Processing question ${questionId}:`, filterValues);
               
               // Skip empty values
-              if (!filterValue || (Array.isArray(filterValue) && filterValue.length === 0)) {
+              if (!filterValues || (Array.isArray(filterValues) && filterValues.length === 0)) {
                 return;
               }
 
-              // Create filter condition based on the answer value
-              let screeningCondition;
+              // Ensure filterValues is an array for consistent processing
+              const valuesArray = Array.isArray(filterValues) ? filterValues : [filterValues];
+              
+              if (valuesArray.length === 0) return;
 
-              if (Array.isArray(filterValue)) {
-                // For multi-choice or multiple acceptable answers
-                screeningCondition = {
-                  screeningAnswers: {
-                    $elemMatch: {
-                      questionId: new mongoose.Types.ObjectId(questionId),
-                      $or: [
-                        { answer: { $in: filterValue } },
-                        { answerText: { $in: filterValue.map(val => new RegExp(val, "i")) } }
-                      ]
+              // Create screening condition for multiple selected options
+              const screeningConditions = [];
+              
+              valuesArray.forEach(value => {
+                if (typeof value === "boolean") {
+                  // For yes/no questions
+                  screeningConditions.push({
+                    screeningAnswers: {
+                      $elemMatch: {
+                        questionId: new mongoose.Types.ObjectId(questionId),
+                        $or: [
+                          { answer: value },
+                          { answer: value ? "Yes" : "No" },
+                          { answerText: value ? /^(yes|true)$/i : /^(no|false)$/i }
+                        ]
+                      },
                     },
-                  },
-                };
-              } else if (typeof filterValue === "string") {
-                // For text answers or single choice
-                const textRegex = new RegExp(filterValue, "i");
-                screeningCondition = {
-                  screeningAnswers: {
-                    $elemMatch: {
-                      questionId: new mongoose.Types.ObjectId(questionId),
-                      $or: [
-                        { answer: filterValue },
-                        { answer: textRegex },
-                        { answerText: textRegex }
-                      ]
+                  });
+                } else if (typeof value === "string") {
+                  // For text answers or single choice
+                  const textRegex = new RegExp(value, "i");
+                  screeningConditions.push({
+                    screeningAnswers: {
+                      $elemMatch: {
+                        questionId: new mongoose.Types.ObjectId(questionId),
+                        $or: [
+                          { answer: value },
+                          { answer: textRegex },
+                          { answerText: textRegex }
+                        ]
+                      },
                     },
-                  },
-                };
-              } else if (typeof filterValue === "boolean") {
-                // For yes/no questions
-                screeningCondition = {
-                  screeningAnswers: {
-                    $elemMatch: {
-                      questionId: new mongoose.Types.ObjectId(questionId),
-                      $or: [
-                        { answer: filterValue },
-                        { answer: filterValue ? "Yes" : "No" },
-                        { answerText: filterValue ? /^(yes|true)$/i : /^(no|false)$/i }
-                      ]
-                    },
-                  },
-                };
-              }
+                  });
+                }
+              });
 
-              if (screeningCondition) {
-                console.log("Screening filter condition:", JSON.stringify(screeningCondition, null, 2));
-                filterConditions.push(screeningCondition);
+              if (screeningConditions.length > 0) {
+                // Use OR logic for multiple selections of the same question
+                const questionFilter = {
+                  $or: screeningConditions
+                };
+                
+                console.log("Screening filter condition:", JSON.stringify(questionFilter, null, 2));
+                filterConditions.push(questionFilter);
               }
             }
           );
@@ -574,7 +597,7 @@ export const getApplicationsOfAjob = async (req, res) => {
     });
     console.log("================================");
 
-    // Apply all filter conditions
+    // Apply all filter conditions with AND logic
     if (filterConditions.length > 0) {
       const finalMatchStage = {
         $match: {
@@ -624,8 +647,8 @@ export const getApplicationsOfAjob = async (req, res) => {
         numOfPage: 0,
         filters: {
           keywords,
-          location,
-          currentDesignation,
+          locations,
+          designations,
           totalYearsInConsulting,
           screeningFilters: screeningFiltersParsed,
         },
@@ -640,8 +663,8 @@ export const getApplicationsOfAjob = async (req, res) => {
       numOfPage,
       filters: {
         keywords,
-        location,
-        currentDesignation,
+        locations,
+        designations,
         totalYearsInConsulting,
         screeningFilters: screeningFiltersParsed,
       },
