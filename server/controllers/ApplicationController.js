@@ -224,6 +224,7 @@ export const getApplicationsOfAjob = async (req, res) => {
     const {
       keywords,
       locations,
+      status,
       designations,
       totalYearsInConsulting,
       screeningFilters,
@@ -243,6 +244,7 @@ export const getApplicationsOfAjob = async (req, res) => {
     console.log("Raw Query Params:", req.query);
     console.log("Keywords:", keywords);
     console.log("Locations:", locations);
+    console.log("Status:", status);
     console.log("Designations:", designations);
     console.log("Total Years in Consulting:", totalYearsInConsulting);
     console.log("Screening Filters (raw):", screeningFilters);
@@ -251,10 +253,14 @@ export const getApplicationsOfAjob = async (req, res) => {
     // Build aggregation pipeline
     const pipeline = [];
 
-    // Initial match stage - filter by job ID only
+    // Initial match stage - filter by job ID
     const matchStage = {
       job: new mongoose.Types.ObjectId(jobId),
     };
+
+    if (status) {
+      matchStage.status = status; 
+    }
 
     pipeline.push({ $match: matchStage });
 
@@ -455,7 +461,7 @@ export const getApplicationsOfAjob = async (req, res) => {
       }
     }
 
-    // Total years in consulting filter
+    // Total years in consulting filter (unchanged)
     if (totalYearsInConsulting) {
       console.log("Processing years in consulting:", totalYearsInConsulting);
       
@@ -877,7 +883,6 @@ export const getScreeningFilterOptions = async (req, res) => {
   }
 };
 
-// Add this to your backend controller file
 export const getApplicationStageCounts = async (req, res) => {
   try {
     const jobId = req.params.jobid;
@@ -890,34 +895,32 @@ export const getApplicationStageCounts = async (req, res) => {
       });
     }
 
-    // Get counts grouped by status
-    const pipeline = [
-      {
-        $match: {
-          job: new mongoose.Types.ObjectId(jobId),
-        },
-      },
-      {
-        $group: {
-          _id: "$status",
-          count: { $sum: 1 },
-        },
-      },
-      {
-        $project: {
-          status: "$_id",
-          count: 1,
-          _id: 0,
-        },
-      },
+    // Get counts grouped by status - include all possible statuses
+    const statuses = [
+      "Applied",
+      "Application Viewed",
+      "Shortlisted",
+      "Interviewing",
+      "Hired",
+      "Not Progressing"
     ];
 
-    const counts = await Application.aggregate(pipeline);
+    // First get all applications for this job
+    const allApplications = await Application.find({
+      job: new mongoose.Types.ObjectId(jobId)
+    });
 
-    // Convert array to object with status as keys
+    // Initialize counts with all possible statuses
     const stageCounts = {};
-    counts.forEach((item) => {
-      stageCounts[item.status] = item.count;
+    statuses.forEach(status => {
+      stageCounts[status] = 0;
+    });
+
+    // Count applications per status
+    allApplications.forEach(app => {
+      if (statuses.includes(app.status)) {
+        stageCounts[app.status]++;
+      }
     });
 
     res.status(200).json({

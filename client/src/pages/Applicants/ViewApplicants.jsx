@@ -275,29 +275,34 @@ const JobApplications = () => {
 
   // Fetch applications with server-side filtering
   const fetchApplications = async (filterParams = {}, status = null) => {
-    try {
-      setFilterLoading(true);
+  try {
+    setFilterLoading(true);
 
-      const queryParams = new URLSearchParams();
+    const queryParams = new URLSearchParams();
 
-      // Add status if provided
-      if (status) {
-        queryParams.append("status", status);
-      }
+    // Add status if provided
+    if (status) {
+      queryParams.append("status", status);
+    }
 
-      // Add filter parameters
-      Object.entries(filterParams).forEach(([key, value]) => {
-        if (value && value.toString().trim()) {
+    // Add filter parameters
+    Object.entries(filterParams).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        // Special handling for screeningFilters
+        if (key === 'screeningFilters' && typeof value === 'object') {
+          queryParams.append(key, JSON.stringify(value));
+        } else {
           queryParams.append(key, value.toString().trim());
         }
-      });
+      }
+    });
 
-      console.log("Fetching applications with params:", queryParams.toString());
+    console.log("Fetching applications with params:", queryParams.toString());
 
-      const response = await apiRequest({
-        url: `application/get-applications/${jobId}?${queryParams.toString()}`,
-        method: "GET",
-      });
+    const response = await apiRequest({
+      url: `application/get-applications/${jobId}?${queryParams.toString()}`,
+      method: "GET",
+    });
 
       if (!response.success) {
         throw new Error(response.message || "Failed to fetch applications");
@@ -326,20 +331,24 @@ const JobApplications = () => {
 
   //Fetch stage counts
   const fetchStageCounts = async () => {
-    try {
-      const response = await apiRequest({
-        url: `application/get-stage-counts/${jobId}`,
-        method: "GET",
-      });
+  try {
+    const response = await apiRequest({
+      url: `application/get-stage-counts/${jobId}`,
+      method: "GET",
+    });
 
-      if (response.success) {
-        setStageCounts(response.stageCounts || {});
-      }
-    } catch (err) {
-      console.error("Error fetching stage counts:", err);
+    if (response.success) {
+      // Ensure all steps have counts, defaulting to 0 if not present
+      const countsWithDefaults = steps.reduce((acc, step) => {
+        acc[step] = response.stageCounts[step] || 0;
+        return acc;
+      }, {});
+      setStageCounts(countsWithDefaults);
     }
-  };
-
+  } catch (err) {
+    console.error("Error fetching stage counts:", err);
+  }
+};
   useEffect(() => {
     const fetchCities = async () => {
       try {
@@ -407,30 +416,30 @@ const JobApplications = () => {
   }, [jobId]);
 
   const handleStepClick = async (index) => {
-    await clearFilters();
-    setActiveStep(index);
-    setSelectedApplications(new Set());
-
-    const currentStatus = steps[index];
-
-    // If filters are applied, fetch with filters and status
-    const hasActiveFilters = Object.values(filters).some(
-      (value) => value && value.toString().trim()
+  setActiveStep(index); // Update the active step first
+  setSelectedApplications(new Set()); // Clear selections
+  
+  const currentStatus = steps[index];
+  
+  // Check if we have any active filters
+  const hasActiveFilters = Object.values(filters).some(
+    (value) => value && value.toString().trim()
+  );
+  
+  if (hasActiveFilters) {
+    // If filters are active, fetch with both filters and status
+    const filteredApps = await fetchApplications(filters, currentStatus);
+    setApplications(filteredApps);
+    setFilteredApps(filteredApps);
+  } else {
+    // If no filters, filter from the existing allApplications
+    const filtered = allApplications.filter(
+      (app) => app.status === currentStatus
     );
-
-    if (hasActiveFilters) {
-      const filteredApps = await fetchApplications(filters, currentStatus);
-      setApplications(filteredApps);
-      setFilteredApps(filteredApps);
-    } else {
-      // Use cached data if no filters
-      const filtered = allApplications.filter(
-        (app) => app.status === currentStatus
-      );
-      setApplications(filtered);
-      setFilteredApps(filtered);
-    }
-  };
+    setApplications(filtered);
+    setFilteredApps(filtered);
+  }
+};
 
   // Keyword handling
   const handleKeywordKeyDown = (e) => {
@@ -511,7 +520,7 @@ const JobApplications = () => {
       locations: filters.locations.join(','),
       designations: filters.designations.join(','),
       totalYearsInConsulting: filters.totalYearsInConsulting,
-      screeningFilters: JSON.stringify(filters.screeningFilters),
+      screeningFilters: filters.screeningFilters,
       status: currentStatus,
     };
 
