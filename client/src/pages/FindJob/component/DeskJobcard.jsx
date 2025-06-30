@@ -22,6 +22,7 @@ import {
   LocationOnOutlined,
   WorkOutlineOutlined,
   Business,
+  Done,
   Bookmark,
   BookmarkBorder,
   CurrencyRupee,
@@ -37,12 +38,17 @@ const JobCard = ({ job, flag = false }) => {
   const [saving, setSaving] = useState(false);
   const experience = user?.experience || 0;
 
+  const isAlreadyApplied = user?.appliedJobs?.includes(job._id);
+
   let noteligible = false;
-  
+
   if (job?.experience && job?.experience > experience) {
     noteligible = true;
   }
-  if (job?.experience?.minExperience && job?.experience.minExperience > experience) {
+  if (
+    job?.experience?.minExperience &&
+    job?.experience.minExperience > experience
+  ) {
     noteligible = true;
   }
   useEffect(() => {
@@ -170,6 +176,25 @@ const JobCard = ({ job, flag = false }) => {
               >
                 {job?.company?.name}
               </Typography>
+              {isAlreadyApplied && (
+                <Chip
+                  label="Applied"
+                  icon={<Done sx={{ fontSize: 14 }} />} // Add a checkmark icon
+                  size="small"
+                  sx={{
+                    ml: 1,
+                    fontFamily: "Poppins",
+                    fontSize: "12px",
+                    backgroundColor: "#E8F5E9", 
+                    color: "#1B5E20", 
+                    fontWeight: 500, 
+                    ".MuiChip-icon": {
+                      color: "#1B5E20",
+                      fontSize: "14px",
+                    },
+                  }}
+                />
+              )}
             </Box>
           </Box>
 
@@ -192,7 +217,9 @@ const JobCard = ({ job, flag = false }) => {
               />
               <Chip
                 icon={<WorkOutlineOutlined sx={{ color: "#474E68" }} />}
-                label={`${job?.experience?.minExperience || job?.experience }+ years experience`}
+                label={`${
+                  job?.experience?.minExperience || job?.experience
+                }+ years experience`}
                 variant="contained"
                 sx={{
                   color: "#EAEAEA",
@@ -207,11 +234,12 @@ const JobCard = ({ job, flag = false }) => {
               <Chip
                 icon={<CurrencyRupee sx={{ color: "#474E68" }} />}
                 label={
-                  (job.salaryConfidential || job.salaryCategory === "Confidential")
+                  job.salaryConfidential ||
+                  job.salaryCategory === "Confidential"
                     ? "Confidential"
-                    : `${Number(job.salary.maxSalary||job.salary).toLocaleString("en-IN")} (${
-                        job.salaryCategory
-                      }) LPA`
+                    : `${Number(
+                        job.salary.maxSalary || job.salary
+                      ).toLocaleString("en-IN")} (${job.salaryCategory}) LPA`
                 }
                 variant="contained"
                 sx={{
@@ -286,7 +314,13 @@ const JobCard = ({ job, flag = false }) => {
             variant="contained"
             color="primary"
             component={Link}
-            sx={{ borderRadius: 20, fontFamily: "Poppins",px:2.5,py:1.5,textTransform: "none" }}
+            sx={{
+              borderRadius: 20,
+              fontFamily: "Poppins",
+              px: 2.5,
+              py: 1.5,
+              textTransform: "none",
+            }}
             to={`/job-detail/${job?._id}`}
           >
             View Details

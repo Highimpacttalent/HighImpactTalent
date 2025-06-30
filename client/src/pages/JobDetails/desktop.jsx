@@ -629,11 +629,85 @@ const JobDetail = () => {
             Similar Job Posts
           </Typography>
           <Grid container spacing={2}>
-            {similarJobs.slice(0, 2).map((job, index) => (
-              <Grid item xs={12} key={index} sx={{ cursor: "pointer" }}>
-                <JobCard job={job} flag={true} />
-              </Grid>
-            ))}
+            {similarJobs && similarJobs.length > 0 ? (
+  // Show similar jobs when available
+  similarJobs.slice(0, 2).map((job, index) => (
+    <Grid item xs={12} key={index} sx={{ cursor: "pointer" }}>
+      <JobCard job={job} flag={true} />
+    </Grid>
+  ))
+) : (
+  // Premium message when no similar jobs found
+  <Grid item xs={12}>
+    <Box
+      sx={{
+        textAlign: 'center',
+        py: 8,
+        px: 3,
+        backgroundColor: '#fafafa',
+        borderRadius: 1,
+        border: '1px solid #f0f0f0',
+        position: 'relative',
+      }}
+    >
+      {/* Subtle accent line */}
+      <Box
+        sx={{
+          width: 48,
+          height: 2,
+          backgroundColor: '#333',
+          margin: '0 auto 32px auto',
+          borderRadius: 1,
+        }}
+      />
+
+      {/* Main Message */}
+      <Typography
+        sx={{
+          fontFamily: 'Satoshi, sans-serif',
+          fontWeight: 600,
+          fontSize: '24px',
+          color: '#1a1a1a',
+          mb: 3,
+          letterSpacing: '-0.01em',
+        }}
+      >
+        Great Minds Think Alike!
+      </Typography>
+
+      {/* Witty Professional Message */}
+      <Typography
+        sx={{
+          fontFamily: 'Poppins, sans-serif',
+          fontWeight: 400,
+          fontSize: '16px',
+          color: '#666',
+          lineHeight: 1.6,
+          maxWidth: 420,
+          margin: '0 auto 32px auto',
+        }}
+      >
+        This role is so exceptional that we're still curating matches worthy of its caliber. 
+        Our team is working behind the scenes to discover opportunities that match 
+        your impeccable taste.
+      </Typography>
+
+      {/* Minimal Call to Action */}
+      <Typography
+        sx={{
+          fontFamily: 'Satoshi, sans-serif',
+          fontWeight: 500,
+          fontSize: '14px',
+          color: '#999',
+          textTransform: 'uppercase',
+          letterSpacing: '0.5px',
+        }}
+      >
+        Stay tuned for extraordinary matches
+      </Typography>
+    </Box>
+  </Grid>
+)}
           </Grid>
         </Grid>
       </Grid>

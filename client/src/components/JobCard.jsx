@@ -48,6 +48,8 @@ const JobCard = ({ job, flag = false, enable = false }) => {
   const { minExperience, maxExperience } = job.experience || {};
   let noteligible = false;
 
+  const isAlreadyApplied = user?.appliedJobs?.includes(job._id);
+
   // if the candidate has _too little_ experience…
   if (minExperience != null && experience < minExperience) {
     noteligible = true;
@@ -401,7 +403,7 @@ const JobCard = ({ job, flag = false, enable = false }) => {
           <Button
             variant="contained"
             color="primary"
-            disabled={noteligible}
+            disabled={noteligible || isAlreadyApplied}
             sx={{ borderRadius: 40, fontFamily: "Poppins" }}
             onClick={() => {
               if (job?.applicationLink && job?.applicationLink.trim() !== "") {
@@ -418,7 +420,7 @@ const JobCard = ({ job, flag = false, enable = false }) => {
               }
             }}
           >
-            Apply Now
+            {isAlreadyApplied ? "Already Applied" : "Apply Now"}
           </Button>
         ) : null}
       </CardActions>

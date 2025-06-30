@@ -10,13 +10,16 @@ import {
   IconButton,
   CircularProgress,
   Grid,
+  Switch,
+  FormControlLabel,
+  Modal,
 } from "@mui/material";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { Login } from "../../redux/userSlice"; // Adjust import path if needed
 import { apiRequest } from "../../utils"; // Ensure you have an API request utility
 import Heroimg from "../../assets/CreateAccount/HeroImg.svg";
-import { Visibility, VisibilityOff } from "@mui/icons-material";
+import { Visibility, VisibilityOff, Close } from "@mui/icons-material";
 import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
 import GoogleIcon from "@mui/icons-material/Google";
 import LinkedInIcon from "@mui/icons-material/LinkedIn";
@@ -55,6 +58,10 @@ const UserSignUp = () => {
     title: "",
     message: "",
   });
+
+  // Salary eligibility states
+  const [salaryAbove30LPA, setSalaryAbove30LPA] = useState(false);
+  const [showEligibilityModal, setShowEligibilityModal] = useState(false);
 
   // Email verification states
   const [isVerifying, setIsVerifying] = useState(false);
@@ -129,9 +136,24 @@ const UserSignUp = () => {
     if (otpError) setOtpError("");
   };
 
+  const handleSalaryToggle = (event) => {
+    const isChecked = event.target.checked;
+    setSalaryAbove30LPA(isChecked);
+    
+    if (!isChecked) {
+      setShowEligibilityModal(true);
+    }
+  };
+
   // Function to validate email with OTP
   const validateEmail = async (e) => {
     e.preventDefault();
+
+    // Check salary eligibility first
+    if (!salaryAbove30LPA) {
+      setShowEligibilityModal(true);
+      return;
+    }
 
     if (passwordStrength == "Weak Password") {
       setAlert({
@@ -212,10 +234,15 @@ const UserSignUp = () => {
     setLoading(true);
 
     try {
+      const formDataWithSalary = {
+        ...form,
+        salaryAbove30LPA,
+      };
+
       const res = await apiRequest({
         url: "/user/register",
         method: "POST",
-        data: form,
+        data: formDataWithSalary,
       });
 
       if (res.success) {
@@ -321,6 +348,108 @@ const UserSignUp = () => {
     setErrMsg("Google authentication failed");
   };
 
+  // Eligibility Modal Component
+  const EligibilityModal = () => (
+    <Modal
+      open={showEligibilityModal}
+      onClose={() => setShowEligibilityModal(false)}
+      aria-labelledby="eligibility-modal-title"
+      aria-describedby="eligibility-modal-description"
+    >
+      <Box
+        sx={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          width: { xs: '90%', sm: '400px', md: '450px' },
+          bgcolor: 'white',
+          borderRadius: 16,
+          boxShadow: '0px 10px 40px rgba(0, 0, 0, 0.15)',
+          p: 4,
+          outline: 'none',
+          border: 'none',
+        }}
+      >
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 3 }}>
+          <Typography
+            id="eligibility-modal-title"
+            sx={{
+              fontFamily: "Satoshi",
+              fontSize: "24px",
+              fontWeight: "700",
+              color: "#24252C",
+              lineHeight: 1.3,
+            }}
+          >
+            We appreciate your interest! 🌟
+          </Typography>
+          <IconButton
+            onClick={() => setShowEligibilityModal(false)}
+            sx={{
+              padding: 0.5,
+              '&:hover': { bgcolor: 'rgba(0,0,0,0.04)' }
+            }}
+          >
+            <Close sx={{ color: '#808195' }} />
+          </IconButton>
+        </Box>
+        
+        <Typography
+          id="eligibility-modal-description"
+          sx={{
+            fontFamily: "Satoshi",
+            fontSize: "16px",
+            color: "#404258",
+            lineHeight: 1.6,
+            mb: 3,
+          }}
+        >
+          We recognize your talent and career journey. However, our platform currently specializes in connecting exceptional candidates earning above ₹30 LPA with premium opportunities.
+        </Typography>
+
+        <Typography
+          sx={{
+            fontFamily: "Satoshi",
+            fontSize: "15px",
+            color: "#666",
+            lineHeight: 1.5,
+            mb: 4,
+            fontStyle: "italic",
+          }}
+        >
+          Keep growing, keep achieving—your breakthrough moment is closer than you think. We'd love to welcome you when you reach this milestone! 🚀
+        </Typography>
+
+        <Button
+          fullWidth
+          variant="contained"
+          onClick={() => {
+            setShowEligibilityModal(false);
+            setSalaryAbove30LPA(false);
+          }}
+          sx={{
+            py: 1.5,
+            fontSize: "16px",
+            background: "linear-gradient(135deg, #2575fc 0%, #6c5ce7 100%)",
+            "&:hover": { 
+              background: "linear-gradient(135deg, #1e5dd9 0%, #5a4fcf 100%)",
+              transform: "translateY(-1px)",
+              boxShadow: "0px 8px 25px rgba(37, 117, 252, 0.3)",
+            },
+            borderRadius: 12,
+            textTransform: "none",
+            fontFamily: "Satoshi",
+            fontWeight: "600",
+            transition: "all 0.3s ease",
+          }}
+        >
+          Got it, thanks!
+        </Button>
+      </Box>
+    </Modal>
+  );
+
   return (
     <Box
       sx={{
@@ -338,6 +467,9 @@ const UserSignUp = () => {
         title={alert.title}
         message={alert.message}
       />
+      
+      <EligibilityModal />
+
       <Box
         sx={{
           width: { md: "60%", lg: "60%", xs: "100%", sm: "100%" },
@@ -381,6 +513,74 @@ const UserSignUp = () => {
 
           
         </Typography>
+
+        {/* Salary Eligibility Check */}
+        <Box
+          sx={{
+            mb: 4,
+          }}
+        >
+          <Typography
+            sx={{
+              fontFamily: "Satoshi",
+              fontSize: "18px",
+              fontWeight: "600",
+              color: "#24252C",
+              mb: 2,
+            }}
+          >
+            Quick Eligibility Check
+          </Typography>
+          <Typography
+            sx={{
+              fontFamily: "Satoshi",
+              fontSize: "14px",
+              color: "#666",
+              mb: 3,
+              lineHeight: 1.5,
+            }}
+          >
+            Our platform connects premium talent with exceptional opportunities
+          </Typography>
+          <FormControlLabel
+            control={
+              <Switch
+                checked={salaryAbove30LPA}
+                onChange={handleSalaryToggle}
+                sx={{
+                  '& .MuiSwitch-switchBase.Mui-checked': {
+                    color: '#3C7EFC',
+                    '&:hover': {
+                      backgroundColor: 'rgba(60, 126, 252, 0.08)',
+                    },
+                  },
+                  '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                    backgroundColor: '#3C7EFC',
+                  },
+                  '& .MuiSwitch-track': {
+                    borderRadius: 20,
+                  },
+                  '& .MuiSwitch-thumb': {
+                    boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
+                  },
+                }}
+              />
+            }
+            label={
+              <Typography
+                sx={{
+                  fontFamily: "Satoshi",
+                  fontSize: "16px",
+                  fontWeight: "500",
+                  color: "#24252C",
+                }}
+              >
+                My current package is above ₹30 LPA
+              </Typography>
+            }
+          />
+        </Box>
+
         <Box>
           {errMsg && (
             <Typography color="error" textAlign="center" mb={2}>
@@ -545,8 +745,8 @@ const UserSignUp = () => {
                   mt: 3,
                 }}
               >
-                Can’t find it?
-Try your Spam, Junk, or that weird tab Gmail made up called “Promotions.”
+                Can't find it?
+Try your Spam, Junk, or that weird tab Gmail made up called "Promotions."
               </Typography>
               <Typography
                 align="center"
@@ -629,7 +829,7 @@ Try your Spam, Junk, or that weird tab Gmail made up called “Promotions.”
                   mt: 3,
                 }}
               >
-                Email Address (We’ll only send you relevant stuff—no spam, ever.)
+                Email Address (We'll only send you relevant stuff—no spam, ever.)
               </Typography>
               <TextField
                 fullWidth
@@ -779,7 +979,7 @@ Try your Spam, Junk, or that weird tab Gmail made up called “Promotions.”
                   fontFamily: "Satoshi",
                   fontWeight: "700",
                 }}
-                disabled={otpSending}
+                disabled={otpSending || !salaryAbove30LPA}
               >
                 {otpSending ? <CircularProgress size={24} /> : "Create Account"}
               </Button>

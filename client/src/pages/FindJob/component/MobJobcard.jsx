@@ -27,6 +27,7 @@ import {
   LocationOn,
   Work,
   WorkOutlineOutlined,
+  Done,
   Business,
   Bookmark,
   BookmarkBorder,
@@ -45,6 +46,8 @@ const JobCard = ({ job, flag = false, enable = false }) => {
   const navigate = useNavigate();
   const experience = user?.experience;
   let noteligible = false;
+
+  const isAlreadyApplied = user?.appliedJobs?.includes(job._id);
 
   if (job?.experience && job?.experience > experience) {
     noteligible = true;
@@ -219,6 +222,25 @@ const JobCard = ({ job, flag = false, enable = false }) => {
                 >
                   {job?.company?.name}
                 </Typography>
+                {isAlreadyApplied && (
+                                <Chip
+                                  label="Applied"
+                                  icon={<Done sx={{ fontSize: 14 }} />} // Add a checkmark icon
+                                  size="small"
+                                  sx={{
+                                    ml: 1,
+                                    fontFamily: "Poppins",
+                                    fontSize: "12px",
+                                    backgroundColor: "#E8F5E9", 
+                                    color: "#1B5E20", 
+                                    fontWeight: 500, 
+                                    ".MuiChip-icon": {
+                                      color: "#1B5E20",
+                                      fontSize: "14px",
+                                    },
+                                  }}
+                                />
+                              )}
               </Box>
             </Box>
           </Box>
