@@ -12,6 +12,7 @@ import { AzureOpenAI } from "openai";
 import { uploadJsonAsCsvToS3 } from "../utils/UploadChecker.js";
 import filterAndRankCandidates from "../utils/filterRank.js";
 import { fileURLToPath } from "url";
+import Users from "../models/userModel.js";
 
 const GEMINI_API_KEY = "AIzaSyCXj7iUCYWDQXPW3i6ky4Y24beLiINeDBw";
 const __filename = fileURLToPath(import.meta.url);
@@ -81,8 +82,8 @@ export const parseResume = async (req, res) => {
   - name (Full name of the candidate)
   - email (Email address)
   - contactNumber (Phone number)
-  - linkedinLink (URL to the candidate’s LinkedIn profile)
-  - dateOfBirth (Candidate’s date of birth)
+  - linkedinLink (URL to the candidate's LinkedIn profile)
+  - dateOfBirth (Candidate's date of birth)
   - location (Current city/location)
 
 - **ProfessionalDetails:**
@@ -181,12 +182,10 @@ ${resumeText}`,
       new RegExp(`\\b${company}\\b`, "i").test(resumeText)
     );
 
-    // Check if any top institute is mentioned in the resume
     const isTopInstitute = topInstituteslist.some((institute) =>
       new RegExp(`\\b${institute}\\b`, "i").test(resumeText)
     );
 
-    // Extract skills based on predefined list
     const detectedSkills = skillsList.filter((skill) =>
       new RegExp(`\\b${skill}\\b`, "i").test(resumeText)
     );
@@ -215,7 +214,6 @@ ${resumeText}`,
         dateOfBirth: parsedData.PersonalInformation?.dateOfBirth || "",
         location: parsedData.PersonalInformation?.location || "",
       },
-
       ProfessionalDetails: {
         noOfYearsExperience:
           parsedData.ProfessionalDetails?.noOfYearsExperience || "",
@@ -225,13 +223,11 @@ ${resumeText}`,
         salary: parsedData.ProfessionalDetails?.salary || "",
         about: parsedData.ProfessionalDetails?.about || "",
         hasConsultingBackground:
-          parsedData.ProfessionalDetails?.hasConsultingBackground || false, // Ensuring consulting background field
+          parsedData.ProfessionalDetails?.hasConsultingBackground || false,
       },
-
       EducationDetails: parsedData.EducationDetails || [],
       WorkExperience: parsedData.WorkExperience || [],
       CultureFit: parsedData.CultureFit,
-
       OtherDetails: {
         companiesWorkedAt: parsedData.OtherDetails?.companiesWorkedAt || [],
         jobRoles: parsedData.OtherDetails?.jobRoles || [],
@@ -242,15 +238,35 @@ ${resumeText}`,
 
     const email = parsedData.PersonalInformation?.email;
     if (email) {
+      // Update user's culture fit data only
+      await Users.findOneAndUpdate(
+        { email: email },
+        {
+          $set: {
+            cultureFit: {
+              strength: parsedData.CultureFit.strength || "",
+              concern: parsedData.CultureFit.concern || ""
+            }
+          }
+        },
+        { new: true }
+      );
+
       const existing = await ResumePool.findOne({
         "personalInformation.email": email,
       });
 
       if (existing) {
-        // Update existing record
+        // Update existing record with culture fit data
         await ResumePool.updateOne(
           { _id: existing._id },
           {
+            $set: {
+              CultureFit: {
+                strength: parsedData.CultureFit.strength || "",
+                concern: parsedData.CultureFit.concern || ""
+              }
+            },
             personalInformation: {
               name: parsedData.PersonalInformation?.name || "",
               email: parsedData.PersonalInformation?.email || "",
@@ -292,7 +308,7 @@ ${resumeText}`,
         );
         console.log(`Updated existing resume for email: ${email}`);
       } else {
-        // Create new record
+        // Create new record with culture fit data
         await ResumePool.create({
           personalInformation: {
             name: parsedData.PersonalInformation?.name || "",
@@ -326,6 +342,10 @@ ${resumeText}`,
           companiesWorkedAt: parsedData.OtherDetails?.companiesWorkedAt || [],
           jobRoles: parsedData.OtherDetails?.jobRoles || [],
           cvUrl: req.body.cvurl || "",
+          CultureFit: {
+            strength: parsedData.CultureFit.strength || "",
+            concern: parsedData.CultureFit.concern || ""
+          }
         });
         console.log(`Created new resume for email: ${email}`);
       }
