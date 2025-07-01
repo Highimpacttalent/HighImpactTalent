@@ -239,6 +239,7 @@ ${resumeText}`,
     const existingEmail = await Users.findOne({
         email: "personalInformation.email",
       });
+    console.log("Existing user email:", existingEmail);
     if (existingEmail) {
       // Update user's culture fit data only
       await Users.updateOne(
@@ -257,6 +258,7 @@ ${resumeText}`,
       const existing = await ResumePool.findOne({
         email: "personalInformation.email",
       });
+      console.log("Existing resume found:", existing);
 
       if (existing) {
         // Update existing record with culture fit data
