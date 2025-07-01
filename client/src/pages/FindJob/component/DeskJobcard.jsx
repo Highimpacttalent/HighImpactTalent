@@ -138,7 +138,7 @@ const JobCard = ({ job, flag = false }) => {
       let salaryRange = "";
 
       if (minSalary !== undefined && maxSalary !== undefined) {
-        salaryRange = `${Number(minSalary).toLocaleString("en-IN")} - ${Number(maxSalary).toLocaleString("en-IN")}`;
+        salaryRange = `${Number(minSalary).toLocaleString("en-IN")}LPA - ${Number(maxSalary).toLocaleString("en-IN")}LPA`;
       } else if (minSalary !== undefined) {
         salaryRange = `${Number(minSalary).toLocaleString("en-IN")}+`;
       } else if (maxSalary !== undefined) {
@@ -146,12 +146,12 @@ const JobCard = ({ job, flag = false }) => {
       } else {
         return "Salary not specified";
       }
-      return `${salaryRange} LPA (${salaryCategory})`;
+      return `${salaryRange} (${salaryCategory})`;
     }
 
     // Fallback for old data where salary might be a single number or string
     if (typeof salary === "number" || typeof salary === "string") {
-      return `${Number(salary).toLocaleString("en-IN")} LPA (${salaryCategory})`;
+      return `${Number(salary).toLocaleString("en-IN")} (${salaryCategory})`;
     }
 
     return "Salary not specified";
