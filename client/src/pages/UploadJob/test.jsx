@@ -360,63 +360,66 @@ const JobUploadPage = () => {
 
   // Handler for TextField based Min/Max Range fields (salary)
   const handleRangeInputChange = (field, type, value) => {
-    const numValue = value === "" ? "" : Number(value);
+  const numValue = value === "" ? "" : Number(value);
 
-    // Prevent invalid values
-    if (value !== "" && (isNaN(numValue) || numValue < 0)) {
-      console.warn(`Invalid input for ${field} ${type}:`, value);
-      return;
-    }
+  // Prevent invalid values (negative numbers and zero for salary fields)
+  if (value !== "" && (isNaN(numValue) || numValue < 0 || (field === "salary" && numValue === 0))) {
+    // Optionally, set an error message here or just prevent the update
+    console.warn(`Invalid input for ${field} ${type}:`, value);
+    return; // Stop execution if validation fails
+  }
 
-    // Update the form data first
-    const updatedFormData = {
-      ...formData,
-      [field]: {
-        ...formData[field],
-        [type]: numValue,
-      },
-    };
-
-    setFormData(updatedFormData);
-
-    // Validation: for salary only
-    if (field === "salary") {
-      const otherField = type === "minSalary" ? "maxSalary" : "minSalary";
-      const currentMin =
-        type === "minSalary" ? numValue : updatedFormData.salary.minSalary;
-      const currentMax =
-        type === "maxSalary" ? numValue : updatedFormData.salary.maxSalary;
-
-      const newErrors = { ...salaryErrors };
-
-      // Max cap validation
-      if (numValue > 1000) {
-        newErrors[type] = "Cannot exceed 1000. Please mention in INR Lakhs & not INR";
-      } else {
-        newErrors[type] = "";
-      }
-
-      // Min > Max check
-      if (
-        currentMin !== "" &&
-        currentMax !== "" &&
-        Number(currentMin) > Number(currentMax)
-      ) {
-        newErrors.minSalary = "Min salary cannot be greater than max salary";
-        newErrors.maxSalary = "Max salary cannot be less than min salary";
-      } else {
-        // Clear if previously errored and now valid
-        if (
-          newErrors.minSalary === "Min salary cannot be greater than max salary"
-        )
-          newErrors.minSalary = "";
-        if (newErrors.maxSalary === "Max salary cannot be less than min salary")
-          newErrors.maxSalary = "";
-      }
-
-      setSalaryErrors(newErrors);
-    }
+  // Update the form data first
+  const updatedFormData = {
+    ...formData,
+    [field]: {
+      ...formData[field],
+      [type]: numValue,
+    },
   };
+
+  setFormData(updatedFormData);
+
+  // Validation: for salary only
+  if (field === "salary") {
+    const currentMin =
+      type === "minSalary" ? numValue : updatedFormData.salary.minSalary;
+    const currentMax =
+      type === "maxSalary" ? numValue : updatedFormData.salary.maxSalary;
+
+    const newErrors = { ...salaryErrors };
+
+    // Max cap validation
+    if (numValue > 1000) {
+      newErrors[type] = "Cannot exceed 1000. Please mention in INR Lakhs & not INR";
+    } else if (numValue === 0 && field === "salary") { // Explicitly handle zero if it somehow bypasses earlier check
+      newErrors[type] = "Salary cannot be zero.";
+    }
+    else {
+      newErrors[type] = "";
+    }
+
+    // Min > Max check
+    if (
+      currentMin !== "" &&
+      currentMax !== "" &&
+      Number(currentMin) > Number(currentMax)
+    ) {
+      newErrors.minSalary = "Min salary cannot be greater than max salary";
+      newErrors.maxSalary = "Max salary cannot be less than min salary";
+    } else {
+      // Clear if previously errored and now valid
+      if (
+        newErrors.minSalary === "Min salary cannot be greater than max salary"
+      )
+        newErrors.minSalary = "";
+      if (newErrors.maxSalary === "Max salary cannot be less than min salary")
+        newErrors.maxSalary = "";
+    }
+
+    setSalaryErrors(newErrors);
+  }
+};
 
   // Handler for React-Select Multi-Select fields (Skills, Tags, Qualifications)
   const handleMultiSelectChange = (fieldName, selectedOptions) => {
