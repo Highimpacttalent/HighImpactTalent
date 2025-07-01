@@ -36,21 +36,30 @@ const JobCard = ({ job, flag = false }) => {
   const { user } = useSelector((state) => state.user);
   const [like, setLike] = useState(false);
   const [saving, setSaving] = useState(false);
-  const experience = user?.experience || 0;
+  const userExperience = user?.experience || 0; // Renamed to avoid conflict with job.experience
 
   const isAlreadyApplied = user?.appliedJobs?.includes(job._id);
 
   let noteligible = false;
 
-  if (job?.experience && job?.experience > experience) {
-    noteligible = true;
+  // Check if job experience requires min or max, and compare with user's experience
+  if (job.experience) {
+    if (typeof job.experience === 'object' && job.experience !== null) {
+      const { minExperience, maxExperience } = job.experience;
+      if (minExperience !== undefined && userExperience < minExperience) {
+        noteligible = true;
+      }
+      // If a maxExperience is defined for the job and user's experience exceeds it (e.g., job for juniors)
+      // You might want to uncomment this based on your specific eligibility logic
+      // if (maxExperience !== undefined && userExperience > maxExperience) {
+      //   noteligible = true;
+      // }
+    } else if (typeof job.experience === 'number' && userExperience < job.experience) {
+      // Fallback for old data where job.experience might be just a number (minimum)
+      noteligible = true;
+    }
   }
-  if (
-    job?.experience?.minExperience &&
-    job?.experience.minExperience > experience
-  ) {
-    noteligible = true;
-  }
+
 
   useEffect(() => {
     setLike(user?.likedJobs?.includes(job._id));
@@ -94,28 +103,58 @@ const JobCard = ({ job, flag = false }) => {
   };
 
   // Helper function to format experience text
-  const getExperienceText = (experience) => {
-    if (!experience) return "Experience not specified";
-    
+  const getExperienceText = (exp) => {
+    if (!exp) return "Not specified";
+
     // If experience is an object with min/max
-    if (typeof experience === 'object' && experience !== null) {
-      const { minExperience, maxExperience } = experience;
-      
+    if (typeof exp === 'object' && exp !== null) {
+      const { minExperience, maxExperience } = exp;
+
       if (minExperience !== undefined && maxExperience !== undefined) {
-        return `${minExperience}-${maxExperience} years experience`;
+        return `${minExperience}-${maxExperience} years`;
       } else if (minExperience !== undefined) {
-        return `${minExperience}+ years experience`;
+        return `${minExperience}+ years`;
       } else if (maxExperience !== undefined) {
-        return `Up to ${maxExperience} years experience`;
+        return `Up to ${maxExperience} years`;
       }
     }
-    
-    // If experience is a number or string (fallback for old data)
-    if (typeof experience === 'number' || typeof experience === 'string') {
-      return `${experience}+ years experience`;
+
+    // If experience is a number or string (fallback for old data, assuming it's a minimum)
+    if (typeof exp === 'number' || typeof exp === 'string') {
+      return `${exp}+ years`;
     }
-    
-    return "Experience not specified";
+
+    return "Not specified";
+  };
+
+  // Helper function to format salary text
+  const getSalaryText = (salary, salaryCategory, salaryConfidential) => {
+    if (salaryConfidential) return "Confidential";
+    if (!salary) return "Salary not specified";
+
+    // Check if salary is an object (with minSalary, maxSalary)
+    if (typeof salary === "object" && salary !== null) {
+      const { minSalary, maxSalary } = salary;
+      let salaryRange = "";
+
+      if (minSalary !== undefined && maxSalary !== undefined) {
+        salaryRange = `${Number(minSalary).toLocaleString("en-IN")} - ${Number(maxSalary).toLocaleString("en-IN")}`;
+      } else if (minSalary !== undefined) {
+        salaryRange = `${Number(minSalary).toLocaleString("en-IN")}+`;
+      } else if (maxSalary !== undefined) {
+        salaryRange = `Up to ${Number(maxSalary).toLocaleString("en-IN")}`;
+      } else {
+        return "Salary not specified";
+      }
+      return `${salaryRange} LPA (${salaryCategory})`;
+    }
+
+    // Fallback for old data where salary might be a single number or string
+    if (typeof salary === "number" || typeof salary === "string") {
+      return `${Number(salary).toLocaleString("en-IN")} LPA (${salaryCategory})`;
+    }
+
+    return "Salary not specified";
   };
 
   const desktopView = (
@@ -211,9 +250,9 @@ const JobCard = ({ job, flag = false }) => {
                     ml: 1,
                     fontFamily: "Poppins",
                     fontSize: "12px",
-                    backgroundColor: "#E8F5E9", 
-                    color: "#1B5E20", 
-                    fontWeight: 500, 
+                    backgroundColor: "#E8F5E9",
+                    color: "#1B5E20",
+                    fontWeight: 500,
                     ".MuiChip-icon": {
                       color: "#1B5E20",
                       fontSize: "14px",
@@ -257,14 +296,7 @@ const JobCard = ({ job, flag = false }) => {
               />
               <Chip
                 icon={<CurrencyRupee sx={{ color: "#474E68" }} />}
-                label={
-                  job.salaryConfidential ||
-                  job.salaryCategory === "Confidential"
-                    ? "Confidential"
-                    : `${Number(
-                        job.salary.maxSalary || job.salary
-                      ).toLocaleString("en-IN")} LPA (${job.salaryCategory})`
-                }
+                label={getSalaryText(job?.salary, job?.salaryCategory, job?.salaryConfidential)} // UPDATED HERE
                 variant="contained"
                 sx={{
                   color: "#EAEAEA",

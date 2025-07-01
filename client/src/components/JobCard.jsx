@@ -57,21 +57,51 @@ const JobCard = ({ job, flag = false, enable = false }) => {
 
   // // …or the candidate has _too much_ (i.e. you only want juniors)…
   // if (maxExperience != null && experience > maxExperience) {
-  //   noteligible = true;
+  //   noteligible = true;
   // }
 
   const formatExperience = (exp) => {
-  if (exp?.minExperience === 0 && exp?.maxExperience) {
-    return `0-${exp.maxExperience} years`;
-  } else if (exp?.minExperience && exp?.maxExperience) {
-    return `${exp.minExperience}-${exp.maxExperience} years`;
-  } else if (exp?.minExperience) {
-    return `${exp.minExperience}+ years`;
-  } else if (exp?.maxExperience) {
-    return `Up to ${exp.maxExperience} years`;
-  }
-  return "Not specified";
-};
+    if (exp?.minExperience === 0 && exp?.maxExperience) {
+      return `0-${exp.maxExperience} years`;
+    } else if (exp?.minExperience && exp?.maxExperience) {
+      return `${exp.minExperience}-${exp.maxExperience} years`;
+    } else if (exp?.minExperience) {
+      return `${exp.minExperience}+ years`;
+    } else if (exp?.maxExperience) {
+      return `Up to ${exp.maxExperience} years`;
+    }
+    return "Not specified";
+  };
+
+  // Helper function to format salary text - ADDED THIS FUNCTION
+  const getSalaryText = (salary) => {
+    if (job.salaryConfidential) return "Confidential";
+    if (!salary) return "Salary not specified";
+
+    if (typeof salary === "object" && salary !== null) {
+      const { minSalary, maxSalary } = salary;
+      let salaryRange = "";
+
+      if (minSalary !== undefined && maxSalary !== undefined) {
+        salaryRange = `${minSalary.toLocaleString("en-IN")} LPA - ${maxSalary.toLocaleString("en-IN")} LPA`;
+      } else if (minSalary !== undefined) {
+        salaryRange = `${minSalary.toLocaleString("en-IN")} LPA+`;
+      } else if (maxSalary !== undefined) {
+        salaryRange = `Up to ${maxSalary.toLocaleString("en-IN")} LPA`;
+      } else {
+        return "Salary not specified";
+      }
+
+      return `${salaryRange} (${job.salaryCategory})`;
+    }
+
+    // Fallback for old data where salary might be a single number
+    if (typeof salary === "number" || typeof salary === "string") {
+      return `${Number(salary).toLocaleString("en-IN")} LPA (${job.salaryCategory})`;
+    }
+
+    return "Salary not specified";
+  };
 
   useEffect(() => {
     setLike(user?.likedJobs?.includes(job._id));
@@ -211,7 +241,7 @@ const JobCard = ({ job, flag = false, enable = false }) => {
           mb={1.5}
         >
           <Box display="flex" alignItems="center" gap={1}>
-            <Business color="#404258" />
+            <Business sx={{ color: "#404258" }} />
             <Typography
               variant="subtitle1"
               fontWeight={600}
@@ -241,13 +271,7 @@ const JobCard = ({ job, flag = false, enable = false }) => {
           </Box>
           <Chip
             icon={<CurrencyRupee sx={{ color: "#474E68" }} />}
-            label={
-              job.salaryConfidential || job.salaryCategory === "Confidential"
-                ? "Confidential"
-                : `${Number(job.salary.maxSalary || job.salary).toLocaleString(
-                    "en-IN"
-                  )} LPA (${job.salaryCategory})`
-            }
+            label={getSalaryText(job?.salary)} 
             variant="contained"
             sx={{ color: "#474E68", fontWeight: "400" }}
           />
@@ -333,7 +357,7 @@ const JobCard = ({ job, flag = false, enable = false }) => {
             gap={1}
             sx={{ mb: 1, mt: 0.5 }}
           >
-            <Business color="primary" sx={{ color: "#404258" }} />
+            <Business sx={{ color: "#404258" }} />
             <Typography
               variant="subtitle1"
               fontWeight={600}
@@ -361,13 +385,7 @@ const JobCard = ({ job, flag = false, enable = false }) => {
             />
             <Chip
               icon={<CurrencyRupee sx={{ color: "#474E68" }} />}
-              label={
-                job.salaryConfidential || job.salaryCategory === "Confidential"
-                  ? "Confidential"
-                  : `${Number(
-                      job.salary.maxSalary || job.salary
-                    ).toLocaleString("en-IN")} LPA (${job.salaryCategory})`
-              }
+              label={getSalaryText(job?.salary)} 
               variant="contained"
               sx={{ color: "#474E68", fontWeight: "400" }}
             />

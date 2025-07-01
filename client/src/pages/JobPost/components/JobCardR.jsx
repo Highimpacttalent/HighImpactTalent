@@ -7,22 +7,22 @@ import {
   Button,
   Avatar,
   CircularProgress,
-  Menu, 
-  MenuItem, 
+  Menu,
+  MenuItem,
   IconButton,
-  Divider 
+  Divider,
 } from "@mui/material";
 import moment from "moment";
-import { 
-  LocationOnOutlined, 
-  WorkOutlineOutlined, 
+import {
+  LocationOnOutlined,
+  WorkOutlineOutlined,
   CurrencyRupee,
   MoreVert,
   Edit,
   PlayArrow,
   Pause,
   Delete,
-  Visibility
+  Visibility,
 } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 import { useMediaQuery, useTheme } from "@mui/material";
@@ -46,18 +46,18 @@ function JobCardRecriter({ job, fetchJobs }) {
 
   const handleActionSelect = (action) => {
     handleActionsClose();
-    
+
     switch (action) {
-      case 'edit':
+      case "edit":
         navigate("/view-job-post", { state: { job } });
         break;
-      case 'live':
+      case "live":
         handleStatusUpdate("live");
         break;
-      case 'pause':
+      case "pause":
         handleStatusUpdate("paused");
         break;
-      case 'delete':
+      case "delete":
         handleStatusUpdate("deleted");
         break;
       default:
@@ -104,26 +104,31 @@ function JobCardRecriter({ job, fetchJobs }) {
 
   const getStatusColor = (status) => {
     switch (status?.toLowerCase()) {
-      case 'live': return '#4CAF50';
-      case 'paused': return '#FF9800';
-      case 'draft': return '#9E9E9E';
-      case 'deleted': return '#F44336';
-      default: return '#9E9E9E';
+      case "live":
+        return "#4CAF50";
+      case "paused":
+        return "#FF9800";
+      case "draft":
+        return "#9E9E9E";
+      case "deleted":
+        return "#F44336";
+      default:
+        return "#9E9E9E";
     }
-  };  
+  };
 
   const getStatusLabel = (status) => {
-    return status?.toUpperCase() || 'UNKNOWN';
+    return status?.toUpperCase() || "UNKNOWN";
   };
 
   // Helper function to format experience text
   const getExperienceText = (experience) => {
     if (!experience) return "Experience not specified";
-    
+
     // If experience is an object with min/max
-    if (typeof experience === 'object' && experience !== null) {
+    if (typeof experience === "object" && experience !== null) {
       const { minExperience, maxExperience } = experience;
-      
+
       if (minExperience !== undefined && maxExperience !== undefined) {
         return `${minExperience}-${maxExperience} years experience`;
       } else if (minExperience !== undefined) {
@@ -132,319 +137,367 @@ function JobCardRecriter({ job, fetchJobs }) {
         return `Up to ${maxExperience} years experience`;
       }
     }
-    
+
     // If experience is a number or string (fallback for old data)
-    if (typeof experience === 'number' || typeof experience === 'string') {
+    if (typeof experience === "number" || typeof experience === "string") {
       return `${experience}+ years experience`;
     }
-    
+
     return "Experience not specified";
+  };
+
+  // Helper function to format salary text
+  const getSalaryText = (salary) => {
+    if (job.salaryConfidential) return "Confidential";
+    if (!salary) return "Salary not specified";
+
+    if (typeof salary === "object" && salary !== null) {
+      const { minSalary, maxSalary } = salary;
+      let salaryRange = "";
+
+      if (minSalary !== undefined && maxSalary !== undefined) {
+        salaryRange = `${(minSalary).toLocaleString("en-IN")} LPA - ${(maxSalary).toLocaleString("en-IN")} LPA`;
+      } else if (minSalary !== undefined) {
+        salaryRange = `${(minSalary).toLocaleString("en-IN")} LPA+`;
+      } else if (maxSalary !== undefined) {
+        salaryRange = `Up to ${(maxSalary).toLocaleString("en-IN")} LPA`;
+      } else {
+        return "Salary not specified";
+      }
+
+      return `${salaryRange} (${job.salaryCategory})`;
+    }
+
+    // Fallback for old data where salary might be a single number
+    if (typeof salary === "number" || typeof salary === "string") {
+      return `${Number(salary).toLocaleString("en-IN")} LPA (${job.salaryCategory})`;
+    }
+
+    return "Salary not specified";
   };
 
   const desktopView = (
     <div>
       <Box
-      sx={{
-        width: "100%",
-        border: "1px solid #E5E7EB",
-        borderRadius: 3,
-        p: 3,
-        bgcolor: "white",
-      }}
-    >
-      <Stack spacing={2.5}>
-        {/* Header Section */}
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "flex-start",
-            justifyContent: "space-between",
-            gap: 2
-          }}
-        >
-          <Box sx={{ flex: 1, minWidth: 0 }}>
-            <Typography
-              sx={{
-                color: "#24252C",
-                fontFamily: "Poppins",
-                fontWeight: 600,
-                fontSize: "20px",
-                lineHeight: 1.3,
-                mb: 0.5,
-                cursor: canViewApplications ? "pointer" : "default",
-                "&:hover": canViewApplications ? {
-                  color: "#3C7EFC",
-                  textDecoration: "underline"
-                } : {}
-              }}
-              onClick={handleTitleClick}
-            >
-              {job.jobTitle}
-            </Typography>
-            
-            <Box sx={{ display: "flex", alignItems: "center", gap: 2, flexWrap: "wrap" }}>
-              <Typography
-                sx={{
-                  color: "#6B7280",
-                  fontFamily: "Poppins",
-                  fontSize: "13px",
-                  fontWeight: 400
-                }}
-              >
-                Posted {moment(job?.createdAt).fromNow()}
-              </Typography>
-              
-              {job?.status && (
-                <Box
-                  sx={{
-                    px: 1.5,
-                    py: 0.5,
-                    borderRadius: 1,
-                    bgcolor: `${getStatusColor(job.status)}20`,
-                    border: `1px solid ${getStatusColor(job.status)}40`
-                  }}
-                >
-                  <Typography
-                    sx={{
-                      color: getStatusColor(job.status),
-                      fontFamily: "Poppins",
-                      fontSize: "11px",
-                      fontWeight: 600,
-                      letterSpacing: "0.5px"
-                    }}
-                  >
-                    {getStatusLabel(job.status)}
-                  </Typography>
-                </Box>
-              )}
-            </Box>
-          </Box>
-
-          {/* Actions Menu */}
-          {job.status !== "deleted" && (
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-              {canViewApplications && (
-                <Button
-                  variant="outlined"
-                  size="small"
-                  startIcon={<Visibility sx={{ fontSize: "16px !important" }} />}
-                  sx={{
-                    borderColor: "#3C7EFC",
-                    color: "#3C7EFC",
-                    px: 2,
-                    py: 0.75,
-                    borderRadius: 2,
-                    fontFamily: "Satoshi",
-                    fontWeight: 600,
-                    fontSize: "13px",
-                    textTransform: "none",
-                    "&:hover": {
-                      borderColor: "#3C7EFC",
-                      bgcolor: "#3C7EFC08"
-                    }
-                  }}
-                  onClick={() => navigate(`/applicant/${job._id}`)}
-                >
-                  View Applications
-                </Button>
-              )}
-              
-              <IconButton
-                onClick={handleActionsClick}
-                sx={{
-                  color: "#6B7280",
-                  "&:hover": {
-                    bgcolor: "#F3F4F6"
-                  }
-                }}
-              >
-                <MoreVert />
-              </IconButton>
-              
-              <Menu
-                anchorEl={anchorEl}
-                open={open}
-                onClose={handleActionsClose}
-                PaperProps={{
-                  sx: {
-                    borderRadius: 2,
-                    minWidth: 160,
-                    boxShadow: "0 8px 24px rgba(0, 0, 0, 0.12)",
-                    border: "1px solid #E5E7EB"
-                  }
-                }}
-                transformOrigin={{ horizontal: 'right', vertical: 'top' }}
-                anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
-              >
-                <MenuItem 
-                  onClick={() => handleActionSelect('edit')}
-                  sx={{ 
-                    fontFamily: "Satoshi", 
-                    fontSize: "14px",
-                    py: 1,
-                    px: 2
-                  }}
-                >
-                  <Edit sx={{ mr: 1.5, fontSize: "18px", color: "#6B7280" }} />
-                  Edit Job
-                </MenuItem>
-                
-                {(job.status === "draft" || job.status === "paused") && (
-                  <MenuItem 
-                    onClick={() => handleActionSelect('live')}
-                    sx={{ 
-                      fontFamily: "Satoshi", 
-                      fontSize: "14px",
-                      py: 1,
-                      px: 2
-                    }}
-                  >
-                    <PlayArrow sx={{ mr: 1.5, fontSize: "18px", color: "#6B7280" }} />
-                    Make it Live
-                  </MenuItem>
-                )}
-                
-                {job.status === "live" && (
-                  <MenuItem 
-                    onClick={() => handleActionSelect('pause')}
-                    sx={{ 
-                      fontFamily: "Satoshi", 
-                      fontSize: "14px",
-                      py: 1,
-                      px: 2
-                    }}
-                  >
-                    <Pause sx={{ mr: 1.5, fontSize: "18px", color: "#6B7280" }} />
-                    Pause Job
-                  </MenuItem>
-                )}
-                
-                <Divider sx={{ my: 0.5 }} />
-                
-                <MenuItem 
-                  onClick={() => handleActionSelect('delete')}
-                  sx={{ 
-                    fontFamily: "Satoshi", 
-                    fontSize: "14px",
-                    py: 1,
-                    px: 2,
-                    color: "#EF4444"
-                  }}
-                >
-                  <Delete sx={{ mr: 1.5, fontSize: "18px", color: "#EF4444" }} />
-                  Delete Job
-                </MenuItem>
-              </Menu>
-            </Box>
-          )}
-        </Box>
-
-        {/* Job Details Chips */}
-        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
-          <Chip
-            icon={<LocationOnOutlined sx={{ color: "#6B7280 !important", fontSize: "16px !important" }} />}
-            label={job?.jobLocation}
-            variant="outlined"
-            sx={{ 
-              color: "#374151", 
-              fontWeight: "500",
-              fontFamily: "Poppins",
-              fontSize: "13px",
-              borderColor: "#D1D5DB",
-              bgcolor: "#F9FAFB"
-            }}
-          />
-          <Chip
-            icon={<WorkOutlineOutlined sx={{ color: "#6B7280 !important", fontSize: "16px !important" }} />}
-            label={getExperienceText(job?.experience)}
-            variant="outlined"
-            sx={{ 
-              color: "#374151", 
-              fontWeight: "500",
-              fontFamily: "Poppins",
-              fontSize: "13px",
-              borderColor: "#D1D5DB",
-              bgcolor: "#F9FAFB"
-            }}
-          />
-          <Chip
-            icon={<CurrencyRupee sx={{ color: "#6B7280 !important", fontSize: "16px !important" }} />}
-            label={
-              job.salaryConfidential
-                ? "Confidential"
-                : `${Number(job.salary.maxSalary||job.salary).toLocaleString("en-IN")} LPA (${
-                        job.salaryCategory
-                      })`
-            }
-            variant="outlined"
-            sx={{ 
-              color: "#374151", 
-              fontWeight: "500",
-              fontFamily: "Poppins",
-              fontSize: "13px",
-              borderColor: "#D1D5DB",
-              bgcolor: "#F9FAFB"
-            }}
-          />
-        </Box>
-
-        {/* Skills Section */}
-        <Box>
-          {job.skills && job.skills.length > 0 ? (
-            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.75 }}>
-              {job.skills.map((skill, index) => (
-                <Chip
-                  key={index}
-                  label={skill}
-                  variant="filled"
-                  size="small"
-                  sx={{
-                    bgcolor: "#EEF2FF",
-                    color: "#4F46E5",
-                    fontWeight: "500",
-                    fontFamily: "Poppins",
-                    fontSize: "12px",
-                    borderRadius: 1.5,
-                    height: "26px"
-                  }}
-                />
-              ))}
-            </Box>
-          ) : (
-            <Typography
-              sx={{
-                color: "#9CA3AF",
-                fontStyle: "italic",
-                fontFamily: "Satoshi",
-                fontSize: "13px"
-              }}
-            >
-              No skills provided
-            </Typography>
-          )}
-        </Box>
-
-        {/* Footer Info */}
-        <Box sx={{ 
-          display: "flex", 
-          alignItems: "center", 
-          justifyContent: "space-between",
-          pt: 1,
-          borderTop: "1px solid #F3F4F6"
-        }}>
-          <Typography
-            sx={{ 
-              color: "#6B7280", 
-              fontFamily: "Poppins", 
-              fontSize: "14px",
-              fontWeight: 500
+        sx={{
+          width: "100%",
+          border: "1px solid #E5E7EB",
+          borderRadius: 3,
+          p: 3,
+          bgcolor: "white",
+        }}
+      >
+        <Stack spacing={2.5}>
+          {/* Header Section */}
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "flex-start",
+              justifyContent: "space-between",
+              gap: 2,
             }}
           >
-            {job.totalApplications} {job.totalApplications === 1 ? 'Application' : 'Applications'}
-          </Typography>
-        </Box>
-      </Stack>
-    </Box>
+            <Box sx={{ flex: 1, minWidth: 0 }}>
+              <Typography
+                sx={{
+                  color: "#24252C",
+                  fontFamily: "Poppins",
+                  fontWeight: 600,
+                  fontSize: "20px",
+                  lineHeight: 1.3,
+                  mb: 0.5,
+                  cursor: canViewApplications ? "pointer" : "default",
+                  "&:hover": canViewApplications
+                    ? {
+                        color: "#3C7EFC",
+                        textDecoration: "underline",
+                      }
+                    : {},
+                }}
+                onClick={handleTitleClick}
+              >
+                {job.jobTitle}
+              </Typography>
+
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 2,
+                  flexWrap: "wrap",
+                }}
+              >
+                <Typography
+                  sx={{
+                    color: "#6B7280",
+                    fontFamily: "Poppins",
+                    fontSize: "13px",
+                    fontWeight: 400,
+                  }}
+                >
+                  Posted {moment(job?.createdAt).fromNow()}
+                </Typography>
+
+                {job?.status && (
+                  <Box
+                    sx={{
+                      px: 1.5,
+                      py: 0.5,
+                      borderRadius: 1,
+                      bgcolor: `${getStatusColor(job.status)}20`,
+                      border: `1px solid ${getStatusColor(job.status)}40`,
+                    }}
+                  >
+                    <Typography
+                      sx={{
+                        color: getStatusColor(job.status),
+                        fontFamily: "Poppins",
+                        fontSize: "11px",
+                        fontWeight: 600,
+                        letterSpacing: "0.5px",
+                      }}
+                    >
+                      {getStatusLabel(job.status)}
+                    </Typography>
+                  </Box>
+                )}
+              </Box>
+            </Box>
+
+            {/* Actions Menu */}
+            {job.status !== "deleted" && (
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                {canViewApplications && (
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    startIcon={<Visibility sx={{ fontSize: "16px !important" }} />}
+                    sx={{
+                      borderColor: "#3C7EFC",
+                      color: "#3C7EFC",
+                      px: 2,
+                      py: 0.75,
+                      borderRadius: 2,
+                      fontFamily: "Satoshi",
+                      fontWeight: 600,
+                      fontSize: "13px",
+                      textTransform: "none",
+                      "&:hover": {
+                        borderColor: "#3C7EFC",
+                        bgcolor: "#3C7EFC08",
+                      },
+                    }}
+                    onClick={() => navigate(`/applicant/${job._id}`)}
+                  >
+                    View Applications
+                  </Button>
+                )}
+
+                <IconButton
+                  onClick={handleActionsClick}
+                  sx={{
+                    color: "#6B7280",
+                    "&:hover": {
+                      bgcolor: "#F3F4F6",
+                    },
+                  }}
+                >
+                  <MoreVert />
+                </IconButton>
+
+                <Menu
+                  anchorEl={anchorEl}
+                  open={open}
+                  onClose={handleActionsClose}
+                  PaperProps={{
+                    sx: {
+                      borderRadius: 2,
+                      minWidth: 160,
+                      boxShadow: "0 8px 24px rgba(0, 0, 0, 0.12)",
+                      border: "1px solid #E5E7EB",
+                    },
+                  }}
+                  transformOrigin={{ horizontal: "right", vertical: "top" }}
+                  anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
+                >
+                  <MenuItem
+                    onClick={() => handleActionSelect("edit")}
+                    sx={{
+                      fontFamily: "Satoshi",
+                      fontSize: "14px",
+                      py: 1,
+                      px: 2,
+                    }}
+                  >
+                    <Edit sx={{ mr: 1.5, fontSize: "18px", color: "#6B7280" }} />
+                    Edit Job
+                  </MenuItem>
+
+                  {(job.status === "draft" || job.status === "paused") && (
+                    <MenuItem
+                      onClick={() => handleActionSelect("live")}
+                      sx={{
+                        fontFamily: "Satoshi",
+                        fontSize: "14px",
+                        py: 1,
+                        px: 2,
+                      }}
+                    >
+                      <PlayArrow sx={{ mr: 1.5, fontSize: "18px", color: "#6B7280" }} />
+                      Make it Live
+                    </MenuItem>
+                  )}
+
+                  {job.status === "live" && (
+                    <MenuItem
+                      onClick={() => handleActionSelect("pause")}
+                      sx={{
+                        fontFamily: "Satoshi",
+                        fontSize: "14px",
+                        py: 1,
+                        px: 2,
+                      }}
+                    >
+                      <Pause sx={{ mr: 1.5, fontSize: "18px", color: "#6B7280" }} />
+                      Pause Job
+                    </MenuItem>
+                  )}
+
+                  <Divider sx={{ my: 0.5 }} />
+
+                  <MenuItem
+                    onClick={() => handleActionSelect("delete")}
+                    sx={{
+                      fontFamily: "Satoshi",
+                      fontSize: "14px",
+                      py: 1,
+                      px: 2,
+                      color: "#EF4444",
+                    }}
+                  >
+                    <Delete sx={{ mr: 1.5, fontSize: "18px", color: "#EF4444" }} />
+                    Delete Job
+                  </MenuItem>
+                </Menu>
+              </Box>
+            )}
+          </Box>
+
+          {/* Job Details Chips */}
+          <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
+            <Chip
+              icon={
+                <LocationOnOutlined
+                  sx={{ color: "#6B7280 !important", fontSize: "16px !important" }}
+                />
+              }
+              label={job?.jobLocation}
+              variant="outlined"
+              sx={{
+                color: "#374151",
+                fontWeight: "500",
+                fontFamily: "Poppins",
+                fontSize: "13px",
+                borderColor: "#D1D5DB",
+                bgcolor: "#F9FAFB",
+              }}
+            />
+            <Chip
+              icon={
+                <WorkOutlineOutlined
+                  sx={{ color: "#6B7280 !important", fontSize: "16px !important" }}
+                />
+              }
+              label={getExperienceText(job?.experience)}
+              variant="outlined"
+              sx={{
+                color: "#374151",
+                fontWeight: "500",
+                fontFamily: "Poppins",
+                fontSize: "13px",
+                borderColor: "#D1D5DB",
+                bgcolor: "#F9FAFB",
+              }}
+            />
+            <Chip
+              icon={
+                <CurrencyRupee
+                  sx={{ color: "#6B7280 !important", fontSize: "16px !important" }}
+                />
+              }
+              label={getSalaryText(job?.salary)}
+              variant="outlined"
+              sx={{
+                color: "#374151",
+                fontWeight: "500",
+                fontFamily: "Poppins",
+                fontSize: "13px",
+                borderColor: "#D1D5DB",
+                bgcolor: "#F9FAFB",
+              }}
+            />
+          </Box>
+
+          {/* Skills Section */}
+          <Box>
+            {job.skills && job.skills.length > 0 ? (
+              <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.75 }}>
+                {job.skills.map((skill, index) => (
+                  <Chip
+                    key={index}
+                    label={skill}
+                    variant="filled"
+                    size="small"
+                    sx={{
+                      bgcolor: "#EEF2FF",
+                      color: "#4F46E5",
+                      fontWeight: "500",
+                      fontFamily: "Poppins",
+                      fontSize: "12px",
+                      borderRadius: 1.5,
+                      height: "26px",
+                    }}
+                  />
+                ))}
+              </Box>
+            ) : (
+              <Typography
+                sx={{
+                  color: "#9CA3AF",
+                  fontStyle: "italic",
+                  fontFamily: "Satoshi",
+                  fontSize: "13px",
+                }}
+              >
+                No skills provided
+              </Typography>
+            )}
+          </Box>
+
+          {/* Footer Info */}
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              pt: 1,
+              borderTop: "1px solid #F3F4F6",
+            }}
+          >
+            <Typography
+              sx={{
+                color: "#6B7280",
+                fontFamily: "Poppins",
+                fontSize: "14px",
+                fontWeight: 500,
+              }}
+            >
+              {job.totalApplications}{" "}
+              {job.totalApplications === 1 ? "Application" : "Applications"}
+            </Typography>
+          </Box>
+        </Stack>
+      </Box>
     </div>
   );
 
@@ -510,7 +563,7 @@ function JobCardRecriter({ job, fetchJobs }) {
                       color: "#00A824E5",
                     }}
                   >
-                    {moment(job?.createdAt).fromNow()}
+                    Posted {moment(job?.createdAt).fromNow()}
                   </Typography>
                 </Box>
               </Box>
@@ -550,13 +603,7 @@ function JobCardRecriter({ job, fetchJobs }) {
               </Box>
               <Chip
                 icon={<CurrencyRupee sx={{ color: "#474E68" }} />}
-                label={
-                  job.salaryConfidential
-                    ? "Confidential"
-                    : `${Number(job.salary.maxSalary||job.salary).toLocaleString("en-IN")} LPA (${
-                        job.salaryCategory
-                      })`
-                }
+                label={getSalaryText(job?.salary)}
                 variant="contained"
                 sx={{ color: "#474E68", fontWeight: "400" }}
               />
