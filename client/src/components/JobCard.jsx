@@ -60,6 +60,19 @@ const JobCard = ({ job, flag = false, enable = false }) => {
   //   noteligible = true;
   // }
 
+  const formatExperience = (exp) => {
+  if (exp?.minExperience === 0 && exp?.maxExperience) {
+    return `0-${exp.maxExperience} years`;
+  } else if (exp?.minExperience && exp?.maxExperience) {
+    return `${exp.minExperience}-${exp.maxExperience} years`;
+  } else if (exp?.minExperience) {
+    return `${exp.minExperience}+ years`;
+  } else if (exp?.maxExperience) {
+    return `Up to ${exp.maxExperience} years`;
+  }
+  return "Not specified";
+};
+
   useEffect(() => {
     setLike(user?.likedJobs?.includes(job._id));
   }, [user, job._id]);
@@ -221,9 +234,7 @@ const JobCard = ({ job, flag = false, enable = false }) => {
             />
             <Chip
               icon={<WorkOutlineOutlined sx={{ color: "#474E68" }} />}
-              label={`${
-                job?.experience?.minExperience || job?.experience
-              }+ years experience`}
+              label={`${formatExperience(job.experience)}`}
               variant="contained"
               sx={{ color: "#474E68", fontWeight: "400" }}
             />
@@ -344,9 +355,7 @@ const JobCard = ({ job, flag = false, enable = false }) => {
             />
             <Chip
               icon={<WorkOutlineOutlined sx={{ color: "#474E68" }} />}
-              label={`${
-                job?.experience?.minExperience || job?.experience
-              }+ years experience`}
+              label={`${formatExperience(job.experience)}`}
               variant="contained"
               sx={{ color: "#474E68", fontWeight: "400" }}
             />

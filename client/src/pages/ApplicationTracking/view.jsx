@@ -33,30 +33,75 @@ const DesktopView = () => {
 
   useEffect(() => {
     const fetchJobs = async () => {
-      if (!user) return;
+      // Get userId from multiple sources - Redux, localStorage, or direct user object
+      let userId = null;
+      
+      // Try to get userId from Redux user state
+      if (user?._id) {
+        userId = user._id;
+      } else {
+        // Try to get from localStorage if Redux state is not available
+        try {
+          const userInfo = localStorage.getItem("userInfo");
+          if (userInfo) {
+            const parsedUser = JSON.parse(userInfo);
+            userId = parsedUser._id || parsedUser.id;
+          }
+        } catch (error) {
+          console.error("Error parsing userInfo from localStorage:", error);
+        }
+      }
+
+      if (!userId) {
+        console.error("No userId found in Redux state or localStorage");
+        setIsFetching(false);
+        return;
+      }
 
       setIsFetching(true);
       try {
+        console.log("Fetching applications for userId:", userId);
+        
         const response = await axios.post(
           "https://highimpacttalent.onrender.com/api-v1/application/get-jobs",
-          { applicationIds: user.appliedJobs || [] },
+          { userId: userId }, // Changed from applicationIds to userId
           { headers: { "Content-Type": "application/json" } }
         );
 
-        const applications = response?.data?.applications || [];
-        setAppliedJobs(applications);
-        if (applications.length > 0) {
-          setAppliedSelect(applications[0]);
+        console.log("API Response:", response.data);
+
+        if (response.data?.success) {
+          const applications = response.data.applications || [];
+          setAppliedJobs(applications);
+          if (applications.length > 0) {
+            setAppliedSelect(applications[0]);
+          }
+          console.log(`Successfully fetched ${applications.length} applications`);
+        } else {
+          console.error("API call unsuccessful:", response.data?.message);
+          setAppliedJobs([]);
         }
       } catch (error) {
         console.error("Error fetching applied jobs:", error);
+        
+        // More detailed error logging
+        if (error.response) {
+          console.error("Error Response:", error.response.data);
+          console.error("Error Status:", error.response.status);
+        } else if (error.request) {
+          console.error("Error Request:", error.request);
+        } else {
+          console.error("Error Message:", error.message);
+        }
+        
+        setAppliedJobs([]);
       } finally {
         setIsFetching(false);
       }
     };
 
     fetchJobs();
-  }, [user]);
+  }, [user]); // Keep dependency on user to refetch when user state changes
 
   // Get jobs count for each processing stage (case-insensitive)
   const getStageCount = (stageKey) => {
@@ -93,9 +138,29 @@ const DesktopView = () => {
 
   const filteredJobs = getFilteredJobs();
 
+  // Debug information display (can be removed in production)
+  const getDebugInfo = () => {
+    const userInfo = localStorage.getItem("userInfo");
+    return {
+      reduxUserId: user?._id,
+      localStorageUserInfo: userInfo ? JSON.parse(userInfo) : null,
+      totalApplications: appliedJobs.length,
+      filteredApplications: filteredJobs.length
+    };
+  };
+
   return (
     <Box sx={{ bgcolor: "white", minHeight: "100vh", p: isMobile ? 2 : 4 }}>
       <Loader isLoading={isFetching} />
+
+      {/* Debug Info - Remove in production */}
+      {/* {process.env.NODE_ENV === 'development' && (
+        <Box sx={{ mb: 2, p: 2, bgcolor: "#f5f5f5", borderRadius: 1 }}>
+          <Typography variant="caption">
+            Debug: {JSON.stringify(getDebugInfo(), null, 2)}
+          </Typography>
+        </Box>
+      )} */}
 
       {/* Header */}
       <Box sx={{ textAlign: "center", mb: 4 }}>
@@ -166,7 +231,7 @@ const DesktopView = () => {
               In Progress
             </Typography>
             <Chip
-              label={appliedJobs.filter(job => job.status !== "Not Progressing").length}
+              label={appliedJobs.filter(job => job.status?.toLowerCase() !== "not progressing").length}
               size="small"
               sx={{
                 backgroundColor: activeTab === "inProgress" ? "#1976d2" : "#e5e7eb",
@@ -212,7 +277,7 @@ const DesktopView = () => {
               Not Progressing
             </Typography>
             <Chip
-              label={appliedJobs.filter(job => job.status === "Not Progressing").length}
+              label={appliedJobs.filter(job => job.status?.toLowerCase() === "not progressing").length}
               size="small"
               sx={{
                 backgroundColor: activeTab === "notProgressing" ? "#dc2626" : "#e5e7eb",
@@ -397,8 +462,34 @@ const DesktopView = () => {
             ))}
           </Grid>
         ) : (
-          <>
-          </>
+          <Box sx={{ textAlign: "center", mt: 6, p: 4 }}>
+            <Typography
+              variant="h6"
+              color="textSecondary"
+              sx={{ 
+                fontFamily: "Poppins",
+                fontSize: isMobile ? 16 : 18,
+                mb: 2
+              }}
+            >
+              {activeTab === "inProgress" 
+                ? "No applications in progress" 
+                : "No applications marked as not progressing"
+              }
+            </Typography>
+            <Typography
+              color="textSecondary"
+              sx={{ 
+                fontFamily: "Poppins",
+                fontSize: isMobile ? 14 : 16,
+              }}
+            >
+              {appliedJobs.length === 0 
+                ? "You haven't applied to any jobs yet." 
+                : "Try changing the filter or check the other tab."
+              }
+            </Typography>
+          </Box>
         )}
       </Box>
     </Box>
