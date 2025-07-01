@@ -34,22 +34,23 @@ import {
 import { UpdateUser } from "../../../redux/userSlice";
 import { AttachMoney } from "@mui/icons-material";
 
-const JobCard = ({ job,flag = false,enable = false }) => {
+const JobCard = ({ job, flag = false, enable = false }) => {
   const dispatch = useDispatch();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const { user } = useSelector((state) => state.user);
   const [like, setLike] = useState(false);
   const navigate = useNavigate();
-  const experience = user.experience;
+  const experience = user.experience; // Assuming user.experience is a single number
+
   let noteligible = false;
 
   const isAlreadyApplied = user?.appliedJobs?.includes(job._id);
-    
-  if (job?.experience && job?.experience > experience) {
+
+  // Experience eligibility check
+  if (job?.experience?.minExperience && experience < job.experience.minExperience) {
     noteligible = true;
-  }
-  if (job?.experience?.minExperience && job?.experience.minExperience > experience) {
+  } else if (job?.experience && typeof job.experience === 'number' && experience < job.experience) {
     noteligible = true;
   }
 
@@ -79,81 +80,132 @@ const JobCard = ({ job,flag = false,enable = false }) => {
     }
   };
 
+  // Helper function to format salary text
+  const getSalaryText = (salary, salaryCategory, salaryConfidential) => {
+    if (salaryConfidential) return "Confidential";
+    if (!salary) return "Salary not specified";
+
+    // Check if salary is an object (with minSalary, maxSalary)
+    if (typeof salary === "object" && salary !== null) {
+      const { minSalary, maxSalary } = salary;
+      let salaryRange = "";
+
+      if (minSalary !== undefined && maxSalary !== undefined) {
+        salaryRange = `${Number(minSalary).toLocaleString("en-IN")}LPA - ${Number(maxSalary).toLocaleString("en-IN")}LPA`;
+      } else if (minSalary !== undefined) {
+        salaryRange = `${Number(minSalary).toLocaleString("en-IN")}+`;
+      } else if (maxSalary !== undefined) {
+        salaryRange = `Up to ${Number(maxSalary).toLocaleString("en-IN")}`;
+      } else {
+        return "Salary not specified";
+      }
+      return `${salaryRange} (${salaryCategory})`;
+    }
+
+    // Fallback for old data where salary might be a single number or string
+    if (typeof salary === "number" || typeof salary === "string") {
+      return `${Number(salary).toLocaleString("en-IN")} (${salaryCategory})`;
+    }
+
+    return "Salary not specified";
+  };
+
+
+  // Helper function to format experience text
+  const getExperienceText = (exp) => {
+    if (!exp) return "Not specified";
+
+    // If experience is an object with min/max
+    if (typeof exp === 'object' && exp !== null) {
+      const { minExperience, maxExperience } = exp;
+
+      if (minExperience !== undefined && maxExperience !== undefined) {
+        return `${minExperience}-${maxExperience} years`;
+      } else if (minExperience !== undefined) {
+        return `${minExperience}+ years`;
+      } else if (maxExperience !== undefined) {
+        return `Up to ${maxExperience} years`;
+      }
+    }
+
+    // If experience is a number or string (fallback for old data, assuming it's a minimum)
+    if (typeof exp === 'number' || typeof exp === 'string') {
+      return `${exp}+ years`;
+    }
+
+    return "Not specified";
+  };
+
+
   const mobileView = (
-    <Card sx={{ 
-      maxWidth: 400, 
-      display: "flex", 
-      flexDirection: "column", 
-      height: "100%", 
-      boxShadow: "0px 0px 4px 0px #00000040", 
-      borderRadius: 2, 
+    <Card sx={{
+      maxWidth: 400,
+      display: "flex",
+      flexDirection: "column",
+      height: "100%",
+      boxShadow: "0px 0px 4px 0px #00000040",
+      borderRadius: 2,
     }}
     >
       <CardContent sx={{ flexGrow: 1, display: "flex", flexDirection: "column" }}>
         {/* Job Title */}
-        <Typography fontWeight={600} gutterBottom sx={{ color: "#24252C" ,mb:1.5,fontFamily:"Poppins"}} >
+        <Typography fontWeight={600} gutterBottom sx={{ color: "#24252C", mb: 1.5, fontFamily: "Poppins" }} >
           {job?.jobTitle}
         </Typography>
         {/* Company Name & Like Button */}
         <Box display="flex" justifyContent="space-between" alignItems="center" mb={1.5}>
           <Box display="flex" alignItems="center" gap={1}>
-            <Business color= "#404258" />
-            <Typography fontWeight={500} sx={{ color: "#24252C" ,fontFamily:"Poppins"}}>
+            <Business color="#404258" />
+            <Typography fontWeight={500} sx={{ color: "#24252C", fontFamily: "Poppins" }}>
               {job?.company?.name}
             </Typography>
           </Box>
-          
+
         </Box>
 
         {/* Job Details */}
-        <Box sx={{ display:"flex",flexWrap:"wrap"}} gap={1}>
-          <Box sx={{display:"flex"}} gap={0.5}>
+        <Box sx={{ display: "flex", flexWrap: "wrap" }} gap={1}>
+          <Box sx={{ display: "flex" }} gap={0.5}>
             <Chip
-              icon={<LocationOnOutlined sx={{color:"#474E68"}}/>}
+              icon={<LocationOnOutlined sx={{ color: "#474E68" }} />}
               label={job?.jobLocation}
-              variant="contained" 
-              sx={{color:"#474E68",fontWeight:"400",bgcolor:"EAEAEA",fontFamily:"Poppins"}}
-            />
-            <Chip
-              icon={<WorkOutlineOutlined sx={{color:"#474E68"}}/>}
-               label={`${job?.experience?.minExperience || job?.experience }+ years experience`}
               variant="contained"
-              sx={{color:"#474E68",fontWeight:"400",bgcolor:"EAEAEA",fontFamily:"Poppins"}}
+              sx={{ color: "#474E68", fontWeight: "400", bgcolor: "EAEAEA", fontFamily: "Poppins" }}
             />
-            </Box>
             <Chip
-                icon={<CurrencyRupee sx={{ color: "#474E68" }} />}
-                label={
-                  (job.salaryConfidential || job.salaryCategory === "Confidential")
-                    ? "Confidential"
-                    : `${Number(job.salary.maxSalary||job.salary).toLocaleString("en-IN")} LPA (${
-                        job.salaryCategory
-                      })`
-                }
-                variant="contained"
-                sx={{
-                  color: "#EAEAEA",
-                  fontWeight: "400",
-                  p: 1,
-                  "& .MuiChip-label": {
-                    fontSize: "14px",
-                    color: "#474E68",
-                  },
-                }}
-              />
-           </Box>
+              icon={<WorkOutlineOutlined sx={{ color: "#474E68" }} />}
+              label={getExperienceText(job?.experience)}
+              variant="contained"
+              sx={{ color: "#474E68", fontWeight: "400", bgcolor: "EAEAEA", fontFamily: "Poppins" }}
+            />
+          </Box>
+          <Chip
+            icon={<CurrencyRupee sx={{ color: "#474E68" }} />}
+            label={getSalaryText(job?.salary, job?.salaryCategory, job?.salaryConfidential)}
+            variant="contained"
+            sx={{
+              color: "#EAEAEA",
+              fontWeight: "400",
+              p: 1,
+              "& .MuiChip-label": {
+                fontSize: "14px",
+                color: "#474E68",
+              },
+            }}
+          />
+        </Box>
 
         {/* Job Description */}
-        {/* <Typography 
-          variant="body2" 
-          color="#474E68" 
+        {/* <Typography
+          variant="body2"
+          color="#474E68"
           sx={{ flexGrow: 1, overflow: "hidden", textOverflow: "ellipsis", height: 40 }}>
           {job.jobDescription !== "- " ? job?.jobDescription : "No description Provided"}
         </Typography> */}
       </CardContent>
 
-       {/* Fixed Bottom Section */}
-       <CardActions
+      {/* Fixed Bottom Section */}
+      <CardActions
         sx={{
           mt: "auto",
           display: "flex",
@@ -177,7 +229,7 @@ const JobCard = ({ job,flag = false,enable = false }) => {
             variant="contained"
             color="primary"
             sx={{ borderRadius: 40, fontFamily: "Poppins" }}
-            onClick={() => navigate("/u-login", { state: { refer: `/job-detail/${job._id}` } })} 
+            onClick={() => navigate("/u-login", { state: { refer: `/job-detail/${job._id}` } })}
           >
             Login/Register To Apply
           </Button>
@@ -202,29 +254,29 @@ const JobCard = ({ job,flag = false,enable = false }) => {
               }
             }}
           >
-           {isAlreadyApplied ? "Already Applied" : "Apply Now"}
+            {isAlreadyApplied ? "Already Applied" : "Apply Now"}
           </Button>
         ) : null}
       </CardActions>
 
-            {noteligible && (
-                    <Box sx={{display:"flex",justifyContent:"flex-start",ml:2,mt:1}}>
-                    <ReportProblem color="error" sx={{mb:1}}/>
-                    <Typography color="error" sx={{ px:1,mt:0.5,fontSize:"12px" }}>
-                     Your experience isn’t quite a match for this role.
-                    </Typography>
-                    </Box>
-                  )}
+      {noteligible && (
+        <Box sx={{ display: "flex", justifyContent: "flex-start", ml: 2, mt: 1 }}>
+          <ReportProblem color="error" sx={{ mb: 1 }} />
+          <Typography color="error" sx={{ px: 1, mt: 0.5, fontSize: "12px" }}>
+            Your experience isn’t quite a match for this role.
+          </Typography>
+        </Box>
+      )}
 
       {/* Fixed Bottom Section */}
-      <CardActions sx={{ display: "flex", justifyContent: "space-between", pl: 2,pr:2}}>
+      <CardActions sx={{ display: "flex", justifyContent: "space-between", pl: 2, pr: 2 }}>
         <Typography variant="caption" color="text.secondary">
           Posted {moment(job?.createdAt).fromNow()}
         </Typography>
         <IconButton onClick={(e) => handleLikeClick(e, job._id)}>
-            {like ? <Bookmark color="primary" /> : <BookmarkBorder color="action" />}
+          {like ? <Bookmark color="primary" /> : <BookmarkBorder color="action" />}
           <Typography gap={1}>Save</Typography>
-          </IconButton>
+        </IconButton>
       </CardActions>
 
     </Card>
