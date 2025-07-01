@@ -236,11 +236,13 @@ ${resumeText}`,
 
     parsedData = { ...defaultFields, ...parsedData };
 
-    const email = parsedData.PersonalInformation?.email;
-    if (email) {
+    const existingEmail = await Users.findOne({
+        "personalInformation.email": email,
+      });
+    if (existingEmail) {
       // Update user's culture fit data only
-      await Users.findOneAndUpdate(
-        { email: email },
+      await Users.updateOne(
+        { email: existingEmail },
         {
           $set: {
             cultureFit: {
