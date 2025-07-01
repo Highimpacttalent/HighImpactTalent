@@ -954,41 +954,59 @@ export const getallApplicationOfApplicant = async (req, res) => {
 
 export const getApplicationsWithJobs = async (req, res) => {
   try {
-    const { applicationIds } = req.body;
+    const { applicationIds, userId } = req.body;
 
-    if (!applicationIds || !Array.isArray(applicationIds) || applicationIds.length === 0) {
+    let applications;
+
+    if (userId) {
+      // If userId is provided, get all applications for that user
+      if (!mongoose.Types.ObjectId.isValid(userId)) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid userId format.",
+        });
+      }
+
+      applications = await Application.find({
+        applicant: new mongoose.Types.ObjectId(userId),
+      })
+        .populate("job")
+        .populate("company")
+        .sort({ createdAt: -1 });
+
+    } else if (applicationIds && Array.isArray(applicationIds) && applicationIds.length > 0) {
+      // If applicationIds array is provided, get specific applications
+      const validIds = applicationIds
+        .filter(id => mongoose.Types.ObjectId.isValid(id))
+        .map(id => new mongoose.Types.ObjectId(id));
+
+      if (validIds.length === 0) {
+        return res.status(400).json({
+          success: false,
+          message: "No valid ObjectId format found in provided IDs.",
+        });
+      }
+
+      applications = await Application.find({
+        _id: { $in: validIds },
+      })
+        .populate("job")
+        .populate("company");
+
+    } else {
       return res.status(400).json({
         success: false,
-        message: "Please provide a valid array of application IDs.",
+        message: "Please provide either userId or applicationIds array.",
       });
     }
-
-    // Convert all IDs to ObjectId and validate
-    const validIds = applicationIds
-      .filter(id => mongoose.Types.ObjectId.isValid(id))
-      .map(id => new mongoose.Types.ObjectId(id));
-
-    if (validIds.length === 0) {
-      return res.status(400).json({
-        success: false,
-        message: "No valid ObjectId format found in provided IDs.",
-      });
-    }
-
-    // Single query with populate
-    const applications = await Application.find({
-      _id: { $in: validIds },
-    })
-      .populate("job")
-      .populate("company");
 
     if (applications.length === 0) {
       return res.status(404).json({
         success: false,
-        message: "No applications found for the provided IDs.",
+        message: "No applications found.",
         debug: {
-          providedIds: applicationIds,
-          validIds: validIds.map(id => id.toString())
+          userId: userId || null,
+          applicationIds: applicationIds || null
         }
       });
     }
@@ -996,10 +1014,14 @@ export const getApplicationsWithJobs = async (req, res) => {
     res.status(200).json({
       success: true,
       applications,
+      count: applications.length
     });
   } catch (error) {
     console.error('Error in getApplicationsWithJobs:', error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ 
+      success: false,
+      error: error.message 
+    });
   }
 };
 
