@@ -129,6 +129,10 @@ export const updateJob = async (req, res, next) => {
       return res.status(400).json({ success: false, message: "Job ID is required" });
     }
 
+    if (updates.jobLocation === "") {
+      updates.jobLocation = "Hybrid";
+    }
+
     // Filter out undefined fields to avoid overwriting with undefined
     const filteredUpdates = Object.fromEntries(
       Object.entries(updates).filter(([_, value]) => value !== undefined)
