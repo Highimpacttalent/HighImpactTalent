@@ -963,13 +963,11 @@ export const getApplicationsWithJobs = async (req, res) => {
       });
     }
 
-    // Debug logging
-    console.log('Received applicationIds:', applicationIds);
-    
-    // Validate ObjectIds
-    const validIds = applicationIds.filter(id => mongoose.Types.ObjectId.isValid(id));
-    console.log('Valid IDs count:', validIds.length);
-    
+    // Convert all IDs to ObjectId and validate
+    const validIds = applicationIds
+      .filter(id => mongoose.Types.ObjectId.isValid(id))
+      .map(id => new mongoose.Types.ObjectId(id));
+
     if (validIds.length === 0) {
       return res.status(400).json({
         success: false,
@@ -977,28 +975,23 @@ export const getApplicationsWithJobs = async (req, res) => {
       });
     }
 
-    // Check if any applications exist with these IDs (without populate first)
-    const existingApps = await Application.find({ _id: { $in: validIds } }).select('_id');
-    console.log('Found applications count:', existingApps.length);
-    console.log('Found IDs:', existingApps.map(app => app._id.toString()));
-
-    if (existingApps.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: "No applications found for the provided IDs.",
-        debug: {
-          providedIds: applicationIds,
-          validIds: validIds
-        }
-      });
-    }
-
-    // Now get full data with populate
+    // Single query with populate
     const applications = await Application.find({
       _id: { $in: validIds },
     })
       .populate("job")
       .populate("company");
+
+    if (applications.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "No applications found for the provided IDs.",
+        debug: {
+          providedIds: applicationIds,
+          validIds: validIds.map(id => id.toString())
+        }
+      });
+    }
 
     res.status(200).json({
       success: true,
