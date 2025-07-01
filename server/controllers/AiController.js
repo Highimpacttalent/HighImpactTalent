@@ -237,7 +237,7 @@ ${resumeText}`,
     parsedData = { ...defaultFields, ...parsedData };
 
     const existingEmail = await Users.findOne({
-        "personalInformation.email": email,
+        email: "personalInformation.email",
       });
     if (existingEmail) {
       // Update user's culture fit data only
@@ -255,7 +255,7 @@ ${resumeText}`,
       );
 
       const existing = await ResumePool.findOne({
-        "personalInformation.email": email,
+        email: "personalInformation.email",
       });
 
       if (existing) {
