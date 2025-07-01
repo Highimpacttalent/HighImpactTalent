@@ -130,7 +130,7 @@ const AppliedJobMenuCard = ({ job, flag = false, enable = false }) => {
                 ? "Confidential"
                 : `${Number(job.job.salary.maxSalary || job.job.salary).toLocaleString(
                     "en-IN"
-                  )} (${job.job.salaryCategory}) LPA`
+                  )} LPA (${job.job.salaryCategory})`
             }
             variant="outlined"
             size="small"
