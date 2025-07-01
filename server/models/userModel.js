@@ -116,11 +116,13 @@ const userSchema = new mongoose.Schema(
     cultureFit: {
       strength: {
         type: String,
+        default: "", 
       },
       concern: {
         type: String,
-      }
-  },
+        default: "",
+  }
+},
     experienceHistory: [
       {
         companyName: {
