@@ -51,6 +51,7 @@ const JobCard = ({ job, flag = false }) => {
   ) {
     noteligible = true;
   }
+
   useEffect(() => {
     setLike(user?.likedJobs?.includes(job._id));
   }, [user, job._id]);
@@ -90,6 +91,31 @@ const JobCard = ({ job, flag = false }) => {
     ) : (
       <BookmarkBorder color="action" />
     );
+  };
+
+  // Helper function to format experience text
+  const getExperienceText = (experience) => {
+    if (!experience) return "Experience not specified";
+    
+    // If experience is an object with min/max
+    if (typeof experience === 'object' && experience !== null) {
+      const { minExperience, maxExperience } = experience;
+      
+      if (minExperience !== undefined && maxExperience !== undefined) {
+        return `${minExperience}-${maxExperience} years experience`;
+      } else if (minExperience !== undefined) {
+        return `${minExperience}+ years experience`;
+      } else if (maxExperience !== undefined) {
+        return `Up to ${maxExperience} years experience`;
+      }
+    }
+    
+    // If experience is a number or string (fallback for old data)
+    if (typeof experience === 'number' || typeof experience === 'string') {
+      return `${experience}+ years experience`;
+    }
+    
+    return "Experience not specified";
   };
 
   const desktopView = (
@@ -217,9 +243,7 @@ const JobCard = ({ job, flag = false }) => {
               />
               <Chip
                 icon={<WorkOutlineOutlined sx={{ color: "#474E68" }} />}
-                label={`${
-                  job?.experience?.minExperience || job?.experience
-                }+ years experience`}
+                label={getExperienceText(job?.experience)}
                 variant="contained"
                 sx={{
                   color: "#EAEAEA",
