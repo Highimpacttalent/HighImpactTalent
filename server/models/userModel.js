@@ -116,7 +116,7 @@ const userSchema = new mongoose.Schema(
     cultureFit: {
       strength: String,
       concern: String
-  }
+   },
     experienceHistory: [
       {
         companyName: {
