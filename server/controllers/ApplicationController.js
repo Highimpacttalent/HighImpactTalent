@@ -3,9 +3,6 @@ import mongoose from "mongoose";
 import Jobs from "../models/jobsModel.js";
 import Users from "../models/userModel.js";
 import { sendStatusUpdateEmail } from "./sendMailController.js";
-import { uploadFileToS3 } from "../s3Config/s3.js";
-import multer from "multer";
-
 // Create a new application
 export const createApplication = async (req, res) => {
   try {
