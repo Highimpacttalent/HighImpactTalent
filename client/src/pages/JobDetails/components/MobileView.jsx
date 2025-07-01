@@ -126,9 +126,9 @@ const JobCard = ({ job,flag = false,enable = false }) => {
                 label={
                   (job.salaryConfidential || job.salaryCategory === "Confidential")
                     ? "Confidential"
-                    : `${Number(job.salary.maxSalary||job.salary).toLocaleString("en-IN")} (${
+                    : `${Number(job.salary.maxSalary||job.salary).toLocaleString("en-IN")} LPA (${
                         job.salaryCategory
-                      }) LPA`
+                      })`
                 }
                 variant="contained"
                 sx={{

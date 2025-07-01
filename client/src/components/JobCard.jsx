@@ -235,7 +235,7 @@ const JobCard = ({ job, flag = false, enable = false }) => {
                 ? "Confidential"
                 : `${Number(job.salary.maxSalary || job.salary).toLocaleString(
                     "en-IN"
-                  )} (${job.salaryCategory}) LPA`
+                  )} LPA (${job.salaryCategory})`
             }
             variant="contained"
             sx={{ color: "#474E68", fontWeight: "400" }}
@@ -357,7 +357,7 @@ const JobCard = ({ job, flag = false, enable = false }) => {
                   ? "Confidential"
                   : `${Number(
                       job.salary.maxSalary || job.salary
-                    ).toLocaleString("en-IN")} (${job.salaryCategory}) LPA`
+                    ).toLocaleString("en-IN")} LPA (${job.salaryCategory})`
               }
               variant="contained"
               sx={{ color: "#474E68", fontWeight: "400" }}

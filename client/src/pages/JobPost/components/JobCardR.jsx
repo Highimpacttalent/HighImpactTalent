@@ -372,9 +372,9 @@ function JobCardRecriter({ job, fetchJobs }) {
             label={
               job.salaryConfidential
                 ? "Confidential"
-                : `${Number(job.salary.maxSalary||job.salary).toLocaleString("en-IN")} (${
+                : `${Number(job.salary.maxSalary||job.salary).toLocaleString("en-IN")} LPA (${
                         job.salaryCategory
-                      }) LPA`
+                      })`
             }
             variant="outlined"
             sx={{ 
@@ -553,9 +553,9 @@ function JobCardRecriter({ job, fetchJobs }) {
                 label={
                   job.salaryConfidential
                     ? "Confidential"
-                    : `${Number(job.salary.maxSalary||job.salary).toLocaleString("en-IN")} (${
+                    : `${Number(job.salary.maxSalary||job.salary).toLocaleString("en-IN")} LPA (${
                         job.salaryCategory
-                      }) LPA`
+                      })`
                 }
                 variant="contained"
                 sx={{ color: "#474E68", fontWeight: "400" }}
