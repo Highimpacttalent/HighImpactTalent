@@ -956,35 +956,56 @@ export const getApplicationsWithJobs = async (req, res) => {
   try {
     const { applicationIds } = req.body;
 
-    if (
-      !applicationIds ||
-      !Array.isArray(applicationIds) ||
-      applicationIds.length === 0
-    ) {
+    if (!applicationIds || !Array.isArray(applicationIds) || applicationIds.length === 0) {
       return res.status(400).json({
         success: false,
         message: "Please provide a valid array of application IDs.",
       });
     }
 
-    const applications = await Application.find({
-      _id: { $in: applicationIds },
-    })
-      .populate("job") // Populating job details
-      .populate("company");
+    // Debug logging
+    console.log('Received applicationIds:', applicationIds);
+    
+    // Validate ObjectIds
+    const validIds = applicationIds.filter(id => mongoose.Types.ObjectId.isValid(id));
+    console.log('Valid IDs count:', validIds.length);
+    
+    if (validIds.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "No valid ObjectId format found in provided IDs.",
+      });
+    }
 
-    if (!applications || applications.length === 0) {
+    // Check if any applications exist with these IDs (without populate first)
+    const existingApps = await Application.find({ _id: { $in: validIds } }).select('_id');
+    console.log('Found applications count:', existingApps.length);
+    console.log('Found IDs:', existingApps.map(app => app._id.toString()));
+
+    if (existingApps.length === 0) {
       return res.status(404).json({
         success: false,
         message: "No applications found for the provided IDs.",
+        debug: {
+          providedIds: applicationIds,
+          validIds: validIds
+        }
       });
     }
+
+    // Now get full data with populate
+    const applications = await Application.find({
+      _id: { $in: validIds },
+    })
+      .populate("job")
+      .populate("company");
 
     res.status(200).json({
       success: true,
       applications,
     });
   } catch (error) {
+    console.error('Error in getApplicationsWithJobs:', error);
     res.status(500).json({ error: error.message });
   }
 };
