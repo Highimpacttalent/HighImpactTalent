@@ -155,19 +155,26 @@ const AppliedJobMenuCard = ({ job, flag = false, enable = false }) => {
             }}
           />
           <Chip
-            label={`${
-                job?.job?.experience?.minExperience || job?.job?.experience
-              }+ years experience`}
-            variant="outlined"
-            size="small"
-            sx={{ 
-              color: "#666", 
-              fontWeight: "400",
-              backgroundColor: "#f5f5f5",
-              border: "none",
-              borderRadius: 2,
-            }}
-          />
+              label={
+                job?.job?.experience?.minExperience !== undefined && 
+                job?.job?.experience?.maxExperience !== undefined
+                  ? `${job.job.experience.minExperience}-${job.job.experience.maxExperience} years experience`
+                  : job?.job?.experience?.minExperience !== undefined
+                  ? `${job.job.experience.minExperience}+ years experience`
+                  : job?.job?.experience?.maxExperience !== undefined
+                  ? `Up to ${job.job.experience.maxExperience} years experience`
+                  : "Experience not specified"
+              }
+              variant="outlined"
+              size="small"
+              sx={{ 
+                color: "#666", 
+                fontWeight: "400",
+                backgroundColor: "#f5f5f5",
+                border: "none",
+                borderRadius: 2,
+              }}
+            />
         </Box>
 
         {/* Status Section */}
