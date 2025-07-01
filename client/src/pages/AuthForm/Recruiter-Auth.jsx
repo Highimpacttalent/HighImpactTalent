@@ -1,4 +1,4 @@
-import React, { useState,useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import {
   TextField,
   Button,
@@ -16,6 +16,7 @@ import {
   MenuItem,
   InputLabel,
 } from "@mui/material";
+import PhoneInput from "react-phone-number-input";
 import { useNavigate } from "react-router-dom";
 import Heroimg from "../../assets/CreateAccount/HeroImg.svg";
 import dayjs from "dayjs";
@@ -64,23 +65,27 @@ const RecruiterSignup = () => {
     { value: "Other", label: "Other" }, // Always at the bottom
   ];
 
-   useEffect(() => {
-      const fetchCities = async () => {
-        try {
-          const response = await fetch("/cities.csv");
-          const text = await response.text();
-          const rows = text.split("\n");
-          const cityList = rows.slice(1).map((row) => row.trim()).filter(Boolean).sort();
-  
-          setCities([...new Set(cityList)]);
-        } catch (error) {
-          console.error("Error loading cities:", error);
-          setCities([]);
-        }
-      };
-  
-      fetchCities();
-    }, []);
+  useEffect(() => {
+    const fetchCities = async () => {
+      try {
+        const response = await fetch("/cities.csv");
+        const text = await response.text();
+        const rows = text.split("\n");
+        const cityList = rows
+          .slice(1)
+          .map((row) => row.trim())
+          .filter(Boolean)
+          .sort();
+
+        setCities([...new Set(cityList)]);
+      } catch (error) {
+        console.error("Error loading cities:", error);
+        setCities([]);
+      }
+    };
+
+    fetchCities();
+  }, []);
 
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   const phoneRegex = /^[0-9]{10}$/; // Basic validation for 10-digit phone number
@@ -88,26 +93,26 @@ const RecruiterSignup = () => {
   // Enum options for dropdowns
   const numberOfEmployeesOptions = [
     "1-10",
-    "11-50", 
+    "11-50",
     "51-200",
     "201-500",
     "501-1000",
     "1001-5000",
     "5001-10000",
-    "10000+"
+    "10000+",
   ];
 
   const organizationTypeOptions = [
     "Startup",
     "Public",
-    "Private", 
+    "Private",
     "Government",
     "Non-Profit",
     "MNC",
     "SME",
     "Indian MNC",
     "Other",
-    "Consultant"
+    "Consultant",
   ];
 
   const handleProfilePicUpload = async (e) => {
@@ -246,28 +251,21 @@ const RecruiterSignup = () => {
         setEmailError("");
       }
     }
-    if (name === "mobileNumber") {
-      if (!phoneRegex.test(value)) {
-        setMobileError("Please enter a valid 10-digit mobile number.");
-      } else {
-        setMobileError("");
-      }
-    }
   };
 
   const handleCityChange = (selectedOption) => {
-      setSelectedCity(selectedOption);
-      // Update location in formData when a city is selected
-      if (selectedOption) {
-        setForm({ ...form, location: selectedOption.value });
-      } else {
-        setForm({ ...form, location: "" });
-      }
+    setSelectedCity(selectedOption);
+    // Update location in formData when a city is selected
+    if (selectedOption) {
+      setForm({ ...form, location: selectedOption.value });
+    } else {
+      setForm({ ...form, location: "" });
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     // Validation checks
     if (form.password.length < 6) {
       alert("Password must be at least 6 characters long.");
@@ -383,10 +381,9 @@ const RecruiterSignup = () => {
         px: { md: 10, lg: 10, xs: 4, sm: 4 },
       }}
     >
-      
       <Box
         sx={{
-          display: { xs: "none", sm: "none", md: "flex",lg: "flex" },
+          display: { xs: "none", sm: "none", md: "flex", lg: "flex" },
           width: { md: "50%", lg: "50%" },
           flexgrow: 1,
           p: { md: 3, lg: 3, xs: 0, sm: 0 },
@@ -488,23 +485,35 @@ const RecruiterSignup = () => {
             >
               Mobile Number <span style={{ color: "red" }}>*</span>
             </Typography>
-            <TextField
-              fullWidth
-              type="text"
-              name="mobileNumber"
-              value={form.mobileNumber}
-              onChange={handleChange}
-              required
-              error={!!mobileError}
-              helperText={mobileError}
-              inputProps={{ maxLength: 10 }}
+
+            <Box
               sx={{
-                "& .MuiOutlinedInput-root": {
-                  borderRadius: 16,
-                  height: 50,
-                },
+                border: "1px solid #c4c4c4",
+                borderRadius: "24px",
+                height: "50px",
+                px: 2,
+                display: "flex",
+                alignItems: "center",
               }}
-            />
+            >
+              <PhoneInput
+                defaultCountry="IN"
+                value={form.mobileNumber}
+                onChange={(value) =>
+                  handleChange({ target: { name: "mobileNumber", value } })
+                }
+                maxLength={15}
+                required
+                style={{
+                  fontFamily: "Satoshi",
+                  fontSize: "16px",
+                  width: "100%",
+                  border: "none",
+                  outline: "none",
+                  background: "transparent",
+                }}
+              />
+            </Box>
 
             {/* Designation */}
             <Typography
@@ -611,17 +620,21 @@ const RecruiterSignup = () => {
               Company Location
             </Typography>
             <ReactSelect
-          options={filteredCities}
-          value={selectedCity}
-          styles={customStyles}
-          onChange={handleCityChange}
-          onInputChange={(value) => setInputValue(value)}
-          inputValue={inputValue}
-          placeholder="Search or select a city..."
-          isClearable
-          isSearchable
-          noOptionsMessage={() => (inputValue ? "No matching cities found" : "Start typing to search")}
-        />
+              options={filteredCities}
+              value={selectedCity}
+              styles={customStyles}
+              onChange={handleCityChange}
+              onInputChange={(value) => setInputValue(value)}
+              inputValue={inputValue}
+              placeholder="Search or select a city..."
+              isClearable
+              isSearchable
+              noOptionsMessage={() =>
+                inputValue
+                  ? "No matching cities found"
+                  : "Start typing to search"
+              }
+            />
 
             {/* Number of Employees */}
             <Typography
@@ -778,11 +791,13 @@ const RecruiterSignup = () => {
                     >
                       Preview
                     </p>
-                    <img
-                      src={profilePic}
-                      alt="Profile Preview"
-                      className="w-32 h-32 rounded-full object-cover mt-2 mx-auto"
-                    />
+                    <div className="w-32 h-32 border border-gray-300 rounded-lg mt-2 mx-auto flex items-center justify-center overflow-hidden">
+                      <img
+                        src={profilePic}
+                        alt="Logo Preview"
+                        className="max-w-full max-h-full object-contain"
+                      />
+                    </div>
                   </div>
                 )}
               </div>
@@ -842,7 +857,12 @@ const RecruiterSignup = () => {
               margin="normal"
               required
               error={!!passwordError && form.confirmPassword !== ""}
-              helperText={form.confirmPassword !== "" && form.confirmPassword !== form.password ? "Passwords do not match" : ""}
+              helperText={
+                form.confirmPassword !== "" &&
+                form.confirmPassword !== form.password
+                  ? "Passwords do not match"
+                  : ""
+              }
               sx={{
                 "& .MuiOutlinedInput-root": {
                   borderRadius: 16,
@@ -914,7 +934,6 @@ const RecruiterSignup = () => {
           </Box>
         </Box>
       </Box>
-      
     </Box>
   );
 };

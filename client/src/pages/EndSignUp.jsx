@@ -1,29 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
 
 const RecruiterRedirectPage = () => {
   const navigate = useNavigate();
   // Actual user data structure from your backend
-  const userData = {
-    _id: "681dd8db92a42414403477a6",
-    name: "Test",
-    recruiterName: "Test",
-    mobileNumber: "8374026569",
-    email: "test@gmail.com",
-    copmanyType: "company", // Note: keeping original field name as in your data
-    accountType: "recruiter",
-    profileUrl: "https://logonoid.com/images/bain-and-company-logo.png",
-    jobPosts: [
-      "681de47905bca925bd9e0af6",
-      "682357b0c6489b597389ede9",
-      "6823d7a68f07f04a5cea5d4f",
-      "685167c54ceb0c8accfa68f4",
-    ],
-    location: "", // Can be empty string
-    designation: "", // May not exist
-    organizationType: "", // May not exist
-    numberOfEmployees: "", // May not exist
-  };
+  const { user } = useSelector((state) => state.user);
+  const userData = user;
+  console.log("User Data:", userData);  
 
   const [isLoaded, setIsLoaded] = useState(false);
 
@@ -503,11 +487,12 @@ const RecruiterRedirectPage = () => {
         <header className="header">
           <div className="header-inner">
             <div className="user-profile">
+            {userData?.profileUrl &&
               <img
                 src={userData.profileUrl}
                 alt={`${userData.recruiterName} profile`}
                 className="avatar"
-              />
+              />}
               <div className="user-info">
                 <h2>Welcome, {userData.recruiterName}</h2>
                 <div className="user-meta">
@@ -634,39 +619,6 @@ const RecruiterRedirectPage = () => {
                 <div className="traffic-light red"></div>
                 <div className="traffic-light yellow"></div>
                 <div className="traffic-light green"></div>
-              </div>
-
-              <div className="chart-container">
-                <div className="chart-bars">
-                  <div
-                    className="bar"
-                    style={{ "--height": "60%", "--index": 0 }}
-                  ></div>
-                  <div
-                    className="bar"
-                    style={{ "--height": "85%", "--index": 1 }}
-                  ></div>
-                  <div
-                    className="bar"
-                    style={{ "--height": "70%", "--index": 2 }}
-                  ></div>
-                  <div
-                    className="bar"
-                    style={{ "--height": "95%", "--index": 3 }}
-                  ></div>
-                  <div
-                    className="bar"
-                    style={{ "--height": "75%", "--index": 4 }}
-                  ></div>
-                  <div
-                    className="bar"
-                    style={{ "--height": "90%", "--index": 5 }}
-                  ></div>
-                  <div
-                    className="bar"
-                    style={{ "--height": "80%", "--index": 6 }}
-                  ></div>
-                </div>
               </div>
 
               <div className="stats-overview">

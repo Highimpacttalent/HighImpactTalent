@@ -274,6 +274,8 @@ const JobUploadPage = () => {
     isPremiumJob: false, // boolean
   });
 
+  const [experienceGapMessage, setExperienceGapMessage] = useState("");
+
   // Fetch Cities Effect (Kept)
   useEffect(() => {
     const fetchCities = async () => {
@@ -294,6 +296,31 @@ const JobUploadPage = () => {
     };
     fetchCities();
   }, []);
+
+  // Effect to check for experience gap
+  useEffect(() => {
+    const minExp = formData.experience.minExperience;
+    const maxExp = formData.experience.maxExperience;
+
+    if (
+      minExp !== "" &&
+      maxExp !== "" &&
+      typeof minExp === "number" &&
+      typeof maxExp === "number"
+    ) {
+      const gap = maxExp - minExp;
+      if (gap > 10) {
+        setExperienceGapMessage(
+          `Wow, that's quite the journey! Covering a span of ${gap} years in experience. Let's find someone who truly fits the bill for this unique requirement.`
+        );
+      } else {
+        setExperienceGapMessage("");
+      }
+    } else {
+      setExperienceGapMessage("");
+    }
+  }, [formData.experience.minExperience, formData.experience.maxExperience]);
+
 
   // Generic handler for simple text/number/single-select/radio fields
   // Modified to also handle react-select single value changes by expecting an 'event-like' object
@@ -677,6 +704,19 @@ const JobUploadPage = () => {
       "functionalArea",
       "salaryCategory",
     ];
+
+    if (formData.experience.minExperience === "" || formData.experience.maxExperience === "") {
+        alert("Please provide both minimum and maximum years of experience.");
+        return;
+    }
+
+    // UPDATED: Simplified Salary Validation
+    // Require min/max salary UNLESS the category is "Confidential"
+    if (formData.salaryCategory !== "Confidential" && (formData.salary.minSalary === "" || formData.salary.maxSalary === "")) {
+         alert("Please provide both minimum and maximum annual salary, or select 'Confidential'.");
+         return;
+     }
+
     for (const field of requiredFields) {
       const value = formData[field];
       // Check for empty string for text/select fields
@@ -743,6 +783,8 @@ const JobUploadPage = () => {
     if (!validateRange("salary", "salary")) return;
     if (!validateRange("experience", "experience")) return;
     if (!validateRange("graduationYear", "batch year")) return;
+
+    
 
     // Validation for screening questions
     const validScreeningQuestions = formData.screeningQuestions.filter((q) => {
@@ -952,10 +994,20 @@ const JobUploadPage = () => {
             <Typography sx={{ ...formLabelStyle }}>
               Years of experience <span style={{ color: "red" }}>*</span>
             </Typography>
+            {experienceGapMessage && (
+              <Typography
+                variant="body2"
+                color="info.main"
+                sx={{ mt: 1, mb: 1, color: "#3C7EFC", fontWeight: 500 }}
+              >
+                {experienceGapMessage}
+              </Typography>
+            )}
             <Grid container spacing={2}>
               <Grid item xs={12} sm={6}>
                 <Select
                   options={experienceRangeOptions}
+                  required
                   value={
                     formData.experience.minExperience !== ""
                       ? experienceRangeOptions.find(
@@ -987,6 +1039,7 @@ const JobUploadPage = () => {
                         )
                       : experienceRangeOptions
                   }
+                  required
                   value={
                     formData.experience.maxExperience !== ""
                       ? experienceRangeOptions.find(
@@ -1172,6 +1225,7 @@ const JobUploadPage = () => {
                 <TextField
                   type="number"
                   name="minSalary"
+                  required
                   placeholder="Min salary (in lakhs)"
                   value={formData.salary.minSalary}
                   onChange={(e) =>
@@ -1194,6 +1248,7 @@ const JobUploadPage = () => {
                 <TextField
                   type="number"
                   name="maxSalary"
+                  required
                   placeholder="Max salary (in lakhs)"
                   value={formData.salary.maxSalary}
                   onChange={(e) =>
@@ -1390,7 +1445,7 @@ const JobUploadPage = () => {
           {/* Graduation Year Range (Min - Max Batch) - Using Selects matching image & backend structure */}
           <div className="mb-4">
             <Typography sx={{ ...formLabelStyle }}>
-              Graduation Year <span style={{ color: "red" }}>*</span>
+              Graduation Year 
             </Typography>
             <Grid container spacing={2}>
               <Grid item xs={12} sm={6}>
