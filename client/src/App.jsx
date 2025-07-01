@@ -43,7 +43,7 @@ import JobApplications from "./pages/Applicants/ViewApplicants.jsx";
 import ResumeUpload from "./pages/UserDetailsUpload/userInfo";
 import RecruiterSchedule from "./pages/RecruiterSchedule";
 import RecruiterSignup from "./pages/AuthForm/Recruiter-Auth";
-import UserSignUp from "./pages/AuthForm/User-Auth";
+import UserSignUp from "./pages/AuthForm/User-Auth2";
 import CompanyLoginForm from "./pages/AuthForm/r-login";
 import RecruiterRedirectPage from "./pages/EndSignUp";
 import PayUPaymentPage from "./pages/Payments/PaymentPage";
@@ -67,19 +67,19 @@ function Layout() {
 }
 function App() {
   const { user } = useSelector((state) => state.user);
-  const [developer, setDeveloper] = useState(false);
+  // const [developer, setDeveloper] = useState(false);
   const [signupCount, setSignupCount] = useState(0);
   const [isBetaFull, setIsBetaFull] = useState(false);
 
   // Check localStorage for developer flag on mount
-  useEffect(() => {
-    const devValue = localStorage.getItem("developer");
-    if (devValue === "developer@highimpact") {
-      setDeveloper(true);
-    } else {
-      setDeveloper(false);
-    }
-  }, []);
+  // useEffect(() => {
+  //   const devValue = localStorage.getItem("developer");
+  //   if (devValue === "developer@highimpact") {
+  //     setDeveloper(true);
+  //   } else {
+  //     setDeveloper(false);
+  //   }
+  // }, []);
 
   // Handler to set developer flag
   const handledeveloper = () => {
@@ -90,11 +90,13 @@ function App() {
   useEffect(() => {
     const fetchSignupCount = async () => {
       try {
-        const res = await fetch("https://highimpacttalent.onrender.com/api-v1/waitlist/count");
+        const res = await fetch(
+          "https://highimpacttalent.onrender.com/api-v1/waitlist/count"
+        );
         const data = await res.json();
         if (data.success) {
           setSignupCount(data.count);
-          setIsBetaFull(data.count >= 100); 
+          setIsBetaFull(data.count >= 100);
         }
       } catch (err) {
         console.error("Error fetching signup count:", err);
@@ -104,10 +106,9 @@ function App() {
     fetchSignupCount();
   }, []);
 
-
-  if (!developer) {
-    return <HighImpactTalentLanding handledeveloper={handledeveloper} />;
-  }
+  // if (!developer) {
+  //   return <HighImpactTalentLanding handledeveloper={handledeveloper} />;
+  // }
 
   return (
     <main className="bg-[#f3f4f6] font-[Poppins] tracking-tighter ">
@@ -166,10 +167,11 @@ function App() {
         </Route>
         <Route path="/r-authform" element={<RecruiterSignup />}></Route>
         <Route path="/u-authform" element={<UserSignUp />}></Route>
-        <Route
+        {/* <Route
           path="/u-login"
           element={isBetaFull ? <WaitlistPage /> : <UserLoginForm />}
-        />
+        /> */}
+        <Route path="/u-login" element={<UserLoginForm />} />
 
         <Route path="/r-login" element={<CompanyLoginForm />}></Route>
         <Route path="/linkedin-callback" element={<LinkedInCallback />} />

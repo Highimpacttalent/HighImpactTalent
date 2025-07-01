@@ -275,10 +275,6 @@ const RecruiterSignup = () => {
       alert("Passwords do not match");
       return;
     }
-    if (!phoneRegex.test(form.mobileNumber)) {
-      alert("Please enter a valid 10-digit mobile number.");
-      return;
-    }
     if (!form.recruiterName) {
       alert("Recruiter name is required.");
       return;
