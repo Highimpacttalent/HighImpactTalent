@@ -103,6 +103,32 @@ export const parseResume = async (req, res) => {
   - duration (Employment period, e.g., "Jan 2020 - Dec 2023")
   - responsibilities (An array of key responsibilities and contributions in this role)
 
+- CultureFit: {
+    strength: "One specific verifiable strength (e.g., '5 years at McKinsey')",
+    concern: "One specific verifiable concern (e.g., '3 job changes in 4 years')"
+  }
+}
+
+2. Culture Fit Assessment Rules:
+- STRENGTHS: Look for:
+  • Big4/MBB/Accenture experience
+  • Long tenure (>3 years) at reputable firms
+  • Progressive promotions
+  • Client-facing keywords ("client", "stakeholder")
+  • International experience
+  • Leadership titles (VP, Director, Partner)
+
+- CONCERNS: Look for:
+  • Frequent job changes (<2 years/role)
+  • No consulting experience
+  • Only internal project roles
+  • No leadership experience
+  • Only domestic experience
+
+3. Examples:
+Good Strength: "Proven consulting culture fit with 6 years at Deloitte"
+Good Concern: "May need consulting onboarding (no Big4 experience)"
+
 - **OtherDetails:**
   - companiesWorkedAt (An array of company names where the candidate has worked)
   - jobRoles (An array of job titles the candidate has held)
@@ -165,6 +191,17 @@ ${resumeText}`,
       new RegExp(`\\b${skill}\\b`, "i").test(resumeText)
     );
 
+    if (!parsedData.CultureFit) {
+      parsedData.CultureFit = {
+        strength: parsedData.ProfessionalDetails?.hasConsultingBackground 
+          ? "Relevant consulting experience" 
+          : "Strong technical background",
+        concern: parsedData.ProfessionalDetails?.hasConsultingBackground
+          ? "No visible Big4/MBB experience"
+          : "No consulting experience"
+      };
+    }
+
     // Ensure all required fields exist, with defaults
     const defaultFields = {
       skills: detectedSkills.length > 0 ? detectedSkills : ["Not Mentioned"],
@@ -193,6 +230,7 @@ ${resumeText}`,
 
       EducationDetails: parsedData.EducationDetails || [],
       WorkExperience: parsedData.WorkExperience || [],
+      CultureFit: parsedData.CultureFit,
 
       OtherDetails: {
         companiesWorkedAt: parsedData.OtherDetails?.companiesWorkedAt || [],

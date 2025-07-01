@@ -51,6 +51,10 @@ const resumepoolschema = new mongoose.Schema(
       type: [String],
       default: [],
     },
+    cultureFit: {
+      strength: String,
+      concern: String
+    },
     topCompanies: { type: Boolean, default: false },
     topInstitutes: { type: Boolean, default: false },
     companiesWorkedAt: {

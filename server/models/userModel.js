@@ -113,6 +113,10 @@ const userSchema = new mongoose.Schema(
       type: [String],
       default: ["Remote"]
     },
+    cultureFit: {
+      strength: String,
+      concern: String
+  }
     experienceHistory: [
       {
         companyName: {
