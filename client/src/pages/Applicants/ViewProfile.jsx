@@ -17,6 +17,8 @@ import MailIcon from "@mui/icons-material/Mail";
 import PhoneIcon from "@mui/icons-material/Phone";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
+import { useNavigate } from "react-router-dom";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import WorkOutlineIcon from "@mui/icons-material/WorkOutline";
@@ -33,21 +35,29 @@ import { useLocation } from "react-router-dom";
 
 const ViewProfile = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const userData = location.state?.applicant || {};
   const ScreeningQues = location.state?.screeningAnswers || [];
-  console.log(userData)
+  console.log(userData);
   const applicationId = location.state?.applicationId || "";
   const [expanded, setExpanded] = useState({});
   const [expandedExperience, setExpandedExperience] = useState({});
-  
-  const validStatuses = ["Application Viewed", "Shortlisted", "Interviewing", "Hired"];
-  const initialStatus = validStatuses.includes(location.state?.status) ? location.state?.status : "Application Viewed";
-  
+
+  const validStatuses = [
+    "Application Viewed",
+    "Shortlisted",
+    "Interviewing",
+    "Hired",
+  ];
+  const initialStatus = validStatuses.includes(location.state?.status)
+    ? location.state?.status
+    : "Application Viewed";
+
   const [currentStatus, setStatus] = useState(initialStatus);
   const statusFlow = {
     "Application Viewed": "Shortlist",
-    "Shortlisted": "Interview",
-    "Interviewing": "Hire",
+    Shortlisted: "Interview",
+    Interviewing: "Hire",
   };
 
   const nextAction = statusFlow[currentStatus];
@@ -72,7 +82,7 @@ const ViewProfile = () => {
       Interview: "Interviewing",
       Hire: "Hired",
     };
-  
+
     const statusToSend = statusMap[nextAction];
     try {
       const res = await axios.post(
@@ -95,11 +105,16 @@ const ViewProfile = () => {
 
   const getStatusConfig = (status) => {
     switch (status) {
-      case "Application Viewed": return { color: "#F59E0B", bg: "#FEF3C7", text: "#92400E" };
-      case "Shortlisted": return { color: "#3B82F6", bg: "#DBEAFE", text: "#1E40AF" };
-      case "Interviewing": return { color: "#8B5CF6", bg: "#EDE9FE", text: "#5B21B6" };
-      case "Hired": return { color: "#10B981", bg: "#D1FAE5", text: "#065F46" };
-      default: return { color: "#6B7280", bg: "#F3F4F6", text: "#374151" };
+      case "Application Viewed":
+        return { color: "#F59E0B", bg: "#FEF3C7", text: "#92400E" };
+      case "Shortlisted":
+        return { color: "#3B82F6", bg: "#DBEAFE", text: "#1E40AF" };
+      case "Interviewing":
+        return { color: "#8B5CF6", bg: "#EDE9FE", text: "#5B21B6" };
+      case "Hired":
+        return { color: "#10B981", bg: "#D1FAE5", text: "#065F46" };
+      default:
+        return { color: "#6B7280", bg: "#F3F4F6", text: "#374151" };
     }
   };
 
@@ -108,9 +123,41 @@ const ViewProfile = () => {
   return (
     <Box sx={{ bgcolor: "white", minHeight: "100vh", py: 4 }}>
       <Container maxWidth="xl">
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 2 }}>
+          <Button
+            onClick={() => navigate(-1)}
+            startIcon={<ArrowBackIcon />}
+            sx={{
+              textTransform: "none",
+              fontFamily: "Satoshi",
+              fontWeight: 600,
+              fontSize: "13px",
+              color: "#374151",
+              px: 2,
+              py: 1,
+              border: "1px solid #E5E7EB",
+              borderRadius: "8px",
+              backgroundColor: "#F9FAFB",
+              "&:hover": {
+                backgroundColor: "#F3F4F6",
+                borderColor: "#D1D5DB",
+              },
+            }}
+          >
+            Back
+          </Button>
+        </Box>
+
         {/* Header with Status */}
         <Box sx={{ mb: 4 }}>
-          <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              mb: 2,
+            }}
+          >
             <Typography
               sx={{
                 fontSize: "28px",
@@ -197,21 +244,63 @@ const ViewProfile = () => {
               <Box sx={{ mb: 4 }}>
                 <Grid container spacing={2}>
                   <Grid item xs={6}>
-                    <Box sx={{ textAlign: "center", py: 2, bgcolor: "#F8FAFC", borderRadius: "8px" }}>
-                      <Typography sx={{ fontSize: "20px", fontWeight: 700, fontFamily: "Satoshi", color: "#111827" }}>
+                    <Box
+                      sx={{
+                        textAlign: "center",
+                        py: 2,
+                        bgcolor: "#F8FAFC",
+                        borderRadius: "8px",
+                      }}
+                    >
+                      <Typography
+                        sx={{
+                          fontSize: "20px",
+                          fontWeight: 700,
+                          fontFamily: "Satoshi",
+                          color: "#111827",
+                        }}
+                      >
                         {userData?.experience || 0}
                       </Typography>
-                      <Typography sx={{ fontSize: "12px", fontWeight: 500, fontFamily: "Poppins", color: "#6B7280" }}>
+                      <Typography
+                        sx={{
+                          fontSize: "12px",
+                          fontWeight: 500,
+                          fontFamily: "Poppins",
+                          color: "#6B7280",
+                        }}
+                      >
                         Years Exp.
                       </Typography>
                     </Box>
                   </Grid>
                   <Grid item xs={6}>
-                    <Box sx={{ textAlign: "center", py: 2, bgcolor: "#F8FAFC", borderRadius: "8px" }}>
-                      <Typography sx={{ fontSize: "20px", fontWeight: 700, fontFamily: "Satoshi", color: "#111827" }}>
+                    <Box
+                      sx={{
+                        textAlign: "center",
+                        py: 2,
+                        bgcolor: "#F8FAFC",
+                        borderRadius: "8px",
+                      }}
+                    >
+                      <Typography
+                        sx={{
+                          fontSize: "20px",
+                          fontWeight: 700,
+                          fontFamily: "Satoshi",
+                          color: "#111827",
+                        }}
+                      >
                         {userData?.experienceHistory?.length || 0}
                       </Typography>
-                      <Typography sx={{ fontSize: "12px", fontWeight: 500, fontFamily: "Poppins", color: "#6B7280" }}>
+                      <Typography
+                        sx={{
+                          fontSize: "12px",
+                          fontWeight: 500,
+                          fontFamily: "Poppins",
+                          color: "#6B7280",
+                        }}
+                      >
                         Companies
                       </Typography>
                     </Box>
@@ -234,10 +323,19 @@ const ViewProfile = () => {
                 >
                   Contact Information
                 </Typography>
-                
+
                 <Stack spacing={2}>
                   {/* Email */}
-                  <Box sx={{ display: "flex", alignItems: "center", gap: 2, p: 2, bgcolor: "#F9FAFB", borderRadius: "8px" }}>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 2,
+                      p: 2,
+                      bgcolor: "#F9FAFB",
+                      borderRadius: "8px",
+                    }}
+                  >
                     <MailIcon sx={{ fontSize: 18, color: "#6B7280" }} />
                     <Box sx={{ flex: 1, minWidth: 0 }}>
                       <Typography
@@ -249,14 +347,21 @@ const ViewProfile = () => {
                           wordBreak: "break-all",
                         }}
                       >
-                        {currentStatus === "Application Viewed" ? "•••••••••••••••••" : userData?.email}
+                        {currentStatus === "Application Viewed"
+                          ? "•••••••••••••••••"
+                          : userData?.email}
                       </Typography>
                     </Box>
                     {currentStatus !== "Application Viewed" && (
                       <IconButton
                         size="small"
-                        onClick={() => navigator.clipboard.writeText(userData?.email)}
-                        sx={{ color: "#6B7280", "&:hover": { color: "#374151" } }}
+                        onClick={() =>
+                          navigator.clipboard.writeText(userData?.email)
+                        }
+                        sx={{
+                          color: "#6B7280",
+                          "&:hover": { color: "#374151" },
+                        }}
                       >
                         <ContentCopyIcon sx={{ fontSize: 16 }} />
                       </IconButton>
@@ -264,7 +369,16 @@ const ViewProfile = () => {
                   </Box>
 
                   {/* Phone */}
-                  <Box sx={{ display: "flex", alignItems: "center", gap: 2, p: 2, bgcolor: "#F9FAFB", borderRadius: "8px" }}>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 2,
+                      p: 2,
+                      bgcolor: "#F9FAFB",
+                      borderRadius: "8px",
+                    }}
+                  >
                     <PhoneIcon sx={{ fontSize: 18, color: "#6B7280" }} />
                     <Box sx={{ flex: 1 }}>
                       <Typography
@@ -275,14 +389,21 @@ const ViewProfile = () => {
                           color: "#111827",
                         }}
                       >
-                        {currentStatus === "Application Viewed" ? "•••••••••••••••••" : userData?.contactNumber}
+                        {currentStatus === "Application Viewed"
+                          ? "•••••••••••••••••"
+                          : userData?.contactNumber}
                       </Typography>
                     </Box>
                     {currentStatus !== "Application Viewed" && (
                       <IconButton
                         size="small"
-                        onClick={() => navigator.clipboard.writeText(userData?.contactNumber)}
-                        sx={{ color: "#6B7280", "&:hover": { color: "#374151" } }}
+                        onClick={() =>
+                          navigator.clipboard.writeText(userData?.contactNumber)
+                        }
+                        sx={{
+                          color: "#6B7280",
+                          "&:hover": { color: "#374151" },
+                        }}
                       >
                         <ContentCopyIcon sx={{ fontSize: 16 }} />
                       </IconButton>
@@ -290,7 +411,16 @@ const ViewProfile = () => {
                   </Box>
 
                   {/* Location */}
-                  <Box sx={{ display: "flex", alignItems: "center", gap: 2, p: 2, bgcolor: "#F9FAFB", borderRadius: "8px" }}>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 2,
+                      p: 2,
+                      bgcolor: "#F9FAFB",
+                      borderRadius: "8px",
+                    }}
+                  >
                     <LocationOnIcon sx={{ fontSize: 18, color: "#6B7280" }} />
                     <Typography
                       sx={{
@@ -306,7 +436,16 @@ const ViewProfile = () => {
 
                   {/* LinkedIn */}
                   {userData?.linkedinLink && (
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 2, p: 2, bgcolor: "#F9FAFB", borderRadius: "8px" }}>
+                    <Box
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 2,
+                        p: 2,
+                        bgcolor: "#F9FAFB",
+                        borderRadius: "8px",
+                      }}
+                    >
                       <LinkedInIcon sx={{ fontSize: 18, color: "#0A66C2" }} />
                       <Box sx={{ flex: 1 }}>
                         <Typography
@@ -391,7 +530,7 @@ const ViewProfile = () => {
                   >
                     Hired
                   </Button>
-                ) : (
+                ) : location.state?.status !== "Not Progressing" ? (
                   <Button
                     fullWidth
                     variant="contained"
@@ -409,7 +548,7 @@ const ViewProfile = () => {
                   >
                     {nextAction}
                   </Button>
-                )}
+                ) : null}
               </Stack>
             </Paper>
           </Grid>
@@ -420,7 +559,9 @@ const ViewProfile = () => {
               {/* About Section */}
               <ProfileSection
                 title="About"
-                icon={<PersonOutlineIcon sx={{ fontSize: 20, color: "#6B7280" }} />}
+                icon={
+                  <PersonOutlineIcon sx={{ fontSize: 20, color: "#6B7280" }} />
+                }
               >
                 <Typography
                   sx={{
@@ -430,30 +571,52 @@ const ViewProfile = () => {
                     lineHeight: 1.6,
                   }}
                 >
-                  {userData?.about || "No description provided by the candidate."}
+                  {userData?.about ||
+                    "No description provided by the candidate."}
                 </Typography>
               </ProfileSection>
 
               {/* Professional Summary */}
               <ProfileSection
                 title="Professional Summary"
-                icon={<BusinessCenterIcon sx={{ fontSize: 20, color: "#6B7280" }} />}
+                icon={
+                  <BusinessCenterIcon sx={{ fontSize: 20, color: "#6B7280" }} />
+                }
               >
                 <Grid container spacing={3}>
                   <Grid item xs={12} sm={6}>
-                    <InfoField label="Current Company" value={`${userData?.currentCompany}` || "Not Provided"} />
+                    <InfoField
+                      label="Current Company"
+                      value={`${userData?.currentCompany}` || "Not Provided"}
+                    />
                   </Grid>
                   <Grid item xs={12} sm={6}>
-                    <InfoField label="Current Salary" value={`${userData?.currentSalary} LPA` || "Not disclosed"} />
+                    <InfoField
+                      label="Current Salary"
+                      value={
+                        `${userData?.currentSalary} LPA` || "Not disclosed"
+                      }
+                    />
                   </Grid>
                   <Grid item xs={12} sm={6}>
-                    <InfoField label="Current Designation" value={`${userData?.currentDesignation}` || "Not Provided"} />
+                    <InfoField
+                      label="Current Designation"
+                      value={
+                        `${userData?.currentDesignation}` || "Not Provided"
+                      }
+                    />
                   </Grid>
                   <Grid item xs={12} sm={6}>
-                    <InfoField label="Current Location" value={`${userData?.currentLocation}` || "Not Provided"} />
+                    <InfoField
+                      label="Current Location"
+                      value={`${userData?.currentLocation}` || "Not Provided"}
+                    />
                   </Grid>
                   <Grid item xs={12} sm={6}>
-                    <InfoField label="Open to Relocate" value={userData?.openToRelocate || "Not specified"} />
+                    <InfoField
+                      label="Open to Relocate"
+                      value={userData?.openToRelocate || "Not specified"}
+                    />
                   </Grid>
                 </Grid>
               </ProfileSection>
@@ -461,29 +624,58 @@ const ViewProfile = () => {
               {/* Preferences Summary */}
               <ProfileSection
                 title="Preferences"
-                icon={<BusinessCenterIcon sx={{ fontSize: 20, color: "#6B7280" }} />}
+                icon={
+                  <BusinessCenterIcon sx={{ fontSize: 20, color: "#6B7280" }} />
+                }
               >
                 <Grid container spacing={3}>
                   <Grid item xs={12} sm={6}>
-                    <InfoField label="Expected Salary" value={`${userData?.expectedMinSalary} LPA` || "Not specified"} />
+                    <InfoField
+                      label="Expected Salary"
+                      value={
+                        `${userData?.expectedMinSalary} LPA` || "Not specified"
+                      }
+                    />
                   </Grid>
                   <Grid item xs={12} sm={6}>
-                    <InfoField label="Work Type Preference" value={userData?.preferredWorkTypes?.join(", ") || "Not specified"} />
+                    <InfoField
+                      label="Work Type Preference"
+                      value={
+                        userData?.preferredWorkTypes?.join(", ") ||
+                        "Not specified"
+                      }
+                    />
                   </Grid>
                   <Grid item xs={12} sm={6}>
-                    <InfoField label="Work Mode Preference" value={userData?.preferredWorkModes?.join(", ") || "Not specified"} />
+                    <InfoField
+                      label="Work Mode Preference"
+                      value={
+                        userData?.preferredWorkModes?.join(", ") ||
+                        "Not specified"
+                      }
+                    />
                   </Grid>
                   <Grid item xs={12} sm={6}>
-                    <InfoField label="Preferred Locations" value={userData?.preferredLocations?.join(", ") || "Any location"} />
+                    <InfoField
+                      label="Preferred Locations"
+                      value={
+                        userData?.preferredLocations?.join(", ") ||
+                        "Any location"
+                      }
+                    />
                   </Grid>
                 </Grid>
               </ProfileSection>
 
-               {/* Education */}
+              {/* Education */}
               {userData?.highestQualification?.length > 0 && (
                 <ProfileSection
                   title="Education"
-                  icon={<SchoolOutlinedIcon sx={{ fontSize: 20, color: "#6B7280" }} />}
+                  icon={
+                    <SchoolOutlinedIcon
+                      sx={{ fontSize: 20, color: "#6B7280" }}
+                    />
+                  }
                 >
                   <Stack spacing={1}>
                     {userData.highestQualification.map((qual, index) => (
@@ -526,7 +718,13 @@ const ViewProfile = () => {
                     ))}
                   </Box>
                 ) : (
-                  <Typography sx={{ fontSize: "14px", color: "#9CA3AF", fontFamily: "Poppins" }}>
+                  <Typography
+                    sx={{
+                      fontSize: "14px",
+                      color: "#9CA3AF",
+                      fontFamily: "Poppins",
+                    }}
+                  >
                     No skills specified
                   </Typography>
                 )}
@@ -536,7 +734,9 @@ const ViewProfile = () => {
               {userData?.experienceHistory?.length > 0 && (
                 <ProfileSection
                   title="Experience History"
-                  icon={<WorkOutlineIcon sx={{ fontSize: 20, color: "#6B7280" }} />}
+                  icon={
+                    <WorkOutlineIcon sx={{ fontSize: 20, color: "#6B7280" }} />
+                  }
                 >
                   <Stack spacing={2}>
                     {userData.experienceHistory.map((exp, index) => (
@@ -557,7 +757,9 @@ const ViewProfile = () => {
                             alignItems: "flex-start",
                             cursor: exp.description ? "pointer" : "default",
                           }}
-                          onClick={() => exp.description && handleExperienceToggle(index)}
+                          onClick={() =>
+                            exp.description && handleExperienceToggle(index)
+                          }
                         >
                           <Box sx={{ flex: 1 }}>
                             <Typography
@@ -589,18 +791,35 @@ const ViewProfile = () => {
                                 color: "#6B7280",
                               }}
                             >
-                              {new Date(exp.from).toLocaleDateString("en-US", { year: "numeric", month: "short" })} - 
-{new Date(exp.to).toLocaleDateString("en-US", { year: "numeric", month: "short" })}
+                              {new Date(exp.from).toLocaleDateString("en-US", {
+                                year: "numeric",
+                                month: "short",
+                              })}{" "}
+                              -
+                              {new Date(exp.to).toLocaleDateString("en-US", {
+                                year: "numeric",
+                                month: "short",
+                              })}
                             </Typography>
                           </Box>
                           {exp.description && (
                             <IconButton size="small" sx={{ color: "#6B7280" }}>
-                              {expandedExperience[index] ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                              {expandedExperience[index] ? (
+                                <ExpandLessIcon />
+                              ) : (
+                                <ExpandMoreIcon />
+                              )}
                             </IconButton>
                           )}
                         </Box>
                         {expandedExperience[index] && exp.description && (
-                          <Box sx={{ mt: 2, pt: 2, borderTop: "1px solid #F3F4F6" }}>
+                          <Box
+                            sx={{
+                              mt: 2,
+                              pt: 2,
+                              borderTop: "1px solid #F3F4F6",
+                            }}
+                          >
                             <Typography
                               sx={{
                                 fontSize: "14px",
@@ -623,7 +842,11 @@ const ViewProfile = () => {
               {ScreeningQues?.length > 0 && (
                 <ProfileSection
                   title="Screening Questions"
-                  icon={<AssignmentTurnedInIcon sx={{ fontSize: 20, color: "#6B7280" }} />}
+                  icon={
+                    <AssignmentTurnedInIcon
+                      sx={{ fontSize: 20, color: "#6B7280" }}
+                    />
+                  }
                 >
                   <Stack spacing={2}>
                     {ScreeningQues.map((item, index) => (
@@ -660,7 +883,11 @@ const ViewProfile = () => {
                             Q{index + 1}: {item.question}
                           </Typography>
                           <IconButton size="small" sx={{ color: "#6B7280" }}>
-                            {expanded[index] ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                            {expanded[index] ? (
+                              <ExpandLessIcon />
+                            ) : (
+                              <ExpandMoreIcon />
+                            )}
                           </IconButton>
                         </Box>
                         {expanded[index] && (
@@ -683,8 +910,6 @@ const ViewProfile = () => {
                   </Stack>
                 </ProfileSection>
               )}
-
-             
             </Stack>
           </Grid>
         </Grid>

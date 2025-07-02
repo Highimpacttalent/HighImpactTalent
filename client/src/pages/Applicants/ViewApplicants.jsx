@@ -244,6 +244,32 @@ const JobApplications = () => {
   const [stageCounts, setStageCounts] = useState({});
   const [cities, setCities] = useState();
   const currentUser = useSelector((state) => state.user.user);
+  const [sortOption, setSortOption] = useState("name-asc"); // default
+
+  const getSortedApps = (apps) => {
+    const sorted = [...apps];
+    switch (sortOption) {
+      case "match-desc":
+        return sorted.sort((a, b) => b.matchScore - a.matchScore);
+      case "match-asc":
+        return sorted.sort((a, b) => a.matchScore - b.matchScore);
+      case "name-asc":
+        return sorted.sort((a, b) =>
+          a.applicant.firstName.localeCompare(b.applicant.firstName)
+        );
+      case "name-desc":
+        return sorted.sort((a, b) =>
+          b.applicant.firstName.localeCompare(a.applicant.firstName)
+        );
+      case "newest":
+        return sorted.sort(
+          (a, b) =>
+            new Date(b.createdAt || b._id) - new Date(a.createdAt || a._id)
+        );
+      default:
+        return sorted;
+    }
+  };
 
   // Bulk selection states
   const [selectedApplications, setSelectedApplications] = useState(new Set());
@@ -265,44 +291,44 @@ const JobApplications = () => {
     keywords: [],
     locations: [],
     designations: [],
-    totalYearsInConsulting: '',
-    screeningFilters: {}
+    totalYearsInConsulting: "",
+    screeningFilters: {},
   });
-  const [keywordInput, setKeywordInput] = useState('');
-  const [locationInput, setLocationInput] = useState('');
-  const [designationInput, setDesignationInput] = useState('');
+  const [keywordInput, setKeywordInput] = useState("");
+  const [locationInput, setLocationInput] = useState("");
+  const [designationInput, setDesignationInput] = useState("");
   const [screeningQuestions, setScreeningQuestions] = useState([]);
 
   // Fetch applications with server-side filtering
   const fetchApplications = async (filterParams = {}, status = null) => {
-  try {
-    setFilterLoading(true);
+    try {
+      setFilterLoading(true);
 
-    const queryParams = new URLSearchParams();
+      const queryParams = new URLSearchParams();
 
-    // Add status if provided
-    if (status) {
-      queryParams.append("status", status);
-    }
-
-    // Add filter parameters
-    Object.entries(filterParams).forEach(([key, value]) => {
-      if (value !== undefined && value !== null && value !== '') {
-        // Special handling for screeningFilters
-        if (key === 'screeningFilters' && typeof value === 'object') {
-          queryParams.append(key, JSON.stringify(value));
-        } else {
-          queryParams.append(key, value.toString().trim());
-        }
+      // Add status if provided
+      if (status) {
+        queryParams.append("status", status);
       }
-    });
 
-    console.log("Fetching applications with params:", queryParams.toString());
+      // Add filter parameters
+      Object.entries(filterParams).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== "") {
+          // Special handling for screeningFilters
+          if (key === "screeningFilters" && typeof value === "object") {
+            queryParams.append(key, JSON.stringify(value));
+          } else {
+            queryParams.append(key, value.toString().trim());
+          }
+        }
+      });
 
-    const response = await apiRequest({
-      url: `application/get-applications/${jobId}?${queryParams.toString()}`,
-      method: "GET",
-    });
+      console.log("Fetching applications with params:", queryParams.toString());
+
+      const response = await apiRequest({
+        url: `application/get-applications/${jobId}?${queryParams.toString()}`,
+        method: "GET",
+      });
 
       if (!response.success) {
         throw new Error(response.message || "Failed to fetch applications");
@@ -331,24 +357,24 @@ const JobApplications = () => {
 
   //Fetch stage counts
   const fetchStageCounts = async () => {
-  try {
-    const response = await apiRequest({
-      url: `application/get-stage-counts/${jobId}`,
-      method: "GET",
-    });
+    try {
+      const response = await apiRequest({
+        url: `application/get-stage-counts/${jobId}`,
+        method: "GET",
+      });
 
-    if (response.success) {
-      // Ensure all steps have counts, defaulting to 0 if not present
-      const countsWithDefaults = steps.reduce((acc, step) => {
-        acc[step] = response.stageCounts[step] || 0;
-        return acc;
-      }, {});
-      setStageCounts(countsWithDefaults);
+      if (response.success) {
+        // Ensure all steps have counts, defaulting to 0 if not present
+        const countsWithDefaults = steps.reduce((acc, step) => {
+          acc[step] = response.stageCounts[step] || 0;
+          return acc;
+        }, {});
+        setStageCounts(countsWithDefaults);
+      }
+    } catch (err) {
+      console.error("Error fetching stage counts:", err);
     }
-  } catch (err) {
-    console.error("Error fetching stage counts:", err);
-  }
-};
+  };
   useEffect(() => {
     const fetchCities = async () => {
       try {
@@ -416,109 +442,110 @@ const JobApplications = () => {
   }, [jobId]);
 
   const handleStepClick = async (index) => {
-  setActiveStep(index); // Update the active step first
-  setSelectedApplications(new Set()); // Clear selections
-  
-  const currentStatus = steps[index];
-  
-  // Check if we have any active filters
-  const hasActiveFilters = Object.values(filters).some(
-    (value) => value && value.toString().trim()
-  );
-  
-  if (hasActiveFilters) {
-    // If filters are active, fetch with both filters and status
-    const filteredApps = await fetchApplications(filters, currentStatus);
-    setApplications(filteredApps);
-    setFilteredApps(filteredApps);
-  } else {
-    // If no filters, filter from the existing allApplications
-    const filtered = allApplications.filter(
-      (app) => app.status === currentStatus
+    setActiveStep(index); // Update the active step first
+    setSelectedApplications(new Set()); // Clear selections
+
+    const currentStatus = steps[index];
+
+    // Check if we have any active filters
+    const hasActiveFilters = Object.values(filters).some(
+      (value) => value && value.toString().trim()
     );
-    setApplications(filtered);
-    setFilteredApps(filtered);
-  }
-};
+
+    if (hasActiveFilters) {
+      // If filters are active, fetch with both filters and status
+      const filteredApps = await fetchApplications(filters, currentStatus);
+      setApplications(filteredApps);
+      setFilteredApps(filteredApps);
+    } else {
+      // If no filters, filter from the existing allApplications
+      const filtered = allApplications.filter(
+        (app) => app.status === currentStatus
+      );
+      setApplications(filtered);
+      const sortedFiltered = getSortedApps(filtered);
+      setFilteredApps(sortedFiltered);
+    }
+  };
 
   // Keyword handling
   const handleKeywordKeyDown = (e) => {
-    if (e.key === 'Enter' && keywordInput.trim()) {
+    if (e.key === "Enter" && keywordInput.trim()) {
       e.preventDefault();
-      setFilters(prev => ({
+      setFilters((prev) => ({
         ...prev,
-        keywords: [...prev.keywords, keywordInput.trim()]
+        keywords: [...prev.keywords, keywordInput.trim()],
       }));
-      setKeywordInput('');
+      setKeywordInput("");
     }
   };
 
   const handleRemoveKeyword = (index) => {
-    setFilters(prev => {
+    setFilters((prev) => {
       const newKeywords = [...prev.keywords];
       newKeywords.splice(index, 1);
-      return {...prev, keywords: newKeywords};
+      return { ...prev, keywords: newKeywords };
     });
   };
 
   // Location handling
   const handleLocationChange = (event, newValue) => {
     if (newValue) {
-      setFilters(prev => ({
+      setFilters((prev) => ({
         ...prev,
-        locations: [...prev.locations, newValue]
+        locations: [...prev.locations, newValue],
       }));
-      setLocationInput('');
+      setLocationInput("");
     }
   };
 
   const handleRemoveLocation = (index) => {
-    setFilters(prev => {
+    setFilters((prev) => {
       const newLocations = [...prev.locations];
       newLocations.splice(index, 1);
-      return {...prev, locations: newLocations};
+      return { ...prev, locations: newLocations };
     });
   };
 
   // Designation handling
   const handleDesignationChange = (event, newValue) => {
     if (newValue) {
-      setFilters(prev => ({
+      setFilters((prev) => ({
         ...prev,
-        designations: [...prev.designations, newValue]
+        designations: [...prev.designations, newValue],
       }));
-      setDesignationInput('');
+      setDesignationInput("");
     }
   };
 
   const handleRemoveDesignation = (index) => {
-    setFilters(prev => {
+    setFilters((prev) => {
       const newDesignations = [...prev.designations];
       newDesignations.splice(index, 1);
-      return {...prev, designations: newDesignations};
+      return { ...prev, designations: newDesignations };
     });
   };
 
   // Screening question handling
   const handleScreeningFilterChange = (questionId, value) => {
-    setFilters(prev => ({
+    setFilters((prev) => ({
       ...prev,
       screeningFilters: {
         ...prev.screeningFilters,
-        [questionId]: value
-      }
+        [questionId]: value,
+      },
     }));
   };
 
   // Apply filters function
   const applyFilters = async () => {
     const currentStatus = steps[activeStep];
-    
+
     // Prepare filter parameters for API
     const filterParams = {
-      keywords: filters.keywords.join(','),
-      locations: filters.locations.join(','),
-      designations: filters.designations.join(','),
+      keywords: filters.keywords.join(","),
+      locations: filters.locations.join(","),
+      designations: filters.designations.join(","),
       totalYearsInConsulting: filters.totalYearsInConsulting,
       screeningFilters: filters.screeningFilters,
       status: currentStatus,
@@ -528,9 +555,10 @@ const JobApplications = () => {
 
     const filtered = await fetchApplications(filterParams);
     setApplications(filtered);
-    setFilteredApps(filtered);
+    const sortedFiltered = getSortedApps(filtered);
+    setFilteredApps(sortedFiltered);
     setSelectedApplications(new Set());
-    
+
     if (isMobile) {
       setDrawerOpen(false);
     }
@@ -543,13 +571,13 @@ const JobApplications = () => {
       keywords: [],
       locations: [],
       designations: [],
-      totalYearsInConsulting: '',
-      screeningFilters: {}
+      totalYearsInConsulting: "",
+      screeningFilters: {},
     });
-    
-    setKeywordInput('');
-    setLocationInput('');
-    setDesignationInput('');
+
+    setKeywordInput("");
+    setLocationInput("");
+    setDesignationInput("");
 
     // Reset to first tab
     const newActiveStep = 0;
@@ -559,9 +587,10 @@ const JobApplications = () => {
     const currentStatus = steps[newActiveStep];
     const allApps = await fetchApplications();
     setAllApplications(allApps);
-    const filtered = allApps.filter(app => app.status === currentStatus);
+    const filtered = allApps.filter((app) => app.status === currentStatus);
     setApplications(filtered);
-    setFilteredApps(filtered);
+    const sortedFiltered = getSortedApps(filtered);
+    setFilteredApps(sortedFiltered);
 
     // Refresh counts
     await fetchStageCounts();
@@ -828,10 +857,12 @@ const JobApplications = () => {
           <Select
             name="totalYearsInConsulting"
             value={filters.totalYearsInConsulting}
-            onChange={(e) => setFilters(prev => ({
-              ...prev,
-              totalYearsInConsulting: e.target.value
-            }))}
+            onChange={(e) =>
+              setFilters((prev) => ({
+                ...prev,
+                totalYearsInConsulting: e.target.value,
+              }))
+            }
             size="small"
             displayEmpty
             sx={selectFieldStyle}
@@ -872,20 +903,21 @@ const JobApplications = () => {
                     <Select
                       multiple
                       value={filters.screeningFilters[question._id] || []}
-                      onChange={(e) => handleScreeningFilterChange(
-                        question._id, 
-                        e.target.value
-                      )}
+                      onChange={(e) =>
+                        handleScreeningFilterChange(
+                          question._id,
+                          e.target.value
+                        )
+                      }
                       renderValue={(selected) => selected.join(", ")}
                       sx={selectFieldStyle}
                     >
                       {options.map((opt) => (
                         <MenuItem key={opt} value={opt}>
-                          <Checkbox 
-                            checked={
-                              (filters.screeningFilters[question._id] || [])
-                              .includes(opt)
-                            } 
+                          <Checkbox
+                            checked={(
+                              filters.screeningFilters[question._id] || []
+                            ).includes(opt)}
                           />
                           {opt}
                         </MenuItem>
@@ -894,10 +926,12 @@ const JobApplications = () => {
                   ) : (
                     <Select
                       value={filters.screeningFilters[question._id] || ""}
-                      onChange={(e) => handleScreeningFilterChange(
-                        question._id, 
-                        e.target.value
-                      )}
+                      onChange={(e) =>
+                        handleScreeningFilterChange(
+                          question._id,
+                          e.target.value
+                        )
+                      }
                       sx={selectFieldStyle}
                     >
                       <MenuItem value="">
@@ -1009,7 +1043,8 @@ const JobApplications = () => {
       const filtered = allApplications.filter(
         (app) => app.status === currentStatus
       );
-      setFilteredApps(filtered);
+      const sortedFiltered = getSortedApps(filtered);
+      setFilteredApps(sortedFiltered);
     }
 
     setSearchKeyword("");
@@ -1091,7 +1126,8 @@ const JobApplications = () => {
             (app) => app.status === currentStatus
           );
           setApplications(filtered);
-          setFilteredApps(filtered);
+          const sortedFiltered = getSortedApps(filtered);
+          setFilteredApps(sortedFiltered);
         }
       }
     } catch (err) {
@@ -1147,7 +1183,8 @@ const JobApplications = () => {
             (app) => app.status === currentStatus
           );
           setApplications(filtered);
-          setFilteredApps(filtered);
+          const sortedFiltered = getSortedApps(filtered);
+          setFilteredApps(sortedFiltered);
         }
       }
     } catch (err) {
@@ -1202,7 +1239,8 @@ const JobApplications = () => {
             (app) => app.status === currentStatus
           );
           setApplications(filtered);
-          setFilteredApps(filtered);
+          const sortedFiltered = getSortedApps(filtered);
+          setFilteredApps(sortedFiltered);
         }
       }
     } catch (err) {
@@ -1675,7 +1713,7 @@ const JobApplications = () => {
                       },
                     }}
                   >
-                    {bulkActionLoading ? "Processing..." : "Advance"}
+                    {bulkActionLoading ? "Processing..." : "Shortlist"}
                   </Button>
 
                   <Button
@@ -1765,6 +1803,63 @@ const JobApplications = () => {
                   >
                     Reject All
                   </Button>
+                  <FormControl
+  size="small"
+  sx={{
+    minWidth: 200,
+    borderRadius: 2.5,
+    backgroundColor: "white",
+    border: "1.5px solid #e2e8f0",
+    fontFamily: "Satoshi",
+    fontWeight: 600,
+    "& .MuiInputLabel-root": {
+      fontSize: "13px",
+      fontWeight: 600,
+      color: "#64748b",
+      fontFamily: "Satoshi",
+    },
+    "& .MuiOutlinedInput-root": {
+      borderRadius: 2.5,
+      fontSize: "13px",
+      fontWeight: 600,
+      fontFamily: "Satoshi",
+      backgroundColor: "white",
+      paddingY: 0.5,
+      "& fieldset": {
+        border: "none",
+      },
+      "&:hover fieldset": {
+        border: "none",
+      },
+      "&.Mui-focused fieldset": {
+        border: "none",
+      },
+    },
+    "& .MuiSelect-select": {
+      padding: "10px 14px",
+      color: "#1f2937",
+    },
+    "& .MuiSelect-icon": {
+      color: "#6b7280",
+      right: "12px",
+    },
+  }}
+>
+  <InputLabel id="sort-by-label">Sort By</InputLabel>
+  <Select
+    labelId="sort-by-label"
+    value={sortOption}
+    onChange={(e) => setSortOption(e.target.value)}
+    label="Sort By"
+  >
+    <MenuItem value="match-desc">Match Score: High to Low</MenuItem>
+    <MenuItem value="match-asc">Match Score: Low to High</MenuItem>
+    <MenuItem value="name-asc">Name: A to Z</MenuItem>
+    <MenuItem value="name-desc">Name: Z to A</MenuItem>
+    <MenuItem value="newest">Newest First</MenuItem>
+  </Select>
+</FormControl>
+
                 </Box>
               </Box>
             </Box>
@@ -1786,7 +1881,7 @@ const JobApplications = () => {
             }}
           >
             <Grid container spacing={3}>
-              {filteredApps.map((app) => (
+              {getSortedApps(filteredApps).map((app) => (
                 <Grid item xs={12} key={app._id}>
                   <Box
                     sx={{
