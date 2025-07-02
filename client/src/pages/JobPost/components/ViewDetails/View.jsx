@@ -1034,10 +1034,50 @@ export default function JobEditForm() {
       }
       return true;
     };
+    const Salaryvalid = (field, label) => {
+      const minVal =
+        jobData[field][
+          `min${field
+            .replace(/./, (c) => c.toUpperCase())
+            .replace("Graduation", "Batch")}`
+        ];
+      const maxVal =
+        jobData[field][
+          `max${field
+            .replace(/./, (c) => c.toUpperCase())
+            .replace("Graduation", "Batch")}`
+        ];
+
+      // Only check if both are provided (not empty string or null) AND min > max
+      if (
+        minVal !== "" &&
+        minVal !== null &&
+        maxVal !== "" &&
+        maxVal !== null &&
+        Number(minVal) > Number(maxVal)
+      ) {
+        setNotification({
+          open: true,
+          message: `Minimum ${label} cannot be greater than maximum ${label}.`,
+          severity: "error",
+        });
+        return false;
+      }
+      if (minVal <= 0 || maxVal <= 0) {
+        setNotification({
+          open: true,
+          message: `${label} values cannot be 0.`,
+          severity: "error",
+        });
+        return false;
+      }
+      return true;
+    };
 
     if (!validateRange("salary", "salary")) return null;
     if (!validateRange("experience", "experience")) return null;
     if (!validateRange("graduationYear", "batch year")) return null;
+    if (!Salaryvalid("salary", "salary")) return null;
 
     // Validate screening questions
     const validScreeningQuestions = jobData.screeningQuestions.filter((q) => {

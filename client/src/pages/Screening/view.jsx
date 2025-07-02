@@ -95,6 +95,7 @@ const ScreeningView = () => {
   });
 
   const { user } = useSelector((state) => state.user);
+  console.log("User data from Redux:", user);
   const hasUploadedResume = user?.cvUrl || false;
 
   // Get screening questions from location state and filter out empty ones
@@ -303,11 +304,6 @@ const ScreeningView = () => {
                 typeof answerValue === "string" ? answerValue.trim() : "";
               break;
           }
-
-          // ************* Include questionType back in the payload *************
-          // Based on the error you received when excluding it, the backend likely needs it.
-          // The backend schema also requires it for the pre-save middleware.
-          // Even if the route handler's filter/map seems inconsistent, including it is necessary.
           return {
             questionId: question._id, // Use the _id from the job's question
             question: question.question, // Include the question text from the job
@@ -317,19 +313,8 @@ const ScreeningView = () => {
           // *************************************************************************
         }
       );
-
-      // The backend route's filter is `answer.answer && answer.answer.trim() !== ''`.
-      // This means it will keep items where 'answer' is a non-empty string.
-      // It will filter out items where 'answer' is '', null, undefined, false, [] etc.
-      // Our new `formattedAnswerString` is designed to be either a non-empty string or "".
-      // So, filtering by `item.answer !== ""` should largely align with the backend's filter.
       const finalScreeningAnswersPayload = screeningAnswersPayload.filter(
-        (item) => item.answer !== "" // Keep items where the formatted string answer is not empty
-        // Note: This filter means mandatory multi-choice or yes/no questions that
-        // were answered (e.g., multi-choice array was non-empty, yes/no was 'no')
-        // will be included because their formatted string won't be empty.
-        // Mandatory text/single answers will also be included if non-empty.
-        // Mandatory questions with genuinely empty answers will be caught by frontend validation.
+        (item) => item.answer !== "" 
       );
 
       const res = await axios.post(
@@ -498,6 +483,7 @@ const ScreeningView = () => {
         py: 4,
       }}
     >
+
       {/* Title Section */}
       <Box sx={{ p: { xs: 3, md: 6 }, textAlign: "center", mb: 4 }}>
         <Typography
@@ -622,8 +608,25 @@ const ScreeningView = () => {
           </Typography>
         </Box>
 
+        {Array.isArray(user?.experienceHistory) && user.experienceHistory.length === 0 && (
+        <Box sx={{ mb: 3, textAlign: 'center'}}>
+          <Typography sx={{ color: '#d32f2f', fontFamily: 'Satoshi', fontWeight: 700, fontSize: '1rem' }}>
+            Hey there! It looks like your profile is missing work experience complete it to stay ahead of the competition.
+          </Typography>
+          <Button
+            variant="contained"
+            onClick={() => navigate('/user-profile')}
+            sx={{ mt: 2, bgcolor: '#3C7EFC', color: 'white', fontFamily: 'Satoshi', fontWeight: 700, borderRadius: 16, textTransform: 'none' }}
+          >
+            Complete Your Profile
+          </Button>
+        </Box>
+      )}
+
         {/* Screening Questions Section */}
         {filteredQuestions?.length > 0 && (
+
+
           <Box mb={4}>
             <Typography
               sx={{
