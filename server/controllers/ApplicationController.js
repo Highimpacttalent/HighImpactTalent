@@ -225,32 +225,14 @@ export const getApplicationsOfAjob = async (req, res) => {
       designations,
       totalYearsInConsulting,
       screeningFilters,
-      page = 1,
-      limit = 20,
     } = req.query;
-
-    const pageNum = Number(page);
-    const limitNum = Number(limit);
-    const skip = (pageNum - 1) * limitNum;
 
     let screeningFiltersParsed = null;
 
-    // DEBUGGING: Log all incoming parameters
-    console.log("=== DEBUGGING FILTERS ===");
-    console.log("Job ID:", jobId);
-    console.log("Raw Query Params:", req.query);
-    console.log("Keywords:", keywords);
-    console.log("Locations:", locations);
-    console.log("Status:", status);
-    console.log("Designations:", designations);
-    console.log("Total Years in Consulting:", totalYearsInConsulting);
-    console.log("Screening Filters (raw):", screeningFilters);
-    console.log("========================");
-
-    // Build aggregation pipeline
+    // Build optimized aggregation pipeline
     const pipeline = [];
 
-    // Initial match stage - filter by job ID
+    // Initial match stage - filter by job ID (most selective filter first)
     const matchStage = {
       job: new mongoose.Types.ObjectId(jobId),
     };
@@ -261,25 +243,123 @@ export const getApplicationsOfAjob = async (req, res) => {
 
     pipeline.push({ $match: matchStage });
 
-    // Lookup stages for population
+    // Apply text-based filters EARLY to reduce dataset size before expensive lookups
+    const earlyFilterConditions = [];
+
+    // Parse and prepare filters
+    let keywordsList = [];
+    let locationsList = [];
+    let designationsList = [];
+
+    if (keywords && keywords.trim()) {
+      try {
+        keywordsList = JSON.parse(keywords);
+        if (!Array.isArray(keywordsList)) {
+          keywordsList = [keywordsList];
+        }
+      } catch (e) {
+        keywordsList = keywords.split(",").map(k => k.trim()).filter(k => k);
+      }
+    }
+
+    if (locations && locations.trim()) {
+      try {
+        locationsList = JSON.parse(locations);
+        if (!Array.isArray(locationsList)) {
+          locationsList = [locationsList];
+        }
+      } catch (e) {
+        locationsList = locations.split(",").map(loc => loc.trim()).filter(loc => loc);
+      }
+    }
+
+    if (designations && designations.trim()) {
+      try {
+        designationsList = JSON.parse(designations);
+        if (!Array.isArray(designationsList)) {
+          designationsList = [designationsList];
+        }
+      } catch (e) {
+        designationsList = designations.split(",").map(des => des.trim()).filter(des => des);
+      }
+    }
+
+    // Parse screening filters early
+    if (screeningFilters && screeningFilters.trim()) {
+      try {
+        screeningFiltersParsed = typeof screeningFilters === "string" 
+          ? JSON.parse(screeningFilters) 
+          : screeningFilters;
+
+        if (screeningFiltersParsed && typeof screeningFiltersParsed === "object" && 
+            Object.keys(screeningFiltersParsed).length > 0) {
+          
+          Object.entries(screeningFiltersParsed).forEach(([questionId, filterValues]) => {
+            if (!filterValues || (Array.isArray(filterValues) && filterValues.length === 0)) {
+              return;
+            }
+
+            const valuesArray = Array.isArray(filterValues) ? filterValues : [filterValues];
+            if (valuesArray.length === 0) return;
+
+            const screeningConditions = [];
+            
+            valuesArray.forEach(value => {
+              if (typeof value === "boolean") {
+                screeningConditions.push({
+                  screeningAnswers: {
+                    $elemMatch: {
+                      questionId: new mongoose.Types.ObjectId(questionId),
+                      $or: [
+                        { answer: value },
+                        { answer: value ? "Yes" : "No" },
+                        { answerText: value ? /^(yes|true)$/i : /^(no|false)$/i }
+                      ]
+                    },
+                  },
+                });
+              } else if (typeof value === "string") {
+                const textRegex = new RegExp(value, "i");
+                screeningConditions.push({
+                  screeningAnswers: {
+                    $elemMatch: {
+                      questionId: new mongoose.Types.ObjectId(questionId),
+                      $or: [
+                        { answer: value },
+                        { answer: textRegex },
+                        { answerText: textRegex }
+                      ]
+                    },
+                  },
+                });
+              }
+            });
+
+            if (screeningConditions.length > 0) {
+              earlyFilterConditions.push({ $or: screeningConditions });
+            }
+          });
+        }
+      } catch (error) {
+        console.error("Error parsing screening filters:", error);
+        return res.status(400).json({
+          success: false,
+          message: "Invalid screening filter format: " + error.message,
+        });
+      }
+    }
+
+    // Apply early filters to reduce dataset before lookups
+    if (earlyFilterConditions.length > 0) {
+      pipeline.push({
+        $match: {
+          $and: earlyFilterConditions,
+        },
+      });
+    }
+
+    // Optimized lookup stages with minimal projections
     pipeline.push(
-      {
-        $lookup: {
-          from: "jobs",
-          localField: "job",
-          foreignField: "_id",
-          as: "job",
-        },
-      },
-      {
-        $lookup: {
-          from: "companies",
-          localField: "company",
-          foreignField: "_id",
-          as: "company",
-          pipeline: [{ $project: { password: 0 } }],
-        },
-      },
       {
         $lookup: {
           from: "users",
@@ -289,6 +369,7 @@ export const getApplicationsOfAjob = async (req, res) => {
           pipeline: [
             {
               $project: {
+                // Only project fields that are actually used
                 firstName: 1,
                 lastName: 1,
                 email: 1,
@@ -323,145 +404,89 @@ export const getApplicationsOfAjob = async (req, res) => {
             },
           ],
         },
+      },
+      {
+        $lookup: {
+          from: "jobs",
+          localField: "job",
+          foreignField: "_id",
+          as: "job",
+        },
+      },
+      {
+        $lookup: {
+          from: "companies",
+          localField: "company",
+          foreignField: "_id",
+          as: "company",
+          pipeline: [{ $project: { password: 0 } }],
+        },
       }
     );
 
     // Unwind the populated fields
     pipeline.push(
+      { $unwind: "$applicant" },
       { $unwind: "$job" },
-      { $unwind: "$company" },
-      { $unwind: "$applicant" }
+      { $unwind: "$company" }
     );
 
-    // Apply filters using $match stages
-    const filterConditions = [];
+    // Apply remaining filters after lookups
+    const postLookupFilters = [];
 
-    // Enhanced Keywords filter - search across all relevant fields using OR
-    if (keywords && keywords.trim()) {
-      console.log("Processing keywords:", keywords);
+    // Keywords filter
+    if (keywordsList.length > 0) {
+      const allKeywordConditions = [];
       
-      let keywordsList;
-      try {
-        keywordsList = JSON.parse(keywords);
-        if (!Array.isArray(keywordsList)) {
-          keywordsList = [keywordsList];
-        }
-      } catch (e) {
-        keywordsList = keywords.split(",").map(k => k.trim()).filter(k => k);
-      }
-
-      console.log("Keywords list:", keywordsList);
-
-      if (keywordsList.length > 0) {
-        // Create OR conditions for all keywords across all searchable fields
-        const allKeywordConditions = [];
-        
-        keywordsList.forEach((keyword) => {
-          const keywordRegex = new RegExp(keyword, "i");
-          allKeywordConditions.push(
-            { "applicant.currentDesignation": keywordRegex },
-            { "applicant.currentCompany": keywordRegex },
-            { "applicant.lastConsultingCompany": keywordRegex },
-            { "applicant.skills": { $elemMatch: { $regex: keyword, $options: "i" } } },
-            { "applicant.about": keywordRegex },
-            { "applicant.firstName": keywordRegex },
-            { "applicant.lastName": keywordRegex },
-            { "applicant.email": keywordRegex },
-            { "applicant.currentLocation": keywordRegex },
-            { "applicant.preferredLocations": { $elemMatch: { $regex: keyword, $options: "i" } } },
-            { "applicant.highestQualification": keywordRegex },
-            // Search in experience history
-            { "applicant.experienceHistory.jobTitle": keywordRegex },
-            { "applicant.experienceHistory.companyName": keywordRegex },
-            { "applicant.experienceHistory.description": keywordRegex }
-          );
-        });
-
-        const keywordFilter = {
-          $or: allKeywordConditions,
-        };
-        
-        console.log("Keyword filter condition:", JSON.stringify(keywordFilter, null, 2));
-        filterConditions.push(keywordFilter);
-      }
-    }
-
-    // Enhanced Multiple Locations filter
-    if (locations && locations.trim()) {
-      console.log("Processing locations:", locations);
-      
-      let locationsList;
-      try {
-        locationsList = JSON.parse(locations);
-        if (!Array.isArray(locationsList)) {
-          locationsList = [locationsList];
-        }
-      } catch (e) {
-        locationsList = locations.split(",").map(loc => loc.trim()).filter(loc => loc);
-      }
-
-      console.log("Locations list:", locationsList);
-
-      if (locationsList.length > 0) {
-        const locationRegexes = locationsList.map(
-          (loc) => new RegExp(loc, "i")
+      keywordsList.forEach((keyword) => {
+        const keywordRegex = new RegExp(keyword, "i");
+        allKeywordConditions.push(
+          { "applicant.currentDesignation": keywordRegex },
+          { "applicant.currentCompany": keywordRegex },
+          { "applicant.lastConsultingCompany": keywordRegex },
+          { "applicant.skills": { $elemMatch: { $regex: keyword, $options: "i" } } },
+          { "applicant.about": keywordRegex },
+          { "applicant.firstName": keywordRegex },
+          { "applicant.lastName": keywordRegex },
+          { "applicant.email": keywordRegex },
+          { "applicant.currentLocation": keywordRegex },
+          { "applicant.preferredLocations": { $elemMatch: { $regex: keyword, $options: "i" } } },
+          { "applicant.highestQualification": keywordRegex },
+          { "applicant.experienceHistory.jobTitle": keywordRegex },
+          { "applicant.experienceHistory.companyName": keywordRegex },
+          { "applicant.experienceHistory.description": keywordRegex }
         );
+      });
 
-        const locationFilter = {
-          $or: [
-            { "applicant.currentLocation": { $in: locationRegexes } },
-            {
-              "applicant.preferredLocations": {
-                $elemMatch: { $in: locationRegexes },
-              },
-            },
-          ],
-        };
-        
-        console.log("Location filter condition:", JSON.stringify(locationFilter, null, 2));
-        filterConditions.push(locationFilter);
-      }
+      postLookupFilters.push({ $or: allKeywordConditions });
     }
 
-    // Enhanced Multiple Designations filter
-    if (designations && designations.trim()) {
-      console.log("Processing designations:", designations);
-      
-      let designationsList;
-      try {
-        designationsList = JSON.parse(designations);
-        if (!Array.isArray(designationsList)) {
-          designationsList = [designationsList];
-        }
-      } catch (e) {
-        designationsList = designations.split(",").map(des => des.trim()).filter(des => des);
-      }
-
-      if (designationsList.length > 0) {
-        // Create OR conditions for designations - search in multiple fields
-        const designationConditions = [];
-        
-        designationsList.forEach(designation => {
-          const designationRegex = new RegExp(designation, "i");
-          designationConditions.push(
-            { "applicant.currentDesignation": designationRegex },
-            { "applicant.experienceHistory.jobTitle": designationRegex }
-          );
-        });
-        
-        const designationFilter = {
-          $or: designationConditions,
-        };
-        
-        console.log("Designation filter condition:", JSON.stringify(designationFilter, null, 2));
-        filterConditions.push(designationFilter);
-      }
+    // Locations filter
+    if (locationsList.length > 0) {
+      const locationRegexes = locationsList.map(loc => new RegExp(loc, "i"));
+      postLookupFilters.push({
+        $or: [
+          { "applicant.currentLocation": { $in: locationRegexes } },
+          { "applicant.preferredLocations": { $elemMatch: { $in: locationRegexes } } },
+        ],
+      });
     }
 
-    // Total years in consulting filter (unchanged)
+    // Designations filter
+    if (designationsList.length > 0) {
+      const designationConditions = [];
+      designationsList.forEach(designation => {
+        const designationRegex = new RegExp(designation, "i");
+        designationConditions.push(
+          { "applicant.currentDesignation": designationRegex },
+          { "applicant.experienceHistory.jobTitle": designationRegex }
+        );
+      });
+      postLookupFilters.push({ $or: designationConditions });
+    }
+
+    // Total years in consulting filter
     if (totalYearsInConsulting) {
-      console.log("Processing years in consulting:", totalYearsInConsulting);
-      
       const experienceRanges = totalYearsInConsulting.split(",");
       const expConditions = [];
 
@@ -470,194 +495,43 @@ export const getApplicationsOfAjob = async (req, res) => {
           const [min, max] = range.split("-").map(Number);
           if (!isNaN(min) && !isNaN(max)) {
             if (max === 100) {
-              expConditions.push({
-                "applicant.totalYearsInConsulting": { $gte: min },
-              });
+              expConditions.push({ "applicant.totalYearsInConsulting": { $gte: min } });
             } else {
-              expConditions.push({
-                "applicant.totalYearsInConsulting": { $gte: min, $lt: max },
-              });
+              expConditions.push({ "applicant.totalYearsInConsulting": { $gte: min, $lt: max } });
             }
           }
         } else {
           const exactYears = Number(range);
           if (!isNaN(exactYears)) {
-            expConditions.push({
-              "applicant.totalYearsInConsulting": exactYears,
-            });
+            expConditions.push({ "applicant.totalYearsInConsulting": exactYears });
           }
         }
       });
 
       if (expConditions.length > 0) {
-        const experienceFilter = { $or: expConditions };
-        console.log("Experience filter condition:", JSON.stringify(experienceFilter, null, 2));
-        filterConditions.push(experienceFilter);
+        postLookupFilters.push({ $or: expConditions });
       }
     }
 
-    // Enhanced Screening Filters - support multiple selections per question
-    if (screeningFilters && screeningFilters.trim()) {
-      console.log("Processing screening filters:", screeningFilters);
-      
-      try {
-        screeningFiltersParsed =
-          typeof screeningFilters === "string"
-            ? JSON.parse(screeningFilters)
-            : screeningFilters;
-
-        console.log("Parsed screening filters:", screeningFiltersParsed);
-
-        if (
-          screeningFiltersParsed &&
-          typeof screeningFiltersParsed === "object" &&
-          Object.keys(screeningFiltersParsed).length > 0
-        ) {
-          console.log("Processing screening filter entries...");
-          
-          Object.entries(screeningFiltersParsed).forEach(
-            ([questionId, filterValues]) => {
-              console.log(`Processing question ${questionId}:`, filterValues);
-              
-              // Skip empty values
-              if (!filterValues || (Array.isArray(filterValues) && filterValues.length === 0)) {
-                return;
-              }
-
-              // Ensure filterValues is an array for consistent processing
-              const valuesArray = Array.isArray(filterValues) ? filterValues : [filterValues];
-              
-              if (valuesArray.length === 0) return;
-
-              // Create screening condition for multiple selected options
-              const screeningConditions = [];
-              
-              valuesArray.forEach(value => {
-                if (typeof value === "boolean") {
-                  // For yes/no questions
-                  screeningConditions.push({
-                    screeningAnswers: {
-                      $elemMatch: {
-                        questionId: new mongoose.Types.ObjectId(questionId),
-                        $or: [
-                          { answer: value },
-                          { answer: value ? "Yes" : "No" },
-                          { answerText: value ? /^(yes|true)$/i : /^(no|false)$/i }
-                        ]
-                      },
-                    },
-                  });
-                } else if (typeof value === "string") {
-                  // For text answers or single choice
-                  const textRegex = new RegExp(value, "i");
-                  screeningConditions.push({
-                    screeningAnswers: {
-                      $elemMatch: {
-                        questionId: new mongoose.Types.ObjectId(questionId),
-                        $or: [
-                          { answer: value },
-                          { answer: textRegex },
-                          { answerText: textRegex }
-                        ]
-                      },
-                    },
-                  });
-                }
-              });
-
-              if (screeningConditions.length > 0) {
-                // Use OR logic for multiple selections of the same question
-                const questionFilter = {
-                  $or: screeningConditions
-                };
-                
-                console.log("Screening filter condition:", JSON.stringify(questionFilter, null, 2));
-                filterConditions.push(questionFilter);
-              }
-            }
-          );
-        }
-      } catch (error) {
-        console.error("Error parsing screening filters:", error);
-        return res.status(400).json({
-          success: false,
-          message: "Invalid screening filter format: " + error.message,
-        });
-      }
-    }
-
-    // DEBUGGING: Log all filter conditions before applying
-    console.log("=== FINAL FILTER CONDITIONS ===");
-    console.log("Total filter conditions:", filterConditions.length);
-    filterConditions.forEach((condition, index) => {
-      console.log(`Filter ${index + 1}:`, JSON.stringify(condition, null, 2));
-    });
-    console.log("================================");
-
-    // Apply all filter conditions with AND logic
-    if (filterConditions.length > 0) {
-      const finalMatchStage = {
+    // Apply post-lookup filters
+    if (postLookupFilters.length > 0) {
+      pipeline.push({
         $match: {
-          $and: filterConditions,
-        },
-      };
-      console.log("Final match stage:", JSON.stringify(finalMatchStage, null, 2));
-      pipeline.push(finalMatchStage);
-    } else {
-      console.log("No filter conditions applied");
-    }
-
-    // Add sorting
-    pipeline.push({ $sort: { createdAt: -1 } });
-
-    // Use facet for parallel count and data retrieval
-    pipeline.push({
-      $facet: {
-        data: [{ $skip: skip }, { $limit: limitNum }],
-        count: [{ $count: "total" }],
-      },
-    });
-
-    // Log the complete pipeline for debugging
-    console.log("=== COMPLETE AGGREGATION PIPELINE ===");
-    console.log(JSON.stringify(pipeline, null, 2));
-    console.log("====================================");
-
-    // Execute aggregation
-    const [result] = await Application.aggregate(pipeline);
-    const applications = result.data || [];
-    const totalApplications = result.count[0]?.total || 0;
-    const numOfPage = Math.ceil(totalApplications / limitNum);
-
-    console.log("=== RESULTS ===");
-    console.log("Applications found:", applications.length);
-    console.log("Total applications:", totalApplications);
-    console.log("===============");
-
-    if (totalApplications === 0) {
-      return res.status(200).json({
-        success: true,
-        message: "No applications found matching the criteria",
-        applications: [],
-        totalApplications: 0,
-        page: pageNum,
-        numOfPage: 0,
-        filters: {
-          keywords,
-          locations,
-          designations,
-          totalYearsInConsulting,
-          screeningFilters: screeningFiltersParsed,
+          $and: postLookupFilters,
         },
       });
     }
 
-    res.status(200).json({
+    // Sort by creation date (newest first)
+    pipeline.push({ $sort: { createdAt: -1 } });
+
+    // Execute aggregation
+    const applications = await Application.aggregate(pipeline);
+
+    return res.status(200).json({
       success: true,
       applications,
-      totalApplications,
-      page: pageNum,
-      numOfPage,
+      totalApplications: applications.length,
       filters: {
         keywords,
         locations,
@@ -666,6 +540,7 @@ export const getApplicationsOfAjob = async (req, res) => {
         screeningFilters: screeningFiltersParsed,
       },
     });
+
   } catch (error) {
     console.error("Error in getApplicationsOfAjob:", error);
     res.status(500).json({
