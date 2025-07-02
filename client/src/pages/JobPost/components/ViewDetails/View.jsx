@@ -695,6 +695,17 @@ export default function JobEditForm() {
     }
   };
 
+  const handleRangeSelectChange = (section, field, selectedOption) => {
+    const value = selectedOption ? selectedOption.value : "";
+    setJobData((prev) => ({
+      ...prev,
+      [section]: {
+        ...prev[section],
+        [field]: value,
+      },
+    }));
+  };
+
   // Handle changes in dynamic text array fields (requirements)
   const handleArrayChange = (field, index, value) => {
     setJobData((prev) => ({
@@ -730,6 +741,12 @@ export default function JobEditForm() {
       }));
     }
   };
+
+  const currentYear = new Date().getFullYear();
+  const batchYearOptions = Array.from({ length: 100 }, (_, i) => {
+    const year = currentYear + 5 - i;
+    return { label: year.toString(), value: year };
+  }); // from 1900 to currentYear+5
 
   // Remove items from dynamic text array fields (requirements)
   const removeArrayItem = (field, index) => {
@@ -2143,7 +2160,8 @@ export default function JobEditForm() {
                   <Grid container spacing={3}>
                     <Grid item xs={12} md={6}>
                       <Typography variant="body2" sx={{ ...formLabelStyle }}>
-                        Minimum Experience (Years)<span style={{ color: "red" }}>*</span>
+                        Minimum Experience (Years)
+                        <span style={{ color: "red" }}>*</span>
                       </Typography>
                       <TextField
                         fullWidth
@@ -2164,85 +2182,72 @@ export default function JobEditForm() {
                       />
                     </Grid>
 
-                    <Grid item xs={12} md={6}>
-                      <Typography variant="body2" sx={{ ...formLabelStyle }}>
-                        Maximum Experience (Years)<span style={{ color: "red" }}>*</span>
+                    {/* Graduation Year Batch Section */}
+                    {/* Graduation Year Batch Section */}
+                    <Grid item xs={12}>
+                      <Typography sx={{ ...formLabelStyle }}>
+                        Graduation Year Batch{" "}
+                        <span style={{ color: "red" }}>*</span>
                       </Typography>
-                      <TextField
-                        fullWidth
-                        type="number"
-                        value={jobData.experience.maxExperience}
-                        required
-                        onChange={(e) =>
-                          handleInputChange(
-                            "experience.maxExperience",
-                            e.target.value
-                          )
-                        }
-                        InputLabelProps={{
-                          shrink: !!jobData.experience.maxExperience,
-                        }}
-                        size="small"
-                        inputProps={{
-                          min:
-                            jobData.experience.minExperience !== ""
-                              ? Number(jobData.experience.minExperience)
-                              : 0,
-                        }}
-                      />
-                    </Grid>
+                      <Grid container spacing={2}>
+                        <Grid item xs={12} sm={6}>
+                          <Select
+                            options={batchYearOptions}
+                            value={
+                              jobData.graduationYear.minBatch !== ""
+                                ? batchYearOptions.find(
+                                    (opt) =>
+                                      opt.value ===
+                                      Number(jobData.graduationYear.minBatch)
+                                  )
+                                : null
+                            }
+                            onChange={(selectedOption) =>
+                              handleRangeSelectChange(
+                                "graduationYear",
+                                "minBatch",
+                                selectedOption
+                              )
+                            }
+                            placeholder="Min Batch"
+                            isClearable
+                            styles={customSelectStyle}
+                          />
+                        </Grid>
 
-                    <Grid item xs={12} md={6}>
-                      <Typography variant="body2" sx={{ ...formLabelStyle }}>
-                        Minimum Graduation Year Batch
-                      </Typography>
-                      <TextField
-                        fullWidth
-                        type="number"
-                        value={jobData.graduationYear.minBatch}
-                        onChange={(e) =>
-                          handleInputChange(
-                            "graduationYear.minBatch",
-                            e.target.value
-                          )
-                        }
-                        InputLabelProps={{
-                          shrink: !!jobData.graduationYear.minBatch,
-                        }}
-                        size="small"
-                        inputProps={{
-                          min: 1900,
-                          max: new Date().getFullYear() + 5,
-                        }}
-                      />
-                    </Grid>
-
-                    <Grid item xs={12} md={6}>
-                      <Typography variant="body2" sx={{ ...formLabelStyle }}>
-                        Maximum Graduation Year Batch
-                      </Typography>
-                      <TextField
-                        fullWidth
-                        type="number"
-                        value={jobData.graduationYear.maxBatch}
-                        onChange={(e) =>
-                          handleInputChange(
-                            "graduationYear.maxBatch",
-                            e.target.value
-                          )
-                        }
-                        InputLabelProps={{
-                          shrink: !!jobData.graduationYear.maxBatch,
-                        }}
-                        size="small"
-                        inputProps={{
-                          min:
-                            jobData.graduationYear.minBatch !== ""
-                              ? Number(jobData.graduationYear.minBatch)
-                              : 1900,
-                          max: new Date().getFullYear() + 5,
-                        }}
-                      />
+                        <Grid item xs={12} sm={6}>
+                          <Select
+                            options={
+                              jobData.graduationYear.minBatch
+                                ? batchYearOptions.filter(
+                                    (opt) =>
+                                      opt.value >=
+                                      Number(jobData.graduationYear.minBatch)
+                                  )
+                                : batchYearOptions
+                            }
+                            value={
+                              jobData.graduationYear.maxBatch !== ""
+                                ? batchYearOptions.find(
+                                    (opt) =>
+                                      opt.value ===
+                                      Number(jobData.graduationYear.maxBatch)
+                                  )
+                                : null
+                            }
+                            onChange={(selectedOption) =>
+                              handleRangeSelectChange(
+                                "graduationYear",
+                                "maxBatch",
+                                selectedOption
+                              )
+                            }
+                            placeholder="Max Batch"
+                            isClearable
+                            styles={customSelectStyle}
+                          />
+                        </Grid>
+                      </Grid>
                     </Grid>
                   </Grid>
                 </AccordionDetails>
