@@ -167,48 +167,20 @@ export const getApplication = async (req, res) => {
 };
 
 export const updateApplicationStatus = async (req, res) => {
-  const { status, applicationId } = req.body;
-  
+  const { status } = req.body;
+
   try {
-    // Get companyId from the authenticated user
-    const companyId = req.body.user?.userId;
-    
-    if (!companyId) {
-      return res.status(400).json({
-        success: false,
-        message: "User information is required",
-      });
-    }
-
-    if (!applicationId) {
-      return res.status(400).json({
-        success: false,
-        message: "Application ID is required",
-      });
-    }
-
-    // Validate the application ID format
-    if (!mongoose.Types.ObjectId.isValid(applicationId)) {
-      return res.status(400).json({ 
-        success: false, 
-        message: "Invalid application ID format" 
-      });
-    }
-    
-    let application = await Application.findById(applicationId)
+    const companyId = req.body.user.userId;
+    let application = await Application.findById(req.params.id)
       .populate("applicant", "email firstName")
       .populate("job", "jobTitle")
       .populate("company", "name");
 
     if (!application) {
-      return res.status(404).json({ 
-        success: false, 
-        message: "Application not found" 
-      });
+      return res.status(404).json({ message: "Application not found" });
     }
 
-    // Use strict equality for ObjectId comparison
-    if (companyId.toString() !== application.company._id.toString()) {
+    if (companyId != application.company._id) {
       return res.status(401).json({
         success: false,
         message: "Not authorized to update status",
@@ -224,36 +196,23 @@ export const updateApplicationStatus = async (req, res) => {
 
     await application.save();
 
-    // Safe property access for email sending
-    const email = application.applicant?.email;
-    const name = application.applicant?.firstName;
+    const email = application.applicant.email;
+    const name = application.applicant.firstName;
     const jobTitle = application.job?.jobTitle || "Position";
     const companyName = application.company?.name || "Company";
 
-    if (email) {
-      try {
-        await sendStatusUpdateEmail(email, status, name, jobTitle, companyName);
-      } catch (emailError) {
-        console.error('Email sending failed:', emailError);
-        // Don't fail the entire request if email fails
-      }
-    }
+    await sendStatusUpdateEmail(email, status, name, jobTitle, companyName);
 
     res.status(200).json({
       success: true,
       message: "Application status updated successfully",
-      data: application, // Consistent response structure
+      application,
     });
   } catch (err) {
-    console.error('Error updating application status:', err);
-    res.status(500).json({
-      success: false,
-      message: "Server error",
-      error: process.env.NODE_ENV === 'development' ? err.message : undefined
-    });
+    console.error(err.message);
+    res.status(500).send("Server error");
   }
 };
-
 
 export const getApplicationsOfAjob = async (req, res) => {
   try {
