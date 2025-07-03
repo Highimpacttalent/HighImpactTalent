@@ -167,11 +167,11 @@ export const getApplication = async (req, res) => {
 };
 
 export const updateApplicationStatus = async (req, res) => {
-  const { status } = req.body;
+  const { applicationId,status } = req.body;
 
   try {
     const companyId = req.body.user.userId;
-    let application = await Application.findById(req.params.id)
+    let application = await Application.findById(applicationId)
       .populate("applicant", "email firstName")
       .populate("job", "jobTitle")
       .populate("company", "name");
