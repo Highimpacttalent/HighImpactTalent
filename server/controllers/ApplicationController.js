@@ -166,13 +166,12 @@ export const getApplication = async (req, res) => {
   }
 };
 
-// update status
 export const updateApplicationStatus = async (req, res) => {
-  const { status } = req.body;
+  const { applicationId,status } = req.body;
 
   try {
     const companyId = req.body.user.userId;
-    let application = await Application.findById(req.params.id)
+    let application = await Application.findById(applicationId)
       .populate("applicant", "email firstName")
       .populate("job", "jobTitle")
       .populate("company", "name");
@@ -735,10 +734,6 @@ export const getScreeningFilterOptions = async (req, res) => {
         ];
       }
     });
-
-    console.log("Filter options for debugging:", JSON.stringify(filterOptions, null, 2));
-    console.log("Job Screening Questions:", job.screeningQuestions);
-    console.log("Total Questions:", Object.keys(filterOptions).length);
 
     res.status(200).json({
       success: true,

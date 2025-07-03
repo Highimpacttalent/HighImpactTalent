@@ -1049,18 +1049,26 @@ const JobApplications = () => {
   };
 
   const markAsViewed = async (applicationId) => {
-    try {
-      await axios.post(
-        "https://highimpacttalent.onrender.com/api-v1/application/update-status",
-        {
-          applicationId,
-          status: "Application Viewed",
+  try {
+    const token = userInfo.token; 
+    
+    await axios.post(
+      "https://highimpacttalent.onrender.com/api-v1/application/update-status",
+      {
+        applicationId,
+        status: "Application Viewed",
+      },
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
         }
-      );
-    } catch (err) {
-      console.error("Error marking application as viewed:", err);
-    }
-  };
+      }
+    );
+  } catch (err) {
+    console.error("Error marking application as viewed:", err);
+  }
+};
 
   const handleApplicationSelect = (applicationId) => {
     const newSelected = new Set(selectedApplications);
