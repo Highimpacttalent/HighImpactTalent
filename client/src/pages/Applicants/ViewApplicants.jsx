@@ -1602,18 +1602,7 @@ const JobApplications = () => {
                         lineHeight: 1,
                       }}
                     >
-                      {filteredApps.length}
-                    </Typography>
-                    <Typography
-                      sx={{
-                        color: "#1976d2",
-                        fontFamily: "Satoshi",
-                        fontWeight: 500,
-                        fontSize: "13px",
-                        lineHeight: 1,
-                      }}
-                    >
-                      at <strong>{steps[activeStep]}</strong>
+                      {filteredApps.length} candidate{filteredApps.length !== 1 ? "s" : ""} matched
                     </Typography>
                   </Box>
 
