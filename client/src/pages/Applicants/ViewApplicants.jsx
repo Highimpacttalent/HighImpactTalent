@@ -1349,10 +1349,13 @@ const JobApplications = () => {
             <Box
               sx={{
                 bgcolor: "white",
-                p: 3,
+                p: 3, 
                 borderRight: "2px solid #e2e8f0",
                 position: "sticky",
                 top: 20,
+                height: 'calc(100vh - 40px)', 
+                overflowY: 'auto',
+                pb: 8, 
               }}
             >
               <Typography
