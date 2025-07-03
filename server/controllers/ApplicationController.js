@@ -735,10 +735,6 @@ export const getScreeningFilterOptions = async (req, res) => {
       }
     });
 
-    console.log("Filter options for debugging:", JSON.stringify(filterOptions, null, 2));
-    console.log("Job Screening Questions:", job.screeningQuestions);
-    console.log("Total Questions:", Object.keys(filterOptions).length);
-
     res.status(200).json({
       success: true,
       filterOptions,

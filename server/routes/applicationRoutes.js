@@ -16,7 +16,7 @@ router.put("/status/:id",userAuth,updateApplicationStatus)
 
 router.post("/get-jobs",getApplicationsWithJobs)
 
-router.post("/update-status",ApplicationStatusUpdate)
+router.post("/update-status",userAuth,ApplicationStatusUpdate)
 
 router.put('/bulk-reject', bulkRejectApplications);
 
