@@ -47,19 +47,19 @@ import { useSelector } from "react-redux";
 
 const computeMatchScore = (job, applicant) => {
   const weights = {
-    exp: 25,
-    skills: 40,
-    loc: 10,
-    type: 10,
-    mode: 10,
-    sal: 5,
+    exp: 45,
+    skills: 15,
+    loc: 20,
+    //type: 10,
+    //mode: 10,
+    sal: 20,
   };
 
   let expScore = 0,
     skillsScore = 0,
     locScore = 0,
-    typeScore = 0,
-    modeScore = 0,
+    //typeScore = 0,
+    //modeScore = 0,
     salScore = 0;
 
   // 1) Experience
@@ -71,7 +71,7 @@ const computeMatchScore = (job, applicant) => {
     expScore = weights.exp;
   }
 
-  // 2) Skills Match (40%)
+  // 2) Skills Match 
   if (Array.isArray(job.skills) && job.skills.length > 0) {
     const matches = job.skills.filter((js) =>
       (applicant.skills || []).some(
@@ -98,22 +98,22 @@ const computeMatchScore = (job, applicant) => {
   }
 
   // 4) Work Type
-  if (job.workType) {
-    if ((applicant.preferredWorkTypes || []).includes(job.workType)) {
-      typeScore = weights.type;
-    }
-  } else {
-    typeScore = weights.type;
-  }
+  // if (job.workType) {
+  //   if ((applicant.preferredWorkTypes || []).includes(job.workType)) {
+  //     typeScore = weights.type;
+  //   }
+  // } else {
+  //   typeScore = weights.type;
+  // }
 
   // 5) Work Mode
-  if (job.workMode) {
-    if ((applicant.preferredWorkModes || []).includes(job.workMode)) {
-      modeScore = weights.mode;
-    }
-  } else {
-    modeScore = weights.mode;
-  }
+  // if (job.workMode) {
+  //   if ((applicant.preferredWorkModes || []).includes(job.workMode)) {
+  //     modeScore = weights.mode;
+  //   }
+  // } else {
+  //   modeScore = weights.mode;
+  // }
 
   // 6) Salary Expectation
   const jobMinSalary = job.salary?.minSalary ?? job.salary;
@@ -129,7 +129,7 @@ const computeMatchScore = (job, applicant) => {
   }
 
   const totalScore = Math.round(
-    expScore + skillsScore + locScore + typeScore + modeScore + salScore
+    expScore + skillsScore + locScore + salScore
   );
 
   const breakdown = `
@@ -159,8 +159,6 @@ Score by Category:
   • Experience: ${expScore.toFixed(1)} / ${weights.exp}
   • Skills:     ${skillsScore.toFixed(1)} / ${weights.skills}
   • Location:   ${locScore.toFixed(1)} / ${weights.loc}
-  • Work Type:  ${typeScore.toFixed(1)} / ${weights.type}
-  • Work Mode:  ${modeScore.toFixed(1)} / ${weights.mode}
   • Salary:     ${salScore.toFixed(1)} / ${weights.sal}
 
 → Total Match Score: ${totalScore}%

@@ -162,6 +162,46 @@ const userSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+// PERFORMANCE INDEXES - Add these for fast filtering
+// Single field indexes for common filters
+userSchema.index({ currentDesignation: 1 });
+userSchema.index({ currentCompany: 1 });
+userSchema.index({ currentLocation: 1 });
+userSchema.index({ totalYearsInConsulting: 1 });
+userSchema.index({ lastConsultingCompany: 1 });
+userSchema.index({ firstName: 1 });
+userSchema.index({ lastName: 1 });
+userSchema.index({ email: 1 }); // Already exists due to unique, but explicit
+userSchema.index({ accountType: 1 });
+
+// Array field indexes for skills and locations
+userSchema.index({ skills: 1 });
+userSchema.index({ preferredLocations: 1 });
+userSchema.index({ highestQualification: 1 });
+
+// Text index for full-text search across multiple fields
+userSchema.index({
+  firstName: 'text',
+  lastName: 'text',
+  currentDesignation: 'text',
+  currentCompany: 'text',
+  lastConsultingCompany: 'text',
+  about: 'text',
+  'experienceHistory.companyName': 'text',
+  'experienceHistory.designation': 'text',
+  'experienceHistory.description': 'text'
+});
+
+// Compound indexes for common filter combinations
+userSchema.index({ accountType: 1, currentLocation: 1 });
+userSchema.index({ accountType: 1, totalYearsInConsulting: 1 });
+userSchema.index({ currentDesignation: 1, totalYearsInConsulting: 1 });
+userSchema.index({ currentLocation: 1, totalYearsInConsulting: 1 });
+
+// Sorting index
+userSchema.index({ createdAt: -1 });
+userSchema.index({ updatedAt: -1 });
+
 // middelwares
 userSchema.pre("save", async function (next) {
   // Only hash the password if it has been modified (or is new)
