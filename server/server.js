@@ -26,6 +26,7 @@ const PORT = process.env.PORT || 8800;
 dbConnection()
 
 app.use(cors())
+app.options("*", cors());
 app.use(xss())
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: true }))
