@@ -71,7 +71,7 @@ const computeMatchScore = (job, applicant) => {
     expScore = weights.exp;
   }
 
-  // 2) Skills Match 
+  // 2) Skills Match
   if (Array.isArray(job.skills) && job.skills.length > 0) {
     const matches = job.skills.filter((js) =>
       (applicant.skills || []).some(
@@ -128,9 +128,7 @@ const computeMatchScore = (job, applicant) => {
     salScore = weights.sal;
   }
 
-  const totalScore = Math.round(
-    expScore + skillsScore + locScore + salScore
-  );
+  const totalScore = Math.round(expScore + skillsScore + locScore + salScore);
 
   const breakdown = `
 Candidate: ${applicant.firstName} ${applicant.lastName}
@@ -1049,26 +1047,26 @@ const JobApplications = () => {
   };
 
   const markAsViewed = async (applicationId) => {
-  try {
-    const token = userInfo.token; 
-    
-    await axios.post(
-      "https://highimpacttalent.onrender.com/api-v1/application/update-status",
-      {
-        applicationId,
-        status: "Application Viewed",
-      },
-      {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
+    try {
+      const token = userInfo.token;
+
+      await axios.post(
+        "https://highimpacttalent.onrender.com/api-v1/application/update-status",
+        {
+          applicationId,
+          status: "Application Viewed",
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
         }
-      }
-    );
-  } catch (err) {
-    console.error("Error marking application as viewed:", err);
-  }
-};
+      );
+    } catch (err) {
+      console.error("Error marking application as viewed:", err);
+    }
+  };
 
   const handleApplicationSelect = (applicationId) => {
     const newSelected = new Set(selectedApplications);
@@ -1357,13 +1355,13 @@ const JobApplications = () => {
             <Box
               sx={{
                 bgcolor: "white",
-                p: 3, 
+                p: 3,
                 borderRight: "2px solid #e2e8f0",
                 position: "sticky",
                 top: 20,
-                height: 'calc(100vh - 40px)', 
-                overflowY: 'auto',
-                pb: 8, 
+                height: "calc(100vh - 40px)",
+                overflowY: "auto",
+                pb: 8,
               }}
             >
               <Typography
@@ -1610,7 +1608,8 @@ const JobApplications = () => {
                         lineHeight: 1,
                       }}
                     >
-                      {filteredApps.length} candidate{filteredApps.length !== 1 ? "s" : ""} matched
+                      {filteredApps.length} candidate
+                      {filteredApps.length !== 1 ? "s" : ""} matched
                     </Typography>
                   </Box>
 
@@ -1802,70 +1801,67 @@ const JobApplications = () => {
                     Reject All
                   </Button>
                   <FormControl
-  size="small"
-  sx={{
-    minWidth: 200,
-    borderRadius: 2.5,
-    backgroundColor: "white",
-    border: "1.5px solid #e2e8f0",
-    fontFamily: "Satoshi",
-    fontWeight: 600,
-    "& .MuiInputLabel-root": {
-      fontSize: "13px",
-      fontWeight: 600,
-      color: "#64748b",
-      fontFamily: "Satoshi",
-    },
-    "& .MuiOutlinedInput-root": {
-      borderRadius: 2.5,
-      fontSize: "13px",
-      fontWeight: 600,
-      fontFamily: "Satoshi",
-      backgroundColor: "white",
-      paddingY: 0.5,
-      "& fieldset": {
-        border: "none",
-      },
-      "&:hover fieldset": {
-        border: "none",
-      },
-      "&.Mui-focused fieldset": {
-        border: "none",
-      },
-    },
-    "& .MuiSelect-select": {
-      padding: "10px 14px",
-      color: "#1f2937",
-    },
-    "& .MuiSelect-icon": {
-      color: "#6b7280",
-      right: "12px",
-    },
-  }}
->
-  <InputLabel id="sort-by-label">Sort By</InputLabel>
-  <Select
-    labelId="sort-by-label"
-    value={sortOption}
-    onChange={(e) => setSortOption(e.target.value)}
-    label="Sort By"
-  >
-    <MenuItem value="match-desc">Match Score: High to Low</MenuItem>
-    <MenuItem value="match-asc">Match Score: Low to High</MenuItem>
-    <MenuItem value="name-asc">Name: A to Z</MenuItem>
-    <MenuItem value="name-desc">Name: Z to A</MenuItem>
-    <MenuItem value="newest">Newest First</MenuItem>
-  </Select>
-</FormControl>
-
+                    size="small"
+                    sx={{
+                      minWidth: 200,
+                      borderRadius: 2.5,
+                      backgroundColor: "white",
+                      border: "1.5px solid #e2e8f0",
+                      fontFamily: "Satoshi",
+                      fontWeight: 600,
+                      "& .MuiInputLabel-root": {
+                        fontSize: "13px",
+                        fontWeight: 600,
+                        color: "#64748b",
+                        fontFamily: "Satoshi",
+                      },
+                      "& .MuiOutlinedInput-root": {
+                        borderRadius: 2.5,
+                        fontSize: "13px",
+                        fontWeight: 600,
+                        fontFamily: "Satoshi",
+                        backgroundColor: "white",
+                        paddingY: 0.5,
+                        "& fieldset": {
+                          border: "none",
+                        },
+                        "&:hover fieldset": {
+                          border: "none",
+                        },
+                        "&.Mui-focused fieldset": {
+                          border: "none",
+                        },
+                      },
+                      "& .MuiSelect-select": {
+                        padding: "10px 14px",
+                        color: "#1f2937",
+                      },
+                      "& .MuiSelect-icon": {
+                        color: "#6b7280",
+                        right: "12px",
+                      },
+                    }}
+                  >
+                    <InputLabel id="sort-by-label">Sort By</InputLabel>
+                    <Select
+                      labelId="sort-by-label"
+                      value={sortOption}
+                      onChange={(e) => setSortOption(e.target.value)}
+                      label="Sort By"
+                    >
+                      <MenuItem value="match-desc">
+                        Match Score: High to Low
+                      </MenuItem>
+                      <MenuItem value="match-asc">
+                        Match Score: Low to High
+                      </MenuItem>
+                      <MenuItem value="name-asc">Name: A to Z</MenuItem>
+                      <MenuItem value="name-desc">Name: Z to A</MenuItem>
+                      <MenuItem value="newest">Newest First</MenuItem>
+                    </Select>
+                  </FormControl>
                 </Box>
               </Box>
-            </Box>
-          )}
-
-          {loading && (
-            <Box sx={{ display: "flex", justifyContent: "center", my: 4 }}>
-              <CircularProgress sx={{ color: "#1976d2" }} size={40} />
             </Box>
           )}
 
@@ -1878,6 +1874,11 @@ const JobApplications = () => {
               minHeight: "400px",
             }}
           >
+            {filterLoading && (
+              <Box sx={{ display: "flex", justifyContent: "center", mb: 3 }}>
+                <CircularProgress sx={{ color: "#1976d2" }} size={40} />
+              </Box>
+            )}
             <Grid container spacing={3}>
               {getSortedApps(filteredApps).map((app) => (
                 <Grid item xs={12} key={app._id}>
