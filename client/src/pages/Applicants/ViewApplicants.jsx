@@ -1046,12 +1046,62 @@ const JobApplications = () => {
     setSearchKeyword("");
   };
 
+  const handleStageSelect = async (applicationId, newStatus) => {
+    try {
+      const token = currentUser?.token;
+
+      const response = await axios.post(
+        "https://highimpacttalent.onrender.com/api-v1/application/update-single-status",
+        {
+          applicationId,
+          status: newStatus,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (response.data.success) {
+        setFilteredApps((prev) =>
+          prev.filter((app) => app._id !== applicationId)
+        );
+        setApplications((prev) =>
+          prev.filter((app) => app._id !== applicationId)
+        );
+        setSnackbar({
+          open: true,
+          message: `Candidate moved to "${newStatus}" stage.`,
+          severity: "success",
+        });
+
+        // Update stage counts after status change
+        await fetchStageCounts();
+      } else {
+        setSnackbar({
+          open: true,
+          message: response.data.message || "Failed to update status.",
+          severity: "error",
+        });
+      }
+    } catch (err) {
+      console.error("Error updating application status:", err);
+      setSnackbar({
+        open: true,
+        message: "Something went wrong while updating the status.",
+        severity: "error",
+      });
+    }
+  };
+
   const markAsViewed = async (applicationId) => {
     try {
-      const token = userInfo.token;
+      const token = currentUser?.token;
 
       await axios.post(
-        "https://highimpacttalent.onrender.com/api-v1/application/update-status",
+        "https://highimpacttalent.onrender.com/api-v1/application/update-single-status",
         {
           applicationId,
           status: "Application Viewed",
@@ -1063,6 +1113,8 @@ const JobApplications = () => {
           },
         }
       );
+
+      console.log(`Application ${applicationId} marked as viewed`);
     } catch (err) {
       console.error("Error marking application as viewed:", err);
     }
@@ -1951,6 +2003,7 @@ const JobApplications = () => {
                         setBreakdownDialogOpen={setBreakdownDialogOpen}
                         navigate={navigate}
                         markAsViewed={markAsViewed}
+                        onStageSelect={handleStageSelect}
                       />
                     </Box>
                   </Box>

@@ -84,14 +84,29 @@ const ViewProfile = () => {
     };
 
     const statusToSend = statusMap[nextAction];
+
+    if (!statusToSend) {
+      alert("Invalid next action.");
+      return;
+    }
+
     try {
+      const token = currentUser?.token;
+
       const res = await axios.post(
-        "https://highimpacttalent.onrender.com/api-v1/application/update-status",
+        "https://highimpacttalent.onrender.com/api-v1/application/update-single-status",
         {
           applicationId,
           status: statusToSend,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
         }
       );
+
       if (res.status === 200 || res.data.success) {
         setStatus(statusToSend);
       } else {

@@ -8,6 +8,7 @@ import {
   Chip,
   Button,
   IconButton,
+  CircularProgress,
   Grid,
   Stack,
   Tooltip,
@@ -39,9 +40,11 @@ import {
   TrendingUp,
 } from "@mui/icons-material";
 import { useTheme } from "@mui/material";
+import axios from "axios";
 import { useMediaQuery } from "@mui/material";
+import { useSelector } from "react-redux";
 
-const ApplicationCard = ({ app, navigate, markAsViewed }) => {
+const ApplicationCard = ({ app, navigate, markAsViewed, onStageSelect }) => {
   const { applicant, matchScore, status, screeningAnswers, cvUrl } = app;
   const [showAll, setShowAll] = useState(false);
   const [resumeOpen, setResumeOpen] = useState(false);
@@ -52,12 +55,43 @@ const ApplicationCard = ({ app, navigate, markAsViewed }) => {
   const [showAllSkills, setShowAllSkills] = useState(false);
   const [anchorEl, setAnchorEl] = useState(null);
   const skills = applicant.skills || [];
+  const [action, setAction] = useState(false);
   const displayedSkills = showAllSkills ? skills : skills.slice(0, 4);
+  const possibleStages = [
+    "Applied",
+    "Application Viewed",
+    "Shortlisted",
+    "Interviewing",
+    "Hired",
+    "Not Progressing",
+  ];
 
   const openMenu = (e) => setAnchorEl(e.currentTarget);
   const closeMenu = () => setAnchorEl(null);
 
+  const [actionsAnchorEl, setActionsAnchorEl] = useState(null);
+  const openActionsMenu = (e) => {
+    e.stopPropagation();
+    setActionsAnchorEl(e.currentTarget);
+  };
+  const closeActionsMenu = () => setActionsAnchorEl(null);
+  const currentUser = useSelector((state) => state.user.user);
+
   const visibleSkills = showAll ? skills : skills.slice(0, 8);
+
+  const handleStageSelect = async (selectedStage) => {
+    setAction(true); // ✅ Set action state to true
+    closeActionsMenu();
+    if (status === selectedStage) return;
+
+    try {
+      await onStageSelect(app._id, selectedStage); // ✅ Call parent handler
+    } catch (error) {
+      console.error("Stage update failed:", error);
+    } finally {
+      setAction(false);
+    }
+  };
 
   // Professional match color scheme
   const getMatchColor = (score) => {
@@ -795,6 +829,34 @@ const ApplicationCard = ({ app, navigate, markAsViewed }) => {
                   Profile
                 </Button>
                 <Button
+                  variant="outlined"
+                  size="small"
+                  onClick={openActionsMenu}
+                  disabled={action} // ✅ Disable button during loading
+                  endIcon={
+                    action ? (
+                      <CircularProgress size={16} sx={{ color: "#6b7280" }} />
+                    ) : (
+                      <MoreVertIcon />
+                    )
+                  }
+                  sx={{
+                    textTransform: "none",
+                    fontFamily: "Satoshi, sans-serif",
+                    fontWeight: 600,
+                    borderColor: "#d1d5db",
+                    color: "#374151",
+                    "&:hover": {
+                      borderColor: "#9ca3af",
+                      backgroundColor: "#f9fafb",
+                    },
+                    minWidth: 100,
+                  }}
+                >
+                  {action ? "Loading..." : "Actions"}
+                </Button>
+
+                <Button
                   variant="contained"
                   size="small"
                   startIcon={<Download />}
@@ -990,6 +1052,38 @@ const ApplicationCard = ({ app, navigate, markAsViewed }) => {
           </Grid>
         </Grid>
       </CardContent>
+
+      <Menu
+        anchorEl={actionsAnchorEl}
+        open={Boolean(actionsAnchorEl)}
+        onClose={closeActionsMenu}
+        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+        transformOrigin={{ vertical: "top", horizontal: "right" }}
+        // Optional: Add PaperProps to adjust menu width if needed
+        PaperProps={{
+          style: {
+            width: "180px", // Example fixed width
+          },
+        }}
+      >
+        <Typography
+          variant="caption"
+          sx={{ display: "block", px: 2, py: 1, color: "#6b7280" }}
+        >
+          Move to Stage:
+        </Typography>
+        <Divider sx={{ my: 0 }} />
+        {/* Map over possible stages to create menu items */}
+        {possibleStages.map((stage) => (
+          <MenuItem
+            key={stage}
+            onClick={() => handleStageSelect(stage)} // Call handler on click
+            disabled={status === stage} // Disable if already in this stage
+          >
+            {stage}
+          </MenuItem>
+        ))}
+      </Menu>
 
       {/* Resume Drawer */}
       <Drawer
