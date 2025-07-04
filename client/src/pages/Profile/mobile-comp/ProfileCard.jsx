@@ -21,14 +21,13 @@ import { UpdateUser } from "../../../redux/userSlice";
 import axios from "axios";
 import Select from "react-select";
 
-
 const WRAP_AT = 16;
- function EmailWithBreak({ email }) {
+function EmailWithBreak({ email }) {
   if (!email) return null;
   if (email.length <= WRAP_AT) {
     return <>{email}</>;
   }
-  const first  = email.slice(0, WRAP_AT);
+  const first = email.slice(0, WRAP_AT);
   const second = email.slice(WRAP_AT);
   return (
     <>
@@ -66,7 +65,6 @@ const LocationDropdown = ({ value, onChange, isRequired = false }) => {
     };
     fetchCities();
   }, []);
-
 
   // Handle city selection
   const handleCityChange = (selectedOption) => {
@@ -290,6 +288,19 @@ const UserInfoCard = () => {
 
   const profileCompletion = Math.round((filledFieldsCount / totalFields) * 100);
   const handleSaveClick = async () => {
+    if (
+      !updatedUserInfo.contactNumber ||
+      updatedUserInfo.contactNumber.trim() === ""
+    ) {
+      setAlert({
+        open: true,
+        type: "warning",
+        title: "Missing Phone Number",
+        message: "Please enter your phone number before saving your profile.",
+      });
+      return;
+    }
+
     setLoading(true);
     try {
       const response = await fetch(
@@ -347,6 +358,13 @@ const UserInfoCard = () => {
         borderRadius: 4,
       }}
     >
+      <AlertModal
+        open={alert.open}
+        onClose={() => setAlert({ ...alert, open: false })}
+        type={alert.type}
+        title={alert.title}
+        message={alert.message}
+      />
       {/* Profile Image */}
       <Box sx={{ position: "relative", display: "inline-block" }}>
         <Avatar
@@ -405,7 +423,7 @@ const UserInfoCard = () => {
             mb: 1,
             color: "#404258",
             fontWeight: 700,
-            textAlign:"center",
+            textAlign: "center",
             fontFamily: "Satoshi",
             fontSize: { xs: 20, md: 25, lg: 30 },
           }}
@@ -424,7 +442,6 @@ const UserInfoCard = () => {
             gap={1}
             color="#404258"
             fontWeight="400"
-            
           >
             <AiOutlineMail /> <EmailWithBreak email={updatedUserInfo.email} />
           </Typography>
@@ -432,20 +449,20 @@ const UserInfoCard = () => {
           {/* Contact */}
           {isEditing ? (
             <PhoneInput
-                defaultCountry="IN"
-                value={updatedUserInfo.contactNumber}
-                maxLength={15} // value like "+919876543210"
-                onChange={(phone) => {
-                  handleChange({
-                    target: {
-                      name: "contactNumber",
-                      value: phone, // already includes country code like +91
-                    },
-                  });
-                }}
-                className="rounded-full px-4 py-2.5 border focus:outline-none focus:ring-2 focus:ring-blue-500"
-                style={{ borderRadius: 50, border: "1px solid #24252C" }}
-              />
+              defaultCountry="IN"
+              value={updatedUserInfo.contactNumber}
+              maxLength={15} // value like "+919876543210"
+              onChange={(phone) => {
+                handleChange({
+                  target: {
+                    name: "contactNumber",
+                    value: phone, // already includes country code like +91
+                  },
+                });
+              }}
+              className="rounded-full px-4 py-2.5 border focus:outline-none focus:ring-2 focus:ring-blue-500"
+              style={{ borderRadius: 50, border: "1px solid #24252C" }}
+            />
           ) : (
             <Typography
               display="flex"
@@ -522,9 +539,7 @@ const UserInfoCard = () => {
     </Box>
   );
 
-  return (
-    <Box sx={{ width: "100%" }}>{mobileView}</Box>
-  );
+  return <Box sx={{ width: "100%" }}>{mobileView}</Box>;
 };
 
 export default UserInfoCard;

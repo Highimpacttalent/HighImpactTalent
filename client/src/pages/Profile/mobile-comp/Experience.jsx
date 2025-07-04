@@ -35,6 +35,15 @@ const Experience = ({ experienceData }) => {
     experience: "",
   });
 
+  // State to store validation errors
+  const [validationErrors, setValidationErrors] = useState({
+    currentCompany: "",
+    currentDesignation: "",
+    currentSalary: "",
+    // Add other fields here if they become mandatory later
+  });
+
+
   useEffect(() => {
     if (experienceData) {
       setFormData({
@@ -46,26 +55,95 @@ const Experience = ({ experienceData }) => {
         joinConsulting: experienceData.joinConsulting || "",
         experience: experienceData.experience || "",
       });
+       // Optional: Validate initial data when loaded, but will be validated on edit click anyway
+       // const initialErrors = validateForm({
+       //    currentCompany: experienceData.currentCompany || "",
+       //    currentDesignation: experienceData.currentDesignation || "",
+       //    currentSalary: experienceData.currentSalary || "",
+       // });
+       // setValidationErrors(initialErrors);
     }
   }, [experienceData]);
 
   const [isSaving, setIsSaving] = useState(false);
 
+  // Validation function - Identical to the previous solution as the fields are the same
+  const validateForm = (data) => {
+    const errors = {};
+
+    // Validate Current Company (Required)
+    if (!data.currentCompany || data.currentCompany.trim() === "") {
+      errors.currentCompany = "Current Company is required.";
+    } else {
+      errors.currentCompany = ""; // Clear error if valid
+    }
+
+    // Validate Current Designation (Required)
+    if (!data.currentDesignation || data.currentDesignation.trim() === "") {
+      errors.currentDesignation = "Designation is required.";
+    } else {
+      errors.currentDesignation = ""; // Clear error if valid
+    }
+
+    // Validate Current Salary (Required, Numeric, Max 1000, No negatives)
+    const salary = parseFloat(data.currentSalary);
+    if (!data.currentSalary || data.currentSalary.trim() === "") {
+         errors.currentSalary = "Current Salary is required.";
+    } else if (isNaN(salary)) {
+         errors.currentSalary = "Please enter a valid number.";
+    } else if (salary > 1000) {
+      errors.currentSalary = "Salary cannot exceed 1000 lakhs.";
+    }
+     else if (salary < 0) {
+        errors.currentSalary = "Salary cannot be negative.";
+     }
+     else {
+      errors.currentSalary = ""; // Clear error if valid
+    }
+
+    // You can add validation for other fields here if needed
+
+    return errors;
+  };
+
+
   const handleEditClick = () => {
     setIsEditing(true);
+    // Run validation immediately when entering edit mode to show initial errors if any
+    const initialErrors = validateForm(formData);
+    setValidationErrors(initialErrors);
   };
 
   const handleChange = (e) => {
-    console.log("Updated formData:", {
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    const newFormData = { ...formData, [name]: value };
+    setFormData(newFormData);
+
+    // Validate the form data whenever a field changes for real-time feedback
+    const updatedErrors = validateForm(newFormData);
+    setValidationErrors(updatedErrors);
+
+    // console.log("Updated formData:", newFormData); // Keep if needed for debugging
+    // console.log("Updated validationErrors:", updatedErrors); // Keep if needed for debugging
   };
 
   const handleSaveClick = async () => {
+    // Perform final validation before attempting to save
+    const finalErrors = validateForm(formData);
+    setValidationErrors(finalErrors);
+
+    // Check if there are any errors
+    const isValid = Object.values(finalErrors).every(error => error === '');
+
+    if (!isValid) {
+      console.log("Validation failed. Cannot save.");
+      return; // Stop the save process if validation fails
+    }
+
+    // If validation passes, proceed with saving
     setIsSaving(true);
-    console.log("Payload being sent:", formData);
+    console.log("Payload being sent:", formData); // Keep if needed for debugging
+
     try {
       const response = await fetch(
         "https://highimpacttalent.onrender.com/api-v1/user/updateWork",
@@ -75,7 +153,7 @@ const Experience = ({ experienceData }) => {
           body: JSON.stringify({
             userId: experienceData?._id,
             ...formData,
-            // experience: Number(formData.experience)
+            // experience: Number(formData.experience) // Keep if needed
           }),
         }
       );
@@ -84,14 +162,23 @@ const Experience = ({ experienceData }) => {
       if (response.ok) {
         dispatch(UpdateUser(formData)); // Update Redux store
         setIsEditing(false);
+        // Optionally clear errors on successful save
+        // setValidationErrors({ currentCompany: "", currentDesignation: "", currentSalary: "" });
       } else {
         console.error("Failed to save experience:", result.message);
+        // Handle API error display if necessary
       }
     } catch (error) {
       console.error("Error saving experience:", error);
+      // Handle network/other error display if necessary
     }
     setIsSaving(false);
   };
+
+   // Determine if the Save button should be disabled
+   // Disabled if currently saving OR if there are any validation errors
+  const isSaveButtonDisabled = isSaving || Object.values(validationErrors).some(error => error !== '');
+
 
   return (
     <Box>
@@ -114,13 +201,14 @@ const Experience = ({ experienceData }) => {
           <Button
             variant="outlined"
             onClick={handleSaveClick}
-            disabled={isSaving}
+            disabled={isSaveButtonDisabled} // Use the calculated disabled state
             sx={{
               height: "35px",
               mt: 2,
-              bgcolor: isSaving ? "grey.400" : "#3C7EFC",
+              // Style disabled state differently
+              bgcolor: isSaveButtonDisabled ? "grey.400" : "#3C7EFC",
               color: "white",
-              "&:hover": { bgcolor: "#3361cb" },
+              "&:hover": { bgcolor: isSaveButtonDisabled ? "grey.400" : "#3361cb" },
             }}
           >
             Save
@@ -150,6 +238,8 @@ const Experience = ({ experienceData }) => {
                 name="currentCompany"
                 value={formData.currentCompany}
                 onChange={handleChange}
+                error={!!validationErrors.currentCompany} // Set error prop based on state
+                helperText={validationErrors.currentCompany} // Display error message
                 sx={{
                   "& .MuiOutlinedInput-root": {
                     borderRadius: 16,
@@ -184,6 +274,8 @@ const Experience = ({ experienceData }) => {
                 name="currentDesignation"
                 value={formData.currentDesignation}
                 onChange={handleChange}
+                 error={!!validationErrors.currentDesignation} // Set error prop based on state
+                 helperText={validationErrors.currentDesignation} // Display error message
                 sx={{
                   "& .MuiOutlinedInput-root": {
                     borderRadius: 16,
@@ -216,7 +308,7 @@ const Experience = ({ experienceData }) => {
                 <Select
                   name="experience"
                   value={formData.experience}
-                  onChange={handleChange}
+                  onChange={handleChange} // This handleChange will now trigger validation as well, though 'experience' isn't being validated currently
                   sx={{
                     borderRadius: 16,
                     height: "35px",
@@ -229,6 +321,8 @@ const Experience = ({ experienceData }) => {
                     </MenuItem>
                   ))}
                 </Select>
+                {/* Add error/helper text here if experience becomes mandatory */}
+                {/* {!!validationErrors.experience && <Typography color="error" variant="caption">{validationErrors.experience}</Typography>} */}
               </FormControl>
             ) : (
               <Typography
@@ -252,10 +346,12 @@ const Experience = ({ experienceData }) => {
               <TextField
                 size="small"
                 fullWidth
-                type="number"
+                type="number" // Use type="number" for better user input, but validation is still needed
                 name="currentSalary"
                 value={formData.currentSalary}
                 onChange={handleChange}
+                error={!!validationErrors.currentSalary} // Set error prop based on state
+                helperText={validationErrors.currentSalary} // Display error message
                 sx={{
                   "& .MuiOutlinedInput-root": {
                     borderRadius: 16,
@@ -264,6 +360,10 @@ const Experience = ({ experienceData }) => {
                   width: "95%",
                   mt: 1,
                 }}
+                // Optional: Prevent negative input directly in the field
+                 InputProps={{
+                   inputProps: { min: 0 }
+                 }}
               />
             ) : (
               <Typography
@@ -291,7 +391,7 @@ const Experience = ({ experienceData }) => {
                   row
                   name="isItConsultingCompany"
                   value={formData.isItConsultingCompany}
-                  onChange={handleChange}
+                  onChange={handleChange} // This handleChange will now trigger validation as well
                 >
                   <FormControlLabel
                     value="Yes"
@@ -300,6 +400,8 @@ const Experience = ({ experienceData }) => {
                   />
                   <FormControlLabel value="No" control={<Radio />} label="No" />
                 </RadioGroup>
+                 {/* Add error/helper text here if this becomes mandatory */}
+                 {/* {!!validationErrors.isItConsultingCompany && <Typography color="error" variant="caption">{validationErrors.isItConsultingCompany}</Typography>} */}
               </FormControl>
             ) : (
               <Typography
@@ -325,7 +427,7 @@ const Experience = ({ experienceData }) => {
                   row
                   name="joinConsulting"
                   value={formData.joinConsulting}
-                  onChange={handleChange}
+                  onChange={handleChange} // This handleChange will now trigger validation as well
                 >
                   <FormControlLabel
                     value="Lateral"
@@ -338,6 +440,8 @@ const Experience = ({ experienceData }) => {
                     label="Out of Campus"
                   />
                 </RadioGroup>
+                 {/* Add error/helper text here if this becomes mandatory */}
+                 {/* {!!validationErrors.joinConsulting && <Typography color="error" variant="caption">{validationErrors.joinConsulting}</Typography>} */}
               </FormControl>
             ) : (
               <Typography
@@ -363,7 +467,7 @@ const Experience = ({ experienceData }) => {
                   row
                   name="openToRelocate"
                   value={formData.openToRelocate}
-                  onChange={handleChange}
+                  onChange={handleChange} // This handleChange will now trigger validation as well
                 >
                   <FormControlLabel
                     value="Yes"
@@ -372,6 +476,8 @@ const Experience = ({ experienceData }) => {
                   />
                   <FormControlLabel value="No" control={<Radio />} label="No" />
                 </RadioGroup>
+                 {/* Add error/helper text here if this becomes mandatory */}
+                 {/* {!!validationErrors.openToRelocate && <Typography color="error" variant="caption">{validationErrors.openToRelocate}</Typography>} */}
               </FormControl>
             ) : (
               <Typography

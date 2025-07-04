@@ -274,6 +274,15 @@ const UserInfoCard = () => {
 
   const profileCompletion = Math.round((filledFieldsCount / totalFields) * 100);
   const handleSaveClick = async () => {
+    if (!updatedUserInfo.contactNumber || updatedUserInfo.contactNumber.trim() === "") {
+    setAlert({
+      open: true,
+      type: "warning",
+      title: "Missing Phone Number",
+      message: "Please enter your phone number before saving your profile.",
+    });
+    return;
+  }
     setLoading(true);
     try {
       const response = await fetch(
