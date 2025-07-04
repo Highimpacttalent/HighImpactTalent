@@ -1162,3 +1162,86 @@ export const bulkAdvanceApplications = async (req, res) => {
     });
   }
 };
+
+
+
+export const updateSingleApplicationStatus = async (req, res) => {
+  const { applicationId, status } = req.body;
+  const userId = req.body.user?.userId;
+
+  const allowedStatuses = [
+    "Applied",
+    "Application Viewed",
+    "Shortlisted",
+    "Interviewing",
+    "Hired",
+    "Not Progressing",
+  ];
+
+  if (!applicationId || !status) {
+    return res.status(400).json({
+      success: false,
+      message: "Both applicationId and status are required.",
+    });
+  }
+
+  if (!allowedStatuses.includes(status)) {
+    return res.status(400).json({
+      success: false,
+      message: "Invalid status provided.",
+    });
+  }
+
+  try {
+    const application = await Application.findById(applicationId)
+      .populate("applicant", "email firstName")
+      .populate("job", "jobTitle")
+      .populate("company", "name");
+
+    if (!application) {
+      return res.status(404).json({
+        success: false,
+        message: "Application not found",
+      });
+    }
+
+    // Authorization check (optional, but mirrors the bulk route)
+    if (userId && userId != application.company?._id?.toString()) {
+      return res.status(401).json({
+        success: false,
+        message: "Not authorized to update this application",
+      });
+    }
+
+    const email = application.applicant.email;
+    const name = application.applicant.firstName;
+    const jobTitle = application.job?.jobTitle || "Position";
+    const companyName = application.company?.name || "Company";
+
+    // Update status and history
+    application.status = status;
+    application.statusHistory.push({
+      status,
+      changedAt: new Date(),
+    });
+
+    await application.save();
+
+    await sendStatusUpdateEmail(email, status, name, jobTitle, companyName);
+
+    return res.status(200).json({
+      success: true,
+      message: `Application status updated to '${status}'`,
+      updatedApplication: {
+        _id: application._id,
+        status: application.status,
+      },
+    });
+  } catch (err) {
+    console.error("Error updating application status:", err.message);
+    return res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
+  }
+};
