@@ -238,8 +238,10 @@ export const getApplicationsOfAjob = async (req, res) => {
     const cachedData = cache.get(cacheKey);
     if (cachedData) {
       console.log("🟢 Cache hit:", cacheKey);
+      res.set("Cache-Control", "no-store");  // 🚫 prevent browser 304 logic
       return res.status(200).json(cachedData);
     }
+
 
     // Build optimized aggregation pipeline
     const pipeline = [];
