@@ -239,8 +239,6 @@ export const getApplicationsOfAjob = async (req, res) => {
       screeningFilters,
     });
 
-    let screeningFiltersParsed = null;
-
     // STEP 1: Parse and normalize filters early
     let screeningFiltersParsed = {};
     try {
