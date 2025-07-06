@@ -241,7 +241,28 @@ export const getApplicationsOfAjob = async (req, res) => {
 
     let screeningFiltersParsed = null;
 
-    const cacheKey = `apps:${jobId}:${status || "all"}:${keywords || ""}:${locations || ""}:${designations || ""}:${totalYearsInConsulting || ""}:${screeningFilters || ""}`;
+    // STEP 1: Parse and normalize filters early
+    let screeningFiltersParsed = {};
+    try {
+      if (screeningFilters && screeningFilters.trim()) {
+        screeningFiltersParsed =
+          typeof screeningFilters === "string"
+            ? JSON.parse(screeningFilters)
+            : screeningFilters;
+      }
+    } catch (err) {
+      console.error("❌ Invalid screeningFilters JSON:", err);
+      return res.status(400).json({
+        success: false,
+        message: "Invalid screeningFilters format",
+      });
+    }
+
+    // STEP 2: Build normalized cache key
+    const cacheKey = `apps:${jobId}:${status.trim()}:${keywords.trim()}:${locations.trim()}:${designations.trim()}:${totalYearsInConsulting.trim()}:${JSON.stringify(
+      screeningFiltersParsed
+    )}`;
+
     console.log("🔑 Computed cacheKey:", cacheKey);
 
     const cachedData = cache.get(cacheKey);
