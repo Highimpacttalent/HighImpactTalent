@@ -227,7 +227,7 @@ export const getApplicationsOfAjob = async (req, res) => {
       designations,
       totalYearsInConsulting,
       screeningFilters,
-    } = req.query;
+    } = req.query ?? {};
 
     console.log("📝 Raw query params:", {
       jobId,
@@ -242,7 +242,7 @@ export const getApplicationsOfAjob = async (req, res) => {
     // STEP 1: Parse and normalize filters early
     let screeningFiltersParsed = {};
     try {
-      if (screeningFilters && screeningFilters.trim()) {
+      if ((screeningFilters ?? "").trim()) {
         screeningFiltersParsed =
           typeof screeningFilters === "string"
             ? JSON.parse(screeningFilters)
@@ -256,8 +256,8 @@ export const getApplicationsOfAjob = async (req, res) => {
       });
     }
 
-    // STEP 2: Build normalized cache key
-    const cacheKey = `apps:${jobId}:${status.trim()}:${keywords.trim()}:${locations.trim()}:${designations.trim()}:${totalYearsInConsulting.trim()}:${JSON.stringify(
+    // STEP 2: Build normalized cache key (safe .trim() usage)
+    const cacheKey = `apps:${jobId}:${(status ?? "all").trim()}:${(keywords ?? "").trim()}:${(locations ?? "").trim()}:${(designations ?? "").trim()}:${(totalYearsInConsulting ?? "").trim()}:${JSON.stringify(
       screeningFiltersParsed
     )}`;
 
@@ -276,8 +276,8 @@ export const getApplicationsOfAjob = async (req, res) => {
     const matchStage = {
       job: new mongoose.Types.ObjectId(jobId),
     };
-    if (status) {
-      matchStage.status = status;
+    if ((status ?? "").trim()) {
+      matchStage.status = status.trim();
     }
 
     pipeline.push({ $match: matchStage });
@@ -291,60 +291,28 @@ export const getApplicationsOfAjob = async (req, res) => {
 
     console.log("🛠 Parsing filters...");
 
-    if (keywords && keywords.trim()) {
+    const parseList = (val) => {
       try {
-        keywordsList = JSON.parse(keywords);
-        if (!Array.isArray(keywordsList)) {
-          keywordsList = [keywordsList];
-        }
+        const parsed = JSON.parse(val);
+        return Array.isArray(parsed) ? parsed : [parsed];
       } catch (e) {
-        keywordsList = keywords.split(",").map((k) => k.trim()).filter((k) => k);
+        return (val ?? "")
+          .split(",")
+          .map((item) => item.trim())
+          .filter(Boolean);
       }
-    }
+    };
 
-    if (locations && locations.trim()) {
-      try {
-        locationsList = JSON.parse(locations);
-        if (!Array.isArray(locationsList)) {
-          locationsList = [locationsList];
-        }
-      } catch (e) {
-        locationsList = locations.split(",").map((loc) => loc.trim()).filter((loc) => loc);
-      }
-    }
+    keywordsList = parseList(keywords);
+    locationsList = parseList(locations);
+    designationsList = parseList(designations);
 
-    if (designations && designations.trim()) {
-      try {
-        designationsList = JSON.parse(designations);
-        if (!Array.isArray(designationsList)) {
-          designationsList = [designationsList];
-        }
-      } catch (e) {
-        designationsList = designations.split(",").map((des) => des.trim()).filter((des) => des);
-      }
-    }
-
-    if (screeningFilters && screeningFilters.trim()) {
-      try {
-        screeningFiltersParsed =
-          typeof screeningFilters === "string"
-            ? JSON.parse(screeningFilters)
-            : screeningFilters;
-
-        if (
-          screeningFiltersParsed &&
-          typeof screeningFiltersParsed === "object" &&
-          Object.keys(screeningFiltersParsed).length > 0
-        ) {
-          console.log("🔎 Screening filters parsed:", screeningFiltersParsed);
-        }
-      } catch (error) {
-        console.error("❌ Error parsing screening filters:", error);
-        return res.status(400).json({
-          success: false,
-          message: "Invalid screening filter format: " + error.message,
-        });
-      }
+    if (
+      screeningFiltersParsed &&
+      typeof screeningFiltersParsed === "object" &&
+      Object.keys(screeningFiltersParsed).length > 0
+    ) {
+      console.log("🔎 Screening filters parsed:", screeningFiltersParsed);
     }
 
     if (earlyFilterConditions.length > 0) {
@@ -361,7 +329,42 @@ export const getApplicationsOfAjob = async (req, res) => {
           localField: "applicant",
           foreignField: "_id",
           as: "applicant",
-          pipeline: [{ $project: { firstName: 1, lastName: 1, email: 1 /* ...etc */ } }],
+          pipeline: [
+            {
+              $project: {
+                firstName: 1,
+                lastName: 1,
+                email: 1,
+                contactNumber: 1,
+                profileUrl: 1,
+                cvUrl: 1,
+                currentDesignation: 1,
+                currentCompany: 1,
+                currentSalary: 1,
+                currentLocation: 1,
+                preferredLocations: 1,
+                totalYearsInConsulting: 1,
+                lastConsultingCompany: 1,
+                isItConsultingCompany: 1,
+                skills: 1,
+                experience: 1,
+                experienceHistory: 1,
+                about: 1,
+                expectedMinSalary: 1,
+                preferredWorkTypes: 1,
+                preferredWorkModes: 1,
+                openToRelocate: 1,
+                joinConsulting: 1,
+                highestQualification: 1,
+                linkedinLink: 1,
+                dateOfBirth: 1,
+                accountType: 1,
+                isEmailVerified: 1,
+                createdAt: 1,
+                updatedAt: 1,
+              },
+            },
+          ],
         },
       },
       {
@@ -380,10 +383,7 @@ export const getApplicationsOfAjob = async (req, res) => {
           as: "company",
           pipeline: [{ $project: { password: 0 } }],
         },
-      }
-    );
-
-    pipeline.push(
+      },
       { $unwind: "$applicant" },
       { $unwind: "$job" },
       { $unwind: "$company" }
@@ -405,7 +405,7 @@ export const getApplicationsOfAjob = async (req, res) => {
       console.log("👔 Adding designation filters:", designationsList);
     }
 
-    if (totalYearsInConsulting) {
+    if ((totalYearsInConsulting ?? "").trim()) {
       console.log("⏳ Adding experience filters:", totalYearsInConsulting);
     }
 
@@ -442,7 +442,7 @@ export const getApplicationsOfAjob = async (req, res) => {
     return res.status(200).json(responseData);
   } catch (error) {
     console.error("❌ Error in getApplicationsOfAjob:", error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: error.message,
       message: "Server Error while fetching applications",
