@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 import Jobs from "../models/jobsModel.js";
 import Users from "../models/userModel.js";
 import { sendStatusUpdateEmail } from "./sendMailController.js";
+import cache from "../utils/cache.js";
 // Create a new application
 export const createApplication = async (req, res) => {
   try {
@@ -167,7 +168,7 @@ export const getApplication = async (req, res) => {
 };
 
 export const updateApplicationStatus = async (req, res) => {
-  const { applicationId,status } = req.body;
+  const { applicationId, status } = req.body;
 
   try {
     const companyId = req.body.user.userId;
@@ -228,6 +229,18 @@ export const getApplicationsOfAjob = async (req, res) => {
 
     let screeningFiltersParsed = null;
 
+    const cacheKey = `apps:${jobId}:${status || "all"}:${keywords || ""}:${
+      locations || ""
+    }:${designations || ""}:${totalYearsInConsulting || ""}:${
+      screeningFilters || ""
+    }`;
+
+    const cachedData = cache.get(cacheKey);
+    if (cachedData) {
+      console.log("🟢 Cache hit:", cacheKey);
+      return res.status(200).json(cachedData);
+    }
+
     // Build optimized aggregation pipeline
     const pipeline = [];
 
@@ -237,7 +250,7 @@ export const getApplicationsOfAjob = async (req, res) => {
     };
 
     if (status) {
-      matchStage.status = status; 
+      matchStage.status = status;
     }
 
     pipeline.push({ $match: matchStage });
@@ -257,7 +270,10 @@ export const getApplicationsOfAjob = async (req, res) => {
           keywordsList = [keywordsList];
         }
       } catch (e) {
-        keywordsList = keywords.split(",").map(k => k.trim()).filter(k => k);
+        keywordsList = keywords
+          .split(",")
+          .map((k) => k.trim())
+          .filter((k) => k);
       }
     }
 
@@ -268,7 +284,10 @@ export const getApplicationsOfAjob = async (req, res) => {
           locationsList = [locationsList];
         }
       } catch (e) {
-        locationsList = locations.split(",").map(loc => loc.trim()).filter(loc => loc);
+        locationsList = locations
+          .split(",")
+          .map((loc) => loc.trim())
+          .filter((loc) => loc);
       }
     }
 
@@ -279,65 +298,82 @@ export const getApplicationsOfAjob = async (req, res) => {
           designationsList = [designationsList];
         }
       } catch (e) {
-        designationsList = designations.split(",").map(des => des.trim()).filter(des => des);
+        designationsList = designations
+          .split(",")
+          .map((des) => des.trim())
+          .filter((des) => des);
       }
     }
 
     // Parse screening filters early
     if (screeningFilters && screeningFilters.trim()) {
       try {
-        screeningFiltersParsed = typeof screeningFilters === "string" 
-          ? JSON.parse(screeningFilters) 
-          : screeningFilters;
+        screeningFiltersParsed =
+          typeof screeningFilters === "string"
+            ? JSON.parse(screeningFilters)
+            : screeningFilters;
 
-        if (screeningFiltersParsed && typeof screeningFiltersParsed === "object" && 
-            Object.keys(screeningFiltersParsed).length > 0) {
-          
-          Object.entries(screeningFiltersParsed).forEach(([questionId, filterValues]) => {
-            if (!filterValues || (Array.isArray(filterValues) && filterValues.length === 0)) {
-              return;
-            }
-
-            const valuesArray = Array.isArray(filterValues) ? filterValues : [filterValues];
-            if (valuesArray.length === 0) return;
-
-            const screeningConditions = [];
-            
-            valuesArray.forEach(value => {
-              if (typeof value === "boolean") {
-                screeningConditions.push({
-                  screeningAnswers: {
-                    $elemMatch: {
-                      questionId: new mongoose.Types.ObjectId(questionId),
-                      $or: [
-                        { answer: value },
-                        { answer: value ? "Yes" : "No" },
-                        { answerText: value ? /^(yes|true)$/i : /^(no|false)$/i }
-                      ]
-                    },
-                  },
-                });
-              } else if (typeof value === "string") {
-                const textRegex = new RegExp(value, "i");
-                screeningConditions.push({
-                  screeningAnswers: {
-                    $elemMatch: {
-                      questionId: new mongoose.Types.ObjectId(questionId),
-                      $or: [
-                        { answer: value },
-                        { answer: textRegex },
-                        { answerText: textRegex }
-                      ]
-                    },
-                  },
-                });
+        if (
+          screeningFiltersParsed &&
+          typeof screeningFiltersParsed === "object" &&
+          Object.keys(screeningFiltersParsed).length > 0
+        ) {
+          Object.entries(screeningFiltersParsed).forEach(
+            ([questionId, filterValues]) => {
+              if (
+                !filterValues ||
+                (Array.isArray(filterValues) && filterValues.length === 0)
+              ) {
+                return;
               }
-            });
 
-            if (screeningConditions.length > 0) {
-              earlyFilterConditions.push({ $or: screeningConditions });
+              const valuesArray = Array.isArray(filterValues)
+                ? filterValues
+                : [filterValues];
+              if (valuesArray.length === 0) return;
+
+              const screeningConditions = [];
+
+              valuesArray.forEach((value) => {
+                if (typeof value === "boolean") {
+                  screeningConditions.push({
+                    screeningAnswers: {
+                      $elemMatch: {
+                        questionId: new mongoose.Types.ObjectId(questionId),
+                        $or: [
+                          { answer: value },
+                          { answer: value ? "Yes" : "No" },
+                          {
+                            answerText: value
+                              ? /^(yes|true)$/i
+                              : /^(no|false)$/i,
+                          },
+                        ],
+                      },
+                    },
+                  });
+                } else if (typeof value === "string") {
+                  const textRegex = new RegExp(value, "i");
+                  screeningConditions.push({
+                    screeningAnswers: {
+                      $elemMatch: {
+                        questionId: new mongoose.Types.ObjectId(questionId),
+                        $or: [
+                          { answer: value },
+                          { answer: textRegex },
+                          { answerText: textRegex },
+                        ],
+                      },
+                    },
+                  });
+                }
+              });
+
+              if (screeningConditions.length > 0) {
+                earlyFilterConditions.push({ $or: screeningConditions });
+              }
             }
-          });
+          );
         }
       } catch (error) {
         console.error("Error parsing screening filters:", error);
@@ -436,20 +472,28 @@ export const getApplicationsOfAjob = async (req, res) => {
     // Keywords filter
     if (keywordsList.length > 0) {
       const allKeywordConditions = [];
-      
+
       keywordsList.forEach((keyword) => {
         const keywordRegex = new RegExp(keyword, "i");
         allKeywordConditions.push(
           { "applicant.currentDesignation": keywordRegex },
           { "applicant.currentCompany": keywordRegex },
           { "applicant.lastConsultingCompany": keywordRegex },
-          { "applicant.skills": { $elemMatch: { $regex: keyword, $options: "i" } } },
+          {
+            "applicant.skills": {
+              $elemMatch: { $regex: keyword, $options: "i" },
+            },
+          },
           { "applicant.about": keywordRegex },
           { "applicant.firstName": keywordRegex },
           { "applicant.lastName": keywordRegex },
           { "applicant.email": keywordRegex },
           { "applicant.currentLocation": keywordRegex },
-          { "applicant.preferredLocations": { $elemMatch: { $regex: keyword, $options: "i" } } },
+          {
+            "applicant.preferredLocations": {
+              $elemMatch: { $regex: keyword, $options: "i" },
+            },
+          },
           { "applicant.highestQualification": keywordRegex },
           { "applicant.experienceHistory.jobTitle": keywordRegex },
           { "applicant.experienceHistory.companyName": keywordRegex },
@@ -462,11 +506,15 @@ export const getApplicationsOfAjob = async (req, res) => {
 
     // Locations filter
     if (locationsList.length > 0) {
-      const locationRegexes = locationsList.map(loc => new RegExp(loc, "i"));
+      const locationRegexes = locationsList.map((loc) => new RegExp(loc, "i"));
       postLookupFilters.push({
         $or: [
           { "applicant.currentLocation": { $in: locationRegexes } },
-          { "applicant.preferredLocations": { $elemMatch: { $in: locationRegexes } } },
+          {
+            "applicant.preferredLocations": {
+              $elemMatch: { $in: locationRegexes },
+            },
+          },
         ],
       });
     }
@@ -474,7 +522,7 @@ export const getApplicationsOfAjob = async (req, res) => {
     // Designations filter
     if (designationsList.length > 0) {
       const designationConditions = [];
-      designationsList.forEach(designation => {
+      designationsList.forEach((designation) => {
         const designationRegex = new RegExp(designation, "i");
         designationConditions.push(
           { "applicant.currentDesignation": designationRegex },
@@ -494,15 +542,21 @@ export const getApplicationsOfAjob = async (req, res) => {
           const [min, max] = range.split("-").map(Number);
           if (!isNaN(min) && !isNaN(max)) {
             if (max === 100) {
-              expConditions.push({ "applicant.totalYearsInConsulting": { $gte: min } });
+              expConditions.push({
+                "applicant.totalYearsInConsulting": { $gte: min },
+              });
             } else {
-              expConditions.push({ "applicant.totalYearsInConsulting": { $gte: min, $lt: max } });
+              expConditions.push({
+                "applicant.totalYearsInConsulting": { $gte: min, $lt: max },
+              });
             }
           }
         } else {
           const exactYears = Number(range);
           if (!isNaN(exactYears)) {
-            expConditions.push({ "applicant.totalYearsInConsulting": exactYears });
+            expConditions.push({
+              "applicant.totalYearsInConsulting": exactYears,
+            });
           }
         }
       });
@@ -527,7 +581,7 @@ export const getApplicationsOfAjob = async (req, res) => {
     // Execute aggregation
     const applications = await Application.aggregate(pipeline);
 
-    return res.status(200).json({
+    const responseData = {
       success: true,
       applications,
       totalApplications: applications.length,
@@ -538,8 +592,13 @@ export const getApplicationsOfAjob = async (req, res) => {
         totalYearsInConsulting,
         screeningFilters: screeningFiltersParsed,
       },
-    });
+    };
 
+    // ✅ STEP 4: Store in cache
+    cache.set(cacheKey, responseData);
+
+    // ✅ STEP 5: Send response
+    return res.status(200).json(responseData);
   } catch (error) {
     console.error("Error in getApplicationsOfAjob:", error);
     res.status(500).json({
@@ -607,7 +666,7 @@ export const getScreeningFilterOptions = async (req, res) => {
             // Frontend doesn't send options for yes/no - they're always the same
             filterOptions[questionId].availableAnswers = [
               { label: "Yes", value: "Yes" },
-              { label: "No", value: "No" }
+              { label: "No", value: "No" },
             ];
             break;
 
@@ -642,31 +701,36 @@ export const getScreeningFilterOptions = async (req, res) => {
         // For yes/no questions, we keep the default options but can add statistics
         if (group.questionType === "yes/no") {
           // Count actual responses for statistics
-          const yesAnswers = group.uniqueAnswers.filter(ans => {
-            if (typeof ans === 'string') return ans.toLowerCase() === 'yes';
+          const yesAnswers = group.uniqueAnswers.filter((ans) => {
+            if (typeof ans === "string") return ans.toLowerCase() === "yes";
             return false;
           });
-          
-          const noAnswers = group.uniqueAnswers.filter(ans => {
-            if (typeof ans === 'string') return ans.toLowerCase() === 'no';
+
+          const noAnswers = group.uniqueAnswers.filter((ans) => {
+            if (typeof ans === "string") return ans.toLowerCase() === "no";
             return false;
           });
-          
+
           filterOptions[questionId].statistics = {
             yesCount: yesAnswers.length,
             noCount: noAnswers.length,
-            totalResponses: yesAnswers.length + noAnswers.length
+            totalResponses: yesAnswers.length + noAnswers.length,
           };
-          
+
           // ALWAYS ensure Yes/No options are available - don't rely on job definition
           filterOptions[questionId].availableAnswers = [
             { label: "Yes", value: "Yes" },
-            { label: "No", value: "No" }
+            { label: "No", value: "No" },
           ];
         }
         // For other question types, we might want to add additional info
-        else if (group.questionType === "short_answer" || group.questionType === "long_answer") {
-          filterOptions[questionId].sampleAnswers = group.answerTexts ? group.answerTexts.slice(0, 3) : [];
+        else if (
+          group.questionType === "short_answer" ||
+          group.questionType === "long_answer"
+        ) {
+          filterOptions[questionId].sampleAnswers = group.answerTexts
+            ? group.answerTexts.slice(0, 3)
+            : [];
         }
       } else {
         // If question wasn't in job definition, create from application data
@@ -681,24 +745,24 @@ export const getScreeningFilterOptions = async (req, res) => {
             // ALWAYS provide Yes/No options for yes/no questions - no matter what
             filterOptions[questionId].availableAnswers = [
               { label: "Yes", value: "Yes" },
-              { label: "No", value: "No" }
+              { label: "No", value: "No" },
             ];
-            
+
             // Add statistics if we have actual answers
-            const yesAnswers = group.uniqueAnswers.filter(ans => {
-              if (typeof ans === 'string') return ans.toLowerCase() === 'yes';
+            const yesAnswers = group.uniqueAnswers.filter((ans) => {
+              if (typeof ans === "string") return ans.toLowerCase() === "yes";
               return false;
             });
-            
-            const noAnswers = group.uniqueAnswers.filter(ans => {
-              if (typeof ans === 'string') return ans.toLowerCase() === 'no';
+
+            const noAnswers = group.uniqueAnswers.filter((ans) => {
+              if (typeof ans === "string") return ans.toLowerCase() === "no";
               return false;
             });
-            
+
             filterOptions[questionId].statistics = {
               yesCount: yesAnswers.length,
               noCount: noAnswers.length,
-              totalResponses: yesAnswers.length + noAnswers.length
+              totalResponses: yesAnswers.length + noAnswers.length,
             };
             break;
 
@@ -718,19 +782,21 @@ export const getScreeningFilterOptions = async (req, res) => {
           case "short_answer":
           case "long_answer":
             filterOptions[questionId].searchable = true;
-            filterOptions[questionId].sampleAnswers = group.answerTexts ? group.answerTexts.slice(0, 3) : [];
+            filterOptions[questionId].sampleAnswers = group.answerTexts
+              ? group.answerTexts.slice(0, 3)
+              : [];
             break;
         }
       }
     });
 
     // Final check: Ensure ALL yes/no questions have availableAnswers (most important part!)
-    Object.keys(filterOptions).forEach(questionId => {
+    Object.keys(filterOptions).forEach((questionId) => {
       if (filterOptions[questionId].questionType === "yes/no") {
         // FORCE Yes/No options for all yes/no questions regardless of any other logic
         filterOptions[questionId].availableAnswers = [
           { label: "Yes", value: "Yes" },
-          { label: "No", value: "No" }
+          { label: "No", value: "No" },
         ];
       }
     });
@@ -769,22 +835,22 @@ export const getApplicationStageCounts = async (req, res) => {
       "Shortlisted",
       "Interviewing",
       "Hired",
-      "Not Progressing"
+      "Not Progressing",
     ];
 
     // First get all applications for this job
     const allApplications = await Application.find({
-      job: new mongoose.Types.ObjectId(jobId)
+      job: new mongoose.Types.ObjectId(jobId),
     });
 
     // Initialize counts with all possible statuses
     const stageCounts = {};
-    statuses.forEach(status => {
+    statuses.forEach((status) => {
       stageCounts[status] = 0;
     });
 
     // Count applications per status
-    allApplications.forEach(app => {
+    allApplications.forEach((app) => {
       if (statuses.includes(app.status)) {
         stageCounts[app.status]++;
       }
@@ -843,12 +909,15 @@ export const getApplicationsWithJobs = async (req, res) => {
         .populate("job")
         .populate("company")
         .sort({ createdAt: -1 });
-
-    } else if (applicationIds && Array.isArray(applicationIds) && applicationIds.length > 0) {
+    } else if (
+      applicationIds &&
+      Array.isArray(applicationIds) &&
+      applicationIds.length > 0
+    ) {
       // If applicationIds array is provided, get specific applications
       const validIds = applicationIds
-        .filter(id => mongoose.Types.ObjectId.isValid(id))
-        .map(id => new mongoose.Types.ObjectId(id));
+        .filter((id) => mongoose.Types.ObjectId.isValid(id))
+        .map((id) => new mongoose.Types.ObjectId(id));
 
       if (validIds.length === 0) {
         return res.status(400).json({
@@ -862,7 +931,6 @@ export const getApplicationsWithJobs = async (req, res) => {
       })
         .populate("job")
         .populate("company");
-
     } else {
       return res.status(400).json({
         success: false,
@@ -876,21 +944,21 @@ export const getApplicationsWithJobs = async (req, res) => {
         message: "No applications found.",
         debug: {
           userId: userId || null,
-          applicationIds: applicationIds || null
-        }
+          applicationIds: applicationIds || null,
+        },
       });
     }
 
     res.status(200).json({
       success: true,
       applications,
-      count: applications.length
+      count: applications.length,
     });
   } catch (error) {
-    console.error('Error in getApplicationsWithJobs:', error);
-    res.status(500).json({ 
+    console.error("Error in getApplicationsWithJobs:", error);
+    res.status(500).json({
       success: false,
-      error: error.message 
+      error: error.message,
     });
   }
 };
@@ -1162,8 +1230,6 @@ export const bulkAdvanceApplications = async (req, res) => {
     });
   }
 };
-
-
 
 export const updateSingleApplicationStatus = async (req, res) => {
   const { applicationId, status } = req.body;
