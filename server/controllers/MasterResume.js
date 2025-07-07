@@ -6,7 +6,8 @@ import path from "path";
 import { generateResumeHTML } from "../utils/MasterResume.js";
 const GEMINI_API_KEY = "AIzaSyCXj7iUCYWDQXPW3i6ky4Y24beLiINeDBw";
 import { uploadFileToS3 } from "../s3Config/s3.js";
-import puppeteer from "puppeteer";
+import chromium from "chrome-aws-lambda";
+import puppeteer from "puppeteer-core";
 
 // Helper to split comma-separated skills string into an array
 const parseSkillsString = (skillsString) => {
@@ -254,10 +255,10 @@ ${jobDescription}
     const tailoredResume = JSON.parse(match[1]);
     const html = generateResumeHTML(tailoredResume);
     const browser = await puppeteer.launch({
-    headless: "new",
-    args: ["--no-sandbox", "--disable-setuid-sandbox"],
-    executablePath: puppeteer.executablePath()
-    });
+    args: chromium.args,
+    executablePath: await chromium.executablePath,
+    headless: chromium.headless,
+  });
 
     const page = await browser.newPage();
     await page.setContent(html, { waitUntil: "networkidle0" });
