@@ -52,6 +52,11 @@ const workExperienceSchema = new mongoose.Schema({
   responsibilities: [{ type: String, trim: true }], // Array of bullet points
 });
 
+const storedResumeSchema = new mongoose.Schema({
+  resumeName: { type: String, trim: true },
+  link: { type: String,  trim: true },
+}, { _id: false });
+
 const projectSchema = new mongoose.Schema({
   title: { type: String, trim: true },
   description: { type: String, trim: true },
@@ -79,6 +84,7 @@ const resumeSchema = new mongoose.Schema({
   achievements: [{ type: String, trim: true }], // Array of achievement strings
   awards: [{ type: String, trim: true }], // Array of award strings
   volunteer: [{ type: String, trim: true }], // Array of volunteer strings
+  storedResumes: [storedResumeSchema],
 }, { timestamps: true }); // Adds createdAt and updatedAt timestamps
 
 // Create and export the model
