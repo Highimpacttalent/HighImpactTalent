@@ -37,13 +37,10 @@ export const createOrUpdateMasterResume = async (req, res) => {
     // Map the incoming form data structure keys to the schema structure keys
     // Ensure nested objects exist even if empty, to avoid Mongoose issues with undefined paths on $set
     const mappedData = {
-      personalInformation: personalInfo || {}, // Map and ensure it's an object
-      professionalDetails: { // Map from careerSummary and add placeholder for others
+      personalInfo: personalInfo || {}, // Map and ensure it's an object
+      careerSummary: { // Map from careerSummary and add placeholder for others
         shortSummary: careerSummary?.shortSummary,
         detailedObjective: careerSummary?.detailedObjective,
-        // Note: Fields like noOfYearsExperience, currentCompany, etc.,
-        // from the example schema are not in the form, so they are not mapped here.
-        // They will take their default/optional values if not provided in req.body.
       },
       education: education || [], // Map 'education' array to 'educationDetails' and ensure it's an array
       workExperience: workExperience || [], // Direct map and ensure it's an array
