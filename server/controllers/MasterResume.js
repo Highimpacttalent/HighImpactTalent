@@ -109,7 +109,7 @@ export const createOrUpdateMasterResume = async (req, res) => {
 
 export const getMasterResumeByUserId = async (req, res) => {
   try {
-    const userId = req.body;
+    const {userId} = req.body;
 
     // Validate the user_id format before querying
     if (!mongoose.Types.ObjectId.isValid(userId)) {
