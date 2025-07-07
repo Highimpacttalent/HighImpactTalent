@@ -6,8 +6,7 @@ import path from "path";
 import { generateResumeHTML } from "../utils/MasterResume.js";
 const GEMINI_API_KEY = "AIzaSyCXj7iUCYWDQXPW3i6ky4Y24beLiINeDBw";
 import { uploadFileToS3 } from "../s3Config/s3.js";
-import chromium from "chrome-aws-lambda";
-import puppeteer from "puppeteer-core";
+import puppeteer from 'puppeteer';
 
 // Helper to split comma-separated skills string into an array
 const parseSkillsString = (skillsString) => {
@@ -254,15 +253,16 @@ ${jobDescription}
 
     const tailoredResume = JSON.parse(match[1]);
     const html = generateResumeHTML(tailoredResume);
+
     const browser = await puppeteer.launch({
-    args: chromium.args,
-    executablePath: await chromium.executablePath,
-    headless: chromium.headless,
-  });
+      headless: "new",
+      args: ["--no-sandbox", "--disable-setuid-sandbox"],
+    });
 
     const page = await browser.newPage();
     await page.setContent(html, { waitUntil: "networkidle0" });
     const pdfBuffer = await page.pdf({ format: "A4" });
+
     await browser.close();
 
     // Upload PDF to S3
