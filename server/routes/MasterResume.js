@@ -7,7 +7,7 @@ const router = express.Router();
 router.post("/create", createOrUpdateMasterResume);
 
 // GET BY ID
-router.get("/fetch-id", getMasterResumeByUserId);
+router.post("/fetch-id", getMasterResumeByUserId);
 
 export default router;
 
