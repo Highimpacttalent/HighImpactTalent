@@ -6,7 +6,8 @@ import path from "path";
 import { generateResumeHTML } from "../utils/MasterResume.js";
 const GEMINI_API_KEY = "AIzaSyCXj7iUCYWDQXPW3i6ky4Y24beLiINeDBw";
 import { uploadFileToS3 } from "../s3Config/s3.js";
-import puppeteer from 'puppeteer';
+import puppeteer from 'puppeteer-core'; // Import puppeteer-core
+import chromium from '@sparticuz/chromium'; 
 
 // Helper to split comma-separated skills string into an array
 const parseSkillsString = (skillsString) => {
@@ -255,13 +256,27 @@ ${jobDescription}
     const html = generateResumeHTML(tailoredResume);
 
     const browser = await puppeteer.launch({
-      headless: "new",
-      args: ["--no-sandbox", "--disable-setuid-sandbox"],
+      args: [...chromium.args, "--no-sandbox", "--disable-setuid-sandbox"],
+      defaultViewport: chromium.defaultViewport,
+      executablePath: await chromium.executablePath(),
+      headless: chromium.headless, 
     });
 
     const page = await browser.newPage();
+    // It's often good practice to set a reasonable viewport for PDF generation
+    await page.setViewport({ width: 1080, height: 1920 }); // A common standard for documents
+
     await page.setContent(html, { waitUntil: "networkidle0" });
-    const pdfBuffer = await page.pdf({ format: "A4" });
+    const pdfBuffer = await page.pdf({
+      format: "A4",
+      printBackground: true, // Crucial for background colors/images to appear
+      margin: {
+        top: '0.5in',
+        right: '0.5in',
+        bottom: '0.5in',
+        left: '0.5in',
+      }
+    });
 
     await browser.close();
 
