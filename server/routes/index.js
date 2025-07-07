@@ -11,6 +11,7 @@ import resumepool from "./resumepool.js"
 import paymentRoute from "./paymentRoutes.js"
 import verifyRoute from "./verifyToken.js";
 import Waitlist from "./Waitlist.js";
+import MasterResume from "./MasterResume.js"
 
 const router = express.Router();
 
@@ -29,6 +30,7 @@ router.use(`${path}resume`, resumepool);
 router.use(`${path}payment`, paymentRoute);
 router.use(`${path}verify`, verifyRoute);
 router.use(`${path}waitlist`, Waitlist);
+router.use(`${path}master-resume`, MasterResume);
 
 
 export default router;
