@@ -1,0 +1,163 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{{personalInfo.firstName}} {{personalInfo.lastName}} - Resume</title>
+  <link href="https://fonts.googleapis.com/css2?family=Times+New+Roman&family=Arial:wght@400;700&display=swap" rel="stylesheet" />
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Times New Roman', serif;
+      font-size: 11pt;
+      line-height: 1.2;
+      color: #000;
+      background: white;
+      padding: 0.5in;
+    }
+    .resume-container { max-width: 8.5in; margin: 0 auto; background: white; }
+    .header { text-align: left; margin-bottom: 20pt; border-bottom: 1px solid #000; padding-bottom: 10pt; }
+    .name { font-size: 20pt; font-weight: bold; margin-bottom: 14pt; margin-left: 240pt; }
+    .contact-info { margin-left: 30pt; display: flex; font-size: 11pt; line-height: 1.3; column-gap: 80pt; }
+    .contact-line { margin-bottom: 2pt; }
+    .section { margin-bottom: 18pt; }
+    .section-title { font-size: 12pt; font-weight: bold; margin-bottom: 8pt; border-bottom: 1px solid #000; padding-bottom: 2pt; }
+    .education-item, .experience-item { margin-bottom: 12pt; }
+    .education-header, .experience-header {
+      display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4pt;
+    }
+    .institution, .company { font-weight: bold; font-size: 11pt; }
+    .location { text-align: right; font-size: 11pt; }
+    .degree, .position { font-size: 11pt; font-style: italic; margin-bottom: 4pt; }
+    .date-gpa { display: flex; justify-content: space-between; font-size: 11pt; margin-bottom: 6pt; }
+    .gpa { text-align: right; }
+    .courses { font-size: 11pt; margin-top: 4pt; }
+    .courses-label { font-weight: bold; }
+    .responsibilities { margin-top: 6pt; }
+    .responsibilities ul { list-style: none; padding-left: 0; }
+    .responsibilities li {
+      margin-bottom: 4pt; padding-left: 15pt; position: relative; font-size: 11pt;
+    }
+    .responsibilities li::before { content: '◦'; position: absolute; left: 8pt; }
+    .skills-section { font-size: 11pt; }
+    .skill-item { margin-bottom: 4pt; padding-left: 15pt; position: relative; }
+    .skill-item::before { content: '•'; position: absolute; left: 8pt; font-weight: bold; }
+    .skill-category { font-weight: bold; }
+    .projects-section { font-size: 11pt; }
+    .project-item { margin-bottom: 8pt; padding-left: 15pt; position: relative; }
+    .project-item::before { content: '•'; position: absolute; left: 8pt; font-weight: bold; }
+    .project-title { font-weight: bold; display: inline; }
+    .project-tech { font-weight: bold; display: inline; }
+    .publication-item, .award-item, .volunteer-item {
+      margin-bottom: 6pt; padding-left: 15pt; position: relative;
+    }
+    .publication-item::before, .award-item::before, .volunteer-item::before {
+      content: '•'; position: absolute; left: 8pt; font-weight: bold;
+    }
+    .publication-title, .award-title { font-weight: bold; }
+    .volunteer-header {
+      display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2pt;
+    }
+    .volunteer-role { font-weight: bold; }
+    .date { text-align: right; }
+    .volunteer-position { font-style: italic; margin-bottom: 2pt; }
+    .volunteer-description { margin-top: 2pt; }
+    @media print {
+      body { padding: 0.5in; font-size: 10pt; }
+      .resume-container { max-width: none; }
+    }
+    @page { margin: 0.5in; size: letter; }
+  </style>
+</head>
+<body>
+<div class="resume-container">
+  <div class="header">
+    <div class="name">{{personalInfo.firstName}} {{personalInfo.lastName}}</div>
+    <div class="contact-info">
+      <div class="contact-line"><b>Email:</b> {{personalInfo.email}}</div>
+      <div class="contact-line"><b>Mobile:</b> {{personalInfo.phone}}</div>
+      <div class="contact-line"><b>Location:</b> {{personalInfo.city}}, {{personalInfo.country}}</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Education</div>
+    {{#each education}}
+    <div class="education-item">
+      <div class="education-header">
+        <div class="institution">{{university}}</div>
+        <div class="location">{{../personalInfo.country}}</div>
+      </div>
+      <div class="degree">{{degree}} - {{field}}; GPA: {{gpa}}</div>
+      <div class="date-gpa">
+        <div class="date">{{startDate}} - {{endDate}}</div>
+      </div>
+      <div class="courses">{{description}}</div>
+    </div>
+    {{/each}}
+  </div>
+
+  <div class="section">
+    <div class="section-title">Skills Summary</div>
+    <div class="skills-section">
+      {{#each skills}}
+      <div class="skill-item">{{this}}</div>
+      {{/each}}
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Experience</div>
+    {{#each workExperience}}
+    <div class="experience-item">
+      <div class="experience-header">
+        <div class="company">{{company}}</div>
+        <div class="location">{{location}}</div>
+      </div>
+      <div class="position">{{role}} ({{type}})</div>
+      <div class="date-gpa"><div class="date">{{startDate}} - {{endDate}}</div></div>
+      <div class="responsibilities">
+        <ul>
+          {{#each responsibilities}}
+          <li>{{this}}</li>
+          {{/each}}
+        </ul>
+      </div>
+    </div>
+    {{/each}}
+  </div>
+
+  <div class="section">
+    <div class="section-title">Projects</div>
+    <div class="projects-section">
+      {{#each projects}}
+      <div class="project-item">
+        <span class="project-title">{{title}}</span> <span class="project-tech">({{skillsUsed}}):</span> {{description}} ({{duration}})
+      </div>
+      {{/each}}
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Honors and Awards</div>
+    <div class="awards-section">
+      {{#each awards}}
+      <div class="award-item">{{this}}</div>
+      {{/each}}
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Volunteer Experience</div>
+    <div class="volunteer-section">
+      {{#each volunteer}}
+      <div class="volunteer-item">
+        <div class="volunteer-description">{{this}}</div>
+      </div>
+      {{/each}}
+    </div>
+  </div>
+</div>
+</body>
+</html>
