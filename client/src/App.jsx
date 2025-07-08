@@ -55,6 +55,7 @@ import JobRecommendationsComponent from "./pages/Match/view.jsx";
 import HighImpactTalentLanding from "./pages/Form/view2.jsx";
 import RecruitmentChatbot from "./pages/AIChatbot/view.jsx";
 import MasterResumeForm from "./pages/MasterResume/view";
+import DashboardMasterResume from "./pages/MasterResume/dashboard.jsx"
 function Layout() {
   const { user } = useSelector((state) => state.user);
   const location = useLocation();
@@ -192,6 +193,7 @@ function App() {
         <Route path="/privacy-policy" element={<PrivacyPolicy />} />
         <Route path="/ai-chat" element={<RecruitmentChatbot />} />
         <Route path="/master-resume" element={<MasterResumeForm />} />
+        <Route path="/dashboard-master-resume" element={<DashboardMasterResume />} />
       </Routes>
       {user && <FloatingChatAssistant />}
       {user && <Footer />}

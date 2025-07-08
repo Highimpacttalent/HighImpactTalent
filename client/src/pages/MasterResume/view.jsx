@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react"; // Import useEffect
+import { useNavigate } from 'react-router-dom'; // Import useNavigate hook
 import {
   Box,
   Paper,
@@ -32,7 +33,10 @@ import {
   StepLabel,
   LinearProgress,
   Alert,
+  Snackbar, // Using Snackbar for messages (can be success or error)
   alpha,
+  Link, // Import Link for external URLs - Note: not used in the provided code
+  CircularProgress, // Added for loading dialog
 } from "@mui/material";
 import {
   Add as AddIcon,
@@ -48,8 +52,10 @@ import {
   EmojiEvents as AwardIcon,
   Article as ArticleIcon,
   VolunteerActivism as VolunteerIcon,
+  MilitaryTech as AchievementIcon, // Using MilitaryTech for Achievements
 } from "@mui/icons-material";
 import { createTheme, ThemeProvider, styled } from "@mui/material/styles";
+import { useSelector } from "react-redux";
 
 // --- Custom Theme ---
 const premiumTheme = createTheme({
@@ -298,67 +304,7 @@ const premiumTheme = createTheme({
   },
 });
 
-// Sample data for dropdowns
-const skillsOptions = [
-  // Programming Languages
-  "JavaScript",
-  "TypeScript",
-  "Python",
-  "Java",
-  "C++",
-  "C#",
-  "PHP",
-  "Ruby",
-  "Go",
-  "Rust",
-  "Swift",
-  "Kotlin",
-  // Frameworks & Libraries
-  "React",
-  "Angular",
-  "Vue.js",
-  "Node.js",
-  "Express.js",
-  "Django",
-  "Flask",
-  "Spring Boot",
-  "Laravel",
-  "Ruby on Rails",
-  // Design Tools
-  "Figma",
-  "Adobe XD",
-  "Sketch",
-  "Photoshop",
-  "Illustrator",
-  "InVision",
-  "Canva",
-  // Data Tools
-  "Power BI",
-  "Tableau",
-  "Excel",
-  "Google Analytics",
-  "SQL",
-  "MongoDB",
-  "PostgreSQL",
-  "MySQL",
-  // Soft Skills
-  "Leadership",
-  "Team Management",
-  "Project Management",
-  "Communication",
-  "Problem Solving",
-  "Critical Thinking",
-  // Other Skills
-  "Cloud Computing (AWS, Azure, GCP)",
-  "DevOps",
-  "Agile Methodologies",
-  "Machine Learning",
-  "Data Science",
-  "UI/UX Design",
-  "Content Writing",
-  "Digital Marketing",
-];
-
+// Sample data for dropdowns (countries and degree types are still needed)
 const countriesOptions = [
   "United States",
   "India",
@@ -373,16 +319,7 @@ const countriesOptions = [
   "Brazil",
   "South Africa",
 ];
-const visaStatusOptions = [
-  "Citizen",
-  "Permanent Resident",
-  "H1B",
-  "L1",
-  "F1 OPT",
-  "Work Permit Required",
-  "EU Blue Card",
-  "Dependent Visa",
-];
+
 const employmentTypes = [
   "Full-time",
   "Part-time",
@@ -412,7 +349,7 @@ const steps = [
   "Work Experience",
   "Projects",
   "Skills",
-  "Publications",
+  "Achievements", // Changed from Publications
   "Awards",
   "Volunteer Work",
 ];
@@ -622,7 +559,11 @@ const AddEditWorkExperienceDialog = ({
   };
 
   const onSubmit = () => {
-    handleSubmit(currentWork);
+    // Remove empty responsibility strings before submitting
+    const filteredResponsibilities = currentWork.responsibilities.filter(
+      (resp) => resp.trim() !== ""
+    );
+    handleSubmit({ ...currentWork, responsibilities: filteredResponsibilities });
     handleClose();
   };
 
@@ -731,20 +672,26 @@ const AddEditWorkExperienceDialog = ({
                     handleResponsibilityChange(index, e.target.value)
                   }
                   placeholder={`Responsibility ${index + 1}`}
+                  multiline
+                  rows={1}
                 />
-                <IconButton
-                  onClick={() => removeResponsibility(index)}
-                  color="secondary"
-                  sx={{ ml: 1 }}
-                >
-                  <DeleteIcon />
-                </IconButton>
+                {currentWork.responsibilities.length > 1 && ( // Only show delete if more than one item
+                   <IconButton
+                   onClick={() => removeResponsibility(index)}
+                   color="secondary"
+                   size="small"
+                   sx={{ ml: 1, flexShrink: 0 }}
+                 >
+                   <DeleteIcon fontSize="small"/>
+                 </IconButton>
+                )}
               </Box>
             ))}
-            <Button
+             <Button
               startIcon={<AddIcon />}
               onClick={addResponsibility}
               variant="outlined"
+              size="small"
               sx={{ mt: 1 }}
             >
               Add Responsibility
@@ -775,8 +722,7 @@ const AddEditProjectDialog = ({
     project || {
       title: "",
       description: "",
-      technologies: [],
-      link: "",
+      skillsUsed: "", // Changed from technologies (array) to skillsUsed (string)
       duration: "",
       type: "", // e.g., "Personal", "Team", "Open Source"
     }
@@ -787,8 +733,7 @@ const AddEditProjectDialog = ({
       project || {
         title: "",
         description: "",
-        technologies: [],
-        link: "",
+        skillsUsed: "",
         duration: "",
         type: "",
       }
@@ -798,10 +743,6 @@ const AddEditProjectDialog = ({
   const handleChange = (e) => {
     const { name, value } = e.target;
     setCurrentProject((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleTechnologiesChange = (event, value) => {
-    setCurrentProject((prev) => ({ ...prev, technologies: value }));
   };
 
   const onSubmit = () => {
@@ -835,50 +776,14 @@ const AddEditProjectDialog = ({
             />
           </Grid>
           <Grid item xs={12}>
-            <Autocomplete
-              multiple
-              options={skillsOptions} // Reusing skillsOptions for technologies
-              value={currentProject.technologies}
-              onChange={handleTechnologiesChange}
-              freeSolo
-              renderTags={(value, getTagProps) =>
-                value.map((option, index) => (
-                  <Chip
-                    key={index}
-                    variant="outlined"
-                    label={option}
-                    {...getTagProps({ index })}
-                  />
-                ))
-              }
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  label="Technologies Used"
-                  placeholder="e.g., React, Node.js, MongoDB"
-                  InputLabelProps={{ shrink: true }}
-                  sx={{
-                    "& .MuiInputBase-root": {
-                      paddingTop: "12px", // adjust as needed
-                      minHeight: "60px", // prevent squeeze
-                    },
-                  }}
-                />
-              )}
-            />
-          </Grid>
-          <Grid item xs={12} md={6}>
+            {/* Changed Autocomplete for Technologies to TextField for Skills/Tools */}
             <TextField
-              name="link"
-              label="Project Link (Optional)"
+              name="skillsUsed"
+              label="Skills/Tools Used" // Changed label
               fullWidth
-              value={currentProject.link}
+              value={currentProject.skillsUsed}
               onChange={handleChange}
-              InputProps={{
-                startAdornment: (
-                  <WebsiteIcon sx={{ mr: 1, mt: 2.5, color: "#666" }} />
-                ),
-              }}
+              placeholder="e.g., React, Node.js, MongoDB, Python, Figma (Separate with commas)"
             />
           </Grid>
           <Grid item xs={12} md={6}>
@@ -890,7 +795,7 @@ const AddEditProjectDialog = ({
               onChange={handleChange}
             />
           </Grid>
-          <Grid item xs={12}>
+          <Grid item xs={12} md={6}>
             <TextField
               name="type"
               label="Project Type (e.g., Personal, Team, Open Source)"
@@ -913,8 +818,66 @@ const AddEditProjectDialog = ({
   );
 };
 
+// --- New Dialog Components for simpler list items (Achievements, Awards, Volunteer) ---
+
+const AddEditSimpleTextDialog = ({
+    open,
+    handleClose,
+    item, // The string item being edited or null for adding
+    handleSubmit,
+    isEdit,
+    title, // Title for the dialog (e.g., "Add Achievement")
+    label, // Label for the text field (e.g., "Achievement Description")
+  }) => {
+    const [text, setText] = useState(item || "");
+
+    React.useEffect(() => {
+      setText(item || "");
+    }, [item, open]);
+
+    const onSubmit = () => {
+        if (text.trim()) { // Only submit if text is not empty
+            handleSubmit(text.trim());
+            handleClose();
+            setText(""); // Reset for next add
+        }
+    };
+
+    return (
+      <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
+        <DialogTitle>{isEdit ? `Edit ${title}` : `Add ${title}`}</DialogTitle>
+        <DialogContent dividers sx={{ pt: 2 }}>
+          <TextField
+            autoFocus
+            margin="dense"
+            label={label}
+            type="text"
+            fullWidth
+            multiline
+            rows={3}
+            variant="filled"
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+          />
+        </DialogContent>
+        <DialogActions sx={{ p: 3 }}>
+          <Button onClick={handleClose} variant="outlined">
+            Cancel
+          </Button>
+          <Button onClick={onSubmit} variant="contained" color="primary">
+            {isEdit ? "Update" : "Add"} {title}
+          </Button>
+        </DialogActions>
+      </Dialog>
+    );
+  };
+
+
 // --- Main Form Component ---
 export default function MasterResumeForm() {
+  const { user } = useSelector((state) => state.user);
+  const navigate = useNavigate(); 
+
   const [activeStep, setActiveStep] = useState(0);
   const [formData, setFormData] = useState({
     personalInfo: {
@@ -922,17 +885,17 @@ export default function MasterResumeForm() {
       lastName: "",
       email: "",
       phone: "",
-      linkedIn: "",
-      github: "",
-      website: "",
+      linkedIn: "", // Optional
+      github: "", // Optional
+      website: "", // Optional
       address: "",
       city: "",
       state: "",
       country: "",
-      dateOfBirth: null,
-      nationality: "",
-      willingToRelocate: false,
-      workAuthorization: "",
+      dateOfBirth: null, // Keeping this, though not currently used in render
+      nationality: "", // Keeping this, though not currently used in render
+      // Removed willingToRelocate
+      // Removed workAuthorization
     },
     careerSummary: {
       shortSummary: "",
@@ -941,18 +904,10 @@ export default function MasterResumeForm() {
     education: [],
     workExperience: [],
     projects: [],
-    skills: {
-      programming: [],
-      frameworks: [],
-      design: [],
-      data: [],
-      soft: [],
-      languages: [],
-      certifications: [],
-    },
-    publications: [],
-    awards: [],
-    volunteer: [],
+    skills: "", // Changed from object with arrays to a single string
+    achievements: [], // Changed from publications, now an array of strings
+    awards: [], // Now an array of strings
+    volunteer: [], // Now an array of strings
   });
 
   const [errors, setErrors] = useState({});
@@ -960,21 +915,23 @@ export default function MasterResumeForm() {
   const [dialogType, setDialogType] = useState("");
   const [editIndex, setEditIndex] = useState(-1);
 
-  // Validation functions
+  // State for API call status and feedback
+  const [isLoading, setIsLoading] = useState(false);
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [snackbarSeverity, setSnackbarSeverity] = useState("success"); // 'success', 'error', 'info', 'warning'
+
+  // Placeholder User ID - **Replace with actual user ID from auth**
+  const currentUserId = user._id; // Example ID - use a real ID or derive from auth
+
+  // Validation functions (kept as is)
   const validateEmail = (email) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
   };
 
-  const validateLinkedIn = (url) => {
-    const linkedInRegex =
-      /^https?:\/\/(www\.)?linkedin\.com\/in\/[a-zA-Z0-9-]+\/?$/;
-    return url === "" || linkedInRegex.test(url); // Allow empty string
-  };
-
-  const validateGitHub = (url) => {
-    const githubRegex = /^https?:\/\/(www\.)?github\.com\/[a-zA-Z0-9-]+\/?$/;
-    return url === "" || githubRegex.test(url); // Allow empty string
+  const validateUrlOptional = (url, regex) => {
+    return url === "" || url === null || regex.test(url); // Allow empty string or null
   };
 
   const handleNext = () => {
@@ -989,36 +946,43 @@ export default function MasterResumeForm() {
 
   const validateCurrentStep = () => {
     const newErrors = {};
+    const personalInfo = formData.personalInfo;
 
     if (activeStep === 0) {
       // Personal Info validation
-      if (!formData.personalInfo.firstName)
+      if (!personalInfo.firstName)
         newErrors.firstName = "First name is required";
-      if (!formData.personalInfo.lastName)
-        newErrors.lastName = "Last name is required";
-      if (!formData.personalInfo.email) {
+      if (!personalInfo.lastName) newErrors.lastName = "Last name is required";
+      if (!personalInfo.email) {
         newErrors.email = "Email is required";
-      } else if (!validateEmail(formData.personalInfo.email)) {
+      } else if (!validateEmail(personalInfo.email)) {
         newErrors.email = "Invalid email format";
       }
-      if (
-        formData.personalInfo.linkedIn &&
-        !validateLinkedIn(formData.personalInfo.linkedIn)
-      ) {
+
+      // URL validations (now optional, only validate if present)
+      const linkedInRegex = /^https?:\/\/(www\.)?linkedin\.com\/in\/[a-zA-Z0-9-_]+\/?$/; // Added underscore
+      if (personalInfo.linkedIn && !validateUrlOptional(personalInfo.linkedIn, linkedInRegex)) {
         newErrors.linkedIn = "Invalid LinkedIn URL format";
       }
-      if (
-        formData.personalInfo.github &&
-        !validateGitHub(formData.personalInfo.github)
-      ) {
+
+      const githubRegex = /^https?:\/\/(www\.)?github\.com\/[a-zA-Z0-9-_]+\/?$/; // Added underscore
+       if (personalInfo.github && !validateUrlOptional(personalInfo.github, githubRegex)) {
         newErrors.github = "Invalid GitHub URL format";
       }
+
+       const websiteRegex = /^https?:\/\/(?:www\.)?[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b(?:[-a-zA-Z0-9()@:%_+.~#?&//=]*)$/;
+        if (personalInfo.website && !validateUrlOptional(personalInfo.website, websiteRegex)) {
+            newErrors.website = "Invalid website URL format";
+        }
     }
+    // Add validation for other steps here if needed before submitting
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
+
+  // Data handling functions
   const handleInputChange = (section, field, value) => {
     setFormData((prev) => ({
       ...prev,
@@ -1029,6 +993,7 @@ export default function MasterResumeForm() {
     }));
   };
 
+  // For arrays of objects (Education, Work, Projects)
   const handleArrayAdd = (section, item) => {
     setFormData((prev) => ({
       ...prev,
@@ -1052,6 +1017,31 @@ export default function MasterResumeForm() {
     }));
   };
 
+  // For arrays of strings (Achievements, Awards, Volunteer)
+  const handleStringArrayAdd = (section, item) => {
+    setFormData((prev) => ({
+      ...prev,
+      [section]: [...prev[section], item],
+    }));
+  };
+
+  const handleStringArrayEdit = (section, index, item) => {
+    setFormData((prev) => ({
+      ...prev,
+      [section]: prev[section].map((existing, i) =>
+        i === index ? item : existing
+      ),
+    }));
+  };
+
+  const handleStringArrayDelete = (section, index) => {
+    setFormData((prev) => ({
+      ...prev,
+      [section]: prev[section].filter((_, i) => i !== index),
+    }));
+  };
+
+  // Dialog functions (kept as is)
   const openAddDialog = (type) => {
     setDialogType(type);
     setEditIndex(-1); // Indicate adding new item
@@ -1065,15 +1055,195 @@ export default function MasterResumeForm() {
   };
 
   const handleDialogSubmit = (item) => {
-    if (editIndex === -1) {
-      handleArrayAdd(dialogType, item);
-    } else {
-      handleArrayEdit(dialogType, editIndex, item);
+    if (["education", "workExperience", "projects"].includes(dialogType)) {
+      if (editIndex === -1) {
+        handleArrayAdd(dialogType, item);
+      } else {
+        handleArrayEdit(dialogType, editIndex, item);
+      }
+    } else if (["achievements", "awards", "volunteer"].includes(dialogType)) {
+         if (editIndex === -1) {
+            handleStringArrayAdd(dialogType, item);
+         } else {
+            handleStringArrayEdit(dialogType, editIndex, item);
+         }
     }
     setOpenDialog(false);
   };
 
-  const renderPersonalInfo = () => (
+  const getDialogProps = () => {
+      const baseProps = {
+          open: openDialog,
+          handleClose: () => setOpenDialog(false),
+          handleSubmit: handleDialogSubmit,
+          isEdit: editIndex !== -1,
+      };
+
+      switch (dialogType) {
+          case 'education':
+              return {
+                  ...baseProps,
+                  education: editIndex !== -1 ? formData.education[editIndex] : null,
+              };
+          case 'workExperience':
+              return {
+                  ...baseProps,
+                  experience: editIndex !== -1 ? formData.workExperience[editIndex] : null,
+              };
+          case 'projects':
+              return {
+                  ...baseProps,
+                  project: editIndex !== -1 ? formData.projects[editIndex] : null,
+              };
+          case 'achievements':
+              return {
+                  ...baseProps,
+                  item: editIndex !== -1 ? formData.achievements[editIndex] : null,
+                  title: "Achievement",
+                  label: "Achievement Description",
+              };
+          case 'awards':
+              return {
+                ...baseProps,
+                item: editIndex !== -1 ? formData.awards[editIndex] : null,
+                title: "Award",
+                label: "Award Details",
+              };
+          case 'volunteer':
+            return {
+                ...baseProps,
+                item: editIndex !== -1 ? formData.volunteer[editIndex] : null,
+                title: "Volunteer Experience",
+                label: "Volunteer Description",
+            };
+          default:
+              return baseProps; // Should not happen
+      }
+  };
+
+  // --- API Call Logic ---
+  const handleSaveResume = async () => {
+    // Perform final validation across all steps if needed
+    // For simplicity, we'll just check the current step's validation here
+    // and assume other steps don't have hard 'required' fields for now.
+    // A more robust approach would validate the entire formData object.
+    if (!validateCurrentStep()) {
+        // Optionally scroll to the errors or show a specific message
+        setSnackbarMessage("Please fix the highlighted errors in the current section.");
+        setSnackbarSeverity("warning");
+        setSnackbarOpen(true);
+        return; // Stop if validation fails in the current step
+     }
+
+    // *** IMPORTANT: You should validate ALL required fields across ALL steps
+    // before calling the API if you want to enforce data integrity.
+    // This simple example only checks the current step's validation state 'errors'.
+
+
+    if (!currentUserId) {
+        setSnackbarMessage("Error: User ID is not available. Cannot save resume.");
+        setSnackbarSeverity("error");
+        setSnackbarOpen(true);
+        console.error("User ID is missing, cannot save resume.");
+        return; // Stop if user ID is missing
+    }
+
+    setIsLoading(true); // Start loading indicator
+
+    // Construct the payload matching the backend schema expectations
+    // Ensure keys match the Mongoose schema field names from the schema you provided!
+    const payload = {
+      user_id: currentUserId, // Add the user_id
+      personalInfo: formData.personalInfo, // Matches schema field name
+      careerSummary: formData.careerSummary, // Matches schema field name
+      education: formData.education, // Matches schema field name
+      workExperience: formData.workExperience, // Matches schema field name
+      projects: formData.projects, // Matches schema field name
+      skills: formData.skills, // This is the string from the form. Backend Controller converts it to array.
+      achievements: formData.achievements, // Matches schema field name
+      awards: formData.awards, // Matches schema field name
+      volunteer: formData.volunteer, // Matches schema field name
+    };
+
+    console.log("Sending payload:", payload); // Log payload before sending
+
+    try {
+      const response = await fetch('https://highimpacttalent.onrender.com/api-v1/master-resume/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          // Add authorization headers if your API is protected (recommended!)
+          // 'Authorization': `Bearer YOUR_AUTH_TOKEN`, // Example
+        },
+        body: JSON.stringify(payload),
+      });
+
+      // Check for HTTP errors (status codes outside 2xx range)
+      if (!response.ok) {
+        let errorData = { message: `HTTP error! status: ${response.status}` };
+        try {
+             // Attempt to parse error details from the response body
+            errorData = await response.json();
+             // Log the specific errors if available from validation
+            if(errorData.errors) {
+                console.error("Validation Errors:", errorData.errors);
+            } else if (errorData.field) {
+                 console.error("Duplicate Field Error:", errorData.field);
+            }
+        } catch (parseError) {
+            console.error("Failed to parse error response:", parseError);
+            // Use a generic message if parsing fails
+        }
+        // Throw an error with the message from the server or a default
+        throw new Error(errorData.message || `Failed to save resume: ${response.statusText}`);
+      }
+
+      // If the response is OK (2xx), parse the JSON
+      const data = await response.json();
+      console.log('Resume saved successfully:', data);
+
+      // Show success message
+      setSnackbarMessage(data.message || 'Resume saved successfully!');
+      setSnackbarSeverity("success");
+      setSnackbarOpen(true);
+
+      // Navigation is handled by the useEffect hook when snackbarOpen and severity are 'success'
+
+    } catch (error) {
+      console.error('Error saving resume:', error);
+      // Show error message
+      setSnackbarMessage(error.message || 'An unexpected error occurred.'); // Use error.message for more detail
+      setSnackbarSeverity("error");
+      setSnackbarOpen(true);
+    } finally {
+      setIsLoading(false); // Turn off loading indicator
+    }
+  };
+
+  // Effect to handle navigation after successful save and Snackbar closes
+  useEffect(() => {
+    if (snackbarOpen && snackbarSeverity === 'success') {
+      // Set a timeout to navigate after the snackbar duration (2000ms)
+      const timer = setTimeout(() => {
+        // setSnackbarOpen(false); // Snackbar onClose handles hiding
+        navigate('/'); // Navigate to the root route
+      }, 2000); // 2 seconds
+      // Cleanup the timer if the component unmounts or Snackbar state changes
+      return () => clearTimeout(timer);
+    }
+  }, [snackbarOpen, snackbarSeverity, navigate]); // Dependencies
+
+  // Handle Snackbar close event
+  const handleSnackbarClose = (event, reason) => {
+    if (reason === 'clickaway') {
+      return; // Don't close on click away
+    }
+    setSnackbarOpen(false);
+  };
+
+
+  // Render functions (kept as is, added the fix for skills TextField)
+  const renderPersonalInfo = () => ( /* ... existing JSX ... */
     <Card elevation={0} sx={{ mb: 3 }}>
       <CardContent sx={{ p: 4 }}>
         <Typography
@@ -1126,7 +1296,7 @@ export default function MasterResumeForm() {
           <Grid item xs={12} md={6}>
             <TextField
               fullWidth
-              label="Phone Number"
+              label="Phone Number (Optional)"
               value={formData.personalInfo.phone}
               onChange={(e) =>
                 handleInputChange("personalInfo", "phone", e.target.value)
@@ -1138,7 +1308,7 @@ export default function MasterResumeForm() {
           <Grid item xs={12} md={6}>
             <TextField
               fullWidth
-              label="LinkedIn URL"
+              label="LinkedIn URL (Optional)" // Label changed to optional
               value={formData.personalInfo.linkedIn}
               onChange={(e) =>
                 handleInputChange("personalInfo", "linkedIn", e.target.value)
@@ -1155,12 +1325,12 @@ export default function MasterResumeForm() {
           <Grid item xs={12} md={6}>
             <TextField
               fullWidth
-              label="GitHub URL"
+              label="GitHub URL (Optional)" // Label changed to optional
               value={formData.personalInfo.github}
               onChange={(e) =>
                 handleInputChange("personalInfo", "github", e.target.value)
               }
-              error={!!errors.github}
+               error={!!errors.github}
               helperText={errors.github}
               InputProps={{
                 startAdornment: (
@@ -1177,6 +1347,8 @@ export default function MasterResumeForm() {
               onChange={(e) =>
                 handleInputChange("personalInfo", "website", e.target.value)
               }
+               error={!!errors.website}
+               helperText={errors.website}
               InputProps={{
                 startAdornment: (
                   <WebsiteIcon sx={{ mr: 1, mt: 2.5, color: "#666" }} />
@@ -1188,7 +1360,7 @@ export default function MasterResumeForm() {
           <Grid item xs={12}>
             <TextField
               fullWidth
-              label="Address Line 1"
+              label="Address Line 1 (Optional)"
               value={formData.personalInfo.address}
               onChange={(e) =>
                 handleInputChange("personalInfo", "address", e.target.value)
@@ -1201,7 +1373,7 @@ export default function MasterResumeForm() {
           <Grid item xs={12} md={4}>
             <TextField
               fullWidth
-              label="City"
+              label="City (Optional)"
               value={formData.personalInfo.city}
               onChange={(e) =>
                 handleInputChange("personalInfo", "city", e.target.value)
@@ -1211,7 +1383,7 @@ export default function MasterResumeForm() {
           <Grid item xs={12} md={4}>
             <TextField
               fullWidth
-              label="State / Province"
+              label="State / Province (Optional)"
               value={formData.personalInfo.state}
               onChange={(e) =>
                 handleInputChange("personalInfo", "state", e.target.value)
@@ -1226,54 +1398,8 @@ export default function MasterResumeForm() {
                 handleInputChange("personalInfo", "country", value)
               }
               renderInput={(params) => (
-                <TextField {...params} label="Country" />
+                <TextField {...params} label="Country (Optional)" />
               )}
-            />
-          </Grid>
-
-          <Grid item xs={12} md={6}>
-            <FormControl fullWidth variant="filled">
-              <InputLabel>Work Authorization</InputLabel>
-              <Select
-                value={formData.personalInfo.workAuthorization}
-                onChange={(e) =>
-                  handleInputChange(
-                    "personalInfo",
-                    "workAuthorization",
-                    e.target.value
-                  )
-                }
-                label="Work Authorization"
-              >
-                {visaStatusOptions.map((status) => (
-                  <MenuItem key={status} value={status}>
-                    {status}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Grid>
-          <Grid item xs={12} md={6}>
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={formData.personalInfo.willingToRelocate}
-                  onChange={(e) =>
-                    handleInputChange(
-                      "personalInfo",
-                      "willingToRelocate",
-                      e.target.checked
-                    )
-                  }
-                  color="primary"
-                />
-              }
-              label={
-                <Typography sx={{ fontWeight: 500, color: "text.primary" }}>
-                  Willing to Relocate
-                </Typography>
-              }
-              sx={{ ".MuiFormControlLabel-label": { ml: 1 } }}
             />
           </Grid>
         </Grid>
@@ -1281,7 +1407,7 @@ export default function MasterResumeForm() {
     </Card>
   );
 
-  const renderCareerSummary = () => (
+  const renderCareerSummary = () => ( /* ... existing JSX ... */
     <Card elevation={0} sx={{ mb: 3 }}>
       <CardContent sx={{ p: 4 }}>
         <Typography
@@ -1296,7 +1422,7 @@ export default function MasterResumeForm() {
           <Grid item xs={12}>
             <TextField
               fullWidth
-              label="Short Summary (1-2 lines for quick overview)"
+              label="Short Summary (1-2 lines for quick overview - Optional)"
               value={formData.careerSummary.shortSummary}
               onChange={(e) =>
                 handleInputChange(
@@ -1313,7 +1439,7 @@ export default function MasterResumeForm() {
           <Grid item xs={12}>
             <TextField
               fullWidth
-              label="Detailed Career Objective / Professional Statement"
+              label="Detailed Career Objective / Professional Statement (Optional)"
               value={formData.careerSummary.detailedObjective}
               onChange={(e) =>
                 handleInputChange(
@@ -1332,8 +1458,8 @@ export default function MasterResumeForm() {
     </Card>
   );
 
-  const renderEducation = () => (
-    <Card elevation={0} sx={{ mb: 3 }}>
+  const renderEducation = () => ( /* ... existing JSX ... */
+     <Card elevation={0} sx={{ mb: 3 }}>
       <CardContent sx={{ p: 4 }}>
         <Box
           display="flex"
@@ -1433,8 +1559,8 @@ export default function MasterResumeForm() {
     </Card>
   );
 
-  const renderWorkExperience = () => (
-    <Card elevation={0} sx={{ mb: 3 }}>
+  const renderWorkExperience = () => ( /* ... existing JSX ... */
+     <Card elevation={0} sx={{ mb: 3 }}>
       <CardContent sx={{ p: 4 }}>
         <Box
           display="flex"
@@ -1540,8 +1666,8 @@ export default function MasterResumeForm() {
     </Card>
   );
 
-  const renderProjects = () => (
-    <Card elevation={0} sx={{ mb: 3 }}>
+  const renderProjects = () => ( /* ... existing JSX ... */
+     <Card elevation={0} sx={{ mb: 3 }}>
       <CardContent sx={{ p: 4 }}>
         <Box
           display="flex"
@@ -1595,23 +1721,11 @@ export default function MasterResumeForm() {
                         variant="body2"
                         color="text.secondary"
                       >{`${project.duration} • ${project.type}`}</Typography>
-                      {project.link && (
-                        <Typography variant="body2" color="text.secondary">
-                          <Link
-                            href={project.link}
-                            target="_blank"
-                            rel="noopener"
-                            sx={{
-                              display: "flex",
-                              alignItems: "center",
-                              mt: 0.5,
-                            }}
-                          >
-                            <WebsiteIcon fontSize="small" sx={{ mr: 0.5 }} />{" "}
-                            {project.link}
-                          </Link>
-                        </Typography>
-                      )}
+                       {project.skillsUsed && ( // Display skillsUsed as plain text
+                           <Typography variant="body2" color="text.secondary" sx={{mt: 0.5}}>
+                               <Box component="span" sx={{fontWeight: 600}}>Skills/Tools: </Box> {project.skillsUsed}
+                           </Typography>
+                       )}
                       {project.description && (
                         <Typography
                           variant="body2"
@@ -1620,19 +1734,6 @@ export default function MasterResumeForm() {
                           {project.description}
                         </Typography>
                       )}
-                      {project.technologies &&
-                        project.technologies.length > 0 && (
-                          <Box sx={{ mt: 1 }}>
-                            {project.technologies.map((tech, i) => (
-                              <Chip
-                                key={i}
-                                label={tech}
-                                size="small"
-                                sx={{ mr: 0.5, mb: 0.5 }}
-                              />
-                            ))}
-                          </Box>
-                        )}
                     </Box>
                   }
                 />
@@ -1673,137 +1774,172 @@ export default function MasterResumeForm() {
           Skills & Expertise
         </Typography>
 
-        <Grid container spacing={3}>
-          {Object.entries(formData.skills).map(([category, skills]) => (
-            <Grid item xs={12} md={6} key={category}>
-              <Typography
-                variant="h6"
-                gutterBottom
-                sx={{ textTransform: "capitalize" }}
-              >
-                {category.replace(/([A-Z])/g, " $1").trim()}
-              </Typography>
-              <Autocomplete
-                multiple
-                options={skillsOptions}
-                value={skills}
-                onChange={(event, value) => {
-                  setFormData((prev) => ({
-                    ...prev,
-                    skills: {
-                      ...prev.skills,
-                      [category]: value,
-                    },
-                  }));
-                }}
-                freeSolo
-                renderTags={(value, getTagProps) =>
-                  value.map((option, index) => (
-                    <Chip
-                      key={index}
-                      variant="filled"
-                      label={option}
-                      {...getTagProps({ index })}
+        {/* --- FIX IS HERE --- */}
+        <TextField
+          fullWidth
+          label="Skills & Expertise"
+          placeholder="e.g., JavaScript, React, Python, AWS, Figma, Leadership (Separate with commas)"
+          value={formData.skills} // Value is correctly formData.skills (a string)
+          // --- Directly update the skills string in state ---
+          onChange={(e) => {
+            setFormData(prev => ({
+              ...prev,
+              skills: e.target.value // Set the 'skills' field directly to the input string value
+            }));
+          }}
+          // --- End FIX ---
+          multiline
+          rows={4}
+          helperText="List your technical, soft, and domain-specific skills."
+        />
+      </CardContent>
+    </Card>
+  );
+
+  const renderAchievements = () => ( /* ... existing JSX ... */
+     <Card elevation={0} sx={{ mb: 3 }}>
+      <CardContent sx={{ p: 4 }}>
+        <Box
+          display="flex"
+          justifyContent="space-between"
+          alignItems="center"
+          mb={3}
+        >
+          <Typography variant="h5" sx={{ color: "primary.main" }}>
+            Achievements
+          </Typography>
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+             onClick={() => openAddDialog("achievements")} // Open simple text dialog
+          >
+            Add Achievement
+          </Button>
+        </Box>
+
+        {formData.achievements.length === 0 ? (
+          <Box
+            textAlign="center"
+            py={4}
+            sx={{
+              border: "2px dashed #EBF2F7",
+              borderRadius: "12px",
+              bgcolor: "#FDFEFE",
+            }}
+          >
+            <AchievementIcon sx={{ fontSize: 64, color: "#BDC3C7", mb: 2 }} />
+            <Typography color="textSecondary">
+              Highlight your significant accomplishments and contributions.
+            </Typography>
+          </Box>
+        ) : (
+            <List>
+                {formData.achievements.map((achievement, index) => (
+                <ListItem
+                    key={index}
+                    divider={index < formData.achievements.length - 1}
+                >
+                    <ListItemText
+                    primary={<Typography variant="body1" sx={{whiteSpace: 'pre-wrap'}}>{achievement}</Typography>}
                     />
-                  ))
-                }
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    label={`Add ${category
-                      .replace(/([A-Z])/g, " $1")
-                      .trim()} Skills`}
-                    placeholder="Search and select skills..."
-                  />
-                )}
-              />
-            </Grid>
-          ))}
-        </Grid>
+                    <ListItemSecondaryAction>
+                    <IconButton
+                        edge="end"
+                        aria-label="edit"
+                        onClick={() => openEditDialog("achievements", index)}
+                        sx={{ color: "primary.main" }}
+                    >
+                        <EditIcon />
+                    </IconButton>
+                    <IconButton
+                        edge="end"
+                        aria-label="delete"
+                        onClick={() => handleStringArrayDelete("achievements", index)}
+                        color="secondary"
+                    >
+                        <DeleteIcon />
+                    </IconButton>
+                    </ListItemSecondaryAction>
+                </ListItem>
+                ))}
+            </List>
+        )}
       </CardContent>
     </Card>
   );
 
-  // Placeholder components for other sections to maintain UI consistency
-  const renderPublications = () => (
-    <Card elevation={0} sx={{ mb: 3 }}>
-      <CardContent sx={{ p: 4 }}>
-        <Box
-          display="flex"
-          justifyContent="space-between"
-          alignItems="center"
-          mb={3}
-        >
-          <Typography variant="h5" sx={{ color: "primary.main" }}>
-            Publications
-          </Typography>
-          <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={() =>
-              alert("Add Publication feature will be implemented here!")
-            }
+    const renderAwards = () => ( /* ... existing JSX ... */
+      <Card elevation={0} sx={{ mb: 3 }}>
+        <CardContent sx={{ p: 4 }}>
+          <Box
+            display="flex"
+            justifyContent="space-between"
+            alignItems="center"
+            mb={3}
           >
-            Add Publication
-          </Button>
-        </Box>
-        <Box
-          textAlign="center"
-          py={4}
-          sx={{
-            border: "2px dashed #EBF2F7",
-            borderRadius: "12px",
-            bgcolor: "#FDFEFE",
-          }}
-        >
-          <ArticleIcon sx={{ fontSize: 64, color: "#BDC3C7", mb: 2 }} />
-          <Typography color="textSecondary">
-            No publications added yet. Showcase your research and written works.
-          </Typography>
-        </Box>
-      </CardContent>
-    </Card>
-  );
+            <Typography variant="h5" sx={{ color: "primary.main" }}>
+              Awards & Honors
+            </Typography>
+            <Button
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={() => openAddDialog("awards")} // Open simple text dialog
+            >
+              Add Award
+            </Button>
+          </Box>
+           {formData.awards.length === 0 ? (
+            <Box
+              textAlign="center"
+              py={4}
+              sx={{
+                border: "2px dashed #EBF2F7",
+                borderRadius: "12px",
+                bgcolor: "#FDFEFE",
+              }}
+            >
+              <AwardIcon sx={{ fontSize: 64, color: "#BDC3C7", mb: 2 }} />
+              <Typography color="textSecondary">
+                Recognize your significant awards, scholarships, and honors.
+              </Typography>
+            </Box>
+          ) : (
+              <List>
+                  {formData.awards.map((award, index) => (
+                  <ListItem
+                      key={index}
+                      divider={index < formData.awards.length - 1}
+                  >
+                      <ListItemText
+                      primary={<Typography variant="body1" sx={{whiteSpace: 'pre-wrap'}}>{award}</Typography>}
+                      />
+                      <ListItemSecondaryAction>
+                      <IconButton
+                          edge="end"
+                          aria-label="edit"
+                          onClick={() => openEditDialog("awards", index)}
+                          sx={{ color: "primary.main" }}
+                      >
+                          <EditIcon />
+                      </IconButton>
+                      <IconButton
+                          edge="end"
+                          aria-label="delete"
+                          onClick={() => handleStringArrayDelete("awards", index)}
+                          color="secondary"
+                      >
+                          <DeleteIcon />
+                      </IconButton>
+                      </ListItemSecondaryAction>
+                  </ListItem>
+                  ))}
+              </List>
+          )}
+        </CardContent>
+      </Card>
+    );
 
-  const renderAwards = () => (
-    <Card elevation={0} sx={{ mb: 3 }}>
-      <CardContent sx={{ p: 4 }}>
-        <Box
-          display="flex"
-          justifyContent="space-between"
-          alignItems="center"
-          mb={3}
-        >
-          <Typography variant="h5" sx={{ color: "primary.main" }}>
-            Awards & Honors
-          </Typography>
-          <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={() => alert("Add Award feature will be implemented here!")}
-          >
-            Add Award
-          </Button>
-        </Box>
-        <Box
-          textAlign="center"
-          py={4}
-          sx={{
-            border: "2px dashed #EBF2F7",
-            borderRadius: "12px",
-            bgcolor: "#FDFEFE",
-          }}
-        >
-          <AwardIcon sx={{ fontSize: 64, color: "#BDC3C7", mb: 2 }} />
-          <Typography color="textSecondary">
-            No awards or honors added yet. Recognize your achievements!
-          </Typography>
-        </Box>
-      </CardContent>
-    </Card>
-  );
-
-  const renderVolunteerWork = () => (
+  const renderVolunteerWork = () => ( /* ... existing JSX ... */
     <Card elevation={0} sx={{ mb: 3 }}>
       <CardContent sx={{ p: 4 }}>
         <Box
@@ -1818,31 +1954,62 @@ export default function MasterResumeForm() {
           <Button
             variant="contained"
             startIcon={<AddIcon />}
-            onClick={() =>
-              alert("Add Volunteer Work feature will be implemented here!")
-            }
+             onClick={() => openAddDialog("volunteer")} // Open simple text dialog
           >
             Add Volunteer Work
           </Button>
         </Box>
-        <Box
-          textAlign="center"
-          py={4}
-          sx={{
-            border: "2px dashed #EBF2F7",
-            borderRadius: "12px",
-            bgcolor: "#FDFEFE",
-          }}
-        >
-          <VolunteerIcon sx={{ fontSize: 64, color: "#BDC3C7", mb: 2 }} />
-          <Typography color="textSecondary">
-            No volunteer experiences added yet. Highlight your community
-            involvement.
-          </Typography>
-        </Box>
+        {formData.volunteer.length === 0 ? (
+          <Box
+            textAlign="center"
+            py={4}
+            sx={{
+              border: "2px dashed #EBF2F7",
+              borderRadius: "12px",
+              bgcolor: "#FDFEFE",
+            }}
+          >
+            <VolunteerIcon sx={{ fontSize: 64, color: "#BDC3C7", mb: 2 }} />
+            <Typography color="textSecondary">
+              Highlight your community involvement and volunteer experiences.
+            </Typography>
+          </Box>
+        ) : (
+            <List>
+                {formData.volunteer.map((item, index) => (
+                <ListItem
+                    key={index}
+                    divider={index < formData.volunteer.length - 1}
+                >
+                    <ListItemText
+                    primary={<Typography variant="body1" sx={{whiteSpace: 'pre-wrap'}}>{item}</Typography>}
+                    />
+                    <ListItemSecondaryAction>
+                    <IconButton
+                        edge="end"
+                        aria-label="edit"
+                        onClick={() => openEditDialog("volunteer", index)}
+                        sx={{ color: "primary.main" }}
+                    >
+                        <EditIcon />
+                    </IconButton>
+                    <IconButton
+                        edge="end"
+                        aria-label="delete"
+                        onClick={() => handleStringArrayDelete("volunteer", index)}
+                        color="secondary"
+                    >
+                        <DeleteIcon />
+                    </IconButton>
+                    </ListItemSecondaryAction>
+                </ListItem>
+                ))}
+            </List>
+        )}
       </CardContent>
     </Card>
   );
+
 
   const renderStepContent = () => {
     switch (activeStep) {
@@ -1859,7 +2026,7 @@ export default function MasterResumeForm() {
       case 5:
         return renderSkills();
       case 6:
-        return renderPublications();
+        return renderAchievements(); // Render Achievements
       case 7:
         return renderAwards();
       case 8:
@@ -1951,7 +2118,9 @@ export default function MasterResumeForm() {
               justifyContent: "space-between",
             }}
           >
+            {/* Render content based on active step */}
             <Box sx={{ p: 0 }}>{renderStepContent()}</Box>
+
 
             {/* Navigation */}
             <Box
@@ -1967,7 +2136,7 @@ export default function MasterResumeForm() {
             >
               <Button
                 onClick={handleBack}
-                disabled={activeStep === 0}
+                disabled={activeStep === 0 || isLoading} // Disable back button while loading
                 variant="outlined"
                 size="large"
                 sx={{ minWidth: "120px" }}
@@ -1977,69 +2146,81 @@ export default function MasterResumeForm() {
               <Button
                 onClick={
                   activeStep === steps.length - 1
-                    ? () => alert("Form completed!")
-                    : handleNext
+                    ? handleSaveResume // Call the save function on the last step
+                    : handleNext // Otherwise, go to the next step
                 }
                 variant="contained"
                 size="large"
                 color="primary"
+                disabled={isLoading} // Disable button while loading
                 sx={{ minWidth: "120px" }}
               >
-                {activeStep === steps.length - 1 ? "Save Resume" : "Next"}
+                {isLoading ? ( // Show loading indicator if loading
+                   "Saving..." // Text changes to indicate saving
+                ) : (
+                    activeStep === steps.length - 1 ? "Save Resume" : "Next"
+                )}
               </Button>
             </Box>
           </Paper>
 
-          {/* Success Alert */}
-          {activeStep === steps.length - 1 && (
-            <Alert severity="success" sx={{ mt: 3 }}>
-              Congratulations! You've completed your master resume. You can now
-              use this to generate tailored resumes for specific job
-              applications.
-            </Alert>
-          )}
+           {/* Error Summary Alert (Optional, can use Snackbar instead) */}
+           {/* {Object.keys(errors).length > 0 && (activeStep === 0) && (
+               <Alert severity="error" sx={{ mt: 3 }}>
+                   Please fix the errors in the current section before proceeding.
+               </Alert>
+           )} */}
+
         </Box>
       </Box>
 
-      {/* Dialogs for adding/editing items */}
-      {dialogType === "education" && (
-        <AddEditEducationDialog
-          open={openDialog}
-          handleClose={() => setOpenDialog(false)}
-          education={editIndex !== -1 ? formData.education[editIndex] : null}
-          handleSubmit={handleDialogSubmit}
-          isEdit={editIndex !== -1}
-        />
-      )}
-      {dialogType === "workExperience" && (
-        <AddEditWorkExperienceDialog
-          open={openDialog}
-          handleClose={() => setOpenDialog(false)}
-          experience={
-            editIndex !== -1 ? formData.workExperience[editIndex] : null
-          }
-          handleSubmit={handleDialogSubmit}
-          isEdit={editIndex !== -1}
-        />
-      )}
-      {dialogType === "projects" && (
-        <AddEditProjectDialog
-          open={openDialog}
-          handleClose={() => setOpenDialog(false)}
-          project={editIndex !== -1 ? formData.projects[editIndex] : null}
-          handleSubmit={handleDialogSubmit}
-          isEdit={editIndex !== -1}
-        />
-      )}
+      {/* Dialog Components (kept as is) */}
+      {dialogType === "education" && <AddEditEducationDialog {...getDialogProps()} />}
+      {dialogType === "workExperience" && <AddEditWorkExperienceDialog {...getDialogProps()} />}
+      {dialogType === "projects" && <AddEditProjectDialog {...getDialogProps()} />}
+      {dialogType === "achievements" && <AddEditSimpleTextDialog {...getDialogProps()} />}
+      {dialogType === "awards" && <AddEditSimpleTextDialog {...getDialogProps()} />}
+      {dialogType === "volunteer" && <AddEditSimpleTextDialog {...getDialogProps()} />}
+
+       {/* Snackbar for success/error messages */}
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={snackbarSeverity === 'success' ? 2000 : 6000} // 2s for success, 6s for others
+        onClose={handleSnackbarClose}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }} // Position at top center
+      >
+        <Alert
+          onClose={handleSnackbarClose}
+          severity={snackbarSeverity}
+          sx={{ width: '100%' }}
+          variant="filled" // Matches theme style
+        >
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
+
+       {/* Optional Full-screen Loading Backdrop/Dialog */}
+        {/* Removed the CircularProgress inside the dialog, the button handles loading */}
+        {/* Keeping this here as an example if you want a full screen loader */}
+        {/*
+        <Dialog open={isLoading} sx={{ '& .MuiDialog-paper': { bgcolor: 'transparent', boxShadow: 'none' } }}>
+            <DialogContent sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', p: 2 }}>
+                 <CircularProgress color="primary" size={60} />
+            </DialogContent>
+        </Dialog>
+        */}
+
+
     </ThemeProvider>
   );
 }
 
-// Simple Link component for project URLs
-const Link = styled("a")({
+// Simple Link component for project URLs (if needed elsewhere)
+// Renamed to avoid conflict with MUI Link import
+const LinkStyled = styled("a")(({ theme }) => ({ // Use theme if needed
   textDecoration: "none",
-  color: premiumTheme.palette.primary.main,
+  color: theme.palette.primary.main,
   "&:hover": {
     textDecoration: "underline",
   },
-});
+}));
