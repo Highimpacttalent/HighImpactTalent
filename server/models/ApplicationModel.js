@@ -53,6 +53,12 @@ const applicationSchema = new Schema({
       },
     },
   ],
+  resumeMatchLevel: {
+    type: String,
+    enum: ["relevant", "recommended", "not_relevant"],
+    default: "not_relevant",
+    index: true,
+  },
   screeningAnswers: [
     {
       questionId: {

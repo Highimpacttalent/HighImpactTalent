@@ -4,6 +4,7 @@ import Jobs from "../models/jobsModel.js";
 import Users from "../models/userModel.js";
 import { sendStatusUpdateEmail } from "./sendMailController.js";
 import cache from "../utils/cache.js";
+import { scoreResumeAgainstJobKeywords } from "../utils/Reommend.js";
 // Create a new application
 export const createApplication = async (req, res) => {
   try {
@@ -96,12 +97,25 @@ export const createApplication = async (req, res) => {
       });
     }
 
+    const { success: scoringSuccess, scoreLabel } = await scoreResumeAgainstJobKeywords(
+      cvUrl,
+      jobex.keywords || { must_have: [], nice_to_have: [], bonus: [] }
+    );
+
+    if (!scoringSuccess) {
+      return res.status(500).json({
+        success: false,
+        message: "Failed to evaluate resume against job keywords",
+      });
+    }
+
     // Create application with screening answers and cvUrl
     const newApplication = await Application.create({
       job,
       company,
       applicant,
       cvUrl, // Store the resume URL for this specific application
+      resumeMatchLevel: scoreLabel,
       screeningAnswers: formattedScreeningAnswers,
       statusHistory: [{ status: "Applied", changedAt: new Date() }],
     });
