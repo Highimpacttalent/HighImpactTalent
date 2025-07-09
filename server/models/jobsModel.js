@@ -122,6 +122,12 @@ const jobSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    keywords: {
+      must_have: { type: [String], default: [] },
+      nice_to_have: { type: [String], default: [] },
+      bonus: { type: [String], default: [] },
+      red_flags: { type: [String], default: [] }
+    }
   },
   { 
     timestamps: true, 

@@ -7,6 +7,7 @@ import Application from "../models/ApplicationModel.js";
 import calculateJobMatch  from "../utils/jobMatchCalculator.js";
 import Users from "../models/userModel.js";
 import jwt from 'jsonwebtoken';
+import { extractJobKeywords } from "./AiController.js";
 import dotenv from 'dotenv';
 dotenv.config();
 
@@ -79,6 +80,17 @@ export const createJob = async (req, res, next) => {
       isPremiumJob: isPremiumJob || false,
       ...(applicationLink && { applicationLink }),
     };
+
+    const { success, keywords, error } = await extractJobKeywords(jobPost);
+    if (!success) {
+      return res.status(500).json({
+        message: "Failed to generate keyword filters using AI",
+        error,
+      });
+    }
+
+    // Add keywords to jobPost before saving
+    jobPost.keywords = keywords;
 
     // Use session for atomic operations
     const session = await mongoose.startSession();

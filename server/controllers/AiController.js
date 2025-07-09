@@ -1274,3 +1274,80 @@ Only show candidates that have a CV URL. Don't make up details. Format the respo
     });
   }
 };
+
+
+export const extractJobKeywords = async (job) => {
+  try {
+    const prompt = `
+    You are an expert technical recruiter and AI-powered resume screener.
+
+    Your task is to analyze the given structured job posting and extract the **most relevant and specific keywords** that can be used to evaluate incoming resumes.
+
+    🎯 Extract:
+    1. **Must-Have**: Skills or qualifications that are non-negotiable.
+    2. **Nice-To-Have**: Preferred attributes, not mandatory.
+    3. **Bonus**: Rare or exceptional qualities that would boost a resume's appeal.
+    4. **Red Flags** (optional): Phrases that may indicate a weak or irrelevant profile (e.g., "freelancer", "intern", "1 month").
+
+    🔐 IMPORTANT:
+    - Focus only on the technical and experiential aspects (skills, tools, roles, seniority).
+    - Avoid vague terms like “team player” or “motivated”.
+    - Eliminate repetitions or generalities.
+    - Use **precise, concrete, and role-specific keywords** — imagine what a recruiter would Ctrl+F for in a resume.
+
+    🧾 Job Posting (JSON):
+    \`\`\`json
+    ${JSON.stringify(job, null, 2)}
+    \`\`\`
+
+    ✅ Output Format (Valid JSON only):
+    \`\`\`json
+    {
+      "must_have": [],
+      "nice_to_have": [],
+      "bonus": [],
+      "red_flags": []
+    }
+    \`\`\`
+    `;
+
+    const geminiResponse = await axios.post(
+      `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-pro:generateContent?key=${GEMINI_API_KEY}`,
+      {
+        contents: [
+          {
+            role: "user",
+            parts: [{ text: prompt }],
+          },
+        ],
+      },
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    const rawText =
+      geminiResponse.data?.candidates?.[0]?.content?.parts?.[0]?.text || "";
+
+    const match = rawText.match(/```json\s*([\s\S]*?)\s*```/);
+
+    if (!match) {
+      throw new Error("No valid JSON block found in Gemini response");
+    }
+
+    const keywords = JSON.parse(match[1]);
+
+    return {
+      success: true,
+      keywords,
+    };
+  } catch (error) {
+    console.error("Keyword extraction failed:", error.message);
+    return {
+      success: false,
+      error: error.message,
+    };
+  }
+};
