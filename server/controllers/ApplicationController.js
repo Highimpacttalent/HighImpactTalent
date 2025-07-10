@@ -97,10 +97,12 @@ export const createApplication = async (req, res) => {
       });
     }
 
-    const { success: scoringSuccess, scoreLabel } = await scoreResumeAgainstJobKeywords(
-      cvUrl,
-      jobex.keywords || { must_have: [], nice_to_have: [], bonus: [] }
-    );
+    const {
+      success: scoringSuccess,
+      scoreLabel,
+      matchPercentage,
+      breakdown,
+    } = await scoreResumeAgainstJobKeywords(cvUrl, jobex, userex);
 
     if (!scoringSuccess) {
       return res.status(500).json({
@@ -114,8 +116,10 @@ export const createApplication = async (req, res) => {
       job,
       company,
       applicant,
-      cvUrl, // Store the resume URL for this specific application
+      cvUrl,
       resumeMatchLevel: scoreLabel,
+      matchPercentage,
+      matchBreakdown: breakdown,
       screeningAnswers: formattedScreeningAnswers,
       statusHistory: [{ status: "Applied", changedAt: new Date() }],
     });
@@ -271,9 +275,11 @@ export const getApplicationsOfAjob = async (req, res) => {
     }
 
     // STEP 2: Build normalized cache key (safe .trim() usage)
-    const cacheKey = `apps:${jobId}:${(status ?? "all").trim()}:${(keywords ?? "").trim()}:${(locations ?? "").trim()}:${(designations ?? "").trim()}:${(totalYearsInConsulting ?? "").trim()}:${JSON.stringify(
-      screeningFiltersParsed
-    )}`;
+    const cacheKey = `apps:${jobId}:${(status ?? "all").trim()}:${(
+      keywords ?? ""
+    ).trim()}:${(locations ?? "").trim()}:${(designations ?? "").trim()}:${(
+      totalYearsInConsulting ?? ""
+    ).trim()}:${JSON.stringify(screeningFiltersParsed)}`;
 
     console.log("🔑 Computed cacheKey:", cacheKey);
 
@@ -463,7 +469,6 @@ export const getApplicationsOfAjob = async (req, res) => {
     });
   }
 };
-
 
 // ========================================
 // HELPER FUNCTION - Get Screening Filter Options
