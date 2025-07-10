@@ -31,6 +31,7 @@ export const scoreResumeAgainstJobKeywords = async (cvUrl, job, applicant) => {
       ? (niceToHaveMatches.length + bonusMatches.length) / totalNiceBonus
       : 0;
 
+    // 🔍 Relevance Classification
     let label = "not_relevant";
     if (mustMatchRatio >= 0.75) {
       label = "relevant";
@@ -38,15 +39,15 @@ export const scoreResumeAgainstJobKeywords = async (cvUrl, job, applicant) => {
       label = "recommended";
     }
 
-    // Calculate weighted match score
+    // 🎯 Weights (Equal for Experience & Skills)
     const weights = {
-      exp: 45,
-      skills: 15,
-      loc: 20,
-      sal: 20,
+      exp: 35,
+      skills: 35,
+      loc: 15,
+      sal: 15,
     };
 
-    // 1) Experience
+    // ✅ 1) Experience Score
     const jobMinExp = job.experience?.minExperience ?? job.experience;
     let expScore = 0;
     if (jobMinExp !== undefined && jobMinExp !== null) {
@@ -56,7 +57,7 @@ export const scoreResumeAgainstJobKeywords = async (cvUrl, job, applicant) => {
       expScore = weights.exp;
     }
 
-    // 2) Skills from resume
+    // ✅ 2) Skills Score (from Resume)
     const totalSkills =
       (job.keywords?.must_have?.length || 0) +
       (job.keywords?.nice_to_have?.length || 0) +
@@ -67,7 +68,7 @@ export const scoreResumeAgainstJobKeywords = async (cvUrl, job, applicant) => {
     const skillScoreRatio = totalSkills ? totalMatches / totalSkills : 0;
     const skillsScore = skillScoreRatio * weights.skills;
 
-    // 3) Location
+    // ✅ 3) Location Score
     let locScore = 0;
     if (job.jobLocation) {
       if (
@@ -81,7 +82,7 @@ export const scoreResumeAgainstJobKeywords = async (cvUrl, job, applicant) => {
       locScore = weights.loc;
     }
 
-    // 4) Salary
+    // ✅ 4) Salary Score
     const jobMinSalary = job.salary?.minSalary ?? job.salary;
     let salScore = 0;
     if (jobMinSalary !== undefined && jobMinSalary !== null) {
@@ -95,8 +96,17 @@ export const scoreResumeAgainstJobKeywords = async (cvUrl, job, applicant) => {
       salScore = weights.sal;
     }
 
-    const totalScore = Math.round(expScore + skillsScore + locScore + salScore);
+    // ✅ Total Score Before Cap
+    let totalScore = expScore + skillsScore + locScore + salScore;
 
+    // ⛔ Cap max score to 50 if not relevant
+    if (label === "not_relevant") {
+      totalScore = Math.min(totalScore, 50);
+    }
+
+    const matchPercentage = Math.round(totalScore);
+
+    // 🎯 Breakdown for transparency
     const breakdown = {
       experience: `${expScore.toFixed(1)} / ${weights.exp}`,
       skills: `${skillsScore.toFixed(1)} / ${weights.skills}`,
@@ -107,7 +117,7 @@ export const scoreResumeAgainstJobKeywords = async (cvUrl, job, applicant) => {
     return {
       success: true,
       scoreLabel: label,
-      matchPercentage: totalScore,
+      matchPercentage,
       breakdown,
     };
   } catch (error) {
@@ -117,10 +127,10 @@ export const scoreResumeAgainstJobKeywords = async (cvUrl, job, applicant) => {
       scoreLabel: "not_relevant",
       matchPercentage: 0,
       breakdown: {
-        experience: "0 / 45",
-        skills: "0 / 15",
-        location: "0 / 20",
-        salary: "0 / 20",
+        experience: `0 / 35`,
+        skills: `0 / 35`,
+        location: `0 / 15`,
+        salary: `0 / 15`,
       },
       error: error.message,
     };
