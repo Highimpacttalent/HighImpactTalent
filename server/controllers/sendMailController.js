@@ -546,3 +546,126 @@ export const sendStatusUpdateEmail = async (email, status, name = 'Candidate', j
     console.error(`Failed to send email to ${email}:`, error.message);
   }
 };
+
+
+export const sendReminderEmailIfStaleStatus = async (
+  email,
+  status,
+  name = "Candidate",
+  jobTitle = "Position",
+  companyName = "High Impact Talent",
+  recruiterName = "Koustubh"
+) => {
+  if (!email || !status) return;
+
+  const subject = `Your Application for ${jobTitle} – Quick Update`;
+  const preheader = `Thank you for your patience – we're still following up on your application to ${companyName}.`;
+
+const messageBody = `
+  <p style="font-size: 16px; line-height: 1.6; color: #374151;">
+    Hello ${name},
+  </p>
+
+  <p style="font-size: 16px; line-height: 1.6; color: #374151;">
+    I wanted to give you an update on your application to the <strong>${jobTitle}</strong> position at <strong>${companyName}</strong>.
+  </p>
+
+  <p style="font-size: 16px; line-height: 1.6; color: #374151;">
+    Thank you for your continued patience. We’re currently awaiting feedback from the hiring team, and there’s been a slight delay from their side. Please rest assured that we’re actively following up and hope to provide you with an update very soon.
+  </p>
+
+  <p style="font-size: 16px; line-height: 1.6; color: #374151;">
+    As soon as we hear back, you’ll be the first to know.
+  </p>
+
+  <p style="font-size: 16px; line-height: 1.6; color: #374151;">
+    If you have any questions or if there have been any updates on your end, feel free to get in touch — we’re here to support you throughout your journey.
+  </p>
+
+  <p style="font-size: 16px; line-height: 1.6; color: #374151; margin-top: 20px;">
+  As one of our early adopters, your support during our beta phase means a lot to us. Your experience helps us shape a more thoughtful and impactful hiring platform. If you have any suggestions for how we can improve your experience or features you'd like to see on our platform, please take a moment to share your thoughts:
+  <br />
+  <a href="https://forms.gle/uExw8hfUfJBdrj4P6" target="_blank" style="color: #2563eb; text-decoration: underline;">
+    Share Feedback &raquo;
+  </a>
+  </p>
+
+
+  <p style="font-size: 16px; line-height: 1.6; color: #374151; margin-top: 30px;">
+    Kind regards,<br>
+    ${recruiterName}<br>
+    High Impact Talent
+  </p>
+`;
+
+
+  const htmlTemplate = `
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+      <style>
+        body { margin: 0; padding: 0; background-color: #f9fafb; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; }
+        .container { max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; box-shadow: 0 4px 16px rgba(0,0,0,0.05); padding: 40px; }
+        .footer { font-size: 12px; color: #9ca3af; text-align: center; padding: 20px 0; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <img src="https://www.highimpacttalent.com/assets/tlogo-BljjaXz3.png" alt="High Impact Talent" style="max-width: 180px; margin-bottom: 30px;" />
+        ${messageBody}
+      </div>
+
+      <div class="footer">
+        High Impact Talent • www.highimpacttalent.com<br>
+        © ${new Date().getFullYear()} High Impact Talent. All rights reserved.
+      </div>
+    </body>
+    </html>
+  `;
+
+  const mailOptions = {
+    from: {
+      name: "High Impact Talent",
+      address: "hello@highimpacttalent.com"
+    },
+    to: email,
+    subject,
+    html: htmlTemplate,
+    text: `
+Hello ${name},
+
+I wanted to give you an update on your application to the "${jobTitle}" position at ${companyName}.
+
+Thank you for your patience – we're still following up with the hiring team and are currently experiencing a client-side delay. We hope to get feedback soon.
+
+As soon as there is an update, I’ll make sure to pass it on to you.
+
+Please feel free to reach out if anything about your application changes.
+
+Kind regards,
+${recruiterName}
+Talent Partner, High Impact Talent
+    `
+  };
+
+  try {
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.EMAIL_USER || "developerhighimpact@gmail.com",
+        pass: process.env.EMAIL_PASS || "lpyu zhks kpne qrsc"
+      },
+      pool: true,
+      maxConnections: 1,
+      rateDelta: 20000,
+      rateLimit: 5
+    });
+
+    await transporter.sendMail(mailOptions);
+    console.log(`📬 Premium-style reminder sent to ${email}`);
+  } catch (error) {
+    console.error(`❌ Failed to send premium reminder: ${error.message}`);
+  }
+};

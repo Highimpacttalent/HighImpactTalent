@@ -5,6 +5,7 @@ import companyRoute from "./companiesRoutes.js";
 import jobRoute from "./jobsRoutes.js";
 import applicationRoute from "./applicationRoutes.js";
 import blogRoute from './blogRoutes.js'
+import '../cron/staleApplication.js';
 import sendMailRoute from "./sendMailRoutes.js";
 import aiRoutes from "./aiRoutes.js";
 import resumepool from "./resumepool.js"
