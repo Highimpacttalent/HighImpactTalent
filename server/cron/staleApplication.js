@@ -63,7 +63,7 @@ const runStaleApplicationReminder = async () => {
 };
 
 // Run at 6:37 PM daily
-cron.schedule('07 21 * * *', () => {
+cron.schedule('23 18 * * *', () => {
   console.log('🕒 Running daily stale application check...');
   runStaleApplicationReminder();
 });
