@@ -236,6 +236,7 @@ export const updateApplicationStatus = async (req, res) => {
 export const getApplicationsOfAjob = async (req, res) => {
   try {
     console.log("🔵 ENTERED getApplicationsOfAjob");
+    const startTime = Date.now();
 
     const jobId = req.params.jobid;
     const {
@@ -247,24 +248,13 @@ export const getApplicationsOfAjob = async (req, res) => {
       screeningFilters,
     } = req.query ?? {};
 
-    console.log("📝 Raw query params:", {
-      jobId,
-      status,
-      keywords,
-      locations,
-      designations,
-      totalYearsInConsulting,
-      screeningFilters,
-    });
-
-    // STEP 1: Parse and normalize filters early
+    // STEP 1: Parse filters early
     let screeningFiltersParsed = {};
     try {
-      if ((screeningFilters ?? "").trim()) {
-        screeningFiltersParsed =
-          typeof screeningFilters === "string"
-            ? JSON.parse(screeningFilters)
-            : screeningFilters;
+      if (screeningFilters?.trim()) {
+        screeningFiltersParsed = typeof screeningFilters === "string" 
+          ? JSON.parse(screeningFilters) 
+          : screeningFilters;
       }
     } catch (err) {
       console.error("❌ Invalid screeningFilters JSON:", err);
@@ -274,192 +264,274 @@ export const getApplicationsOfAjob = async (req, res) => {
       });
     }
 
-    // STEP 2: Build normalized cache key (safe .trim() usage)
-    const cacheKey = `apps:${jobId}:${(status ?? "all").trim()}:${(
-      keywords ?? ""
-    ).trim()}:${(locations ?? "").trim()}:${(designations ?? "").trim()}:${(
-      totalYearsInConsulting ?? ""
-    ).trim()}:${JSON.stringify(screeningFiltersParsed)}`;
+    // STEP 2: Smart caching strategy
+    // Base cache key for unfiltered data
+    const baseKey = `apps_base:${jobId}:${status || 'all'}`;
+    
+    // Check if we have base data cached
+    let baseApplications = cache.get(baseKey);
+    
+    if (!baseApplications) {
+      console.log("🔴 Base cache miss - fetching from DB");
+      
+      // OPTIMIZED PIPELINE - Keep all fields but optimize the query
+      const pipeline = [
+        // Stage 1: Early match with indexed fields
+        {
+          $match: {
+            job: new mongoose.Types.ObjectId(jobId),
+            ...(status?.trim() && { status: status.trim() })
+          }
+        },
+        
+        // Stage 2: Optimized lookup for applicant (ALL fields)
+        {
+          $lookup: {
+            from: "users",
+            localField: "applicant",
+            foreignField: "_id",
+            as: "applicant",
+            // Keep all fields - just optimize the lookup
+            pipeline: [
+              {
+                $project: {
+                  password: 0, // Only exclude sensitive data
+                  __v: 0
+                }
+              }
+            ]
+          }
+        },
+        
+        // Stage 3: Job lookup (ALL fields)
+        {
+          $lookup: {
+            from: "jobs",
+            localField: "job",
+            foreignField: "_id",
+            as: "job",
+            pipeline: [
+              {
+                $project: {
+                  __v: 0
+                }
+              }
+            ]
+          }
+        },
+        
+        // Stage 4: Company lookup (ALL fields)
+        {
+          $lookup: {
+            from: "companies",
+            localField: "company",
+            foreignField: "_id",
+            as: "company",
+            pipeline: [
+              {
+                $project: {
+                  password: 0, // Only exclude sensitive data
+                  __v: 0
+                }
+              }
+            ]
+          }
+        },
+        
+        // Stage 5: Unwind - but with preserveNullAndEmptyArrays for safety
+        { $unwind: { path: "$applicant", preserveNullAndEmptyArrays: true } },
+        { $unwind: { path: "$job", preserveNullAndEmptyArrays: true } },
+        { $unwind: { path: "$company", preserveNullAndEmptyArrays: true } },
+        
+        // Stage 6: Sort by creation date (using your existing index)
+        { $sort: { createdAt: -1 } }
+      ];
 
-    console.log("🔑 Computed cacheKey:", cacheKey);
-
-    const cachedData = cache.get(cacheKey);
-    if (cachedData) {
-      console.log("🟢 Cache hit:", cacheKey);
-      res.set("Cache-Control", "no-store");
-      return res.status(200).json(cachedData);
+      const dbStartTime = Date.now();
+      baseApplications = await Application.aggregate(pipeline);
+      const dbDuration = Date.now() - dbStartTime;
+      
+      console.log(`✅ DB query complete: ${dbDuration}ms for ${baseApplications.length} applications`);
+      
+      // Cache base data for 10 minutes
+      cache.set(baseKey, baseApplications, 600);
+    } else {
+      console.log("🟢 Using cached base data");
     }
 
-    console.log("🔴 Cache miss:", cacheKey);
+    // STEP 3: Apply filters in memory (MUCH faster than DB filtering)
+    let filteredApplications = [...baseApplications]; // Clone array
 
-    const pipeline = [];
-    const matchStage = {
-      job: new mongoose.Types.ObjectId(jobId),
-    };
-    if ((status ?? "").trim()) {
-      matchStage.status = status.trim();
-    }
-
-    pipeline.push({ $match: matchStage });
-    console.log("🔍 Initial $match stage added:", matchStage);
-
-    const earlyFilterConditions = [];
-
-    let keywordsList = [];
-    let locationsList = [];
-    let designationsList = [];
-
-    console.log("🛠 Parsing filters...");
-
-    const parseList = (val) => {
+    // Helper function to parse filter lists
+    const parseFilterList = (filterValue) => {
+      if (!filterValue?.trim()) return [];
+      
       try {
-        const parsed = JSON.parse(val);
+        const parsed = JSON.parse(filterValue);
         return Array.isArray(parsed) ? parsed : [parsed];
       } catch (e) {
-        return (val ?? "")
-          .split(",")
-          .map((item) => item.trim())
+        return filterValue.split(",")
+          .map(item => item.trim())
           .filter(Boolean);
       }
     };
 
-    keywordsList = parseList(keywords);
-    locationsList = parseList(locations);
-    designationsList = parseList(designations);
+    // Parse all filters
+    const keywordsList = parseFilterList(keywords);
+    const locationsList = parseFilterList(locations);
+    const designationsList = parseFilterList(designations);
 
-    if (
-      screeningFiltersParsed &&
-      typeof screeningFiltersParsed === "object" &&
-      Object.keys(screeningFiltersParsed).length > 0
-    ) {
-      console.log("🔎 Screening filters parsed:", screeningFiltersParsed);
-    }
+    console.log("📊 Applying filters:", {
+      keywordsCount: keywordsList.length,
+      locationsCount: locationsList.length,
+      designationsCount: designationsList.length,
+      hasScreeningFilters: Object.keys(screeningFiltersParsed).length > 0,
+      hasExperienceFilter: !!totalYearsInConsulting?.trim()
+    });
 
-    if (earlyFilterConditions.length > 0) {
-      pipeline.push({ $match: { $and: earlyFilterConditions } });
-      console.log("⚡ Early filters applied:", earlyFilterConditions);
-    }
-
-    console.log("🔗 Adding $lookup stages...");
-
-    pipeline.push(
-      {
-        $lookup: {
-          from: "users",
-          localField: "applicant",
-          foreignField: "_id",
-          as: "applicant",
-          pipeline: [
-            {
-              $project: {
-                firstName: 1,
-                lastName: 1,
-                email: 1,
-                contactNumber: 1,
-                profileUrl: 1,
-                cvUrl: 1,
-                currentDesignation: 1,
-                currentCompany: 1,
-                currentSalary: 1,
-                currentLocation: 1,
-                preferredLocations: 1,
-                totalYearsInConsulting: 1,
-                lastConsultingCompany: 1,
-                isItConsultingCompany: 1,
-                skills: 1,
-                experience: 1,
-                experienceHistory: 1,
-                about: 1,
-                expectedMinSalary: 1,
-                preferredWorkTypes: 1,
-                preferredWorkModes: 1,
-                openToRelocate: 1,
-                joinConsulting: 1,
-                highestQualification: 1,
-                linkedinLink: 1,
-                dateOfBirth: 1,
-                accountType: 1,
-                isEmailVerified: 1,
-                createdAt: 1,
-                updatedAt: 1,
-              },
-            },
-          ],
-        },
-      },
-      {
-        $lookup: {
-          from: "jobs",
-          localField: "job",
-          foreignField: "_id",
-          as: "job",
-        },
-      },
-      {
-        $lookup: {
-          from: "companies",
-          localField: "company",
-          foreignField: "_id",
-          as: "company",
-          pipeline: [{ $project: { password: 0 } }],
-        },
-      },
-      { $unwind: "$applicant" },
-      { $unwind: "$job" },
-      { $unwind: "$company" }
-    );
-
-    console.log("📥 Lookup and unwind stages added.");
-
-    const postLookupFilters = [];
-
+    // Apply keyword filter
     if (keywordsList.length > 0) {
-      console.log("🧠 Adding keyword filters:", keywordsList);
+      const filterStart = Date.now();
+      
+      filteredApplications = filteredApplications.filter(app => {
+        const searchableFields = [
+          app.applicant?.firstName,
+          app.applicant?.lastName,
+          app.applicant?.email,
+          app.applicant?.currentDesignation,
+          app.applicant?.currentCompany,
+          app.applicant?.about,
+          ...(app.applicant?.skills || []),
+          ...(app.applicant?.preferredLocations || [])
+        ];
+        
+        const searchText = searchableFields
+          .filter(Boolean)
+          .join(' ')
+          .toLowerCase();
+        
+        return keywordsList.some(keyword => 
+          searchText.includes(keyword.toLowerCase())
+        );
+      });
+      
+      console.log(`🔍 Keyword filter: ${Date.now() - filterStart}ms, ${filteredApplications.length} remaining`);
     }
 
+    // Apply location filter
     if (locationsList.length > 0) {
-      console.log("🌍 Adding location filters:", locationsList);
+      const filterStart = Date.now();
+      
+      filteredApplications = filteredApplications.filter(app => {
+        const userLocations = [
+          app.applicant?.currentLocation,
+          ...(app.applicant?.preferredLocations || [])
+        ].filter(Boolean);
+        
+        return locationsList.some(filterLocation => 
+          userLocations.some(userLocation => 
+            userLocation.toLowerCase().includes(filterLocation.toLowerCase())
+          )
+        );
+      });
+      
+      console.log(`🌍 Location filter: ${Date.now() - filterStart}ms, ${filteredApplications.length} remaining`);
     }
 
+    // Apply designation filter
     if (designationsList.length > 0) {
-      console.log("👔 Adding designation filters:", designationsList);
+      const filterStart = Date.now();
+      
+      filteredApplications = filteredApplications.filter(app => {
+        const designation = app.applicant?.currentDesignation?.toLowerCase() || '';
+        return designationsList.some(filterDesignation => 
+          designation.includes(filterDesignation.toLowerCase())
+        );
+      });
+      
+      console.log(`👔 Designation filter: ${Date.now() - filterStart}ms, ${filteredApplications.length} remaining`);
     }
 
-    if ((totalYearsInConsulting ?? "").trim()) {
-      console.log("⏳ Adding experience filters:", totalYearsInConsulting);
+    // Apply experience filter
+    if (totalYearsInConsulting?.trim()) {
+      const filterStart = Date.now();
+      const minExperience = parseFloat(totalYearsInConsulting);
+      
+      if (!isNaN(minExperience)) {
+        filteredApplications = filteredApplications.filter(app => {
+          const userExperience = parseFloat(app.applicant?.totalYearsInConsulting || 0);
+          return userExperience >= minExperience;
+        });
+      }
+      
+      console.log(`⏳ Experience filter: ${Date.now() - filterStart}ms, ${filteredApplications.length} remaining`);
     }
 
-    if (postLookupFilters.length > 0) {
-      pipeline.push({ $match: { $and: postLookupFilters } });
-      console.log("✅ Post-lookup filters applied:", postLookupFilters);
+    // Apply screening filters
+    if (Object.keys(screeningFiltersParsed).length > 0) {
+      const filterStart = Date.now();
+      
+      filteredApplications = filteredApplications.filter(app => {
+        if (!app.screeningAnswers || !Array.isArray(app.screeningAnswers)) {
+          return false;
+        }
+        
+        // Check if application matches ALL screening filter criteria
+        return Object.entries(screeningFiltersParsed).every(([questionId, expectedValue]) => {
+          const userAnswer = app.screeningAnswers.find(answer => 
+            answer.questionId?.toString() === questionId
+          );
+          
+          if (!userAnswer) return false;
+          
+          // Handle different types of expected values
+          if (Array.isArray(expectedValue)) {
+            // Multi-choice: check if user's answer contains any of the expected values
+            if (Array.isArray(userAnswer.answer)) {
+              return expectedValue.some(expected => 
+                userAnswer.answer.includes(expected)
+              );
+            } else {
+              return expectedValue.includes(userAnswer.answer) || 
+                     expectedValue.includes(userAnswer.answerText);
+            }
+          } else {
+            // Single value: direct comparison
+            return userAnswer.answer === expectedValue || 
+                   userAnswer.answerText === expectedValue;
+          }
+        });
+      });
+      
+      console.log(`🔎 Screening filter: ${Date.now() - filterStart}ms, ${filteredApplications.length} remaining`);
     }
 
-    pipeline.push({ $sort: { createdAt: -1 } });
-    console.log("📊 Added $sort stage to pipeline.");
-
-    console.log("🚀 Running aggregation...");
-    const startTime = Date.now();
-    const applications = await Application.aggregate(pipeline);
-    const duration = Date.now() - startTime;
-    console.log(`✅ Aggregation complete. Time taken: ${duration} ms`);
-
+    // STEP 4: Prepare response with all original fields
     const responseData = {
       success: true,
-      applications,
-      totalApplications: applications.length,
+      applications: filteredApplications,
+      totalApplications: filteredApplications.length,
       filters: {
-        keywords,
-        locations,
-        designations,
+        keywords: keywordsList,
+        locations: locationsList,
+        designations: designationsList,
         totalYearsInConsulting,
         screeningFilters: screeningFiltersParsed,
       },
+      performance: {
+        totalTime: Date.now() - startTime,
+        wasCached: !!cache.get(baseKey),
+        originalCount: baseApplications.length,
+        filteredCount: filteredApplications.length
+      }
     };
 
-    cache.set(cacheKey, responseData);
-    console.log("🗃️ Cached result for key:", cacheKey);
+    const totalDuration = Date.now() - startTime;
+    console.log(`🎯 Total request time: ${totalDuration}ms`);
+    console.log(`📈 Performance: ${baseApplications.length} → ${filteredApplications.length} applications`);
 
     return res.status(200).json(responseData);
+    
   } catch (error) {
     console.error("❌ Error in getApplicationsOfAjob:", error);
     return res.status(500).json({
@@ -468,6 +540,68 @@ export const getApplicationsOfAjob = async (req, res) => {
       message: "Server Error while fetching applications",
     });
   }
+};
+
+// ========================================
+// ADDITIONAL PERFORMANCE OPTIMIZATIONS
+// ========================================
+
+// 1. Warm up cache for popular jobs
+export const warmUpCache = async (popularJobIds) => {
+  console.log("🔥 Warming up cache for popular jobs...");
+  
+  const promises = popularJobIds.map(async (jobId) => {
+    const baseKey = `apps_base:${jobId}:all`;
+    
+    if (!cache.get(baseKey)) {
+      try {
+        const pipeline = [
+          { $match: { job: new mongoose.Types.ObjectId(jobId) } },
+          {
+            $lookup: {
+              from: "users",
+              localField: "applicant",
+              foreignField: "_id",
+              as: "applicant",
+              pipeline: [{ $project: { password: 0, __v: 0 } }]
+            }
+          },
+          {
+            $lookup: {
+              from: "jobs",
+              localField: "job",
+              foreignField: "_id",
+              as: "job",
+              pipeline: [{ $project: { __v: 0 } }]
+            }
+          },
+          {
+            $lookup: {
+              from: "companies",
+              localField: "company",
+              foreignField: "_id",
+              as: "company",
+              pipeline: [{ $project: { password: 0, __v: 0 } }]
+            }
+          },
+          { $unwind: { path: "$applicant", preserveNullAndEmptyArrays: true } },
+          { $unwind: { path: "$job", preserveNullAndEmptyArrays: true } },
+          { $unwind: { path: "$company", preserveNullAndEmptyArrays: true } },
+          { $sort: { createdAt: -1 } }
+        ];
+        
+        const applications = await Application.aggregate(pipeline);
+        cache.set(baseKey, applications, 600);
+        
+        console.log(`✅ Cached ${applications.length} applications for job ${jobId}`);
+      } catch (error) {
+        console.error(`❌ Failed to warm cache for job ${jobId}:`, error);
+      }
+    }
+  });
+  
+  await Promise.all(promises);
+  console.log("🔥 Cache warm-up complete!");
 };
 
 // ========================================
