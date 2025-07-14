@@ -57,14 +57,6 @@ const storedResumeSchema = new mongoose.Schema({
   link: { type: String,  trim: true },
 }, { _id: false });
 
-const projectSchema = new mongoose.Schema({
-  title: { type: String, trim: true },
-  description: { type: String, trim: true },
-  skillsUsed: { type: String, trim: true }, // Changed to single string
-  duration: { type: String, trim: true },   // e.g., "3 months", "Jan 2023 - Mar 2023"
-  type: { type: String, trim: true },       // e.g., "Personal", "Team"
-  // Removed link
-});
 
 // Main Resume Schema
 const resumeSchema = new mongoose.Schema({
@@ -78,11 +70,9 @@ const resumeSchema = new mongoose.Schema({
   personalInfo: personalInfoSchema,
   careerSummary: careerSummarySchema,
   education: [educationSchema], // Array of education entries
-  workExperience: [workExperienceSchema], // Array of work entries
-  projects: [projectSchema], // Array of project entries
+  workExperience: [workExperienceSchema],
   skills: [{ type: String, trim: true }],// Changed to single string for all skills
-  achievements: [{ type: String, trim: true }], // Array of achievement strings
-  awards: [{ type: String, trim: true }], // Array of award strings
+  achievements: [{ type: String, trim: true }], 
   volunteer: [{ type: String, trim: true }], // Array of volunteer strings
   storedResumes: [storedResumeSchema],
 }, { timestamps: true }); // Adds createdAt and updatedAt timestamps

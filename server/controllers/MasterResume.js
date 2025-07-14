@@ -27,10 +27,8 @@ export const createOrUpdateMasterResume = async (req, res) => {
       careerSummary,
       education,
       workExperience,
-      projects,
       skills, // This is the single string from the form
       achievements,
-      awards,
       volunteer,
     } = req.body;
 
@@ -56,11 +54,9 @@ export const createOrUpdateMasterResume = async (req, res) => {
         detailedObjective: careerSummary?.detailedObjective,
       },
       education: education || [], // Map 'education' array to 'educationDetails' and ensure it's an array
-      workExperience: workExperience || [], // Direct map and ensure it's an array
-      projects: projects || [], // Direct map and ensure it's an array
+      workExperience: workExperience || [], 
       skills: parseSkillsString(skills), // Convert comma-separated string to array
-      achievements: achievements || [], // Direct map and ensure it's an array
-      awards: awards || [], // Direct map and ensure it's an array
+      achievements: achievements || [], 
       volunteer: volunteer || [], // Direct map and ensure it's an array
     };
 
