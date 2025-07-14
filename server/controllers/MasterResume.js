@@ -21,72 +21,95 @@ const parseSkillsString = (skillsString) => {
 
 export const createOrUpdateMasterResume = async (req, res) => {
   try {
+    // Destructure directly based on the payload structure from the frontend
+    // Note: frontend uses 'profileSummary' object with 'summaryText' field
+    // backend schema uses 'careerSummary' object with 'summaryText' field
+    // frontend uses 'honorsAndAwards' array
+    // backend schema uses 'honorsAndAwards' array
     const {
-      user_id, // Expect user_id here
+      user_id,
       personalInfo,
-      careerSummary,
+      profileSummary, // Expect the new profileSummary object from frontend
       education,
       workExperience,
-      skills, // This is the single string from the form
-      achievements,
+      skills, // Expecting array directly
+      honorsAndAwards, // Expecting array directly (combined achievements/awards)
       volunteer,
+      // storedResumes are not edited via this form
     } = req.body;
 
-    // Basic validation for user_id presence
+    // Basic validation for user_id presence and format
     if (!user_id) {
       return res
         .status(400)
         .json({ message: "User ID is required in the request body" });
     }
-
-    // Basic validation for user_id format
     if (!mongoose.Types.ObjectId.isValid(user_id)) {
       return res.status(400).json({ message: "Invalid User ID format" });
     }
 
-    // Map the incoming form data structure keys to the schema structure keys
+     // Basic validation for mandatory personalInfo fields at the API level
+     // This provides a layer of safety even if frontend validation is bypassed or buggy.
+     if (!personalInfo) {
+         return res.status(400).json({ message: "Personal information is required." });
+     }
+     if (!personalInfo.firstName || !personalInfo.lastName || !personalInfo.email || !personalInfo.phone || !personalInfo.linkedIn) {
+         // You could make this more granular, e.g., check !personalInfo.phone specifically
+         return res.status(400).json({ message: "Required fields in personal information (First Name, Last Name, Email, Phone, LinkedIn) are missing." });
+     }
+      // Add format validation if desired, matching schema regex, but Mongoose validators will also run.
+
+
+    // Construct the update payload matching the backend schema structure
     // Ensure nested objects exist even if empty, to avoid Mongoose issues with undefined paths on $set
-    const mappedData = {
-      personalInfo: personalInfo || {}, // Map and ensure it's an object
+    const updateData = {
+      // Map frontend personalInfo directly to backend personalInfo (schema matches)
+      personalInfo: personalInfo,
+
+      // Map frontend profileSummary object to backend careerSummary object
       careerSummary: {
-        // Map from careerSummary and add placeholder for others
-        shortSummary: careerSummary?.shortSummary,
-        detailedObjective: careerSummary?.detailedObjective,
+         // Map frontend profileSummary.summaryText to backend careerSummary.summaryText
+         summaryText: profileSummary?.summaryText || '' // Ensure it's at least an empty string if profileSummary or summaryText is missing
       },
-      education: education || [], // Map 'education' array to 'educationDetails' and ensure it's an array
-      workExperience: workExperience || [], 
-      skills: parseSkillsString(skills), // Convert comma-separated string to array
-      achievements: achievements || [], 
-      volunteer: volunteer || [], // Direct map and ensure it's an array
+
+      // Map arrays directly (schema matches: education, workExperience, skills, honorsAndAwards, volunteer)
+      education: education || [],
+      workExperience: workExperience || [],
+      skills: skills || [], // Should be an array from frontend
+      honorsAndAwards: honorsAndAwards || [], // Should be an array from frontend
+      volunteer: volunteer || [],
+      // storedResumes are not updated here
     };
 
     // Find an existing resume for the user_id or create a new one (upsert)
     const resume = await MasterResume.findOneAndUpdate(
       { user_id: user_id },
-      { $set: mappedData },
+      { $set: updateData }, // Use $set to replace the entire subdocument/array structure
       {
         new: true, // Return the updated/created document
         upsert: true, // Create the document if it doesn't exist
-        runValidators: true,
+        runValidators: true, // Run Mongoose validators defined in the schema (e.g., 'required')
       }
     );
 
     // Determine if a new document was created vs. an existing one updated
     // Check if createdAt and updatedAt are the same time (upserted document will have identical timestamps initially)
-    const status =
-      resume.createdAt.getTime() === resume.updatedAt.getTime() ? 201 : 200;
-    const message =
-      status === 201
+    const isNew = resume.createdAt.getTime() === resume.updatedAt.getTime();
+    const status = isNew ? 201 : 200;
+    const message = isNew
         ? "Master Resume created successfully"
         : "Master Resume updated successfully";
 
     res.status(status).json({ message: message, resume: resume });
+
   } catch (error) {
     console.error("Error saving/updating master resume:", error);
 
-    // Handle Mongoose validation errors
+    // Handle Mongoose validation errors (e.g., 'required' fields in schema)
     if (error.name === "ValidationError") {
+      // Mongoose validation errors have details in error.errors object
       const messages = Object.values(error.errors).map((val) => val.message);
+      // Return 400 status for bad request due to validation errors
       return res
         .status(400)
         .json({ message: "Validation Error", errors: messages });
@@ -95,24 +118,25 @@ export const createOrUpdateMasterResume = async (req, res) => {
     // Handle Mongoose duplicate key errors (e.g., unique: true constraints)
     if (error.code === 11000) {
       const field = Object.keys(error.keyPattern)[0]; // Get the field name causing the duplicate
-      // Provide a specific message if the duplicate is on the user_id field (unique constraint)
-      if (field === "user_id") {
-        // Although upsert handles this, this catch might trigger if upsert fails for some other reason
-        // or if unique is applied elsewhere like email *across* all resumes instead of per user
-        return res.status(400).json({
-          message: `A master resume profile already exists for this user.`,
-          field: field,
-        });
-      }
-      // Handle other potential unique fields if needed (like email if unique constraint is applied to it)
       const value = error.keyValue[field]; // Get the duplicate value
-      return res.status(400).json({
+       // Provide a specific message if the duplicate is on the user_id field (unique constraint)
+       if (field === 'user_id') {
+            // This specific case should ideally be prevented by upsert unless there's a race condition or prior data issue.
+            // Using 409 Conflict for duplicate resource
+            return res.status(409).json({
+                message: `A master resume profile already exists for this user.`,
+                field: field,
+            });
+       }
+       // Generic message for other unique fields if any (like email if unique constraint was kept there)
+      return res.status(409).json({
         message: `Duplicate value found for field '${field}': '${value}'. Please use a different value.`,
         field: field,
       });
     }
 
     // Handle other potential errors
+    // Default to 500 Internal Server Error for unhandled exceptions
     res
       .status(500)
       .json({ message: "Internal server error", error: error.message });
