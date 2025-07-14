@@ -16,10 +16,7 @@ const personalInfoSchema = new mongoose.Schema({
     match: [/.+@.+\..+/, 'Please fill a valid email address'] // Basic email format validation
   },
   phone: { type: String, required: true, trim: true }, // Changed to REQUIRED
-  linkedIn: { type: String, required: true, trim: true }, // Changed to REQUIRED
-  github: { type: String, trim: true }, // Optional
-  website: { type: String, trim: true }, // Optional
-  // address: { type: String, trim: true }, // Removed address line 1
+  linkedIn: { type: String, required: true, trim: true },
   city: { type: String, trim: true }, // Optional (Mapped from frontend 'Current City')
   state: { type: String, trim: true }, // Optional (Mapped from frontend 'Current State')
   country: { type: String, trim: true }, // Optional (Mapped from frontend 'Current Country')
