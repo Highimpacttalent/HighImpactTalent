@@ -1,13 +1,14 @@
 import MasterResume from "../models/MasterResume.js";
 import mongoose from "mongoose";
 import axios from "axios";
-import fs from "fs";
-import path from "path";
+import multer from "multer";
+import pdf from "pdf-parse/lib/pdf-parse.js";
+import mammoth from "mammoth";
 import { generateResumeHTML } from "../utils/MasterResume.js";
 const GEMINI_API_KEY = "AIzaSyCXj7iUCYWDQXPW3i6ky4Y24beLiINeDBw";
 import { uploadFileToS3 } from "../s3Config/s3.js";
-import puppeteer from 'puppeteer-core'; // Import puppeteer-core
-import chromium from '@sparticuz/chromium'; 
+import puppeteer from "puppeteer-core"; // Import puppeteer-core
+import chromium from "@sparticuz/chromium";
 
 // Helper to split comma-separated skills string into an array
 const parseSkillsString = (skillsString) => {
@@ -48,17 +49,27 @@ export const createOrUpdateMasterResume = async (req, res) => {
       return res.status(400).json({ message: "Invalid User ID format" });
     }
 
-     // Basic validation for mandatory personalInfo fields at the API level
-     // This provides a layer of safety even if frontend validation is bypassed or buggy.
-     if (!personalInfo) {
-         return res.status(400).json({ message: "Personal information is required." });
-     }
-     if (!personalInfo.firstName || !personalInfo.lastName || !personalInfo.email || !personalInfo.phone || !personalInfo.linkedIn) {
-         // You could make this more granular, e.g., check !personalInfo.phone specifically
-         return res.status(400).json({ message: "Required fields in personal information (First Name, Last Name, Email, Phone, LinkedIn) are missing." });
-     }
-      // Add format validation if desired, matching schema regex, but Mongoose validators will also run.
-
+    // Basic validation for mandatory personalInfo fields at the API level
+    // This provides a layer of safety even if frontend validation is bypassed or buggy.
+    if (!personalInfo) {
+      return res
+        .status(400)
+        .json({ message: "Personal information is required." });
+    }
+    if (
+      !personalInfo.firstName ||
+      !personalInfo.lastName ||
+      !personalInfo.email ||
+      !personalInfo.phone ||
+      !personalInfo.linkedIn
+    ) {
+      // You could make this more granular, e.g., check !personalInfo.phone specifically
+      return res.status(400).json({
+        message:
+          "Required fields in personal information (First Name, Last Name, Email, Phone, LinkedIn) are missing.",
+      });
+    }
+    // Add format validation if desired, matching schema regex, but Mongoose validators will also run.
 
     // Construct the update payload matching the backend schema structure
     // Ensure nested objects exist even if empty, to avoid Mongoose issues with undefined paths on $set
@@ -68,8 +79,8 @@ export const createOrUpdateMasterResume = async (req, res) => {
 
       // Map frontend profileSummary object to backend careerSummary object
       careerSummary: {
-         // Map frontend profileSummary.summaryText to backend careerSummary.summaryText
-         summaryText: profileSummary?.summaryText || '' // Ensure it's at least an empty string if profileSummary or summaryText is missing
+        // Map frontend profileSummary.summaryText to backend careerSummary.summaryText
+        summaryText: profileSummary?.summaryText || "", // Ensure it's at least an empty string if profileSummary or summaryText is missing
       },
 
       // Map arrays directly (schema matches: education, workExperience, skills, honorsAndAwards, volunteer)
@@ -97,11 +108,10 @@ export const createOrUpdateMasterResume = async (req, res) => {
     const isNew = resume.createdAt.getTime() === resume.updatedAt.getTime();
     const status = isNew ? 201 : 200;
     const message = isNew
-        ? "Master Resume created successfully"
-        : "Master Resume updated successfully";
+      ? "Master Resume created successfully"
+      : "Master Resume updated successfully";
 
     res.status(status).json({ message: message, resume: resume });
-
   } catch (error) {
     console.error("Error saving/updating master resume:", error);
 
@@ -119,16 +129,16 @@ export const createOrUpdateMasterResume = async (req, res) => {
     if (error.code === 11000) {
       const field = Object.keys(error.keyPattern)[0]; // Get the field name causing the duplicate
       const value = error.keyValue[field]; // Get the duplicate value
-       // Provide a specific message if the duplicate is on the user_id field (unique constraint)
-       if (field === 'user_id') {
-            // This specific case should ideally be prevented by upsert unless there's a race condition or prior data issue.
-            // Using 409 Conflict for duplicate resource
-            return res.status(409).json({
-                message: `A master resume profile already exists for this user.`,
-                field: field,
-            });
-       }
-       // Generic message for other unique fields if any (like email if unique constraint was kept there)
+      // Provide a specific message if the duplicate is on the user_id field (unique constraint)
+      if (field === "user_id") {
+        // This specific case should ideally be prevented by upsert unless there's a race condition or prior data issue.
+        // Using 409 Conflict for duplicate resource
+        return res.status(409).json({
+          message: `A master resume profile already exists for this user.`,
+          field: field,
+        });
+      }
+      // Generic message for other unique fields if any (like email if unique constraint was kept there)
       return res.status(409).json({
         message: `Duplicate value found for field '${field}': '${value}'. Please use a different value.`,
         field: field,
@@ -197,7 +207,9 @@ export const createAiTailoredResume = async (req, res) => {
     // Fetch master resume from DB
     const masterResume = await MasterResume.findOne({ user_id }).lean();
     if (!masterResume) {
-      return res.status(404).json({ error: "Master resume not found for this user" });
+      return res
+        .status(404)
+        .json({ error: "Master resume not found for this user" });
     }
 
     // Format prompt: Tailored resume generation
@@ -279,7 +291,7 @@ ${jobDescription}
       args: [...chromium.args, "--no-sandbox", "--disable-setuid-sandbox"],
       defaultViewport: chromium.defaultViewport,
       executablePath: await chromium.executablePath(),
-      headless: chromium.headless, 
+      headless: chromium.headless,
     });
 
     const page = await browser.newPage();
@@ -291,18 +303,22 @@ ${jobDescription}
       format: "A4",
       printBackground: true, // Crucial for background colors/images to appear
       margin: {
-        top: '0.5in',
-        right: '0.5in',
-        bottom: '0.5in',
-        left: '0.5in',
-      }
+        top: "0.5in",
+        right: "0.5in",
+        bottom: "0.5in",
+        left: "0.5in",
+      },
     });
 
     await browser.close();
 
     // Upload PDF to S3
     const filename = `resumes/${Date.now()}-tailored-resume.pdf`;
-    const s3Response = await uploadFileToS3(pdfBuffer, filename, "application/pdf");
+    const s3Response = await uploadFileToS3(
+      pdfBuffer,
+      filename,
+      "application/pdf"
+    );
     const pdfUrl = s3Response.Location;
 
     const resumeCount = masterResume.storedResumes?.length || 0;
@@ -325,13 +341,215 @@ ${jobDescription}
     return res.status(200).json({
       success: true,
       tailoredResume,
-      pdfUrl  
+      pdfUrl,
     });
   } catch (error) {
     console.error("Gemini Resume Generation Error:", error.message);
     return res.status(500).json({
       error: "Failed to generate tailored resume",
       details: error.message,
+    });
+  }
+};
+
+// --- Multer Setup for File Upload (Remains the same) ---
+const storage = multer.memoryStorage(); // Store file in memory buffer
+const upload = multer({
+  storage: storage,
+  limits: { fileSize: 10 * 1024 * 1024 }, // Limit file size (e.g., 10MB)
+  fileFilter: (req, file, cb) => {
+    // Accept specific file types
+    if (
+      file.mimetype === "application/pdf" ||
+      file.mimetype ===
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
+      file.mimetype === "application/msword"
+    ) {
+      // Added application/msword for older .doc files
+      cb(null, true);
+    } else {
+      cb(
+        new Error(
+          "Invalid file type. Only PDF and DOC/DOCX files are allowed."
+        ),
+        false
+      );
+    }
+  },
+});
+
+// --- Helper Function to Extract Text from Buffer (Remains the same, added .doc support) ---
+const extractTextFromBuffer = async (buffer, mimetype) => {
+  try {
+    if (mimetype === "application/pdf") {
+      const data = await pdf(buffer);
+      return data.text;
+    } else if (
+      mimetype ===
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
+      mimetype === "application/msword"
+    ) {
+      // Mammoth can handle both .docx and .doc
+      const result = await mammoth.extractRawText({ buffer: buffer });
+      return result.value; // raw text
+    } else {
+      throw new Error(`Unsupported file type for text extraction: ${mimetype}`);
+    }
+  } catch (error) {
+    console.error("Error extracting text:", error);
+    throw new Error(`Failed to extract text from file: ${error.message}`);
+  }
+};
+
+export const analyzeResumeFile = async (req, res) => {
+  console.log("🔧 [1] Route entered.");
+
+  try {
+    const resumeFile = req.file;
+    console.log(
+      "📎 [2] Uploaded file received:",
+      resumeFile?.originalname || "No file"
+    );
+
+    if (!resumeFile) {
+      console.warn("⚠️ [3] No resume file found.");
+      return res.status(400).json({ message: "Resume file is required." });
+    }
+
+    // Step 1: Extract Text
+    let resumeText = "";
+    try {
+      console.log("🧠 [4] Extracting text from resume...");
+      resumeText = await extractTextFromBuffer(
+        resumeFile.buffer,
+        resumeFile.mimetype
+      );
+      console.log("📄 [5] Text extracted length:", resumeText.length);
+    } catch (err) {
+      console.error("❌ [6] Error during text extraction:", err);
+      return res
+        .status(500)
+        .json({ message: "Failed to extract text from resume." });
+    }
+
+    if (!resumeText || resumeText.trim().length < 100) {
+      console.warn("⚠️ [7] Insufficient resume text.");
+      return res.status(400).json({
+        message:
+          "Could not extract sufficient text from the resume file. Please try a different file or format.",
+      });
+    }
+
+    // Step 2: Generate Gemini Prompt
+    console.log("🧾 [8] Constructing Gemini prompt...");
+    const prompt = `
+      You are an expert resume parser.
+
+      Given the following resume content, extract and return a **valid JSON object** matching this structure:
+
+      {
+        "personalInfo": {
+          "firstName": "",
+          "lastName": "",
+          "email": "",
+          "phone": "",
+          "linkedIn": "",
+          "city": "",
+          "state": "",
+          "country": "",
+          "dateOfBirth": "",
+          "nationality": ""
+        },
+        "profileSummary": {
+          "summaryText": ""
+        },
+        "education": [
+          {
+            "university": "",
+            "degree": "",
+            "field": "",
+            "startDate": "",
+            "endDate": "",
+            "gpa": "",
+            "description": ""
+          }
+        ],
+        "workExperience": [
+          {
+            "role": "",
+            "company": "",
+            "location": "",
+            "type": "",
+            "startDate": "",
+            "endDate": "",
+            "isCurrent": false,
+            "responsibilities": [""]
+          }
+        ],
+        "skills": [],
+        "honorsAndAwards": [],
+        "volunteer": []
+      }
+
+      🎯 Instructions:
+      - Extract only the data visible in the resume.
+      - If a field is not found, return an empty string or array.
+      - Keep all dates in YYYY-MM format if available.
+      - Make sure all JSON keys match exactly.
+
+      --- Resume Content ---
+      ${resumeText}
+      `;
+    console.log("end")
+    const geminiResponse = await axios.post(
+      `https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`,
+      {
+        contents: [
+          {
+            role: "user",
+            parts: [{ text: prompt }],
+          },
+        ],
+      },
+      {
+        headers: { "Content-Type": "application/json" },
+      }
+    );
+
+
+    const rawText =
+      geminiResponse.data?.candidates?.[0]?.content?.parts?.[0]?.text || "";
+      
+
+    const jsonMatches = rawText.match(/```json\n([\s\S]*?)\n```/g);
+
+    if (!jsonMatches) {
+      return res.status(500).json({
+        success: false,
+        message: "Invalid Gemini response format. JSON block not found.",
+        rawText,
+      });
+    }
+
+    let parsedData = {};
+    jsonMatches.forEach((block) => {
+      try {
+        const jsonString = block.replace(/```json\n|\n```/g, "").trim();
+        const parsed = JSON.parse(jsonString);
+        parsedData = { ...parsedData, ...parsed };
+      } catch (err) {
+        console.error("❌ Error parsing Gemini JSON block:", err.message);
+      }
+    });
+
+    console.log("✅ Resume parsed successfully");
+
+    return res.status(200).json({ success: true, data: parsedData });
+  } catch (error) {
+    console.error("❌ Resume analysis failed:", error.message);
+    return res.status(500).json({
+      success: false,
+      message: error.message || "Unknown error during resume analysis",
     });
   }
 };
