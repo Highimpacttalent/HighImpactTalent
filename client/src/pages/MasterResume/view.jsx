@@ -2325,7 +2325,7 @@ export default function MasterResumeForm() {
 
     try {
       const response = await fetch(
-        "http://localhost:8800/api-v1/master-resume/analyze-upload",
+        "https://highimpacttalent.onrender.com/api-v1/master-resume/analyze-upload",
         {
           method: "POST",
           body: formDataToSend,
