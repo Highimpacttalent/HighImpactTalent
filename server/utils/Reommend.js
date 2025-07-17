@@ -39,25 +39,23 @@ export const scoreResumeAgainstJobKeywords = async (cvUrl, job, applicant) => {
       label = "recommended";
     }
 
-    // 🎯 Weights (Equal for Experience & Skills)
+    // 🎯 Weights (Updated)
     const weights = {
       exp: 35,
-      skills: 35,
-      loc: 15,
-      sal: 15,
+      skills: 25,
+      sal: 20,
+      loc: 20,
     };
 
-    // ✅ 1) Experience Score
+    // ✅ 1) Experience Match (% match × 35)
     const jobMinExp = job.experience?.minExperience ?? job.experience;
     let expScore = 0;
-    if (jobMinExp !== undefined && jobMinExp !== null) {
+    if (jobMinExp !== undefined && jobMinExp !== null && applicant.experience) {
       const ratio = Math.min(Number(applicant.experience) / Number(jobMinExp), 1);
       expScore = ratio * weights.exp;
-    } else {
-      expScore = weights.exp;
     }
 
-    // ✅ 2) Skills Score (from Resume)
+    // ✅ 2) Skill Match (% match × 25)
     const totalSkills =
       (job.keywords?.must_have?.length || 0) +
       (job.keywords?.nice_to_have?.length || 0) +
@@ -68,51 +66,52 @@ export const scoreResumeAgainstJobKeywords = async (cvUrl, job, applicant) => {
     const skillScoreRatio = totalSkills ? totalMatches / totalSkills : 0;
     const skillsScore = skillScoreRatio * weights.skills;
 
-    // ✅ 3) Location Score
+    // ✅ 3) Salary Score (Discrete Conditions)
+    let salScore = 0;
+    const jobMinSalary = parseInt(job.salary?.minSalary ?? job.salary ?? 0, 10);
+    const currentSalary = parseInt(applicant.currentSalary ?? 0, 10);
+
+    if (!isNaN(currentSalary) && !isNaN(jobMinSalary)) {
+      if (currentSalary < jobMinSalary) {
+        salScore = weights.sal;
+      } else if (currentSalary === jobMinSalary) {
+        salScore = 10;
+      } else {
+        salScore = 0;
+      }
+    }
+
+    // ✅ 4) Location Score (Discrete Conditions)
     let locScore = 0;
     if (job.jobLocation) {
-      if (
-        job.jobLocation.toLowerCase() === "hybrid" ||
-        applicant.currentLocation?.toLowerCase() === job.jobLocation.toLowerCase() ||
-        applicant.openToRelocate?.toLowerCase() === "yes"
-      ) {
+      const jobLoc = job.jobLocation.toLowerCase();
+      const appLoc = applicant.currentLocation?.toLowerCase();
+      const openToRelocate = applicant.openToRelocate?.toLowerCase() === "yes";
+
+      if (appLoc === jobLoc) {
         locScore = weights.loc;
+      } else if (openToRelocate) {
+        locScore = 10;
+      } else {
+        locScore = 0;
       }
     } else {
-      locScore = weights.loc;
+      locScore = weights.loc; // If no location specified, give full score
     }
 
-    // ✅ 4) Salary Score
-    const jobMinSalary = job.salary?.minSalary ?? job.salary;
-    let salScore = 0;
-    if (jobMinSalary !== undefined && jobMinSalary !== null) {
-      if (
-        !applicant.expectedMinSalary ||
-        parseInt(applicant.expectedMinSalary, 10) <= parseInt(jobMinSalary, 10)
-      ) {
-        salScore = weights.sal;
-      }
-    } else {
-      salScore = weights.sal;
-    }
-
-    // ✅ Total Score Before Cap
-    let totalScore = expScore + skillsScore + locScore + salScore;
-
-    // ⛔ Cap max score to 50 if not relevant
-    if (label === "not_relevant") {
-      totalScore = Math.min(totalScore, 50);
-    }
-
+    // ✅ Total Score
+    const totalScore = expScore + skillsScore + salScore + locScore;
     const matchPercentage = Math.round(totalScore);
+
 
     // 🎯 Breakdown for transparency
     const breakdown = {
       experience: `${expScore.toFixed(1)} / ${weights.exp}`,
       skills: `${skillsScore.toFixed(1)} / ${weights.skills}`,
-      location: `${locScore.toFixed(1)} / ${weights.loc}`,
       salary: `${salScore.toFixed(1)} / ${weights.sal}`,
+      location: `${locScore.toFixed(1)} / ${weights.loc}`,
     };
+
 
     return {
       success: true,
@@ -128,9 +127,9 @@ export const scoreResumeAgainstJobKeywords = async (cvUrl, job, applicant) => {
       matchPercentage: 0,
       breakdown: {
         experience: `0 / 35`,
-        skills: `0 / 35`,
-        location: `0 / 15`,
-        salary: `0 / 15`,
+        skills: `0 / 25`,
+        location: `0 / 20`,
+        salary: `0 / 20`,
       },
       error: error.message,
     };
