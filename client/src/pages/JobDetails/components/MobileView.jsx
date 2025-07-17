@@ -263,8 +263,9 @@ const JobCard = ({ job, flag = false, enable = false }) => {
         <Box sx={{ display: "flex", justifyContent: "flex-start", ml: 2, mt: 1 }}>
           <ReportProblem color="error" sx={{ mb: 1 }} />
           <Typography color="error" sx={{ px: 1, mt: 0.5, fontSize: "12px" }}>
-            Your experience isn’t quite a match for this role.
-          </Typography>
+  We appreciate your interest, but this role requires a minimum of {job?.experience?.minExperience || job?.experience} years of experience, and your profile currently shows {experience} years.
+</Typography>
+
         </Box>
       )}
 

@@ -452,12 +452,12 @@ const JobCard = ({ job, flag = false, enable = false }) => {
         ) : null}
       </CardActions>
       {noteligible && (
-        <Box
-          sx={{ display: "flex", justifyContent: "flex-start", ml: 2, mt: 1 }}
-        >
+        <Box sx={{ display: "flex", justifyContent: "flex-start", ml: 2, mt: 1 }}>
           <ReportProblem color="error" sx={{ mb: 1 }} />
           <Typography variant="body2" color="error" sx={{ px: 1, mt: 0.5 }}>
-            Your experience isn’t quite a match for this role.
+            We appreciate your interest, but this role requires a minimum of{" "}
+            {minExperience} years of experience, while your profile currently shows{" "}
+            {experience} years.
           </Typography>
         </Box>
       )}
