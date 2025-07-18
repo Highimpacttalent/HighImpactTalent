@@ -45,127 +45,6 @@ import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import SelectAllIcon from "@mui/icons-material/SelectAll";
 import { useSelector } from "react-redux";
 
-const computeMatchScore = (job, applicant) => {
-  const weights = {
-    exp: 45,
-    skills: 15,
-    loc: 20,
-    //type: 10,
-    //mode: 10,
-    sal: 20,
-  };
-
-  let expScore = 0,
-    skillsScore = 0,
-    locScore = 0,
-    //typeScore = 0,
-    //modeScore = 0,
-    salScore = 0;
-
-  // 1) Experience
-  const jobMinExp = job.experience?.minExperience ?? job.experience;
-  if (jobMinExp !== undefined && jobMinExp !== null) {
-    const ratio = Math.min(applicant.experience / jobMinExp, 1);
-    expScore = ratio * weights.exp;
-  } else {
-    expScore = weights.exp;
-  }
-
-  // 2) Skills Match
-  if (Array.isArray(job.skills) && job.skills.length > 0) {
-    const matches = job.skills.filter((js) =>
-      (applicant.skills || []).some(
-        (ast) => ast.toLowerCase() === js.toLowerCase()
-      )
-    );
-    skillsScore = (matches.length / job.skills.length) * weights.skills;
-  } else {
-    skillsScore = weights.skills;
-  }
-
-  // 3) Location / Relocate
-  if (job.jobLocation) {
-    if (
-      job.jobLocation.toLowerCase() === "hybrid" ||
-      applicant.currentLocation?.toLowerCase() ===
-        job.jobLocation.toLowerCase() ||
-      applicant.openToRelocate?.toLowerCase() === "yes"
-    ) {
-      locScore = weights.loc;
-    }
-  } else {
-    locScore = weights.loc;
-  }
-
-  // 4) Work Type
-  // if (job.workType) {
-  //   if ((applicant.preferredWorkTypes || []).includes(job.workType)) {
-  //     typeScore = weights.type;
-  //   }
-  // } else {
-  //   typeScore = weights.type;
-  // }
-
-  // 5) Work Mode
-  // if (job.workMode) {
-  //   if ((applicant.preferredWorkModes || []).includes(job.workMode)) {
-  //     modeScore = weights.mode;
-  //   }
-  // } else {
-  //   modeScore = weights.mode;
-  // }
-
-  // 6) Salary Expectation
-  const jobMinSalary = job.salary?.minSalary ?? job.salary;
-  if (jobMinSalary !== undefined && jobMinSalary !== null) {
-    if (
-      !applicant.expectedMinSalary ||
-      parseInt(applicant.expectedMinSalary, 10) <= parseInt(jobMinSalary, 10)
-    ) {
-      salScore = weights.sal;
-    }
-  } else {
-    salScore = weights.sal;
-  }
-
-  const totalScore = Math.round(expScore + skillsScore + locScore + salScore);
-
-  const breakdown = `
-Candidate: ${applicant.firstName} ${applicant.lastName}
-Job Criteria:
-  • Required Exp: ${jobMinExp ?? "[none specified]"}
-  • Skills: ${job.skills?.length ? job.skills.join(", ") : "Not Provided"}
-  • Location: ${job.jobLocation ?? "[none specified]"}
-  • Work Type: ${job.workType || "[none specified]"}
-  • Work Mode: ${job.workMode || "[none specified]"}
-  • Min Salary: ${jobMinSalary ?? "[none specified]"}
-
-Applicant Profile:
-  • Exp: ${applicant.experience}
-  • Skills: ${(applicant.skills || []).join(", ") || "[none]"}
-  • Current Location: ${applicant.currentLocation}
-  • Open to Relocate: ${applicant.openToRelocate}
-  • Preferred Work Types: ${
-    (applicant.preferredWorkTypes || []).join(", ") || "[none]"
-  }
-  • Preferred Work Modes: ${
-    (applicant.preferredWorkModes || []).join(", ") || "[none]"
-  }
-  • Expected Min Salary: ${applicant.expectedMinSalary || "[none]"}
-
-Score by Category:
-  • Experience: ${expScore.toFixed(1)} / ${weights.exp}
-  • Skills:     ${skillsScore.toFixed(1)} / ${weights.skills}
-  • Location:   ${locScore.toFixed(1)} / ${weights.loc}
-  • Salary:     ${salScore.toFixed(1)} / ${weights.sal}
-
-→ Total Match Score: ${totalScore}%
-`;
-
-  console.log(totalScore, breakdown);
-  return { totalScore, breakdown };
-};
-
 const ActionButton = styled(Button)(({ theme, variant: variantProp }) => ({
   fontFamily: "Satoshi",
   fontWeight: 600,
@@ -226,6 +105,9 @@ const JobApplications = () => {
   const [allApplications, setAllApplications] = useState([]);
   const [filteredApps, setFilteredApps] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const limit = 20;
   const [filterLoading, setFilterLoading] = useState(false);
   const [error, setError] = useState(null);
   const [activeStep, setActiveStep] = useState(0);
@@ -240,40 +122,21 @@ const JobApplications = () => {
   const [stageCounts, setStageCounts] = useState({});
   const [cities, setCities] = useState();
   const currentUser = useSelector((state) => state.user.user);
-  const [sortOption, setSortOption] = useState("name-asc"); // default
+  const [sortOption, setSortOption] = useState("az"); // default
   const [matchTab, setMatchTab] = useState("all");
 
+  useEffect(() => {
+    applyFilters();
+  }, [matchTab, sortOption]);
 
   const categorizedApps = {
-    relevant: filteredApps.filter(app => app.resumeMatchLevel === "relevant"),
-    recommended: filteredApps.filter(app => app.resumeMatchLevel === "recommended"),
-    not_relevant: filteredApps.filter(app => app.resumeMatchLevel === "not_relevant"),
-  };
-
-
-  const getSortedApps = (apps) => {
-    const sorted = [...apps];
-    switch (sortOption) {
-      case "match-desc":
-        return sorted.sort((a, b) => b.matchScore - a.matchScore);
-      case "match-asc":
-        return sorted.sort((a, b) => a.matchScore - b.matchScore);
-      case "name-asc":
-        return sorted.sort((a, b) =>
-          a.applicant.firstName.localeCompare(b.applicant.firstName)
-        );
-      case "name-desc":
-        return sorted.sort((a, b) =>
-          b.applicant.firstName.localeCompare(a.applicant.firstName)
-        );
-      case "newest":
-        return sorted.sort(
-          (a, b) =>
-            new Date(b.createdAt || b._id) - new Date(a.createdAt || a._id)
-        );
-      default:
-        return sorted;
-    }
+    relevant: filteredApps.filter((app) => app.resumeMatchLevel === "relevant"),
+    recommended: filteredApps.filter(
+      (app) => app.resumeMatchLevel === "recommended"
+    ),
+    not_relevant: filteredApps.filter(
+      (app) => app.resumeMatchLevel === "not_relevant"
+    ),
   };
 
   // Bulk selection states
@@ -305,7 +168,11 @@ const JobApplications = () => {
   const [screeningQuestions, setScreeningQuestions] = useState([]);
 
   // Fetch applications with server-side filtering
-  const fetchApplications = async (filterParams = {}, status = null) => {
+  const fetchApplications = async (
+    filterParams = {},
+    status = null,
+    page = currentPage
+  ) => {
     try {
       setFilterLoading(true);
 
@@ -328,6 +195,13 @@ const JobApplications = () => {
         }
       });
 
+      queryParams.append("page", page);
+      queryParams.append("limit", limit);
+      queryParams.append("sortBy", sortOption);
+      if (matchTab !== "all") {
+        queryParams.append("matchLevel", matchTab);
+      }
+
       console.log("Fetching applications with params:", queryParams.toString());
 
       const response = await apiRequest({
@@ -339,19 +213,11 @@ const JobApplications = () => {
         throw new Error(response.message || "Failed to fetch applications");
       }
 
-      const enriched = response.applications.map((app) => {
-        const { totalScore, breakdown } = computeMatchScore(
-          app.job,
-          app.applicant
-        );
-        return {
-          ...app,
-          matchScore: app.matchPercentage || totalScore,
-          matchBreakdown: breakdown.trim(),
-        };
-      });
+      const totalCount = response.totalApplications || response.totalCount || 0;
+      setTotalPages(Math.ceil(totalCount / limit));
+      setCurrentPage(page);
 
-      return enriched;
+      return response.applications;
     } catch (err) {
       setError(err.message);
       return [];
@@ -468,8 +334,7 @@ const JobApplications = () => {
         (app) => app.status === currentStatus
       );
       setApplications(filtered);
-      const sortedFiltered = getSortedApps(filtered);
-      setFilteredApps(sortedFiltered);
+      setFilteredApps(filtered);
     }
   };
 
@@ -560,8 +425,7 @@ const JobApplications = () => {
 
     const filtered = await fetchApplications(filterParams);
     setApplications(filtered);
-    const sortedFiltered = getSortedApps(filtered);
-    setFilteredApps(sortedFiltered);
+    setFilteredApps(filtered);
     setSelectedApplications(new Set());
 
     if (isMobile) {
@@ -594,8 +458,7 @@ const JobApplications = () => {
     setAllApplications(allApps);
     const filtered = allApps.filter((app) => app.status === currentStatus);
     setApplications(filtered);
-    const sortedFiltered = getSortedApps(filtered);
-    setFilteredApps(sortedFiltered);
+    setFilteredApps(filtered);
 
     // Refresh counts
     await fetchStageCounts();
@@ -753,6 +616,13 @@ const JobApplications = () => {
       borderColor: "#f1f5f9",
       color: "#cbd5e1",
     },
+  };
+
+  const handlePageChange = async (page) => {
+    const apps = await fetchApplications(filters, steps[activeStep], page);
+    setAllApplications(apps);
+    setApplications(apps);
+    setFilteredApps(apps);
   };
 
   // Filters Content Component
@@ -1048,8 +918,7 @@ const JobApplications = () => {
       const filtered = allApplications.filter(
         (app) => app.status === currentStatus
       );
-      const sortedFiltered = getSortedApps(filtered);
-      setFilteredApps(sortedFiltered);
+      setFilteredApps(filtered);
     }
 
     setSearchKeyword("");
@@ -1191,8 +1060,7 @@ const JobApplications = () => {
             (app) => app.status === currentStatus
           );
           setApplications(filtered);
-          const sortedFiltered = getSortedApps(filtered);
-          setFilteredApps(sortedFiltered);
+          setFilteredApps(filtered);
         }
       }
     } catch (err) {
@@ -1248,8 +1116,7 @@ const JobApplications = () => {
             (app) => app.status === currentStatus
           );
           setApplications(filtered);
-          const sortedFiltered = getSortedApps(filtered);
-          setFilteredApps(sortedFiltered);
+          setFilteredApps(filtered);
         }
       }
     } catch (err) {
@@ -1304,8 +1171,7 @@ const JobApplications = () => {
             (app) => app.status === currentStatus
           );
           setApplications(filtered);
-          const sortedFiltered = getSortedApps(filtered);
-          setFilteredApps(sortedFiltered);
+          setFilteredApps(filtered);
         }
       }
     } catch (err) {
@@ -1354,10 +1220,9 @@ const JobApplications = () => {
     };
     return statusFlow[currentStatus] || "Next Stage";
   };
-  
-  const visibleApps =
-  matchTab === "all" ? filteredApps : categorizedApps[matchTab] || [];
 
+  const visibleApps =
+    matchTab === "all" ? filteredApps : categorizedApps[matchTab] || [];
 
   return (
     <Box sx={{ bgcolor: "#fff", minHeight: "100vh", p: { xs: 2, md: 4 } }}>
@@ -1586,92 +1451,84 @@ const JobApplications = () => {
                 );
               })}
             </Box>
-            
           </Box>
-         <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2, px: 1 }}>
-  <Typography
-    variant="h6"
-    sx={{
-      fontFamily: "Satoshi",
-      fontWeight: 600,
-      fontSize: "16px",
-      color: "#334155",
-      pl : 1,
-      mb: 1,
-    }}
-  >
-    {steps[activeStep]}
-  </Typography>
-
-  <Box sx={{ display: "flex", gap: 1 }}>
-    {["all", "relevant", "recommended", "not_relevant"].map((level) => {
-      const isActive = matchTab === level;
-      const label =
-        level === "all"
-          ? "All"
-          : level.replace("_", " ").replace(/\b\w/g, (l) => l.toUpperCase());
-      const count =
-        level === "all"
-          ? filteredApps.length
-          : categorizedApps[level]?.length || 0;
-
-      return (
-        <Box
-          key={level}
-          onClick={() => setMatchTab(level)}
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            gap: 0.5,
-            px: 1.5,
-            py: 0.6,
-            cursor: "pointer",
-            borderRadius: "16px",
-            border: isActive ? "1px solid #1976d2" : "1px solid #cbd5e1",
-            backgroundColor: isActive ? "#e3f2fd" : "transparent",
-            transition: "all 0.2s ease-in-out",
-            "&:hover": {
-              backgroundColor: isActive ? "#dbeafe" : "#f1f5f9",
-            },
-          }}
-        >
-          <Typography
-            sx={{
-              fontFamily: "Satoshi",
-              fontWeight: isActive ? 700 : 500,
-              fontSize: "13px",
-              color: isActive ? "#1976d2" : "#334155",
-              whiteSpace: "nowrap",
-            }}
-          >
-            {label}
-          </Typography>
-
           <Box
             sx={{
-              bgcolor: isActive ? "#1976d2" : "#cbd5e1",
-              color: "white",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              mb: 2,
               px: 1,
-              py: 0.1,
-              borderRadius: "10px",
-              fontSize: "11px",
-              fontWeight: 700,
-              fontFamily: "Satoshi",
-              minWidth: "20px",
-              textAlign: "center",
             }}
           >
-            {count}
+            <Typography
+              variant="h6"
+              sx={{
+                fontFamily: "Satoshi",
+                fontWeight: 600,
+                fontSize: "16px",
+                color: "#334155",
+                pl: 1,
+                mb: 1,
+              }}
+            >
+              {steps[activeStep]}
+            </Typography>
+
+            <Box sx={{ display: "flex", gap: 1 }}>
+              {["all", "relevant", "recommended", "not_relevant"].map(
+                (level) => {
+                  const isActive = matchTab === level;
+                  const label =
+                    level === "all"
+                      ? "All"
+                      : level
+                          .replace("_", " ")
+                          .replace(/\b\w/g, (l) => l.toUpperCase());
+                  const count =
+                    level === "all"
+                      ? filteredApps.length
+                      : categorizedApps[level]?.length || 0;
+
+                  return (
+                    <Box
+                      key={level}
+                      onClick={() => setMatchTab(level)}
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 0.5,
+                        px: 1.5,
+                        py: 0.6,
+                        cursor: "pointer",
+                        borderRadius: "16px",
+                        border: isActive
+                          ? "1px solid #1976d2"
+                          : "1px solid #cbd5e1",
+                        backgroundColor: isActive ? "#e3f2fd" : "transparent",
+                        transition: "all 0.2s ease-in-out",
+                        "&:hover": {
+                          backgroundColor: isActive ? "#dbeafe" : "#f1f5f9",
+                        },
+                      }}
+                    >
+                      <Typography
+                        sx={{
+                          fontFamily: "Satoshi",
+                          fontWeight: isActive ? 700 : 500,
+                          fontSize: "13px",
+                          color: isActive ? "#1976d2" : "#334155",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {label}
+                      </Typography>
+                    </Box>
+                  );
+                }
+              )}
+            </Box>
           </Box>
-        </Box>
-      );
-    })}
-  </Box>
-</Box>
-
-
-
-          
 
           {/* Enhanced Bulk Actions */}
           {filteredApps.length > 0 && (
@@ -1999,15 +1856,14 @@ const JobApplications = () => {
                       onChange={(e) => setSortOption(e.target.value)}
                       label="Sort By"
                     >
-                      <MenuItem value="match-desc">
+                      <MenuItem value="matchHighToLow">
                         Match Score: High to Low
                       </MenuItem>
-                      <MenuItem value="match-asc">
+                      <MenuItem value="matchLowToHigh">
                         Match Score: Low to High
                       </MenuItem>
-                      <MenuItem value="name-asc">Name: A to Z</MenuItem>
-                      <MenuItem value="name-desc">Name: Z to A</MenuItem>
-                      <MenuItem value="newest">Newest First</MenuItem>
+                      <MenuItem value="az">Name: A to Z</MenuItem>
+                      <MenuItem value="za">Name: Z to A</MenuItem>
                     </Select>
                   </FormControl>
                 </Box>
@@ -2024,14 +1880,12 @@ const JobApplications = () => {
               minHeight: "400px",
             }}
           >
-            {filterLoading && (
+            {filterLoading ? (
               <Box sx={{ display: "flex", justifyContent: "center", mb: 3 }}>
                 <CircularProgress sx={{ color: "#1976d2" }} size={40} />
               </Box>
-            )}
-            <Grid container spacing={3}>
-
-              {getSortedApps(visibleApps).map((app) => (
+            ): (<Grid container spacing={3}>
+              {visibleApps.map((app) => (
                 <Grid item xs={12} key={app._id}>
                   <Box
                     sx={{
@@ -2108,7 +1962,63 @@ const JobApplications = () => {
                   </Box>
                 </Grid>
               ))}
-            </Grid>
+              {/* Pagination */}
+              <div className="flex justify-center mt-4 space-x-1 flex-wrap w-full">
+                {/* Previous Button */}
+                <button
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  className="px-3 py-1 border rounded disabled:opacity-50"
+                >
+                  Prev
+                </button>
+
+                {/* Page Numbers */}
+                {Array.from({ length: totalPages }, (_, i) => i + 1)
+                  .filter(
+                    (page) =>
+                      page === 1 ||
+                      page === totalPages ||
+                      Math.abs(page - currentPage) <= 1
+                  )
+                  .reduce((acc, page, idx, arr) => {
+                    if (idx > 0 && page - arr[idx - 1] > 1) {
+                      acc.push("ellipsis");
+                    }
+                    acc.push(page);
+                    return acc;
+                  }, [])
+                  .map((item, idx) =>
+                    item === "ellipsis" ? (
+                      <span key={idx} className="px-2 py-1 text-gray-500">
+                        ...
+                      </span>
+                    ) : (
+                      <button
+                        key={item}
+                        onClick={() => handlePageChange(item)}
+                        className={`px-3 py-1 border rounded ${
+                          currentPage === item
+                            ? "bg-blue-600 text-white"
+                            : "bg-white text-blue-600"
+                        }`}
+                      >
+                        {item}
+                      </button>
+                    )
+                  )}
+
+                {/* Next Button */}
+                <button
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                  className="px-3 py-1 border rounded disabled:opacity-50"
+                >
+                  Next
+                </button>
+              </div>
+            </Grid>)}
+            
 
             {/* Enhanced Empty States */}
             {!loading &&

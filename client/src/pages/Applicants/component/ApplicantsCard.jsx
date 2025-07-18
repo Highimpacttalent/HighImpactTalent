@@ -45,7 +45,7 @@ import { useMediaQuery } from "@mui/material";
 import { useSelector } from "react-redux";
 
 const ApplicationCard = ({ app, navigate, markAsViewed, onStageSelect }) => {
-  const { applicant, matchScore, status, screeningAnswers, cvUrl } = app;
+  const { applicant, matchPercentage, status, screeningAnswers, cvUrl } = app;
   const [showAll, setShowAll] = useState(false);
   const [resumeOpen, setResumeOpen] = useState(false);
   const theme = useTheme();
@@ -99,7 +99,7 @@ const ApplicationCard = ({ app, navigate, markAsViewed, onStageSelect }) => {
     if (score >= 60) return { bg: "#fff8e1", fg: "#8b4513", border: "#daa520" };
     return { bg: "#fef2f2", fg: "#b91c1c", border: "#dc2626" };
   };
-  const matchColor = getMatchColor(matchScore);
+  const matchColor = getMatchColor(matchPercentage);
 
   const handleViewResume = () => {
     if (cvUrl) {
@@ -153,7 +153,7 @@ const ApplicationCard = ({ app, navigate, markAsViewed, onStageSelect }) => {
               }}
             >
               <Chip
-                label={`${matchScore}%`}
+                label={`${matchPercentage}%`}
                 size="small"
                 sx={{
                   backgroundColor: "rgba(255, 255, 255, 0.2)",
@@ -703,7 +703,7 @@ const ApplicationCard = ({ app, navigate, markAsViewed, onStageSelect }) => {
                 </Typography>
 
                 <Chip
-                  label={`${matchScore}% Match`}
+                  label={`${matchPercentage}% Match`}
                   size="small"
                   sx={{
                     backgroundColor: matchColor.bg,
