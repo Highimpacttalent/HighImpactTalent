@@ -242,308 +242,241 @@ export const getApplicationsOfAjob = async (req, res) => {
     const {
       keywords,
       locations,
-      status,
       designations,
       totalYearsInConsulting,
       screeningFilters,
+      sortBy,
+      matchLevel, // NEW
     } = req.query ?? {};
 
     const page = parseInt(req.query.page) || 1;
     const limit = 20;
-    const offset = (page - 1) * limit;
+    const skip = (page - 1) * limit;
 
-
-    // STEP 1: Parse filters early
-    let screeningFiltersParsed = {};
-    try {
-      if (screeningFilters?.trim()) {
-        screeningFiltersParsed = typeof screeningFilters === "string" 
-          ? JSON.parse(screeningFilters) 
-          : screeningFilters;
-      }
-    } catch (err) {
-      console.error("❌ Invalid screeningFilters JSON:", err);
-      return res.status(400).json({
-        success: false,
-        message: "Invalid screeningFilters format",
-      });
-    }
-
-    // STEP 2: Smart caching strategy
-    // Base cache key for unfiltered data
-    const baseKey = `apps_base:${jobId}:${status || 'all'}`;
-    
-    // Check if we have base data cached
-    let baseApplications = cache.get(baseKey);
-    
-    if (!baseApplications) {
-      console.log("🔴 Base cache miss - fetching from DB");
-      
-      // OPTIMIZED PIPELINE - Keep all fields but optimize the query
-      const pipeline = [
-        // Stage 1: Early match with indexed fields
-        {
-          $match: {
-            job: new mongoose.Types.ObjectId(jobId),
-            ...(status?.trim() && { status: status.trim() })
-          }
-        },
-        
-        // Stage 2: Optimized lookup for applicant (ALL fields)
-        {
-          $lookup: {
-            from: "users",
-            localField: "applicant",
-            foreignField: "_id",
-            as: "applicant",
-            // Keep all fields - just optimize the lookup
-            pipeline: [
-              {
-                $project: {
-                  password: 0, // Only exclude sensitive data
-                  __v: 0
-                }
-              }
-            ]
-          }
-        },
-        
-        // Stage 3: Job lookup (ALL fields)
-        {
-          $lookup: {
-            from: "jobs",
-            localField: "job",
-            foreignField: "_id",
-            as: "job",
-            pipeline: [
-              {
-                $project: {
-                  __v: 0
-                }
-              }
-            ]
-          }
-        },
-        
-        // Stage 4: Company lookup (ALL fields)
-        {
-          $lookup: {
-            from: "companies",
-            localField: "company",
-            foreignField: "_id",
-            as: "company",
-            pipeline: [
-              {
-                $project: {
-                  password: 0, // Only exclude sensitive data
-                  __v: 0
-                }
-              }
-            ]
-          }
-        },
-        
-        // Stage 5: Unwind - but with preserveNullAndEmptyArrays for safety
-        { $unwind: { path: "$applicant", preserveNullAndEmptyArrays: true } },
-        { $unwind: { path: "$job", preserveNullAndEmptyArrays: true } },
-        { $unwind: { path: "$company", preserveNullAndEmptyArrays: true } },
-        
-        // Stage 6: Sort by creation date (using your existing index)
-        { $sort: { createdAt: -1 } }
-      ];
-
-      const dbStartTime = Date.now();
-      baseApplications = await Application.aggregate(pipeline);
-      const dbDuration = Date.now() - dbStartTime;
-      
-      console.log(`✅ DB query complete: ${dbDuration}ms for ${baseApplications.length} applications`);
-      
-      // Cache base data for 10 minutes
-      cache.set(baseKey, baseApplications, 600);
-    } else {
-      console.log("🟢 Using cached base data");
-    }
-
-    // STEP 3: Apply filters in memory (MUCH faster than DB filtering)
-    let filteredApplications = [...baseApplications]; // Clone array
-
-    // Helper function to parse filter lists
-    const parseFilterList = (filterValue) => {
-      if (!filterValue?.trim()) return [];
-      
+    // Parse filters
+    const parseFilterList = (value) => {
+      if (!value?.trim()) return [];
       try {
-        const parsed = JSON.parse(filterValue);
+        const parsed = JSON.parse(value);
         return Array.isArray(parsed) ? parsed : [parsed];
-      } catch (e) {
-        return filterValue.split(",")
-          .map(item => item.trim())
-          .filter(Boolean);
+      } catch {
+        return value.split(",").map((x) => x.trim()).filter(Boolean);
       }
     };
 
-    // Parse all filters
     const keywordsList = parseFilterList(keywords);
     const locationsList = parseFilterList(locations);
     const designationsList = parseFilterList(designations);
 
-    console.log("📊 Applying filters:", {
-      keywordsCount: keywordsList.length,
-      locationsCount: locationsList.length,
-      designationsCount: designationsList.length,
-      hasScreeningFilters: Object.keys(screeningFiltersParsed).length > 0,
-      hasExperienceFilter: !!totalYearsInConsulting?.trim()
-    });
-
-    // Apply keyword filter
-    if (keywordsList.length > 0) {
-      const filterStart = Date.now();
-      
-      filteredApplications = filteredApplications.filter(app => {
-        const searchableFields = [
-          app.applicant?.firstName,
-          app.applicant?.lastName,
-          app.applicant?.email,
-          app.applicant?.currentDesignation,
-          app.applicant?.currentCompany,
-          app.applicant?.about,
-          ...(app.applicant?.skills || []),
-          ...(app.applicant?.preferredLocations || [])
-        ];
-        
-        const searchText = searchableFields
-          .filter(Boolean)
-          .join(' ')
-          .toLowerCase();
-        
-        return keywordsList.some(keyword => 
-          searchText.includes(keyword.toLowerCase())
-        );
-      });
-      
-      console.log(`🔍 Keyword filter: ${Date.now() - filterStart}ms, ${filteredApplications.length} remaining`);
-    }
-
-    // Apply location filter
-    if (locationsList.length > 0) {
-      const filterStart = Date.now();
-      
-      filteredApplications = filteredApplications.filter(app => {
-        const userLocations = [
-          app.applicant?.currentLocation,
-          ...(app.applicant?.preferredLocations || [])
-        ].filter(Boolean);
-        
-        return locationsList.some(filterLocation => 
-          userLocations.some(userLocation => 
-            userLocation.toLowerCase().includes(filterLocation.toLowerCase())
-          )
-        );
-      });
-      
-      console.log(`🌍 Location filter: ${Date.now() - filterStart}ms, ${filteredApplications.length} remaining`);
-    }
-
-    // Apply designation filter
-    if (designationsList.length > 0) {
-      const filterStart = Date.now();
-      
-      filteredApplications = filteredApplications.filter(app => {
-        const designation = app.applicant?.currentDesignation?.toLowerCase() || '';
-        return designationsList.some(filterDesignation => 
-          designation.includes(filterDesignation.toLowerCase())
-        );
-      });
-      
-      console.log(`👔 Designation filter: ${Date.now() - filterStart}ms, ${filteredApplications.length} remaining`);
-    }
-
-    // Apply experience filter
-    if (totalYearsInConsulting?.trim()) {
-      const filterStart = Date.now();
-      const minExperience = parseFloat(totalYearsInConsulting);
-      
-      if (!isNaN(minExperience)) {
-        filteredApplications = filteredApplications.filter(app => {
-          const userExperience = parseFloat(app.applicant?.totalYearsInConsulting || 0);
-          return userExperience >= minExperience;
-        });
+    let screeningFiltersParsed = {};
+    try {
+      if (screeningFilters?.trim()) {
+        screeningFiltersParsed = typeof screeningFilters === "string"
+          ? JSON.parse(screeningFilters)
+          : screeningFilters;
       }
-      
-      console.log(`⏳ Experience filter: ${Date.now() - filterStart}ms, ${filteredApplications.length} remaining`);
+    } catch (err) {
+      return res.status(400).json({ success: false, message: "Invalid screeningFilters format" });
     }
 
-    // Apply screening filters
-    if (Object.keys(screeningFiltersParsed).length > 0) {
-      const filterStart = Date.now();
-      
-      filteredApplications = filteredApplications.filter(app => {
-        if (!app.screeningAnswers || !Array.isArray(app.screeningAnswers)) {
-          return false;
-        }
-        
-        // Check if application matches ALL screening filter criteria
-        return Object.entries(screeningFiltersParsed).every(([questionId, expectedValue]) => {
-          const userAnswer = app.screeningAnswers.find(answer => 
-            answer.questionId?.toString() === questionId
-          );
-          
-          if (!userAnswer) return false;
-          
-          // Handle different types of expected values
-          if (Array.isArray(expectedValue)) {
-            // Multi-choice: check if user's answer contains any of the expected values
-            if (Array.isArray(userAnswer.answer)) {
-              return expectedValue.some(expected => 
-                userAnswer.answer.includes(expected)
-              );
-            } else {
-              return expectedValue.includes(userAnswer.answer) || 
-                     expectedValue.includes(userAnswer.answerText);
-            }
-          } else {
-            // Single value: direct comparison
-            return userAnswer.answer === expectedValue || 
-                   userAnswer.answerText === expectedValue;
+    // MongoDB Aggregation Pipeline
+    const pipeline = [];
+
+    // Match by jobId and status
+    const matchStage = {
+      job: new mongoose.Types.ObjectId(jobId),
+    };
+    if (req.query.status?.trim()) {
+      matchStage.status = req.query.status.trim();
+    }
+    if (matchLevel) {
+      matchStage.resumeMatchLevel = matchLevel;
+    }
+
+    pipeline.push({ $match: matchStage });
+
+    // Lookup Applicant
+    pipeline.push({
+      $lookup: {
+        from: "users",
+        localField: "applicant",
+        foreignField: "_id",
+        as: "applicant",
+      }
+    });
+    pipeline.push({ $unwind: { path: "$applicant", preserveNullAndEmptyArrays: true } });
+
+    // Lookup Job
+    pipeline.push({
+      $lookup: {
+        from: "jobs",
+        localField: "job",
+        foreignField: "_id",
+        as: "job",
+      }
+    });
+    pipeline.push({ $unwind: { path: "$job", preserveNullAndEmptyArrays: true } });
+
+    // Lookup Company
+    pipeline.push({
+      $lookup: {
+        from: "companies",
+        localField: "company",
+        foreignField: "_id",
+        as: "company",
+      }
+    });
+    pipeline.push({ $unwind: { path: "$company", preserveNullAndEmptyArrays: true } });
+
+    // Apply Filters inside $match or $addFields/$match
+    const andConditions = [];
+
+    // Keywords
+    if (keywordsList.length > 0) {
+      andConditions.push({
+        $or: keywordsList.map((kw) => ({
+          $or: [
+            { "applicant.firstName": { $regex: kw, $options: "i" } },
+            { "applicant.lastName": { $regex: kw, $options: "i" } },
+            { "applicant.email": { $regex: kw, $options: "i" } },
+            { "applicant.currentCompany": { $regex: kw, $options: "i" } },
+            { "applicant.about": { $regex: kw, $options: "i" } },
+            { "applicant.skills": { $elemMatch: { $regex: kw, $options: "i" } } },
+          ]
+        })),
+      });
+    }
+
+    // Locations
+    if (locationsList.length > 0) {
+      andConditions.push({
+        $or: locationsList.map((loc) => ({
+          $or: [
+            { "applicant.currentLocation": { $regex: loc, $options: "i" } },
+            { "applicant.preferredLocations": { $elemMatch: { $regex: loc, $options: "i" } } },
+          ]
+        })),
+      });
+    }
+
+    // Designations
+    if (designationsList.length > 0) {
+      andConditions.push({
+        $or: designationsList.map((des) => ({
+          "applicant.currentDesignation": { $regex: des, $options: "i" }
+        })),
+      });
+    }
+
+    // Experience
+    if (totalYearsInConsulting?.trim()) {
+      const minExp = parseFloat(totalYearsInConsulting);
+      if (!isNaN(minExp)) {
+        andConditions.push({
+          $expr: {
+            $gte: [
+              { $toDouble: "$applicant.totalYearsInConsulting" },
+              minExp,
+            ]
           }
         });
-      });
-      
-      console.log(`🔎 Screening filter: ${Date.now() - filterStart}ms, ${filteredApplications.length} remaining`);
+      }
     }
 
-    // STEP 4: Prepare response with all original fields
-    const paginatedApplications = filteredApplications.slice(offset, offset + limit);
+    // Screening Filters
+    if (Object.keys(screeningFiltersParsed).length > 0) {
+      for (const [qId, expected] of Object.entries(screeningFiltersParsed)) {
+        const objId = new mongoose.Types.ObjectId(qId);
+        if (Array.isArray(expected)) {
+          andConditions.push({
+            screeningAnswers: {
+              $elemMatch: {
+                questionId: objId,
+                $or: [
+                  { answer: { $in: expected } },
+                  { answerText: { $in: expected } }
+                ]
+              }
+            }
+          });
+        } else {
+          andConditions.push({
+            screeningAnswers: {
+              $elemMatch: {
+                questionId: objId,
+                $or: [
+                  { answer: expected },
+                  { answerText: expected }
+                ]
+              }
+            }
+          });
+        }
+      }
+    }
+
+    // Final $match after all conditions
+    if (andConditions.length > 0) {
+      pipeline.push({ $match: { $and: andConditions } });
+    }
+
+    // Sorting
+    let sortStage = { createdAt: -1 };
+    if (sortBy === "az") {
+      sortStage = { "applicant.firstName": 1 };
+    } else if (sortBy === "za") {
+      sortStage = { "applicant.firstName": -1 };
+    } else if (sortBy === "matchHighToLow") {
+      sortStage = { matchPercentage: -1 };
+    } else if (sortBy === "matchLowToHigh") {
+      sortStage = { matchPercentage: 1 };
+    }
+
+    pipeline.push({ $sort: sortStage });
+
+    // Pagination
+    pipeline.push({ $skip: skip });
+    pipeline.push({ $limit: limit });
+
+    // Count total matching applications
+    const countPipeline = [...pipeline];
+    countPipeline.pop(); // remove limit
+    countPipeline.pop(); // remove skip
+    countPipeline.push({ $count: "total" });
+
+    const [applications, totalResult] = await Promise.all([
+      Application.aggregate(pipeline),
+      Application.aggregate(countPipeline)
+    ]);
+
+    const totalApplications = totalResult[0]?.total || 0;
+
     const responseData = {
       success: true,
-      applications: paginatedApplications,
-      totalApplications: filteredApplications.length,
+      applications,
+      totalApplications,
       filters: {
         keywords: keywordsList,
         locations: locationsList,
         designations: designationsList,
         totalYearsInConsulting,
         screeningFilters: screeningFiltersParsed,
+        matchLevel,
       },
       performance: {
         totalTime: Date.now() - startTime,
-        wasCached: !!cache.get(baseKey),
-        originalCount: baseApplications.length,
-        filteredCount: filteredApplications.length
       },
       pagination: {
         page,
         perPage: limit,
-        totalApplications: filteredApplications.length,
-        totalPages: Math.ceil(filteredApplications.length / limit)
+        totalApplications,
+        totalPages: Math.ceil(totalApplications / limit),
       },
     };
 
-    const totalDuration = Date.now() - startTime;
-    console.log(`🎯 Total request time: ${totalDuration}ms`);
-    console.log(`📈 Performance: ${baseApplications.length} → ${filteredApplications.length} applications`);
+    console.log(`🎯 Optimized response time: ${responseData.performance.totalTime}ms`);
 
     return res.status(200).json(responseData);
-    
   } catch (error) {
     console.error("❌ Error in getApplicationsOfAjob:", error);
     return res.status(500).json({
@@ -553,6 +486,7 @@ export const getApplicationsOfAjob = async (req, res) => {
     });
   }
 };
+
 
 // ========================================
 // ADDITIONAL PERFORMANCE OPTIMIZATIONS
