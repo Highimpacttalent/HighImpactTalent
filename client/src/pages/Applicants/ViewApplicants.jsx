@@ -752,79 +752,101 @@ const JobApplications = () => {
       </Box>
 
       {/* Screening Questions Section */}
-      {screeningQuestions.length > 0 && (
-        <Box sx={{ mb: 4 }}>
-          <Box sx={sectionHeaderStyle}>
-            <Box sx={sectionHeaderAccent} />
-            <Typography variant="subtitle1" sx={sectionHeaderText}>
-              Screening Questions
-            </Typography>
+        {screeningQuestions.length > 0 && (
+          <Box sx={{ mb: 4 }}>
+            <Box sx={sectionHeaderStyle}>
+              <Box sx={sectionHeaderAccent} />
+              <Typography variant="subtitle1" sx={sectionHeaderText}>
+                Screening Questions
+              </Typography>
+            </Box>
+
+            {screeningQuestions.map((question) => {
+              const type = question.questionType;
+              const isYesNo = type === "yes/no";
+              const isMulti = type === "multi_choice";
+              const isShortAnswer = type === "short_answer";
+              const isLongAnswer = type === "long_answer";
+              const options = isYesNo ? ["Yes", "No"] : question.options || [];
+
+              return (
+                <Box key={question._id} sx={{ mb: 3 }}>
+                  <Typography variant="subtitle2" sx={filterLabelStyle}>
+                    {question.question}
+                  </Typography>
+
+                  <FormControl fullWidth>
+                    {isMulti ? (
+                      <Select
+                        multiple
+                        value={filters.screeningFilters[question._id] || []}
+                        onChange={(e) =>
+                          handleScreeningFilterChange(
+                            question._id,
+                            e.target.value
+                          )
+                        }
+                        renderValue={(selected) => selected.join(", ")}
+                        sx={selectFieldStyle}
+                      >
+                        {options.map((opt) => (
+                          <MenuItem key={opt} value={opt}>
+                            <Checkbox
+                              checked={(
+                                filters.screeningFilters[question._id] || []
+                              ).includes(opt)}
+                            />
+                            {opt}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    ) : isYesNo ? (
+                      <Select
+                        value={filters.screeningFilters[question._id] || ""}
+                        onChange={(e) =>
+                          handleScreeningFilterChange(
+                            question._id,
+                            e.target.value
+                          )
+                        }
+                        sx={selectFieldStyle}
+                      >
+                        <MenuItem value="">
+                          <em>Select an option</em>
+                        </MenuItem>
+                        {options.map((opt) => (
+                          <MenuItem key={opt} value={opt}>
+                            {opt}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    ) : (
+                      <TextField
+                        value={filters.screeningFilters[question._id] || ""}
+                        onChange={(e) =>
+                          handleScreeningFilterChange(
+                            question._id,
+                            e.target.value
+                          )
+                        }
+                        placeholder={
+                          isShortAnswer 
+                            ? "Enter short answer" 
+                            : "Enter long answer"
+                        }
+                        size="small"
+                        fullWidth
+                        sx={textFieldStyle}
+                        multiline={isLongAnswer}
+                        rows={isLongAnswer ? 3 : 1}
+                      />
+                    )}
+                  </FormControl>
+                </Box>
+              );
+            })}
           </Box>
-
-          {screeningQuestions.map((question) => {
-            const type = question.questionType;
-            const isYesNo = type === "yes/no";
-            const isMulti = type === "multi_choice";
-            const options = isYesNo ? ["Yes", "No"] : question.options || [];
-
-            return (
-              <Box key={question._id} sx={{ mb: 3 }}>
-                <Typography variant="subtitle2" sx={filterLabelStyle}>
-                  {question.question}
-                </Typography>
-
-                <FormControl fullWidth>
-                  {isMulti ? (
-                    <Select
-                      multiple
-                      value={filters.screeningFilters[question._id] || []}
-                      onChange={(e) =>
-                        handleScreeningFilterChange(
-                          question._id,
-                          e.target.value
-                        )
-                      }
-                      renderValue={(selected) => selected.join(", ")}
-                      sx={selectFieldStyle}
-                    >
-                      {options.map((opt) => (
-                        <MenuItem key={opt} value={opt}>
-                          <Checkbox
-                            checked={(
-                              filters.screeningFilters[question._id] || []
-                            ).includes(opt)}
-                          />
-                          {opt}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  ) : (
-                    <Select
-                      value={filters.screeningFilters[question._id] || ""}
-                      onChange={(e) =>
-                        handleScreeningFilterChange(
-                          question._id,
-                          e.target.value
-                        )
-                      }
-                      sx={selectFieldStyle}
-                    >
-                      <MenuItem value="">
-                        <em>Select an option</em>
-                      </MenuItem>
-                      {options.map((opt) => (
-                        <MenuItem key={opt} value={opt}>
-                          {opt}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  )}
-                </FormControl>
-              </Box>
-            );
-          })}
-        </Box>
-      )}
+        )}
 
       {/* Action Buttons */}
       <Box sx={filterActionsStyle}>
