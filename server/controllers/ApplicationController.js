@@ -420,7 +420,33 @@ export const getApplicationsOfAjob = async (req, res) => {
       pipeline.push({ $match: { $and: andConditions } });
     }
 
-    // Sorting
+    // **REMOVE DUPLICATES: Group by applicant and keep the most recent application**
+    pipeline.push({
+      $sort: { createdAt: -1 } // Sort by creation date descending first
+    });
+
+    pipeline.push({
+      $group: {
+        _id: "$applicant._id", // Group by applicant ID
+        // Keep the first document (most recent due to sort above)
+        application: { $first: "$$ROOT" },
+        totalApplications: { $sum: 1 } // Count total applications from this applicant
+      }
+    });
+
+    // Replace root with the kept application and add duplicate count
+    pipeline.push({
+      $replaceRoot: {
+        newRoot: {
+          $mergeObjects: [
+            "$application",
+            { duplicateApplicationsCount: "$totalApplications" }
+          ]
+        }
+      }
+    });
+
+    // Apply final sorting after deduplication
     let sortStage = { createdAt: -1 };
     if (sortBy === "az") {
       sortStage = { "applicant.firstName": 1 };
@@ -438,7 +464,7 @@ export const getApplicationsOfAjob = async (req, res) => {
     pipeline.push({ $skip: skip });
     pipeline.push({ $limit: limit });
 
-    // Count total matching applications
+    // Count total matching applications (unique applicants)
     const countPipeline = [...pipeline];
     countPipeline.pop(); // remove limit
     countPipeline.pop(); // remove skip
@@ -475,6 +501,7 @@ export const getApplicationsOfAjob = async (req, res) => {
     };
 
     console.log(`🎯 Optimized response time: ${responseData.performance.totalTime}ms`);
+    console.log(`📊 Unique applicants returned: ${applications.length}`);
 
     return res.status(200).json(responseData);
   } catch (error) {
@@ -533,13 +560,31 @@ export const warmUpCache = async (popularJobIds) => {
           { $unwind: { path: "$applicant", preserveNullAndEmptyArrays: true } },
           { $unwind: { path: "$job", preserveNullAndEmptyArrays: true } },
           { $unwind: { path: "$company", preserveNullAndEmptyArrays: true } },
-          { $sort: { createdAt: -1 } }
+          { $sort: { createdAt: -1 } },
+          // Add deduplication to cache warming too
+          {
+            $group: {
+              _id: "$applicant._id",
+              application: { $first: "$$ROOT" },
+              totalApplications: { $sum: 1 }
+            }
+          },
+          {
+            $replaceRoot: {
+              newRoot: {
+                $mergeObjects: [
+                  "$application",
+                  { duplicateApplicationsCount: "$totalApplications" }
+                ]
+              }
+            }
+          }
         ];
         
         const applications = await Application.aggregate(pipeline);
         cache.set(baseKey, applications, 600);
         
-        console.log(`✅ Cached ${applications.length} applications for job ${jobId}`);
+        console.log(`✅ Cached ${applications.length} unique applications for job ${jobId}`);
       } catch (error) {
         console.error(`❌ Failed to warm cache for job ${jobId}:`, error);
       }
