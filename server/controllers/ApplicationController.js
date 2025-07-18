@@ -248,6 +248,11 @@ export const getApplicationsOfAjob = async (req, res) => {
       screeningFilters,
     } = req.query ?? {};
 
+    const page = parseInt(req.query.page) || 1;
+    const limit = 20;
+    const offset = (page - 1) * limit;
+
+
     // STEP 1: Parse filters early
     let screeningFiltersParsed = {};
     try {
@@ -507,9 +512,10 @@ export const getApplicationsOfAjob = async (req, res) => {
     }
 
     // STEP 4: Prepare response with all original fields
+    const paginatedApplications = filteredApplications.slice(offset, offset + limit);
     const responseData = {
       success: true,
-      applications: filteredApplications,
+      applications: paginatedApplications,
       totalApplications: filteredApplications.length,
       filters: {
         keywords: keywordsList,
@@ -523,7 +529,13 @@ export const getApplicationsOfAjob = async (req, res) => {
         wasCached: !!cache.get(baseKey),
         originalCount: baseApplications.length,
         filteredCount: filteredApplications.length
-      }
+      },
+      pagination: {
+        page,
+        perPage: limit,
+        totalApplications: filteredApplications.length,
+        totalPages: Math.ceil(filteredApplications.length / limit)
+      },
     };
 
     const totalDuration = Date.now() - startTime;
