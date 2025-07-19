@@ -3,8 +3,10 @@ import mongoose from "mongoose";
 import Jobs from "../models/jobsModel.js";
 import Users from "../models/userModel.js";
 import { sendStatusUpdateEmail } from "./sendMailController.js";
-import cache from "../utils/cache.js";
 import { scoreResumeAgainstJobKeywords } from "../utils/Reommend.js";
+import NodeCache from 'node-cache';
+
+
 // Create a new application
 export const createApplication = async (req, res) => {
   try {
@@ -233,75 +235,147 @@ export const updateApplicationStatus = async (req, res) => {
   }
 };
 
+// Initialize NodeCache with 5 minute TTL and max 500 keys
+const appCache = new NodeCache({ 
+  stdTTL: 300, // 5 minutes
+  maxKeys: 500,
+  checkperiod: 60 // Check for expired keys every minute
+});
+
+// Helper function to parse filters with multiple words support
+const parseFilters = (query) => {
+  const result = {};
+  
+  // Enhanced parseList function that splits by comma or space
+  const parseList = (value) => {
+    if (!value?.trim()) return [];
+    try {
+      const parsed = JSON.parse(value);
+      return Array.isArray(parsed) ? parsed : [parsed];
+    } catch {
+      // Split by comma or space and trim
+      return value.split(/[,\s]+/).map(x => x.trim()).filter(Boolean);
+    }
+  };
+
+  // Parse screening filters with support for multiple values
+  if (query.screeningFilters) {
+    try {
+      result.screeningFilters = typeof query.screeningFilters === 'string' 
+        ? JSON.parse(query.screeningFilters) 
+        : query.screeningFilters;
+      
+      // Convert single values to arrays for consistency
+      Object.keys(result.screeningFilters).forEach(key => {
+        if (!Array.isArray(result.screeningFilters[key])) {
+          result.screeningFilters[key] = [result.screeningFilters[key]];
+        }
+      });
+    } catch (err) {
+      throw new Error('Invalid screeningFilters format');
+    }
+  }
+
+  // Parse other filters with multiple words support
+  ['keywords', 'locations', 'designations'].forEach(field => {
+    if (query[field]) {
+      result[field] = parseList(query[field]);
+    }
+  });
+
+  if (query.totalYearsInConsulting) {
+    result.totalYearsInConsulting = query.totalYearsInConsulting;
+  }
+
+  if (query.matchLevel) {
+    result.resumeMatchLevel = query.matchLevel;
+  }
+
+  if (query.status) {
+    result.status = query.status.trim();
+  }
+
+  return result;
+};
+
+// Generate cache key based on request parameters
+const generateCacheKey = (jobId, query) => {
+  const { page = 1, limit = 20, sortBy } = query;
+  const filters = parseFilters(query);
+  
+  return `applications:${jobId}:${JSON.stringify({
+    page,
+    limit,
+    sortBy,
+    ...filters
+  })}`;
+};
+
+// Main function to get applications
 export const getApplicationsOfAjob = async (req, res) => {
   try {
     console.log("🔵 ENTERED getApplicationsOfAjob");
     const startTime = Date.now();
-
     const jobId = req.params.jobid;
-    const {
-      keywords,
-      locations,
-      designations,
-      totalYearsInConsulting,
-      screeningFilters,
-      sortBy,
-      matchLevel, // NEW
-    } = req.query ?? {};
-
-    const page = parseInt(req.query.page) || 1;
-    const limit = 20;
+    const { page = 1, limit = 20, sortBy } = req.query;
     const skip = (page - 1) * limit;
 
-    // Parse filters
-    const parseFilterList = (value) => {
-      if (!value?.trim()) return [];
-      try {
-        const parsed = JSON.parse(value);
-        return Array.isArray(parsed) ? parsed : [parsed];
-      } catch {
-        return value.split(",").map((x) => x.trim()).filter(Boolean);
-      }
-    };
-
-    const keywordsList = parseFilterList(keywords);
-    const locationsList = parseFilterList(locations);
-    const designationsList = parseFilterList(designations);
-
-    let screeningFiltersParsed = {};
-    try {
-      if (screeningFilters?.trim()) {
-        screeningFiltersParsed = typeof screeningFilters === "string"
-          ? JSON.parse(screeningFilters)
-          : screeningFilters;
-      }
-    } catch (err) {
-      return res.status(400).json({ success: false, message: "Invalid screeningFilters format" });
+    // Generate cache key
+    const cacheKey = generateCacheKey(jobId, req.query);
+    
+    // Try to get from cache
+    const cachedResult = appCache.get(cacheKey);
+    if (cachedResult) {
+      console.log(`🎯 Cache hit for key: ${cacheKey}`);
+      return res.status(200).json({
+        ...cachedResult,
+        performance: {
+          totalTime: Date.now() - startTime,
+          cache: 'hit'
+        }
+      });
     }
 
-    // MongoDB Aggregation Pipeline
-    const pipeline = [];
-
-    // Match by jobId and status
-    const matchStage = {
+    // Parse filters with multiple words support
+    const filters = parseFilters(req.query);
+    
+    // Build base query
+    const baseQuery = {
       job: new mongoose.Types.ObjectId(jobId),
+      ...(filters.status && { status: filters.status }),
+      ...(filters.resumeMatchLevel && { resumeMatchLevel: filters.resumeMatchLevel })
     };
-    if (req.query.status?.trim()) {
-      matchStage.status = req.query.status.trim();
-    }
-    if (matchLevel) {
-      matchStage.resumeMatchLevel = matchLevel;
-    }
 
-    pipeline.push({ $match: matchStage });
+    // Build aggregation pipeline
+    const pipeline = [];
+    
+    // Initial match stage
+    pipeline.push({ $match: baseQuery });
 
-    // Lookup Applicant
+    // Optimized applicant lookup with only needed fields
     pipeline.push({
       $lookup: {
         from: "users",
         localField: "applicant",
         foreignField: "_id",
         as: "applicant",
+        pipeline: [
+          {
+            $project: {
+              firstName: 1,
+              lastName: 1,
+              email: 1,
+              currentCompany: 1,
+              about: 1,
+              skills: 1,
+              currentLocation: 1,
+              preferredLocations: 1,
+              currentDesignation: 1,
+              totalYearsInConsulting: 1,
+              cvUrl: 1
+            }
+          }
+        ]
       }
     });
     pipeline.push({ $unwind: { path: "$applicant", preserveNullAndEmptyArrays: true } });
@@ -328,114 +402,93 @@ export const getApplicationsOfAjob = async (req, res) => {
     });
     pipeline.push({ $unwind: { path: "$company", preserveNullAndEmptyArrays: true } });
 
-    // Apply Filters inside $match or $addFields/$match
+    // Add filter conditions with multiple words support
     const andConditions = [];
-
-    // Keywords
-    if (keywordsList.length > 0) {
-      andConditions.push({
-        $or: keywordsList.map((kw) => ({
-          $or: [
-            { "applicant.firstName": { $regex: kw, $options: "i" } },
-            { "applicant.lastName": { $regex: kw, $options: "i" } },
-            { "applicant.email": { $regex: kw, $options: "i" } },
-            { "applicant.currentCompany": { $regex: kw, $options: "i" } },
-            { "applicant.about": { $regex: kw, $options: "i" } },
-            { "applicant.skills": { $elemMatch: { $regex: kw, $options: "i" } } },
-          ]
-        })),
-      });
+    
+    // Keyword filtering - search each keyword separately
+    if (filters.keywords?.length > 0) {
+      const keywordConditions = filters.keywords.map(keyword => ({
+        $or: [
+          { "applicant.firstName": { $regex: keyword, $options: "i" } },
+          { "applicant.lastName": { $regex: keyword, $options: "i" } },
+          { "applicant.email": { $regex: keyword, $options: "i" } },
+          { "applicant.currentCompany": { $regex: keyword, $options: "i" } },
+          { "applicant.about": { $regex: keyword, $options: "i" } },
+          { "applicant.skills": { $elemMatch: { $regex: keyword, $options: "i" } } },
+        ]
+      }));
+      andConditions.push({ $or: keywordConditions });
     }
 
-    // Locations
-    if (locationsList.length > 0) {
-      andConditions.push({
-        $or: locationsList.map((loc) => ({
-          $or: [
-            { "applicant.currentLocation": { $regex: loc, $options: "i" } },
-            { "applicant.preferredLocations": { $elemMatch: { $regex: loc, $options: "i" } } },
-          ]
-        })),
-      });
+    // Location filtering - search each location separately
+    if (filters.locations?.length > 0) {
+      const locationConditions = filters.locations.map(location => ({
+        $or: [
+          { "applicant.currentLocation": { $regex: location, $options: "i" } },
+          { "applicant.preferredLocations": { $elemMatch: { $regex: location, $options: "i" } } },
+        ]
+      }));
+      andConditions.push({ $or: locationConditions });
     }
 
-    // Designations
-    if (designationsList.length > 0) {
-      andConditions.push({
-        $or: designationsList.map((des) => ({
-          "applicant.currentDesignation": { $regex: des, $options: "i" }
-        })),
-      });
+    // Designation filtering - search each designation separately
+    if (filters.designations?.length > 0) {
+      const designationConditions = filters.designations.map(designation => ({
+        "applicant.currentDesignation": { $regex: designation, $options: "i" }
+      }));
+      andConditions.push({ $or: designationConditions });
     }
 
-    // Experience
-    if (totalYearsInConsulting?.trim()) {
-      const minExp = parseFloat(totalYearsInConsulting);
+    // Experience filtering
+    if (filters.totalYearsInConsulting) {
+      const minExp = parseFloat(filters.totalYearsInConsulting);
       if (!isNaN(minExp)) {
         andConditions.push({
           $expr: {
             $gte: [
               { $toDouble: "$applicant.totalYearsInConsulting" },
-              minExp,
+              minExp
             ]
           }
         });
       }
     }
 
-    // Screening Filters
-    if (Object.keys(screeningFiltersParsed).length > 0) {
-      const screeningConditions = [];
-      
-      for (const [qId, expected] of Object.entries(screeningFiltersParsed)) {
+    // Enhanced screening questions filtering with multiple choice support
+    if (filters.screeningFilters && Object.keys(filters.screeningFilters).length > 0) {
+      const screeningConditions = Object.entries(filters.screeningFilters).map(([qId, expectedValues]) => {
         const questionCondition = {
           'screeningAnswers.questionId': new mongoose.Types.ObjectId(qId)
         };
         
-        if (Array.isArray(expected)) {
-          // For multi-choice questions
-          questionCondition['$or'] = [
-            { 'screeningAnswers.answer': { $in: expected } },
-            { 'screeningAnswers.answerText': { $regex: expected.join('|'), $options: 'i' } }
-          ];
-        } else {
-          // For single answer questions
-          questionCondition['$or'] = [
-            { 'screeningAnswers.answer': expected },
-            { 'screeningAnswers.answerText': { $regex: expected, $options: 'i' } }
-          ];
-        }
+        // Handle multiple expected values (for multi-choice questions)
+        questionCondition['$or'] = [
+          { 'screeningAnswers.answer': { $in: expectedValues } },
+          { 'screeningAnswers.answerText': { $regex: expectedValues.join('|'), $options: 'i' } }
+        ];
         
-        screeningConditions.push({
+        return {
           screeningAnswers: { $elemMatch: questionCondition }
-        });
-      }
+        };
+      });
       
-      if (screeningConditions.length > 0) {
-        andConditions.push({ $and: screeningConditions });
-      }
+      andConditions.push({ $and: screeningConditions });
     }
 
-    // Final $match after all conditions
+    // Add filter conditions to pipeline
     if (andConditions.length > 0) {
       pipeline.push({ $match: { $and: andConditions } });
     }
 
-    // **REMOVE DUPLICATES: Group by applicant and keep the most recent application**
-    pipeline.push({
-      $sort: { createdAt: -1 } // Sort by creation date descending first
-    });
-
+    // Deduplicate applications by applicant (keep most recent)
+    pipeline.push({ $sort: { createdAt: -1 } });
     pipeline.push({
       $group: {
-        _id: "$applicant._id", // Group by applicant ID
-        // Keep the first document (most recent due to sort above)
+        _id: "$applicant._id",
         application: { $first: "$$ROOT" },
-        totalApplications: { $sum: 1 } // Count total applications from this applicant
+        totalApplications: { $sum: 1 }
       }
     });
-
-    // Replace root with the kept application and add duplicate count
     pipeline.push({
       $replaceRoot: {
         newRoot: {
@@ -447,59 +500,60 @@ export const getApplicationsOfAjob = async (req, res) => {
       }
     });
 
-    // Apply final sorting after deduplication
+    // Sorting
     let sortStage = { createdAt: -1 };
-    if (sortBy === "az") {
-      sortStage = { "applicant.firstName": 1 };
-    } else if (sortBy === "za") {
-      sortStage = { "applicant.firstName": -1 };
-    } else if (sortBy === "matchHighToLow") {
-      sortStage = { matchPercentage: -1 };
-    } else if (sortBy === "matchLowToHigh") {
-      sortStage = { matchPercentage: 1 };
+    switch (sortBy) {
+      case "az": sortStage = { "applicant.firstName": 1 }; break;
+      case "za": sortStage = { "applicant.firstName": -1 }; break;
+      case "matchHighToLow": sortStage = { matchPercentage: -1 }; break;
+      case "matchLowToHigh": sortStage = { matchPercentage: 1 }; break;
     }
-
     pipeline.push({ $sort: sortStage });
 
     // Pagination
-    pipeline.push({ $skip: skip });
-    pipeline.push({ $limit: limit });
+    const paginationPipeline = [...pipeline];
+    paginationPipeline.push({ $skip: skip });
+    paginationPipeline.push({ $limit: parseInt(limit) });
 
-    // Count total matching applications (unique applicants)
+    // Count pipeline
     const countPipeline = [...pipeline];
-    countPipeline.pop(); // remove limit
-    countPipeline.pop(); // remove skip
     countPipeline.push({ $count: "total" });
 
+    // Execute both queries in parallel
     const [applications, totalResult] = await Promise.all([
-      Application.aggregate(pipeline),
+      Application.aggregate(paginationPipeline),
       Application.aggregate(countPipeline)
     ]);
 
     const totalApplications = totalResult[0]?.total || 0;
 
+    // Prepare response
     const responseData = {
       success: true,
       applications,
       totalApplications,
       filters: {
-        keywords: keywordsList,
-        locations: locationsList,
-        designations: designationsList,
-        totalYearsInConsulting,
-        screeningFilters: screeningFiltersParsed,
-        matchLevel,
+        keywords: filters.keywords || [],
+        locations: filters.locations || [],
+        designations: filters.designations || [],
+        totalYearsInConsulting: filters.totalYearsInConsulting,
+        screeningFilters: filters.screeningFilters || {},
+        matchLevel: filters.resumeMatchLevel,
       },
       performance: {
         totalTime: Date.now() - startTime,
+        cache: 'miss'
       },
       pagination: {
-        page,
-        perPage: limit,
+        page: parseInt(page),
+        perPage: parseInt(limit),
         totalApplications,
         totalPages: Math.ceil(totalApplications / limit),
       },
     };
+
+    // Cache the result
+    appCache.set(cacheKey, responseData);
 
     console.log(`🎯 Optimized response time: ${responseData.performance.totalTime}ms`);
     console.log(`📊 Unique applicants returned: ${applications.length}`);
@@ -515,11 +569,6 @@ export const getApplicationsOfAjob = async (req, res) => {
   }
 };
 
-
-// ========================================
-// ADDITIONAL PERFORMANCE OPTIMIZATIONS
-// ========================================
-
 // 1. Warm up cache for popular jobs
 export const warmUpCache = async (popularJobIds) => {
   console.log("🔥 Warming up cache for popular jobs...");
@@ -527,7 +576,7 @@ export const warmUpCache = async (popularJobIds) => {
   const promises = popularJobIds.map(async (jobId) => {
     const baseKey = `apps_base:${jobId}:all`;
     
-    if (!cache.get(baseKey)) {
+    if (!appCache.get(baseKey)) {
       try {
         const pipeline = [
           { $match: { job: new mongoose.Types.ObjectId(jobId) } },
@@ -583,7 +632,7 @@ export const warmUpCache = async (popularJobIds) => {
         ];
         
         const applications = await Application.aggregate(pipeline);
-        cache.set(baseKey, applications, 600);
+        appCache.set(baseKey, applications, 600);
         
         console.log(`✅ Cached ${applications.length} unique applications for job ${jobId}`);
       } catch (error) {
@@ -596,21 +645,28 @@ export const warmUpCache = async (popularJobIds) => {
   console.log("🔥 Cache warm-up complete!");
 };
 
-// ========================================
-// HELPER FUNCTION - Get Screening Filter Options
-// ========================================
-
 export const getScreeningFilterOptions = async (req, res) => {
   try {
     const jobId = req.params.jobid;
+    const cacheKey = `screening:${jobId}`;
+    
+    // Try cache first
+    const cached = appCache.get(cacheKey);
+    if (cached) {
+      return res.status(200).json({
+        success: true,
+        jobScreeningQuestions: cached
+      });
+    }
 
-    // First get the job's screening questions for structure
-    const job = await Jobs.findById(jobId).select("screeningQuestions");
+    const job = await Jobs.findById(jobId)
+      .select('screeningQuestions')
+      .lean();
 
     if (!job) {
       return res.status(404).json({
         success: false,
-        message: "Job not found",
+        message: "Job not found"
       });
     }
 
@@ -649,8 +705,6 @@ export const getScreeningFilterOptions = async (req, res) => {
         // Handle different question types
         switch (question.questionType) {
           case "yes/no":
-            // For yes/no questions, ALWAYS provide Yes/No options by default
-            // Frontend doesn't send options for yes/no - they're always the same
             filterOptions[questionId].availableAnswers = [
               { label: "Yes", value: "Yes" },
               { label: "No", value: "No" },
@@ -659,7 +713,6 @@ export const getScreeningFilterOptions = async (req, res) => {
 
           case "single_choice":
           case "multi_choice":
-            // For choice questions, use predefined options from the job
             if (question.options && Array.isArray(question.options)) {
               filterOptions[questionId].availableAnswers = question.options.map(
                 (option) => ({
@@ -672,7 +725,6 @@ export const getScreeningFilterOptions = async (req, res) => {
 
           case "short_answer":
           case "long_answer":
-            // For text answers, indicate it's searchable
             filterOptions[questionId].searchable = true;
             break;
         }
@@ -683,11 +735,8 @@ export const getScreeningFilterOptions = async (req, res) => {
     answerGroups.forEach((group) => {
       const questionId = group._id.toString();
 
-      // If we already have this question from job definition, enhance it
       if (filterOptions[questionId]) {
-        // For yes/no questions, we keep the default options but can add statistics
         if (group.questionType === "yes/no") {
-          // Count actual responses for statistics
           const yesAnswers = group.uniqueAnswers.filter((ans) => {
             if (typeof ans === "string") return ans.toLowerCase() === "yes";
             return false;
@@ -704,13 +753,11 @@ export const getScreeningFilterOptions = async (req, res) => {
             totalResponses: yesAnswers.length + noAnswers.length,
           };
 
-          // ALWAYS ensure Yes/No options are available - don't rely on job definition
           filterOptions[questionId].availableAnswers = [
             { label: "Yes", value: "Yes" },
             { label: "No", value: "No" },
           ];
         }
-        // For other question types, we might want to add additional info
         else if (
           group.questionType === "short_answer" ||
           group.questionType === "long_answer"
@@ -720,7 +767,6 @@ export const getScreeningFilterOptions = async (req, res) => {
             : [];
         }
       } else {
-        // If question wasn't in job definition, create from application data
         filterOptions[questionId] = {
           question: group.question,
           questionType: group.questionType,
@@ -729,13 +775,11 @@ export const getScreeningFilterOptions = async (req, res) => {
 
         switch (group.questionType) {
           case "yes/no":
-            // ALWAYS provide Yes/No options for yes/no questions - no matter what
             filterOptions[questionId].availableAnswers = [
               { label: "Yes", value: "Yes" },
               { label: "No", value: "No" },
             ];
 
-            // Add statistics if we have actual answers
             const yesAnswers = group.uniqueAnswers.filter((ans) => {
               if (typeof ans === "string") return ans.toLowerCase() === "yes";
               return false;
@@ -777,10 +821,9 @@ export const getScreeningFilterOptions = async (req, res) => {
       }
     });
 
-    // Final check: Ensure ALL yes/no questions have availableAnswers (most important part!)
+    // Final check: Ensure ALL yes/no questions have availableAnswers
     Object.keys(filterOptions).forEach((questionId) => {
       if (filterOptions[questionId].questionType === "yes/no") {
-        // FORCE Yes/No options for all yes/no questions regardless of any other logic
         filterOptions[questionId].availableAnswers = [
           { label: "Yes", value: "Yes" },
           { label: "No", value: "No" },
@@ -788,12 +831,18 @@ export const getScreeningFilterOptions = async (req, res) => {
       }
     });
 
-    res.status(200).json({
+    // Prepare response data
+    const responseData = {
       success: true,
       filterOptions,
       jobScreeningQuestions: job.screeningQuestions,
       totalQuestions: Object.keys(filterOptions).length,
-    });
+    };
+
+    // Cache the result
+    appCache.set(cacheKey, responseData, 3600); // 1 hour TTL
+
+    res.status(200).json(responseData);
   } catch (error) {
     console.error("Error getting screening filter options:", error);
     res.status(500).json({
@@ -806,6 +855,16 @@ export const getScreeningFilterOptions = async (req, res) => {
 export const getApplicationStageCounts = async (req, res) => {
   try {
     const jobId = req.params.jobid;
+    const cacheKey = `stageCounts:${jobId}`;
+    
+    // Try cache first
+    const cached = appCache.get(cacheKey);
+    if (cached) {
+      return res.status(200).json({
+        success: true,
+        stageCounts: cached
+      });
+    }
 
     // Validate job ID
     if (!mongoose.Types.ObjectId.isValid(jobId)) {
@@ -815,7 +874,7 @@ export const getApplicationStageCounts = async (req, res) => {
       });
     }
 
-    // Get counts grouped by status - include all possible statuses
+    // Get counts grouped by status
     const statuses = [
       "Applied",
       "Application Viewed",
@@ -825,10 +884,11 @@ export const getApplicationStageCounts = async (req, res) => {
       "Not Progressing",
     ];
 
-    // First get all applications for this job
-    const allApplications = await Application.find({
-      job: new mongoose.Types.ObjectId(jobId),
-    });
+    const result = await Application.aggregate([
+      { $match: { job: new mongoose.Types.ObjectId(jobId) } },
+      { $group: { _id: "$status", count: { $sum: 1 } } },
+      { $project: { _id: 0, status: "$_id", count: 1 } }
+    ]);
 
     // Initialize counts with all possible statuses
     const stageCounts = {};
@@ -836,12 +896,15 @@ export const getApplicationStageCounts = async (req, res) => {
       stageCounts[status] = 0;
     });
 
-    // Count applications per status
-    allApplications.forEach((app) => {
-      if (statuses.includes(app.status)) {
-        stageCounts[app.status]++;
+    // Update with actual counts
+    result.forEach((item) => {
+      if (statuses.includes(item.status)) {
+        stageCounts[item.status] = item.count;
       }
     });
+
+    // Cache the result with shorter TTL (1 minute)
+    appCache.set(cacheKey, stageCounts, 60);
 
     res.status(200).json({
       success: true,
