@@ -272,12 +272,13 @@ const JobApplications = () => {
     const initializeData = async () => {
       setLoading(true);
       try {
-        // Fetch all applications for initial load
-        const allApps = await fetchApplications();
-        setAllApplications(allApps);
-
         // Filter by current step
         const currentStatus = steps[activeStep];
+        
+        // Fetch all applications for initial load
+        const allApps = await fetchApplications({}, currentStatus);
+        setAllApplications(allApps);
+
         const filteredByStatus = allApps.filter(
           (app) => app.status === currentStatus
         );
