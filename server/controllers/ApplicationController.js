@@ -458,13 +458,13 @@ export const getApplicationsOfAjob = async (req, res) => {
     if (filters.screeningFilters && Object.keys(filters.screeningFilters).length > 0) {
       const screeningConditions = Object.entries(filters.screeningFilters).map(([qId, expectedValues]) => {
         const questionCondition = {
-          'screeningAnswers.questionId': new mongoose.Types.ObjectId(qId)
+          'questionId': new mongoose.Types.ObjectId(qId)
         };
         
         // Handle multiple expected values (for multi-choice questions)
         questionCondition['$or'] = [
-          { 'screeningAnswers.answer': { $in: expectedValues } },
-          { 'screeningAnswers.answerText': { $regex: expectedValues.join('|'), $options: 'i' } }
+          { 'answer': { $in: expectedValues } },
+          { 'answerText': { $regex: expectedValues.join('|'), $options: 'i' } }
         ];
         
         return {
