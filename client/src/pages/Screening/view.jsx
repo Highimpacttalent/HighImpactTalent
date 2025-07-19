@@ -81,6 +81,7 @@ const ScreeningView = () => {
   const [applyButton, setApplyButton] = useState(false); // Controls if apply button is enabled (needs resume)
   const [openDialog, setOpenDialog] = useState(false); // For resume upload confirmation
   const [uploading, setUploading] = useState(false); // For resume upload loading
+  const [submitting, setSubmitting] = useState(false); // For application submission loading
 
   // State to hold user's answers, indexed by the position of the question in the filteredQuestions array
   // Initialize with an empty array initially
@@ -209,22 +210,23 @@ const ScreeningView = () => {
 
   // --- Apply Logic ---
   const applyHandler = async () => {
+  // Prevent multiple submissions
+  if (submitting) return;
+  setSubmitting(true);
+
+  try {
     // --- Frontend Validation ---
-    // Validate mandatory questions based on their type *as stored in state*
     const allMandatoryAnswered = filteredQuestions.every((question, index) => {
-      if (!question.isMandatory) return true; // Skip non-mandatory
+      if (!question.isMandatory) return true;
 
       const answer = formData.answers[index];
 
       switch (question.questionType) {
         case "yes/no":
-          // A boolean value (true or false) means it's answered
           return typeof answer === "boolean";
         case "single_choice":
-          // Must be a string value that is not just whitespace
           return typeof answer === "string" && answer.trim() !== "";
         case "multi_choice":
-          // Must be an array with at least one non-empty string selected
           return (
             Array.isArray(answer) &&
             answer.filter((opt) => opt.trim() !== "").length > 0
@@ -232,7 +234,6 @@ const ScreeningView = () => {
         case "short_answer":
         case "long_answer":
         default:
-          // Must be a string that is not just whitespace
           return typeof answer === "string" && answer.trim() !== "";
       }
     });
@@ -240,13 +241,12 @@ const ScreeningView = () => {
     if (!allMandatoryAnswered) {
       setSnackbar({
         open: true,
-        message:
-          "Please answer all mandatory screening questions before submitting.",
+        message: "Please answer all mandatory screening questions before submitting.",
         severity: "error",
       });
       return;
     }
-    // Check if resume is uploaded (this is already controlled by applyButton state, but double-check)
+
     if (!resumeUrl) {
       setSnackbar({
         open: true,
@@ -256,115 +256,95 @@ const ScreeningView = () => {
       return;
     }
 
-    // Prevent multiple submissions (should be disabled by applied state, but safety check)
     if (applied) {
-      // If applied, just navigate to application tracking
       navigate("/application-tracking");
       return;
     }
 
     // --- Prepare API Payload ---
-    try {
-      const screeningAnswersPayload = filteredQuestions.map(
-        (question, index) => {
-          // Get the raw answer value from state
-          const answerValue = formData.answers[index];
+    const screeningAnswersPayload = filteredQuestions.map((question, index) => {
+      const answerValue = formData.answers[index];
+      let formattedAnswerString;
 
-          // Format the answer value *as a string* for the payload,
-          // to be compatible with the backend route's trimming logic.
-          let formattedAnswerString;
-          switch (question.questionType) {
-            case "yes/no":
-              // Convert boolean state to "yes" or "no" string
-              formattedAnswerString =
-                typeof answerValue === "boolean"
-                  ? answerValue
-                    ? "yes"
-                    : "no"
-                  : ""; // Default to empty string
-              break;
-            case "multi_choice":
-              // Convert array of strings to a comma-separated string
-              // Ensure it's an array, filter empty, join. Default to empty string.
-              formattedAnswerString = Array.isArray(answerValue)
-                ? answerValue
-                    .filter(
-                      (opt) => typeof opt === "string" && opt.trim() !== ""
-                    )
-                    .map((opt) => opt.trim())
-                    .join(", ")
-                : "";
-              break;
-            case "single_choice":
-            case "short_answer":
-            case "long_answer":
-            default:
-              // Send trimmed string. Handle non-string answers by converting to empty string.
-              formattedAnswerString =
-                typeof answerValue === "string" ? answerValue.trim() : "";
-              break;
-          }
-          return {
-            questionId: question._id, // Use the _id from the job's question
-            question: question.question, // Include the question text from the job
-            questionType: question.questionType, // <--- INCLUDE questionType
-            answer: formattedAnswerString, // The collected answer, now always a string (or empty string)
-          };
-          // *************************************************************************
-        }
-      );
-      const finalScreeningAnswersPayload = screeningAnswersPayload.filter(
-        (item) => item.answer !== "" 
-      );
-
-      const res = await axios.post(
-        "https://highimpacttalent.onrender.com/api-v1/application/create", // Verify this endpoint
-        {
-          job: state?.jobid, // Ensure jobid and companyid are correctly passed via state
-          company: state?.companyid,
-          applicant: user?._id, // Use user._id from Redux state
-          screeningAnswers: finalScreeningAnswersPayload, // Send the prepared payload (now strings)
-          // Optionally include resumeUrl here if backend expects it with application creation
-          cvUrl: resumeUrl, // Pass the resume URL
-          jobTitle: state?.jobTitle, // Example: assuming jobTitle is passed in state
-          companyName: state?.companyName, // Example: assuming companyName is passed in state
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${user?.token}`, // Add authorization token from Redux state
-          },
-        }
-      );
-
-      if (res.data?.success) {
-        // Check for success flag in response
-        setApplied(true); // Mark as applied on success
-        console.log(res.data);
-        // Update user state if the response includes updated user data
-        if (res.data.user) {
-          dispatch(UpdateUser(res.data.user));
-        }
-        setSnackbar({
-          open: true,
-          message: res.data.message || "Application submitted successfully!",
-          severity: "success",
-        });
-        // Optionally navigate after success or keep showing status message
-        // setTimeout(() => navigate("/application-tracking"), 2000); // Example navigation delay
-      } else {
-        // Handle backend returning success: false
-        const errorMessage =
-          res.data.message || "Failed to apply. Please try again.";
-        console.error("API Error:", errorMessage);
-        setSnackbar({ open: true, message: errorMessage, severity: "error" });
+      switch (question.questionType) {
+        case "yes/no":
+          formattedAnswerString =
+            typeof answerValue === "boolean"
+              ? answerValue ? "yes" : "no"
+              : "";
+          break;
+        case "multi_choice":
+          formattedAnswerString = Array.isArray(answerValue)
+            ? answerValue
+                .filter((opt) => typeof opt === "string" && opt.trim() !== "")
+                .map((opt) => opt.trim())
+                .join(", ")
+            : "";
+          break;
+        case "single_choice":
+        case "short_answer":
+        case "long_answer":
+        default:
+          formattedAnswerString =
+            typeof answerValue === "string" ? answerValue.trim() : "";
+          break;
       }
-    } catch (error) {
-      console.error("Error while applying:", error.response?.data || error);
-      const errorMessage =
-        error.response?.data?.message || "Failed to apply. An error occurred.";
+
+      return {
+        questionId: question._id,
+        question: question.question,
+        questionType: question.questionType,
+        answer: formattedAnswerString,
+      };
+    });
+
+    const finalScreeningAnswersPayload = screeningAnswersPayload.filter(
+      (item) => item.answer !== ""
+    );
+
+    const res = await axios.post(
+      "https://highimpacttalent.onrender.com/api-v1/application/create",
+      {
+        job: state?.jobid,
+        company: state?.companyid,
+        applicant: user?._id,
+        screeningAnswers: finalScreeningAnswersPayload,
+        cvUrl: resumeUrl,
+        jobTitle: state?.jobTitle,
+        companyName: state?.companyName,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${user?.token}`,
+        },
+      }
+    );
+
+    if (res.data?.success) {
+      setApplied(true);
+      console.log(res.data);
+      if (res.data.user) {
+        dispatch(UpdateUser(res.data.user));
+      }
+      setSnackbar({
+        open: true,
+        message: res.data.message || "Application submitted successfully!",
+        severity: "success",
+      });
+    } else {
+      const errorMessage = res.data.message || "Failed to apply. Please try again.";
+      console.error("API Error:", errorMessage);
       setSnackbar({ open: true, message: errorMessage, severity: "error" });
     }
-  };
+  } catch (error) {
+    console.error("Error while applying:", error.response?.data || error);
+    const errorMessage =
+      error.response?.data?.message || "Failed to apply. An error occurred.";
+    setSnackbar({ open: true, message: errorMessage, severity: "error" });
+  } finally {
+    setSubmitting(false);
+  }
+};
 
   // --- Resume Upload Logic (Kept mostly as is, applying original styling) ---
   const handleFileChange = async (e) => {
@@ -887,35 +867,38 @@ const ScreeningView = () => {
         )}
 
         {/* Apply Button */}
-        <Button
-          fullWidth
-          variant="contained"
-          onClick={applyHandler}
-          disabled={isApplyDisabled} // Use the disabled state variable
-          sx={{
-            borderRadius: 16, // Original border radius
-            textTransform: "none", // Original text transform
-            fontFamily: "Satoshi", // Original font family
-            fontWeight: 700, // Original font weight
-            py: 1.5, // Add padding
-            bgcolor: applied ? "success.main" : "#3C7EFC", // Success color if applied, primary otherwise
-            "&:hover": {
-              bgcolor: applied ? "success.dark" : "#3C7EFC", // Darker hover for success/primary
-            },
-            "&:disabled": { bgcolor: "#a0c3fc", color: "#fff" }, // Disabled state style
-          }}
-        >
-          {/* Show loader and text when uploading/submitting */}
-          {uploading ||
-          (isApplyDisabled && applyButtonText === "Submit Application") ? (
-            <>
-              <CircularProgress size={20} color="inherit" sx={{ mr: 1 }} />
-              {applyButtonText}
-            </>
-          ) : (
-            applyButtonText
-          )}
-        </Button>
+          <Button
+            fullWidth
+            variant="contained"
+            onClick={applyHandler}
+            disabled={isApplyDisabled || submitting} // Add submitting to disabled condition
+            sx={{
+              borderRadius: 16,
+              textTransform: "none",
+              fontFamily: "Satoshi",
+              fontWeight: 700,
+              py: 1.5,
+              bgcolor: applied ? "success.main" : "#3C7EFC",
+              "&:hover": {
+                bgcolor: applied ? "success.dark" : "#3C7EFC",
+              },
+              "&:disabled": { bgcolor: "#a0c3fc", color: "#fff" },
+            }}
+          >
+            {submitting ? (
+              <>
+                <CircularProgress size={20} color="inherit" sx={{ mr: 1 }} />
+                Submitting Application...
+              </>
+            ) : uploading ? (
+              <>
+                <CircularProgress size={20} color="inherit" sx={{ mr: 1 }} />
+                Uploading Resume...
+              </>
+            ) : (
+              applyButtonText
+            )}
+          </Button>
       </Box>
 
       {/* Resume Upload Confirmation Dialog (Kept original style) */}
