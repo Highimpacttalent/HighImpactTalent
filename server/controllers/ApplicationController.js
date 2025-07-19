@@ -385,33 +385,34 @@ export const getApplicationsOfAjob = async (req, res) => {
 
     // Screening Filters
     if (Object.keys(screeningFiltersParsed).length > 0) {
+      const screeningConditions = [];
+      
       for (const [qId, expected] of Object.entries(screeningFiltersParsed)) {
-        const objId = new mongoose.Types.ObjectId(qId);
+        const questionCondition = {
+          'screeningAnswers.questionId': new mongoose.Types.ObjectId(qId)
+        };
+        
         if (Array.isArray(expected)) {
-          andConditions.push({
-            screeningAnswers: {
-              $elemMatch: {
-                questionId: objId,
-                $or: [
-                  { answer: { $in: expected } },
-                  { answerText: { $in: expected } }
-                ]
-              }
-            }
-          });
+          // For multi-choice questions
+          questionCondition['$or'] = [
+            { 'screeningAnswers.answer': { $in: expected } },
+            { 'screeningAnswers.answerText': { $regex: expected.join('|'), $options: 'i' } }
+          ];
         } else {
-          andConditions.push({
-            screeningAnswers: {
-              $elemMatch: {
-                questionId: objId,
-                $or: [
-                  { answer: expected },
-                  { answerText: expected }
-                ]
-              }
-            }
-          });
+          // For single answer questions
+          questionCondition['$or'] = [
+            { 'screeningAnswers.answer': expected },
+            { 'screeningAnswers.answerText': { $regex: expected, $options: 'i' } }
+          ];
         }
+        
+        screeningConditions.push({
+          screeningAnswers: { $elemMatch: questionCondition }
+        });
+      }
+      
+      if (screeningConditions.length > 0) {
+        andConditions.push({ $and: screeningConditions });
       }
     }
 
