@@ -829,8 +829,8 @@ export const getScreeningFilterOptions = async (req, res) => {
       totalQuestions: Object.keys(filterOptions).length,
     };
 
-    // Cache the result
-    appCache.set(cacheKey, responseData, 3600); // 1 hour TTL
+    // Cache the results
+    //appCache.set(cacheKey, responseData, 3600); // 1 hour TTL
 
     res.status(200).json(responseData);
   } catch (error) {
