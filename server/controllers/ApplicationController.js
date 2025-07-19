@@ -648,16 +648,6 @@ export const warmUpCache = async (popularJobIds) => {
 export const getScreeningFilterOptions = async (req, res) => {
   try {
     const jobId = req.params.jobid;
-    const cacheKey = `screening:${jobId}`;
-    
-    // Try cache first
-    const cached = appCache.get(cacheKey);
-    if (cached) {
-      return res.status(200).json({
-        success: true,
-        jobScreeningQuestions: cached
-      });
-    }
 
     const job = await Jobs.findById(jobId)
       .select('screeningQuestions')
