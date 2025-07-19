@@ -40,6 +40,7 @@ import {
   TrendingUp,
 } from "@mui/icons-material";
 import { useTheme } from "@mui/material";
+import PersonOutline from '@mui/icons-material/PersonOutline';
 import axios from "axios";
 import { useMediaQuery } from "@mui/material";
 import { useSelector } from "react-redux";
@@ -811,7 +812,7 @@ const ApplicationCard = ({ app, navigate, markAsViewed, onStageSelect }) => {
                 <Button
                   variant="outlined"
                   size="small"
-                  startIcon={<Visibility />}
+                  startIcon={<PersonOutline />}
                   onClick={handleViewProfile}
                   sx={{
                     textTransform: "none",
@@ -859,7 +860,7 @@ const ApplicationCard = ({ app, navigate, markAsViewed, onStageSelect }) => {
                 <Button
                   variant="contained"
                   size="small"
-                  startIcon={<Download />}
+                  startIcon={<Visibility />}
                   onClick={handleViewResume}
                   sx={{
                     textTransform: "none",
