@@ -263,19 +263,25 @@ const parseFilters = (query) => {
   // Parse screening filters with support for multiple values
   if (query.screeningFilters) {
     try {
-      result.screeningFilters = typeof query.screeningFilters === 'string' 
-        ? JSON.parse(query.screeningFilters) 
-        : query.screeningFilters;
-      
-      // Convert single values to arrays for consistency
-      Object.keys(result.screeningFilters).forEach(key => {
-        if (!Array.isArray(result.screeningFilters[key])) {
-          result.screeningFilters[key] = [result.screeningFilters[key]];
-        }
-      });
-    } catch (err) {
-      throw new Error('Invalid screeningFilters format');
+    // **THE FIX**: Check if it's a non-empty string before parsing.
+    if (typeof query.screeningFilters === 'string' && query.screeningFilters.trim() !== '') {
+      result.screeningFilters = JSON.parse(query.screeningFilters);
+    } else if (typeof query.screeningFilters === 'object') {
+      result.screeningFilters = query.screeningFilters;
+    } else {
+      result.screeningFilters = {}; // Default to an empty object if format is weird
     }
+
+    // Convert single values to arrays for consistency (this part is fine)
+    Object.keys(result.screeningFilters).forEach(key => {
+      if (!Array.isArray(result.screeningFilters[key])) {
+        result.screeningFilters[key] = [result.screeningFilters[key]];
+      }
+    });
+  } catch (err) {
+    // This catch is still a good fallback
+    throw new Error('Invalid screeningFilters format');
+  }
   }
 
   // Parse other filters with multiple words support
