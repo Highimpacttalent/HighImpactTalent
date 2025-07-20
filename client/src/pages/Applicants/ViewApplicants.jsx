@@ -436,39 +436,35 @@ const JobApplications = () => {
 
   // Clear filters function
   const clearFilters = async () => {
-    // Reset all filters
-    setFilters({
-      keywords: [],
-      locations: [],
-      designations: [],
-      totalYearsInConsulting: "",
-      screeningFilters: {},
-    });
+  // Reset all filters
+  setFilters({
+    keywords: [],
+    locations: [],
+    designations: [],
+    totalYearsInConsulting: "",
+    screeningFilters: {},
+  });
 
-    setKeywordInput("");
-    setLocationInput("");
-    setDesignationInput("");
+  setKeywordInput("");
+  setLocationInput("");
+  setDesignationInput("");
 
-    // Reset to first tab
-    const newActiveStep = 0;
-    setActiveStep(newActiveStep);
+  // Fetch fresh data filtered by current tab's status
+  const currentStatus = steps[activeStep];
+  const allApps = await fetchApplications({}, currentStatus);
+  setAllApplications(allApps);
+  setApplications(allApps);
+  setFilteredApps(allApps);
 
-    // Fetch fresh data
-    const currentStatus = steps[newActiveStep];
-    const allApps = await fetchApplications();
-    setAllApplications(allApps);
-    const filtered = allApps.filter((app) => app.status === currentStatus);
-    setApplications(filtered);
-    setFilteredApps(filtered);
+  // Refresh counts
+  await fetchStageCounts();
+  setSelectedApplications(new Set());
 
-    // Refresh counts
-    await fetchStageCounts();
-    setSelectedApplications(new Set());
+  if (isMobile) {
+    setDrawerOpen(false);
+  }
+};
 
-    if (isMobile) {
-      setDrawerOpen(false);
-    }
-  };
 
   // Filter component styles
   const filterLabelStyle = {
