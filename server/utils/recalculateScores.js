@@ -5,6 +5,7 @@ import Jobs from '../models/jobsModel.js';
 import Users from '../models/userModel.js';
 import { scoreResumeAgainstJobKeywords } from './Reommend.js';
 import dbConnection from '../dbConfig/dbConnection.js';
+import { scoreResumeWithGemini } from './LLMRecommend.js';
 
 async function main() {
   await dbConnection();
@@ -29,11 +30,7 @@ async function main() {
     }
 
     console.log(`Processing application ${app._id} (applicant ${user._id})`);
-    const result = await scoreResumeAgainstJobKeywords(app.cvUrl, job, user);
-    if (!result.success) {
-      console.error('Scoring failed on', app._id, result.error);
-      continue;
-    }
+    const result = await scoreResumeWithGemini(app.cvUrl, job, user);
 
     await Application.findByIdAndUpdate(app._id, {
   resumeMatchLevel: result.scoreLabel,
