@@ -372,7 +372,13 @@ export const getApplicationsOfAjob = async (req, res) => {
               preferredLocations: 1,
               currentDesignation: 1,
               totalYearsInConsulting: 1,
-              cvUrl: 1
+              cvUrl: 1,
+              linkedinLink:1,
+              openToRelocate: 1,
+              experience: 1,
+              expectedMinSalary: 1,
+              preferredWorkTypes: 1,
+              preferredWorkModes: 1,
             }
           }
         ]
