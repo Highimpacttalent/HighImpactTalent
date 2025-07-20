@@ -263,7 +263,6 @@ const parseFilters = (query) => {
   // Parse screening filters with support for multiple values
   if (query.screeningFilters) {
     try {
-    // **THE FIX**: Check if it's a non-empty string before parsing.
     if (typeof query.screeningFilters === 'string' && query.screeningFilters.trim() !== '') {
       result.screeningFilters = JSON.parse(query.screeningFilters);
     } else if (typeof query.screeningFilters === 'object') {
