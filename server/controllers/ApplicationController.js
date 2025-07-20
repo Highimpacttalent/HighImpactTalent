@@ -4,7 +4,6 @@ import Jobs from "../models/jobsModel.js";
 import Users from "../models/userModel.js";
 import { sendStatusUpdateEmail } from "./sendMailController.js";
 import { scoreResumeAgainstJobKeywords } from "../utils/Reommend.js";
-import NodeCache from 'node-cache';
 
 
 // Create a new application
@@ -235,13 +234,6 @@ export const updateApplicationStatus = async (req, res) => {
   }
 };
 
-// Initialize NodeCache with 5 minute TTL and max 500 keys
-const appCache = new NodeCache({ 
-  stdTTL: 300, // 5 minutes
-  maxKeys: 500,
-  checkperiod: 60 // Check for expired keys every minute
-});
-
 // Helper function to parse filters with multiple words support
 const parseFilters = (query) => {
   const result = {};
@@ -249,13 +241,6 @@ const parseFilters = (query) => {
   // Enhanced parseList function that splits by comma or space
   const parseList = (value) => {
     if (!value?.trim()) return [];
-    // try {
-    //   const parsed = JSON.parse(value);
-    //   return Array.isArray(parsed) ? parsed : [parsed];
-    // } catch {
-    //   // Split by comma or space and trim
-    //   return value.split(/[,\s]+/).map(x => x.trim()).filter(Boolean);
-    // }
     const arr = Array.isArray(value) ? value : value.split(',');
     return arr.map(x => x.trim()).filter(Boolean);
   };
@@ -305,19 +290,6 @@ const parseFilters = (query) => {
   return result;
 };
 
-// Generate cache key based on request parameters
-const generateCacheKey = (jobId, query) => {
-  const { page = 1, limit = 20, sortBy } = query;
-  const filters = parseFilters(query);
-  
-  return `applications:${jobId}:${JSON.stringify({
-    page,
-    limit,
-    sortBy,
-    ...filters
-  })}`;
-};
-
 // Main function to get applications
 export const getApplicationsOfAjob = async (req, res) => {
   try {
@@ -326,22 +298,6 @@ export const getApplicationsOfAjob = async (req, res) => {
     const jobId = req.params.jobid;
     const { page = 1, limit = 20, sortBy } = req.query;
     const skip = (page - 1) * limit;
-
-    // Generate cache key
-    const cacheKey = generateCacheKey(jobId, req.query);
-    
-    // Try to get from cache
-    const cachedResult = appCache.get(cacheKey);
-    if (cachedResult) {
-      console.log(`🎯 Cache hit for key: ${cacheKey}`);
-      return res.status(200).json({
-        ...cachedResult,
-        performance: {
-          totalTime: Date.now() - startTime,
-          cache: 'hit'
-        }
-      });
-    }
 
     // Parse filters with multiple words support
     const filters = parseFilters(req.query);
@@ -558,7 +514,7 @@ export const getApplicationsOfAjob = async (req, res) => {
       },
       performance: {
         totalTime: Date.now() - startTime,
-        cache: 'miss'
+        //cache: 'miss'
       },
       pagination: {
         page: parseInt(page),
@@ -569,7 +525,7 @@ export const getApplicationsOfAjob = async (req, res) => {
     };
 
     // Cache the result
-    appCache.set(cacheKey, responseData);
+    //appCache.set(cacheKey, responseData);
 
     console.log(`🎯 Optimized response time: ${responseData.performance.totalTime}ms`);
     console.log(`📊 Unique applicants returned: ${applications.length}`);
@@ -583,82 +539,6 @@ export const getApplicationsOfAjob = async (req, res) => {
       message: "Server Error while fetching applications",
     });
   }
-};
-
-// 1. Warm up cache for popular jobs
-export const warmUpCache = async (popularJobIds) => {
-  console.log("🔥 Warming up cache for popular jobs...");
-  
-  const promises = popularJobIds.map(async (jobId) => {
-    const baseKey = `apps_base:${jobId}:all`;
-    
-    if (!appCache.get(baseKey)) {
-      try {
-        const pipeline = [
-          { $match: { job: new mongoose.Types.ObjectId(jobId) } },
-          {
-            $lookup: {
-              from: "users",
-              localField: "applicant",
-              foreignField: "_id",
-              as: "applicant",
-              pipeline: [{ $project: { password: 0, __v: 0 } }]
-            }
-          },
-          {
-            $lookup: {
-              from: "jobs",
-              localField: "job",
-              foreignField: "_id",
-              as: "job",
-              pipeline: [{ $project: { __v: 0 } }]
-            }
-          },
-          {
-            $lookup: {
-              from: "companies",
-              localField: "company",
-              foreignField: "_id",
-              as: "company",
-              pipeline: [{ $project: { password: 0, __v: 0 } }]
-            }
-          },
-          { $unwind: { path: "$applicant", preserveNullAndEmptyArrays: true } },
-          { $unwind: { path: "$job", preserveNullAndEmptyArrays: true } },
-          { $unwind: { path: "$company", preserveNullAndEmptyArrays: true } },
-          { $sort: { createdAt: -1 } },
-          // Add deduplication to cache warming too
-          {
-            $group: {
-              _id: "$applicant._id",
-              application: { $first: "$$ROOT" },
-              totalApplications: { $sum: 1 }
-            }
-          },
-          {
-            $replaceRoot: {
-              newRoot: {
-                $mergeObjects: [
-                  "$application",
-                  { duplicateApplicationsCount: "$totalApplications" }
-                ]
-              }
-            }
-          }
-        ];
-        
-        const applications = await Application.aggregate(pipeline);
-        appCache.set(baseKey, applications, 600);
-        
-        console.log(`✅ Cached ${applications.length} unique applications for job ${jobId}`);
-      } catch (error) {
-        console.error(`❌ Failed to warm cache for job ${jobId}:`, error);
-      }
-    }
-  });
-  
-  await Promise.all(promises);
-  console.log("🔥 Cache warm-up complete!");
 };
 
 export const getScreeningFilterOptions = async (req, res) => {
@@ -861,17 +741,7 @@ export const getScreeningFilterOptions = async (req, res) => {
 export const getApplicationStageCounts = async (req, res) => {
   try {
     const jobId = req.params.jobid;
-    const cacheKey = `stageCounts:${jobId}`;
-    
-    // Try cache first
-    const cached = appCache.get(cacheKey);
-    if (cached) {
-      return res.status(200).json({
-        success: true,
-        stageCounts: cached
-      });
-    }
-
+  
     // Validate job ID
     if (!mongoose.Types.ObjectId.isValid(jobId)) {
       return res.status(400).json({
@@ -908,9 +778,6 @@ export const getApplicationStageCounts = async (req, res) => {
         stageCounts[item.status] = item.count;
       }
     });
-
-    // Cache the result with shorter TTL (1 minute)
-    appCache.set(cacheKey, stageCounts, 60);
 
     res.status(200).json({
       success: true,
