@@ -379,6 +379,9 @@ export const getApplicationsOfAjob = async (req, res) => {
               expectedMinSalary: 1,
               preferredWorkTypes: 1,
               preferredWorkModes: 1,
+              expectedMinSalary: 1, 
+              currentSalary: 1,
+              highestQualification: 1
             }
           }
         ]
