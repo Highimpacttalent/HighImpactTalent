@@ -122,7 +122,7 @@ const JobApplications = () => {
   const [stageCounts, setStageCounts] = useState({});
   const [cities, setCities] = useState();
   const currentUser = useSelector((state) => state.user.user);
-  const [sortOption, setSortOption] = useState("az"); // default
+  const [sortOption, setSortOption] = useState("matchHighToLow"); // default
   const [matchTab, setMatchTab] = useState("all");
 
   useEffect(() => {

@@ -29,19 +29,16 @@ import {
   MoreVert as MoreVertIcon,
   Close as CloseIcon,
   Info as InfoIcon,
-  Star,
+  QuestionAnswerOutlined,
   Download,
   ExpandMore,
   ExpandLess,
   Visibility,
-  Phone,
-  Email,
-  CalendarToday,
   TrendingUp,
 } from "@mui/icons-material";
 import { useTheme } from "@mui/material";
 import PersonOutline from '@mui/icons-material/PersonOutline';
-import axios from "axios";
+import ScreeningModal from "./ScreeningModal";
 import { useMediaQuery } from "@mui/material";
 import { useSelector } from "react-redux";
 
@@ -49,6 +46,7 @@ const ApplicationCard = ({ app, navigate, markAsViewed, onStageSelect }) => {
   const { applicant, matchPercentage, status, screeningAnswers, cvUrl } = app;
   const [showAll, setShowAll] = useState(false);
   const [resumeOpen, setResumeOpen] = useState(false);
+  const [screeningModalOpen, setScreeningModalOpen] = useState(false);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const isSmallMobile = useMediaQuery(theme.breakpoints.down("sm"));
@@ -812,6 +810,27 @@ const ApplicationCard = ({ app, navigate, markAsViewed, onStageSelect }) => {
                 <Button
                   variant="outlined"
                   size="small"
+                  startIcon={<QuestionAnswerOutlined />}
+                  onClick={() => setScreeningModalOpen(true)}
+                  sx={{
+                    textTransform: "none",
+                    fontFamily: "Satoshi, sans-serif",
+                    fontWeight: 600,
+                    borderColor: "#d1d5db",
+                    color: "#374151",
+                    "&:hover": {
+                      borderColor: "#9ca3af",
+                      backgroundColor: "#f9fafb",
+                    },
+                    minWidth: 100,
+                  }}
+                >
+                  Screening
+                </Button>
+
+                <Button
+                  variant="outlined"
+                  size="small"
                   startIcon={<PersonOutline />}
                   onClick={handleViewProfile}
                   sx={{
@@ -1145,6 +1164,11 @@ const ApplicationCard = ({ app, navigate, markAsViewed, onStageSelect }) => {
           </Box>
         )}
       </Drawer>
+      <ScreeningModal
+        open={screeningModalOpen}
+        onClose={() => setScreeningModalOpen(false)}
+        answers={screeningAnswers}
+      />
     </Card>
   );
 };
