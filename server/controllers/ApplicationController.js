@@ -249,13 +249,15 @@ const parseFilters = (query) => {
   // Enhanced parseList function that splits by comma or space
   const parseList = (value) => {
     if (!value?.trim()) return [];
-    try {
-      const parsed = JSON.parse(value);
-      return Array.isArray(parsed) ? parsed : [parsed];
-    } catch {
-      // Split by comma or space and trim
-      return value.split(/[,\s]+/).map(x => x.trim()).filter(Boolean);
-    }
+    // try {
+    //   const parsed = JSON.parse(value);
+    //   return Array.isArray(parsed) ? parsed : [parsed];
+    // } catch {
+    //   // Split by comma or space and trim
+    //   return value.split(/[,\s]+/).map(x => x.trim()).filter(Boolean);
+    // }
+    const arr = Array.isArray(value) ? value : value.split(',');
+    return arr.map(x => x.trim()).filter(Boolean);
   };
 
   // Parse screening filters with support for multiple values
