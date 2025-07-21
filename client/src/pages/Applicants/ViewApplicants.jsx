@@ -45,51 +45,6 @@ import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import SelectAllIcon from "@mui/icons-material/SelectAll";
 import { useSelector } from "react-redux";
 
-const ActionButton = styled(Button)(({ theme, variant: variantProp }) => ({
-  fontFamily: "Satoshi",
-  fontWeight: 600,
-  fontSize: "14px",
-  borderRadius: "8px",
-  textTransform: "none",
-  minHeight: "40px",
-  boxShadow: "none",
-  transition: "all 0.2s ease-in-out",
-  ...(variantProp === "advance" && {
-    background: "linear-gradient(135deg, #4CAF50 0%, #45a049 100%)",
-    color: "white",
-    "&:hover": {
-      background: "linear-gradient(135deg, #45a049 0%, #3d8b40 100%)",
-      transform: "translateY(-1px)",
-      boxShadow: "0 4px 12px rgba(76, 175, 80, 0.3)",
-    },
-    "&:disabled": {
-      background: "#e0e0e0",
-      color: "#9e9e9e",
-    },
-  }),
-  ...(variantProp === "reject" && {
-    background: "linear-gradient(135deg, #f44336 0%, #d32f2f 100%)",
-    color: "white",
-    "&:hover": {
-      background: "linear-gradient(135deg, #d32f2f 0%, #c62828 100%)",
-      transform: "translateY(-1px)",
-      boxShadow: "0 4px 12px rgba(244, 67, 54, 0.3)",
-    },
-    "&:disabled": {
-      background: "#e0e0e0",
-      color: "#9e9e9e",
-    },
-  }),
-  ...(variantProp === "rejectAll" && {
-    background: "linear-gradient(135deg, #ff9800 0%, #f57c00 100%)",
-    color: "white",
-    "&:hover": {
-      background: "linear-gradient(135deg, #f57c00 0%, #ef6c00 100%)",
-      transform: "translateY(-1px)",
-      boxShadow: "0 4px 12px rgba(255, 152, 0, 0.3)",
-    },
-  }),
-}));
 
 const JobApplications = () => {
   const steps = [
@@ -779,6 +734,7 @@ const JobApplications = () => {
         <Box sx={{ display: "flex", gap: 1 }}>
           <TextField
             placeholder="Min"
+            type="number"
             value={filters.minExperience}
             onChange={(e) =>
               setFilters((prev) => ({ ...prev, minExperience: e.target.value }))
@@ -789,6 +745,7 @@ const JobApplications = () => {
           />
           <TextField
             placeholder="Max"
+            type="number"
             value={filters.maxExperience}
             onChange={(e) =>
               setFilters((prev) => ({ ...prev, maxExperience: e.target.value }))
@@ -808,6 +765,7 @@ const JobApplications = () => {
         <Box sx={{ display: "flex", gap: 1 }}>
           <TextField
             placeholder="Min"
+            type="number"
             value={filters.minSalary}
             onChange={(e) =>
               setFilters((prev) => ({ ...prev, minSalary: e.target.value }))
@@ -818,6 +776,7 @@ const JobApplications = () => {
           />
           <TextField
             placeholder="Max"
+            type="number"
             value={filters.maxSalary}
             onChange={(e) =>
               setFilters((prev) => ({ ...prev, maxSalary: e.target.value }))
