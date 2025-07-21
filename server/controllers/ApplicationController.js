@@ -426,6 +426,34 @@ export const getApplicationsOfAjob = async (req, res) => {
       }
     }
 
+    // General experience (not consulting) min-max filtering
+    if (filters.minExperience || filters.maxExperience) {
+      const minExp = parseFloat(filters.minExperience) || 0;
+      const maxExp = parseFloat(filters.maxExperience) || 100;
+      andConditions.push({
+        $expr: {
+          $and: [
+            { $gte: [{ $toDouble: "$applicant.experience" }, minExp] },
+            { $lte: [{ $toDouble: "$applicant.experience" }, maxExp] }
+          ]
+        }
+      });
+    }
+
+    // Expected salary min-max filtering
+    if (filters.minSalary || filters.maxSalary) {
+      const minSal = parseFloat(filters.minSalary) || 0;
+      const maxSal = parseFloat(filters.maxSalary) || 10000000;
+      andConditions.push({
+        $expr: {
+          $and: [
+            { $gte: [{ $toDouble: "$applicant.currentSalary" }, minSal] },
+            { $lte: [{ $toDouble: "$applicant.currentSalary" }, maxSal] }
+          ]
+        }
+      });
+    }
+
     // Enhanced screening questions filtering with multiple choice support
     if (filters.screeningFilters && Object.keys(filters.screeningFilters).length > 0) {
       const screeningConditions = Object.entries(filters.screeningFilters).map(([qId, expectedValues]) => {
