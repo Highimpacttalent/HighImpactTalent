@@ -453,7 +453,7 @@ export const getApplicationsOfAjob = async (req, res) => {
         $expr: {
           $regexMatch: {
             input: { $trim: { input: "$applicant.currentDesignation" } },
-            regex: `^${designation}$`,  // Match whole trimmed value
+            regex: `^\\s*${designation}\\s*$`,  // Match whole trimmed value
             options: "i"
           }
         }
