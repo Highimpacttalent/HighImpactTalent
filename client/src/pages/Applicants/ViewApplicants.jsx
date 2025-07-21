@@ -124,6 +124,11 @@ const JobApplications = () => {
   const currentUser = useSelector((state) => state.user.user);
   const [sortOption, setSortOption] = useState("matchHighToLow"); // default
   const [matchTab, setMatchTab] = useState("all");
+  const [errorsnackbar, errorsetSnackbar] = useState({
+    open: false,
+    message: '',
+    severity: 'error', // can be 'success' | 'error' | 'warning' | 'info'
+  });
 
   useEffect(() => {
     applyFilters();
@@ -412,8 +417,14 @@ const JobApplications = () => {
     }));
   };
 
+  const handleSnackbarClose = () => {
+  errorsetSnackbar((prev) => ({ ...prev, open: false }));
+  };
+
+
   // Apply filters function
   const applyFilters = async () => {
+    if (!validateFilters()) return;
     const currentStatus = steps[activeStep];
 
     // Prepare filter parameters for API
@@ -441,6 +452,34 @@ const JobApplications = () => {
       setDrawerOpen(false);
     }
   };
+
+  const validateFilters = () => {
+    const minExp = parseFloat(filters.minExperience);
+    const maxExp = parseFloat(filters.maxExperience);
+    const minSal = parseFloat(filters.minSalary);
+    const maxSal = parseFloat(filters.maxSalary);
+
+    if (!isNaN(minExp) && !isNaN(maxExp) && minExp > maxExp) {
+      setSnackbar({
+        open: true,
+        message: 'Minimum experience cannot be greater than maximum.',
+        severity: 'error',
+      });
+      return false;
+    }
+
+    if (!isNaN(minSal) && !isNaN(maxSal) && minSal > maxSal) {
+      setSnackbar({
+        open: true,
+        message: 'Minimum salary cannot be greater than maximum.',
+        severity: 'error',
+      });
+      return false;
+    }
+
+    return true;
+    };
+
 
   // Clear filters function
   const clearFilters = async () => {
@@ -956,7 +995,7 @@ const JobApplications = () => {
 
     try {
       const response = await fetch(
-        "http://localhost:8800/api-v1/ai/filter-resume",
+        "https://highimpacttalent.onrender.com/api-v1/ai/filter-resume",
         {
           method: "POST",
           headers: {
@@ -2438,6 +2477,19 @@ const JobApplications = () => {
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/** Error SnackBar */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={3000}
+        onClose={handleSnackbarClose}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <Alert onClose={handleSnackbarClose} severity={snackbar.severity} sx={{ width: '100%' }}>
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
+
 
       {/* Enhanced Success/Error Snackbar */}
       <Snackbar
