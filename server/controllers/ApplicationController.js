@@ -450,10 +450,17 @@ export const getApplicationsOfAjob = async (req, res) => {
     // Designation filtering - search each designation separately
     if (filters.designations?.length > 0) {
       const designationConditions = filters.designations.map(designation => ({
-        "applicant.currentDesignation": { $regex: designation, $options: "i" }
+        $expr: {
+          $regexMatch: {
+            input: { $trim: { input: "$applicant.currentDesignation" } },
+            regex: designation,
+            options: "i"
+          }
+        }
       }));
       andConditions.push({ $or: designationConditions });
     }
+
 
     // Experience filtering
     if (filters.totalYearsInConsulting) {
