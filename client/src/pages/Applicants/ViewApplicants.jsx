@@ -161,6 +161,10 @@ const JobApplications = () => {
     designations: [],
     totalYearsInConsulting: "",
     screeningFilters: {},
+    minExperience: "",
+    maxExperience: "",
+    minSalary: "",
+    maxSalary: "",
   });
   const [keywordInput, setKeywordInput] = useState("");
   const [locationInput, setLocationInput] = useState("");
@@ -420,6 +424,10 @@ const JobApplications = () => {
       totalYearsInConsulting: filters.totalYearsInConsulting,
       screeningFilters: filters.screeningFilters,
       status: currentStatus,
+      minExperience: filters.minExperience,
+      maxExperience: filters.maxExperience,
+      minSalary: filters.minSalary,
+      maxSalary: filters.maxSalary,
     };
 
     console.log("Applying filters with params:", filterParams);
@@ -443,6 +451,10 @@ const JobApplications = () => {
     designations: [],
     totalYearsInConsulting: "",
     screeningFilters: {},
+    minExperience: "",
+    maxExperience: "",
+    minSalary: "",
+    maxSalary: "",
   });
 
   setKeywordInput("");
@@ -720,6 +732,65 @@ const JobApplications = () => {
         </Box>
       </Box>
 
+      {/* General Experience (Years) */}
+      <Box sx={{ mb: 3 }}>
+        <Typography variant="subtitle2" sx={filterLabelStyle}>
+          Experience (Years)
+        </Typography>
+        <Box sx={{ display: "flex", gap: 1 }}>
+          <TextField
+            placeholder="Min"
+            value={filters.minExperience}
+            onChange={(e) =>
+              setFilters((prev) => ({ ...prev, minExperience: e.target.value }))
+            }
+            size="small"
+            fullWidth
+            sx={textFieldStyle}
+          />
+          <TextField
+            placeholder="Max"
+            value={filters.maxExperience}
+            onChange={(e) =>
+              setFilters((prev) => ({ ...prev, maxExperience: e.target.value }))
+            }
+            size="small"
+            fullWidth
+            sx={textFieldStyle}
+          />
+        </Box>
+      </Box>
+
+      {/* Expected Salary (₹) */}
+      <Box sx={{ mb: 3 }}>
+        <Typography variant="subtitle2" sx={filterLabelStyle}>
+          Current Salary (in lakhs)
+        </Typography>
+        <Box sx={{ display: "flex", gap: 1 }}>
+          <TextField
+            placeholder="Min"
+            value={filters.minSalary}
+            onChange={(e) =>
+              setFilters((prev) => ({ ...prev, minSalary: e.target.value }))
+            }
+            size="small"
+            fullWidth
+            sx={textFieldStyle}
+          />
+          <TextField
+            placeholder="Max"
+            value={filters.maxSalary}
+            onChange={(e) =>
+              setFilters((prev) => ({ ...prev, maxSalary: e.target.value }))
+            }
+            size="small"
+            fullWidth
+            sx={textFieldStyle}
+          />
+        </Box>
+      </Box>
+
+
       {/* Years in Consulting Field */}
       <Box sx={{ mb: 3 }}>
         <Typography variant="subtitle2" sx={filterLabelStyle}>
@@ -885,7 +956,7 @@ const JobApplications = () => {
 
     try {
       const response = await fetch(
-        "https://highimpacttalent.onrender.com/api-v1/ai/filter-resume",
+        "http://localhost:8800/api-v1/ai/filter-resume",
         {
           method: "POST",
           headers: {
