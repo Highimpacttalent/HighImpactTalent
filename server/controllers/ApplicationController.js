@@ -245,6 +245,8 @@ const parseFilters = (query) => {
     return arr.map(x => x.trim()).filter(Boolean);
   };
 
+  
+
    // ✅ Parse numeric fields safely
   const parseNumber = (value) => {
     const num = parseFloat(value);
@@ -415,14 +417,35 @@ export const getApplicationsOfAjob = async (req, res) => {
 
     // Location filtering - search each location separately
     if (filters.locations?.length > 0) {
-      const locationConditions = filters.locations.map(location => ({
-        $or: [
-          { "applicant.currentLocation": { $regex: location, $options: "i" } },
-          { "applicant.preferredLocations": { $elemMatch: { $regex: location, $options: "i" } } },
-        ]
-      }));
-      andConditions.push({ $or: locationConditions });
-    }
+  const locationConditions = [];
+
+  filters.locations.forEach(location => {
+    locationConditions.push({
+      $expr: {
+        $regexMatch: {
+          input: { $trim: { input: "$applicant.currentLocation" } },
+          regex: location,
+          options: "i"
+        }
+      }
+    });
+    locationConditions.push({
+      $expr: {
+        $regexMatch: {
+          input: { $trim: { input: { $arrayElemAt: ["$applicant.preferredLocations", 0] } } },
+          regex: location,
+          options: "i"
+        }
+      }
+    });
+  });
+
+  if (locationConditions.length > 0) {
+    andConditions.push({ $or: locationConditions });
+  }
+}
+
+
 
     // Designation filtering - search each designation separately
     if (filters.designations?.length > 0) {
