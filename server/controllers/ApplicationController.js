@@ -245,6 +245,29 @@ const parseFilters = (query) => {
     return arr.map(x => x.trim()).filter(Boolean);
   };
 
+   // ✅ Parse numeric fields safely
+  const parseNumber = (value) => {
+    const num = parseFloat(value);
+    return isNaN(num) ? undefined : num;
+  };
+
+    // ✅ Parse experience and salary ranges
+    if (query.minExperience !== undefined) {
+      result.minExperience = parseNumber(query.minExperience);
+    }
+
+    if (query.maxExperience !== undefined) {
+      result.maxExperience = parseNumber(query.maxExperience);
+    }
+
+    if (query.minSalary !== undefined) {
+      result.minSalary = query.minSalary;
+    }
+
+    if (query.maxSalary !== undefined) {
+      result.maxSalary = query.maxSalary;
+    }
+
   // Parse screening filters with support for multiple values
   if (query.screeningFilters) {
     try {
@@ -424,57 +447,72 @@ export const getApplicationsOfAjob = async (req, res) => {
       }
     }
 
-    // -------------- EXPERIENCE RANGE FILTER --------------
-    if (filters.minExperience || filters.maxExperience) {
-      const exprs = [];
-      const minExp = parseFloat(filters.minExperience);
-      const maxExp = parseFloat(filters.maxExperience);
+   // ---------------- EXPERIENCE RANGE FILTER ----------------
+    const experienceConditions = [];
+    const minExperience = parseFloat(filters.minExperience);
+    const maxExperience = parseFloat(filters.maxExperience);
 
-      if (!isNaN(minExp)) {
-        exprs.push({
-          $gte: [{ $toDouble: "$applicant.experience" }, minExp]
-        });
-      }
-      if (!isNaN(maxExp)) {
-        exprs.push({
-          $lte: [{ $toDouble: "$applicant.experience" }, maxExp]
-        });
-      }
-
-      if (exprs.length) {
-        andConditions.push({
-          $expr: exprs.length === 1
-            ? exprs[0]
-            : { $and: exprs }
-        });
-      }
+    if (!isNaN(minExperience)) {
+      experienceConditions.push({
+        $gte: [{ $toDouble: "$applicant.experience" }, minExperience]
+      });
     }
 
-    // -------------- SALARY RANGE FILTER --------------
-    if (filters.minSalary || filters.maxSalary) {
-      const exprs = [];
-      const minSal = parseFloat(filters.minSalary);
-      const maxSal = parseFloat(filters.maxSalary);
-
-      if (!isNaN(minSal)) {
-        exprs.push({
-          $gte: [{ $toDouble: "$applicant.currentSalary" }, minSal]
-        });
-      }
-      if (!isNaN(maxSal)) {
-        exprs.push({
-          $lte: [{ $toDouble: "$applicant.currentSalary" }, maxSal]
-        });
-      }
-
-      if (exprs.length) {
-        andConditions.push({
-          $expr: exprs.length === 1
-            ? exprs[0]
-            : { $and: exprs }
-        });
-      }
+    if (!isNaN(maxExperience)) {
+      experienceConditions.push({
+        $lte: [{ $toDouble: "$applicant.experience" }, maxExperience]
+      });
     }
+
+    if (experienceConditions.length > 0) {
+      const experienceFilter = {
+        $expr: experienceConditions.length === 1
+          ? experienceConditions[0]
+          : { $and: experienceConditions }
+      };
+
+      console.log("✅ Adding experience filter to pipeline:", JSON.stringify(experienceFilter, null, 2));
+      andConditions.push(experienceFilter);
+    } else {
+      console.log("ℹ️ No valid experience filters found.");
+    }
+
+
+    // ---------------- SALARY RANGE FILTER ----------------
+    const salaryConditions = [];
+    const minSalary = parseFloat(filters.minSalary);
+    const maxSalary = parseFloat(filters.maxSalary);
+
+    const convertedSalaryExpr = {
+      $convert: {
+        input: "$applicant.currentSalary",
+        to: "double",
+        onError: 0,
+        onNull: 0
+      }
+    };
+
+    if (!isNaN(minSalary)) {
+      salaryConditions.push({ $gte: [convertedSalaryExpr, minSalary] });
+    }
+
+    if (!isNaN(maxSalary)) {
+      salaryConditions.push({ $lte: [convertedSalaryExpr, maxSalary] });
+    }
+
+    if (salaryConditions.length > 0) {
+      const salaryFilter = {
+        $expr: salaryConditions.length === 1
+          ? salaryConditions[0]
+          : { $and: salaryConditions }
+      };
+
+      console.log("✅ Adding salary filter to pipeline:", JSON.stringify(salaryFilter, null, 2));
+      andConditions.push(salaryFilter);
+    } else {
+      console.log("ℹ️ No valid salary filters found.");
+    }
+
 
 
     // Enhanced screening questions filtering with multiple choice support
