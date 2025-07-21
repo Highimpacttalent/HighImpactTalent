@@ -343,11 +343,12 @@ const JobApplications = () => {
   };
 
   // Designation handling
-  const handleDesignationChange = (event, newValue) => {
-    if (newValue) {
+  const handleDesignationChange = (e) => {
+    if (e.key === "Enter" && designationInput.trim()) {
+      e.preventDefault();
       setFilters((prev) => ({
         ...prev,
-        designations: [...prev.designations, newValue],
+        designations: [...prev.designations, designationInput.trim()],
       }));
       setDesignationInput("");
     }
@@ -697,21 +698,14 @@ const JobApplications = () => {
         <Typography variant="subtitle2" sx={filterLabelStyle}>
           Designations
         </Typography>
-        <Autocomplete
-          freeSolo
-          options={[]} // You might want to add common designations here
-          inputValue={designationInput}
-          onInputChange={(event, newValue) => setDesignationInput(newValue)}
-          onChange={handleDesignationChange}
-          renderInput={(params) => (
-            <TextField
-              {...params}
-              placeholder="Add job titles/roles"
-              size="small"
-              fullWidth
-              sx={textFieldStyle}
-            />
-          )}
+        <TextField
+          placeholder="Press enter to add multiple designations"
+          value={designationInput}
+          onChange={(e) => setDesignationInput(e.target.value)}
+          onKeyDown={handleDesignationChange}
+          size="small"
+          fullWidth
+          sx={textFieldStyle}
         />
         <Box sx={{ mt: 1, display: "flex", flexWrap: "wrap", gap: 1 }}>
           {filters.designations.map((des, idx) => (
