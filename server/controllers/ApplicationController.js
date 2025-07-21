@@ -339,10 +339,8 @@ export const getApplicationsOfAjob = async (req, res) => {
               linkedinLink:1,
               openToRelocate: 1,
               experience: 1,
-              expectedMinSalary: 1,
               preferredWorkTypes: 1,
               preferredWorkModes: 1,
-              expectedMinSalary: 1, 
               currentSalary: 1,
               highestQualification: 1
             }
@@ -426,33 +424,58 @@ export const getApplicationsOfAjob = async (req, res) => {
       }
     }
 
-    // General experience (not consulting) min-max filtering
+    // -------------- EXPERIENCE RANGE FILTER --------------
     if (filters.minExperience || filters.maxExperience) {
-      const minExp = parseFloat(filters.minExperience) || 0;
-      const maxExp = parseFloat(filters.maxExperience) || 100;
-      andConditions.push({
-        $expr: {
-          $and: [
-            { $gte: [{ $toDouble: "$applicant.experience" }, minExp] },
-            { $lte: [{ $toDouble: "$applicant.experience" }, maxExp] }
-          ]
-        }
-      });
+      const exprs = [];
+      const minExp = parseFloat(filters.minExperience);
+      const maxExp = parseFloat(filters.maxExperience);
+
+      if (!isNaN(minExp)) {
+        exprs.push({
+          $gte: [{ $toDouble: "$applicant.experience" }, minExp]
+        });
+      }
+      if (!isNaN(maxExp)) {
+        exprs.push({
+          $lte: [{ $toDouble: "$applicant.experience" }, maxExp]
+        });
+      }
+
+      if (exprs.length) {
+        andConditions.push({
+          $expr: exprs.length === 1
+            ? exprs[0]
+            : { $and: exprs }
+        });
+      }
     }
 
-    // Expected salary min-max filtering
+    // -------------- SALARY RANGE FILTER --------------
     if (filters.minSalary || filters.maxSalary) {
-      const minSal = parseFloat(filters.minSalary) || 0;
-      const maxSal = parseFloat(filters.maxSalary) || 10000000;
-      andConditions.push({
-        $expr: {
-          $and: [
-            { $gte: [{ $toDouble: "$applicant.currentSalary" }, minSal] },
-            { $lte: [{ $toDouble: "$applicant.currentSalary" }, maxSal] }
-          ]
-        }
-      });
+      const exprs = [];
+      const minSal = parseFloat(filters.minSalary);
+      const maxSal = parseFloat(filters.maxSalary);
+
+      if (!isNaN(minSal)) {
+        exprs.push({
+          $gte: [{ $toDouble: "$applicant.currentSalary" }, minSal]
+        });
+      }
+      if (!isNaN(maxSal)) {
+        exprs.push({
+          $lte: [{ $toDouble: "$applicant.currentSalary" }, maxSal]
+        });
+      }
+
+      if (exprs.length) {
+        andConditions.push({
+          $expr: exprs.length === 1
+            ? exprs[0]
+            : { $and: exprs }
+        });
+      }
     }
+
 
     // Enhanced screening questions filtering with multiple choice support
     if (filters.screeningFilters && Object.keys(filters.screeningFilters).length > 0) {
