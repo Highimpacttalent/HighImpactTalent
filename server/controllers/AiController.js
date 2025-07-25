@@ -156,25 +156,35 @@ ${resumeText}`,
       geminiResponse.data?.candidates?.[0]?.content?.parts?.[0]?.text || "";
     console.log("Raw extracted text:", rawText);
 
-    // Extract multiple JSON blocks
-    const jsonMatches = rawText.match(/```json\n([\s\S]*?)\n```/g);
-    if (!jsonMatches) {
-      return res
-        .status(500)
-        .json({ success: false, message: "Invalid API response format" });
-    }
-
-    // Parse and merge JSON objects
+    // Improved JSON extraction with fallback
     let parsedData = {};
-    jsonMatches.forEach((jsonBlock) => {
+    
+    // First try to extract JSON from markdown code blocks
+    const jsonMatches = rawText.match(/```json\n([\s\S]*?)\n```/g);
+    
+    if (jsonMatches) {
+      // Parse and merge JSON objects from code blocks
+      jsonMatches.forEach((jsonBlock) => {
+        try {
+          const jsonString = jsonBlock.replace(/```json\n|\n```/g, "").trim();
+          const parsedObject = JSON.parse(jsonString);
+          parsedData = { ...parsedData, ...parsedObject };
+        } catch (error) {
+          console.error("Error parsing JSON from code block:", error);
+        }
+      });
+    } else {
+      // Fallback: try to parse the entire response as JSON
       try {
-        const jsonString = jsonBlock.replace(/```json\n|\n```/g, "").trim();
-        const parsedObject = JSON.parse(jsonString);
-        parsedData = { ...parsedData, ...parsedObject };
+        parsedData = JSON.parse(rawText.trim());
       } catch (error) {
-        console.error("Error parsing JSON:", error);
+        console.error("Error parsing entire response as JSON:", error);
+        return res.status(500).json({ 
+          success: false, 
+          message: "Invalid API response format - unable to extract JSON" 
+        });
       }
-    });
+    }
 
     console.log("Parsed JSON data successfully:", parsedData);
 
@@ -236,137 +246,136 @@ ${resumeText}`,
 
     parsedData = { ...defaultFields, ...parsedData };
 
-    const existingEmail = await Users.findOne({
-        email: "personalInformation.email",
+    // Extract email for database operations
+    const email = parsedData.PersonalInformation?.email;
+    if (!email) {
+      console.log("No email found in parsed data");
+      return res.status(400).json({ 
+        success: false, 
+        message: "Email not found in resume" 
       });
-    console.log("Existing user email:", existingEmail);
-    if (existingEmail) {
-      // Update user's culture fit data only
+    }
+
+    console.log("Looking for existing user with email:", email);
+
+    // Check if user exists - Users model has flat email structure
+    const existingUser = await Users.findOne({ email: email });
+
+    console.log("Existing user found:", existingUser);
+
+    if (existingUser) {
+      // Update user's culture fit data
       await Users.updateOne(
-        { email: existingEmail },
+        { email: email },
         {
           $set: {
             cultureFit: {
-              strength: parsedData.CultureFit.strength || "",
-              concern: parsedData.CultureFit.concern || ""
+              strength: parsedData.CultureFit?.strength || "",
+              concern: parsedData.CultureFit?.concern || ""
             }
           }
-        },
-        { new: true }
+        }
       );
+      console.log("Updated user culture fit data");
+    }
 
-      const existing = await ResumePool.findOne({
-        email: "personalInformation.email",
-      });
-      console.log("Existing resume found:", existing);
+    // Check if resume exists in ResumePool
+    const existingResume = await ResumePool.findOne({
+      "personalInformation.email": email
+    });
 
-      if (existing) {
-        // Update existing record with culture fit data
-        await ResumePool.updateOne(
-          { _id: existing._id },
-          {
-            $set: {
-              CultureFit: {
-                strength: parsedData.CultureFit.strength || "",
-                concern: parsedData.CultureFit.concern || ""
-              }
-            },
+    console.log("Existing resume found:", existingResume);
+
+    if (existingResume) {
+      // Update existing record
+      const updateResult = await ResumePool.updateOne(
+        { _id: existingResume._id },
+        {
+          $set: {
             personalInformation: {
               name: parsedData.PersonalInformation?.name || "",
               email: parsedData.PersonalInformation?.email || "",
-              contactNumber:
-                parsedData.PersonalInformation?.contactNumber || "",
+              contactNumber: parsedData.PersonalInformation?.contactNumber || "",
               linkedinLink: parsedData.PersonalInformation?.linkedinLink || "",
               dateOfBirth: parsedData.PersonalInformation?.dateOfBirth || "",
               location: parsedData.PersonalInformation?.location || "India",
             },
             professionalDetails: {
-              noOfYearsExperience:
-                Number(parsedData.ProfessionalDetails?.noOfYearsExperience) ||
-                1,
-              currentCompany:
-                parsedData.ProfessionalDetails?.currentCompany || "",
-              currentDesignation:
-                parsedData.ProfessionalDetails?.currentDesignation || "",
+              noOfYearsExperience: Number(parsedData.ProfessionalDetails?.noOfYearsExperience) || 1,
+              currentCompany: parsedData.ProfessionalDetails?.currentCompany || "",
+              currentDesignation: parsedData.ProfessionalDetails?.currentDesignation || "",
               salary: parsedData.ProfessionalDetails?.salary || "",
               about: parsedData.ProfessionalDetails?.about || "",
-              hasConsultingBackground:
-                parsedData.ProfessionalDetails?.hasConsultingBackground ||
-                false,
+              hasConsultingBackground: parsedData.ProfessionalDetails?.hasConsultingBackground || false,
             },
-            educationDetails: (parsedData.EducationDetails || []).map(
-              (edu) => ({
-                ...edu,
-                yearOfPassout: extractYear(edu.yearOfPassout),
-              })
-            ),
+            educationDetails: (parsedData.EducationDetails || []).map((edu) => ({
+              ...edu,
+              yearOfPassout: extractYear(edu.yearOfPassout),
+            })),
             workExperience: parsedData.WorkExperience || [],
-            skills:
-              detectedSkills.length > 0 ? detectedSkills : ["Not Mentioned"],
+            skills: detectedSkills.length > 0 ? detectedSkills : ["Not Mentioned"],
+            cultureFit: {
+              strength: parsedData.CultureFit?.strength || "",
+              concern: parsedData.CultureFit?.concern || ""
+            },
             topCompanies: isTopCompany,
             topInstitutes: isTopInstitute,
             companiesWorkedAt: parsedData.OtherDetails?.companiesWorkedAt || [],
             jobRoles: parsedData.OtherDetails?.jobRoles || [],
             cvUrl: req.body.cvurl || "",
           }
-        );
-        console.log(`Updated existing resume for email: ${email}`);
-      } else {
-        // Create new record with culture fit data
-        await ResumePool.create({
-          personalInformation: {
-            name: parsedData.PersonalInformation?.name || "",
-            email: parsedData.PersonalInformation?.email || "",
-            contactNumber: parsedData.PersonalInformation?.contactNumber || "",
-            linkedinLink: parsedData.PersonalInformation?.linkedinLink || "",
-            dateOfBirth: parsedData.PersonalInformation?.dateOfBirth || "",
-            location: parsedData.PersonalInformation?.location || "India",
-          },
-          professionalDetails: {
-            noOfYearsExperience:
-              Number(parsedData.ProfessionalDetails?.noOfYearsExperience) || 1,
-            currentCompany:
-              parsedData.ProfessionalDetails?.currentCompany || "",
-            currentDesignation:
-              parsedData.ProfessionalDetails?.currentDesignation || "",
-            salary: parsedData.ProfessionalDetails?.salary || "",
-            about: parsedData.ProfessionalDetails?.about || "",
-            hasConsultingBackground:
-              parsedData.ProfessionalDetails?.hasConsultingBackground || false,
-          },
-          educationDetails: (parsedData.EducationDetails || []).map((edu) => ({
-            ...edu,
-            yearOfPassout: extractYear(edu.yearOfPassout),
-          })),
-          workExperience: parsedData.WorkExperience || [],
-          skills:
-            detectedSkills.length > 0 ? detectedSkills : ["Not Mentioned"],
-          topCompanies: isTopCompany,
-          topInstitutes: isTopInstitute,
-          companiesWorkedAt: parsedData.OtherDetails?.companiesWorkedAt || [],
-          jobRoles: parsedData.OtherDetails?.jobRoles || [],
-          cvUrl: req.body.cvurl || "",
-          CultureFit: {
-            strength: parsedData.CultureFit.strength || "",
-            concern: parsedData.CultureFit.concern || ""
-          }
-        });
-        console.log(`Created new resume for email: ${email}`);
-      }
+        }
+      );
+      console.log(`Updated existing resume for email: ${email}`, updateResult);
+    } else {
+      // Create new record
+      const newResume = await ResumePool.create({
+        personalInformation: {
+          name: parsedData.PersonalInformation?.name || "",
+          email: parsedData.PersonalInformation?.email || "",
+          contactNumber: parsedData.PersonalInformation?.contactNumber || "",
+          linkedinLink: parsedData.PersonalInformation?.linkedinLink || "",
+          dateOfBirth: parsedData.PersonalInformation?.dateOfBirth || "",
+          location: parsedData.PersonalInformation?.location || "India",
+        },
+        professionalDetails: {
+          noOfYearsExperience: Number(parsedData.ProfessionalDetails?.noOfYearsExperience) || 1,
+          currentCompany: parsedData.ProfessionalDetails?.currentCompany || "",
+          currentDesignation: parsedData.ProfessionalDetails?.currentDesignation || "",
+          salary: parsedData.ProfessionalDetails?.salary || "",
+          about: parsedData.ProfessionalDetails?.about || "",
+          hasConsultingBackground: parsedData.ProfessionalDetails?.hasConsultingBackground || false,
+        },
+        educationDetails: (parsedData.EducationDetails || []).map((edu) => ({
+          ...edu,
+          yearOfPassout: extractYear(edu.yearOfPassout),
+        })),
+        workExperience: parsedData.WorkExperience || [],
+        skills: detectedSkills.length > 0 ? detectedSkills : ["Not Mentioned"],
+        cultureFit: {
+          strength: parsedData.CultureFit?.strength || "",
+          concern: parsedData.CultureFit?.concern || ""
+        },
+        topCompanies: isTopCompany,
+        topInstitutes: isTopInstitute,
+        companiesWorkedAt: parsedData.OtherDetails?.companiesWorkedAt || [],
+        jobRoles: parsedData.OtherDetails?.jobRoles || [],
+        cvUrl: req.body.cvurl || "",
+      });
+      console.log(`Created new resume for email: ${email}`, newResume._id);
     }
 
     res.status(200).json({ success: true, data: parsedData });
+
   } catch (error) {
-    console.error(
-      "Error processing resume:",
-      error.response?.data || error.message
-    );
+    console.error("Error processing resume:", error.response?.data || error.message);
     res.status(500).json({
-      success: true,
+      success: false,
       message: error.response?.data || "Failed to parse resume",
     });
   }
 };
+
 
 // Define the list of relevant skills
 
