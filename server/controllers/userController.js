@@ -223,6 +223,7 @@ export const updateUser = async (req, res, next) => {
     highestQualification,
     lastConsultingCompany,
     totalYearsInConsulting,
+    experienceHistory
   } = req.body;
 
   try {
@@ -254,6 +255,7 @@ export const updateUser = async (req, res, next) => {
       about,
       experience,
       skills: Array.isArray(skills) ? skills : [],
+      ...(Array.isArray(experienceHistory) && { experienceHistory }),
     };
 
     if (highestQualification)
@@ -266,7 +268,11 @@ export const updateUser = async (req, res, next) => {
       updateUser.totalYearsInConsulting = Number(totalYearsInConsulting);
     }
 
-    const user = await Users.findByIdAndUpdate(id, updateUser, { new: true });
+    const user = await Users.findByIdAndUpdate(id, updateUser, {
+      new: true,
+      runValidators: true,      // ensure your schema validators run
+      context: 'query'         // needed for some mongoose validators
+    });
 
     if (!user) {
       return res.status(404).json({ message: "User not found" });
