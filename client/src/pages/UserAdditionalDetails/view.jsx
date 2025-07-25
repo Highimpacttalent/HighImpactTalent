@@ -12,7 +12,15 @@ import Select from "react-select";
 import { UpdateUser } from "../../redux/userSlice";
 import { useDispatch } from "react-redux";
 import { skillsList } from "../../assets/mock";
-import { Box, Button, Typography } from "@mui/material";
+import {
+  Box,
+  Button,
+  Typography,
+  Grid,
+  TextField,
+  IconButton,
+} from "@mui/material";
+import DeleteIcon from "@mui/icons-material/Delete";
 import Image from "../../assets/CreateAccount/UserDetails.svg";
 import { Margin } from "@mui/icons-material";
 const UserInfoForm = () => {
@@ -26,6 +34,14 @@ const UserInfoForm = () => {
   // State variables
   const [loading, setLoading] = useState(false);
   const [uploadingProfilePic, setUploadingProfilePic] = useState(false);
+  // alongside formData in your useState
+  const [expErrors, setExpErrors] = useState({
+    companyName: "",
+    designation: "",
+    from: "",
+    to: "",
+  });
+
   const [phoneValue, setPhoneValue] = useState(
     defaultValues?.PersonalInformation?.contactNumber || ""
   );
@@ -78,6 +94,12 @@ const UserInfoForm = () => {
     lastConsultingCompany: "",
     lastConsultingCustomCompany: "",
     totalYearsInConsulting: "",
+    expCompanyName: "",
+    expDesignation: "",
+    expFrom: "",
+    expTo: "",
+    expDescription: "",
+    experienceHistory: [],
   });
 
   // Fetch cities from CSV
@@ -158,7 +180,10 @@ const UserInfoForm = () => {
         } else if (num < 1) {
           setSalErr((prev) => ({ ...prev, salary: "Minimum is 1." }));
         } else if (num > 1000) {
-          setSalErr((prev) => ({ ...prev, salary: "Cannot exceed 1000. Please mention in INR Lakhs & not INR" }));
+          setSalErr((prev) => ({
+            ...prev,
+            salary: "Cannot exceed 1000. Please mention in INR Lakhs & not INR",
+          }));
         } else {
           setSalErr((prev) => ({ ...prev, salary: "" }));
         }
@@ -266,6 +291,66 @@ const UserInfoForm = () => {
     }
   };
 
+  // Remove one experience by its index
+  const handleDeleteExperience = (idx) => {
+    setFormData((prev) => ({
+      ...prev,
+      experienceHistory: prev.experienceHistory.filter((_, i) => i !== idx),
+    }));
+  };
+
+  const handleAddExperience = () => {
+    const { expCompanyName, expDesignation, expFrom, expTo, expDescription } =
+      formData;
+    const errs = { companyName: "", designation: "", from: "", to: "" };
+    let hasError = false;
+
+    if (!expCompanyName) {
+      errs.companyName = "Company is required.";
+      hasError = true;
+    }
+    if (!expDesignation) {
+      errs.designation = "Designation is required.";
+      hasError = true;
+    }
+    if (!expFrom) {
+      errs.from = "Start date is required.";
+      hasError = true;
+    }
+    if (!expTo) {
+      errs.to = "End date is required.";
+      hasError = true;
+    }
+    if (expFrom && expTo && expFrom > expTo) {
+      errs.to = "'To' must be same or after 'From'.";
+      hasError = true;
+    }
+
+    setExpErrors(errs);
+    if (hasError) return;
+
+    // append, then reset inputs & errors
+    setFormData((prev) => ({
+      ...prev,
+      experienceHistory: [
+        ...prev.experienceHistory,
+        {
+          companyName: expCompanyName,
+          designation: expDesignation,
+          from: expFrom,
+          to: expTo,
+          description: expDescription || "",
+        },
+      ],
+      expCompanyName: "",
+      expDesignation: "",
+      expFrom: "",
+      expTo: "",
+      expDescription: "",
+    }));
+    setExpErrors({ companyName: "", designation: "", from: "", to: "" });
+  };
+
   // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -287,6 +372,7 @@ const UserInfoForm = () => {
       preferredWorkModes: formData.preferredWorkModes,
       lastConsultingCompany: ConsultingCompany,
       highestQualification: ["Bachelors"],
+      experienceHistory: formData.experienceHistory
     };
 
     // Remove the temporary customCompany field before submission
@@ -334,62 +420,61 @@ const UserInfoForm = () => {
   };
 
   // Custom styles for Select components
- const customStyles = {
-  control: (provided, state) => ({
-    ...provided,
-    padding: 4,
-    width: "100%",
-    fontSize: "0.875rem",
-    borderRadius: 50,
-    border: "1px solid #24252C",
-    boxShadow: state.isFocused ? "0 0 0 2px #3b82f6" : "none",
-    minHeight: "48px",
-    maxHeight: "120px",
-    overflowY: "auto",
-  }),
+  const customStyles = {
+    control: (provided, state) => ({
+      ...provided,
+      padding: 4,
+      width: "100%",
+      fontSize: "0.875rem",
+      borderRadius: 50,
+      border: "1px solid #24252C",
+      boxShadow: state.isFocused ? "0 0 0 2px #3b82f6" : "none",
+      minHeight: "48px",
+      maxHeight: "120px",
+      overflowY: "auto",
+    }),
 
-  valueContainer: (provided) => ({
-    ...provided,
-    display: "flex",
-    flexWrap: "wrap",
-    gap: "4px",
-    overflowY: "auto",
-    maxHeight: "80px",
-    padding: "4px 8px",
-  }),
+    valueContainer: (provided) => ({
+      ...provided,
+      display: "flex",
+      flexWrap: "wrap",
+      gap: "4px",
+      overflowY: "auto",
+      maxHeight: "80px",
+      padding: "4px 8px",
+    }),
 
-  multiValue: (provided) => ({
-    ...provided,
-    margin: "2px",
-    borderRadius: "999px", // ← apply only curve
-  }),
+    multiValue: (provided) => ({
+      ...provided,
+      margin: "2px",
+      borderRadius: "999px", // ← apply only curve
+    }),
 
-  multiValueLabel: (provided) => ({
-    ...provided,
-    borderRadius: "999px", // ← rounded inner label too
-  }),
+    multiValueLabel: (provided) => ({
+      ...provided,
+      borderRadius: "999px", // ← rounded inner label too
+    }),
 
-  multiValueRemove: (provided) => ({
-    ...provided,
-    borderRadius: "999px", // ← rounded remove icon
-  }),
+    multiValueRemove: (provided) => ({
+      ...provided,
+      borderRadius: "999px", // ← rounded remove icon
+    }),
 
-  menu: (provided) => ({
-    ...provided,
-    boxShadow: "0 2px 10px rgba(0, 0, 0, 0.1)",
-    border: "1px solid #d1d5db",
-  }),
+    menu: (provided) => ({
+      ...provided,
+      boxShadow: "0 2px 10px rgba(0, 0, 0, 0.1)",
+      border: "1px solid #d1d5db",
+    }),
 
-  option: (provided, state) => ({
-    ...provided,
-    backgroundColor: state.isSelected ? "#3b82f6" : "white",
-    color: state.isSelected ? "white" : "black",
-    "&:hover": {
-      backgroundColor: "#f3f4f6",
-    },
-  }),
-};
-
+    option: (provided, state) => ({
+      ...provided,
+      backgroundColor: state.isSelected ? "#3b82f6" : "white",
+      color: state.isSelected ? "white" : "black",
+      "&:hover": {
+        backgroundColor: "#f3f4f6",
+      },
+    }),
+  };
 
   // Prepare city options with "Other" at the bottom
   const filteredCities = [
@@ -561,7 +646,7 @@ const UserInfoForm = () => {
                       <option key={i + 1} value={(i + 1).toString()}>{`${
                         i + 1
                       }+`}</option>
-                    ))} 
+                    ))}
                   </select>
                 </div>
                 <div className="mb-6">
@@ -755,6 +840,295 @@ const UserInfoForm = () => {
             </Box>
           </Box>
         </Box>
+
+        {/* --- Experience History --- */}
+        {formData.experienceHistory.length > 0 && (
+          <Box mt={3} sx={{ px: 18, pb: 2 }}>
+            <Typography
+              sx={{
+                fontFamily: "Satoshi",
+                fontWeight: 600,
+                mb: 1,
+              }}
+            >
+              Your Entries:
+            </Typography>
+
+            {formData.experienceHistory.map((e, i) => (
+              <Box
+                key={i}
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  bgcolor: "#F9FAFB",
+                  borderRadius: 2,
+                  p: 2,
+                  mb: 1,
+                }}
+              >
+                <Box>
+                  <Typography sx={{ fontFamily: "Satoshi", fontWeight: 500 }}>
+                    {e.designation} at {e.companyName}
+                  </Typography>
+                  <Typography
+                    sx={{
+                      fontFamily: "Poppins",
+                      fontSize: 12,
+                      color: "#6B7280",
+                    }}
+                  >
+                    {e.from} — {e.to}
+                  </Typography>
+                  {e.description && (
+                    <Typography
+                      sx={{ fontFamily: "Poppins", fontSize: 12, mt: 0.5 }}
+                    >
+                      {e.description}
+                    </Typography>
+                  )}
+                </Box>
+                <IconButton
+                  size="small"
+                  onClick={() => handleDeleteExperience(i)}
+                  sx={{ color: "#EF4444" }}
+                >
+                  <DeleteIcon />
+                </IconButton>
+              </Box>
+            ))}
+          </Box>
+        )}
+
+        {/* --- Experience History (styled like Consulting Background) --- */}
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            width: "100%",
+            mt: 4,
+          }}
+        >
+          <Box
+            sx={{
+              display: "flex",
+              border: "1px solid #0000004D",
+              borderRadius: 4,
+              width: { xs: "100%", sm: "100%", lg: "80%", md: "80%" },
+              flexDirection: "column",
+            }}
+          >
+            {/* Section Heading */}
+            <Typography
+              sx={{
+                color: "#24252C",
+                fontFamily: "Satoshi",
+                fontWeight: 700,
+                p: 2,
+                fontSize: "20px",
+              }}
+            >
+              Experience History
+            </Typography>
+
+            {/* Form Rows */}
+            <Box
+              sx={{
+                display: "flex",
+                flexDirection: { xs: "column", lg: "row" },
+                justifyContent: { lg: "space-between" },
+                width: "100%",
+              }}
+            >
+              {/* Left Column */}
+              <Box sx={{ width: { xs: "100%", lg: "48%" }, p: 2 }}>
+                <div className="mb-6">
+                  <label
+                    className="block mb-2 ml-2"
+                    style={{
+                      fontFamily: "Satoshi",
+                      fontWeight: 500,
+                      fontSize: "16px",
+                      color: "#24252C",
+                    }}
+                  >
+                    Company Name <span style={{ color: "red" }}>*</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="expCompanyName"
+                    value={formData.expCompanyName}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 text-sm border rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    style={{ borderRadius: 50, border: "1px solid #24252C" }}
+                  />
+                  {expErrors.companyName && (
+                    <Typography
+                      sx={{
+                        color: "red",
+                        fontFamily: "Poppins",
+                        fontSize: "12px",
+                        mt: 0.5,
+                        ml: 2,
+                      }}
+                    >
+                      {expErrors.companyName}
+                    </Typography>
+                  )}
+                </div>
+
+                <div className="mb-6">
+                  <label
+                    className="block mb-2 ml-2"
+                    style={{
+                      fontFamily: "Satoshi",
+                      fontWeight: 500,
+                      fontSize: "16px",
+                      color: "#24252C",
+                    }}
+                  >
+                    From <span style={{ color: "red" }}>*</span>
+                  </label>
+                  <input
+                    type="month"
+                    name="expFrom"
+                    value={formData.expFrom}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 text-sm border rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    style={{ borderRadius: 50, border: "1px solid #24252C" }}
+                  />
+                  {expErrors.from && (
+                    <Typography
+                      sx={{
+                        color: "red",
+                        fontFamily: "Poppins",
+                        fontSize: "12px",
+                        mt: 0.5,
+                        ml: 2,
+                      }}
+                    >
+                      {expErrors.from}
+                    </Typography>
+                  )}
+                </div>
+
+                <div className="mb-6">
+                  <label
+                    className="block mb-2 ml-2"
+                    style={{
+                      fontFamily: "Satoshi",
+                      fontWeight: 500,
+                      fontSize: "16px",
+                      color: "#24252C",
+                    }}
+                  >
+                    Description
+                  </label>
+                  <textarea
+                    name="expDescription"
+                    value={formData.expDescription}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    rows={3}
+                    style={{ borderRadius: 16, border: "1px solid #24252C" }}
+                  />
+                </div>
+              </Box>
+
+              {/* Right Column */}
+              <Box sx={{ width: { xs: "100%", lg: "48%" }, p: 2 }}>
+                <div className="mb-6">
+                  <label
+                    className="block mb-2 ml-2"
+                    style={{
+                      fontFamily: "Satoshi",
+                      fontWeight: 500,
+                      fontSize: "16px",
+                      color: "#24252C",
+                    }}
+                  >
+                    Designation <span style={{ color: "red" }}>*</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="expDesignation"
+                    value={formData.expDesignation}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 text-sm border rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    style={{ borderRadius: 50, border: "1px solid #24252C" }}
+                  />
+                  {expErrors.designation && (
+                    <Typography
+                      sx={{
+                        color: "red",
+                        fontFamily: "Poppins",
+                        fontSize: "12px",
+                        mt: 0.5,
+                        ml: 2,
+                      }}
+                    >
+                      {expErrors.designation}
+                    </Typography>
+                  )}
+                </div>
+                <div className="mb-6">
+                  <label
+                    className="block mb-2 ml-2"
+                    style={{
+                      fontFamily: "Satoshi",
+                      fontWeight: 500,
+                      fontSize: "16px",
+                      color: "#24252C",
+                    }}
+                  >
+                    To <span style={{ color: "red" }}>*</span>
+                  </label>
+                  <input
+                    type="month"
+                    name="expTo"
+                    value={formData.expTo}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 text-sm border rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    style={{ borderRadius: 50, border: "1px solid #24252C" }}
+                  />
+                  {expErrors.to && (
+                    <Typography
+                      sx={{
+                        color: "red",
+                        fontFamily: "Poppins",
+                        fontSize: "12px",
+                        mt: 0.5,
+                        ml: 2,
+                      }}
+                    >
+                      {expErrors.to}
+                    </Typography>
+                  )}
+                </div>
+
+                <Box
+                  sx={{
+                    display: "flex",
+                    justifyContent: "flex-end",
+                    alignItems: "center",
+                    px: 2,
+                    pt: 2,
+                  }}
+                >
+                  <button
+                  className="bg-blue-500 hover:bg-blue-700 text-white py-2 px-4 sm:px-10 md:px-16  sm:w-auto rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300"
+                    onClick={handleAddExperience}
+                    sx={{ textTransform: "none" }}
+                  >
+                    Add Experience
+                  </button>
+                </Box>
+              </Box>
+            </Box>
+          </Box>
+        </Box>
+
         {/* Consulting Questions */}
 
         <Box
@@ -1016,8 +1390,8 @@ const UserInfoForm = () => {
                         <option value="">Select experience</option>
                         {Array.from({ length: 15 }, (_, i) => (
                           <option key={i + 1} value={(i + 1).toString()}>{`${
-                        i + 1
-                      }+`}</option>
+                            i + 1
+                          }+`}</option>
                         ))}
                       </select>
                     </div>

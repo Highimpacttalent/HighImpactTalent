@@ -11,6 +11,7 @@ import {
   Divider,
   Grid,
   Stack,
+  Snackbar, 
   Badge,
 } from "@mui/material";
 import MailIcon from "@mui/icons-material/Mail";
@@ -134,6 +135,40 @@ const ViewProfile = () => {
   };
 
   const statusConfig = getStatusConfig(currentStatus);
+
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+
+// Reject handler
+  const handleReject = async () => {
+    try {
+      const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+      const token = currentUser?.token;
+      const res = await axios.post(
+        "https://highimpacttalent.onrender.com/api-v1/application/update-single-status",
+        {
+          applicationId,
+          status: "Not Progressing",
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (res.status === 200 || res.data.success) {
+        setStatus("Not Progressing");
+        setSnackbarOpen(true);
+        setTimeout(() => navigate(-1), 2000); // Go back after 2s
+      } else {
+        alert("Unable to reject candidate.");
+      }
+    } catch (err) {
+      console.error("Reject error:", err);
+      alert("Unable to reject candidate.");
+    }
+  };
 
   return (
     <Box sx={{ bgcolor: "white", minHeight: "100vh", py: 4 }}>
@@ -546,23 +581,46 @@ const ViewProfile = () => {
                     Hired
                   </Button>
                 ) : location.state?.status !== "Not Progressing" ? (
-                  <Button
-                    fullWidth
-                    variant="contained"
-                    onClick={handleStatusUpdate}
-                    sx={{
-                      py: 1.5,
-                      bgcolor: "#6366F1",
-                      fontFamily: "Satoshi",
-                      fontWeight: 600,
-                      textTransform: "none",
-                      "&:hover": {
-                        bgcolor: "#5048E5",
-                      },
-                    }}
-                  >
-                    {nextAction}
-                  </Button>
+                  <>
+                    <Button
+                      fullWidth
+                      variant="contained"
+                      onClick={handleStatusUpdate}
+                      sx={{
+                        py: 1.5,
+                        bgcolor: "#6366F1",
+                        fontFamily: "Satoshi",
+                        fontWeight: 600,
+                        textTransform: "none",
+                        "&:hover": {
+                          bgcolor: "#5048E5",
+                        },
+                      }}
+                    >
+                      {nextAction}
+                    </Button>
+
+                    <Button
+                      fullWidth
+                      variant="outlined"
+                      color="error"
+                      onClick={handleReject}
+                      sx={{
+                        py: 1.5,
+                        fontFamily: "Satoshi",
+                        fontWeight: 600,
+                        textTransform: "none",
+                        borderColor: "#F87171",
+                        color: "#B91C1C",
+                        "&:hover": {
+                          bgcolor: "#FEF2F2",
+                          borderColor: "#DC2626",
+                        },
+                      }}
+                    >
+                      Reject
+                    </Button>
+                  </>
                 ) : null}
               </Stack>
             </Paper>
@@ -929,7 +987,13 @@ const ViewProfile = () => {
           </Grid>
         </Grid>
       </Container>
-    </Box>
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={2000}
+        onClose={() => setSnackbarOpen(false)}
+        message="Candidate Rejected"
+      />
+      </Box>
   );
 };
 
