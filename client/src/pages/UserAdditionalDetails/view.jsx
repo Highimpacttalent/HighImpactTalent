@@ -41,6 +41,13 @@ const UserInfoForm = () => {
     from: "",
     to: "",
   });
+  const [eduErrors, setEduErrors] = useState({
+    institute: "",
+    specialization: "",
+    course: "",
+    from: "",
+    to: "",
+  });
 
   const [phoneValue, setPhoneValue] = useState(
     defaultValues?.PersonalInformation?.contactNumber || ""
@@ -100,6 +107,12 @@ const UserInfoForm = () => {
     expTo: "",
     expDescription: "",
     experienceHistory: [],
+    educationInstitute: "",
+    educationCourse: "",
+    educationSpecialization: "",
+    educationStart: "",
+    educationEnd: "",
+    educationDetails: [],
   });
 
   // Fetch cities from CSV
@@ -351,6 +364,71 @@ const UserInfoForm = () => {
     setExpErrors({ companyName: "", designation: "", from: "", to: "" });
   };
 
+  const handleAddEducation = () => {
+  const {
+    educationInstitute,
+    educationCourse,
+    educationSpecialization,
+    educationStart,
+    educationEnd,
+  } = formData;
+
+  const errors = { institute: "", course: "", from: "", to: "" };
+  let hasError = false;
+
+  if (!educationInstitute) {
+    errors.institute = "Institute name is required.";
+    hasError = true;
+  }
+
+  if (!educationCourse) {
+    errors.course = "Course name is required.";
+    hasError = true;
+  }
+
+  if (!educationStart) {
+    errors.from = "Start year is required.";
+    hasError = true;
+  }
+
+  if (!educationEnd) {
+    errors.to = "End year is required.";
+    hasError = true;
+  }
+
+  if (educationStart && educationEnd && educationStart > educationEnd) {
+    errors.to = "'End Year' must be after 'Start Year'.";
+    hasError = true;
+  }
+
+  setEduErrors(errors);
+  if (hasError) return;
+
+  // Add entry and clear form fields
+  setFormData((prev) => ({
+    ...prev,
+    educationDetails: [
+      ...prev.educationDetails,
+      {
+        institute: educationInstitute,
+        course: educationCourse,
+        specialization: educationSpecialization,
+        from: educationStart,
+        to: educationEnd,
+      },
+    ],
+    educationInstitute: "",
+    educationCourse: "",
+    educationSpecialization: "",
+    educationStart: "",
+    educationEnd: "",
+  }));
+
+  // Clear errors
+  setEduErrors({ institute: "", course: "", from: "", to: "" });
+};
+
+
   // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -363,6 +441,7 @@ const UserInfoForm = () => {
     const updatedFormData = {
       ...formData,
       experience: Number(formData.experience),
+      educationDetails: formData.educationDetails,
       contactNumber: phoneValue,
       profilePic: profilePicUrl,
       skills: filters.skills,
@@ -372,7 +451,7 @@ const UserInfoForm = () => {
       preferredWorkModes: formData.preferredWorkModes,
       lastConsultingCompany: ConsultingCompany,
       highestQualification: ["Bachelors"],
-      experienceHistory: formData.experienceHistory
+      experienceHistory: formData.experienceHistory,
     };
 
     // Remove the temporary customCompany field before submission
@@ -1117,11 +1196,316 @@ const UserInfoForm = () => {
                   }}
                 >
                   <button
-                  className="bg-blue-500 hover:bg-blue-700 text-white py-2 px-4 sm:px-10 md:px-16  sm:w-auto rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300"
+                    className="bg-blue-500 hover:bg-blue-700 text-white py-2 px-4 sm:px-10 md:px-16  sm:w-auto rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300"
                     onClick={handleAddExperience}
                     sx={{ textTransform: "none" }}
                   >
                     Add Experience
+                  </button>
+                </Box>
+              </Box>
+            </Box>
+          </Box>
+        </Box>
+
+        {/*Education List */}
+        {formData.educationDetails.length > 0 && (
+          <Box mt={3} sx={{ px: 18, pb: 2 }}>
+            <Typography
+              sx={{
+                fontFamily: "Satoshi",
+                fontWeight: 600,
+                mb: 1,
+              }}
+            >
+              Your Entries:
+            </Typography>
+
+            {formData.educationDetails.map((edu, i) => (
+              <Box
+                key={i}
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  bgcolor: "#F9FAFB",
+                  borderRadius: 2,
+                  p: 2,
+                  mb: 1,
+                }}
+              >
+                <Box>
+                  <Typography sx={{ fontFamily: "Satoshi", fontWeight: 500 }}>
+                    {edu.course} in {edu.specialization} at {edu.institute}
+                  </Typography>
+                  <Typography
+                    sx={{
+                      fontFamily: "Poppins",
+                      fontSize: 12,
+                      color: "#6B7280",
+                    }}
+                  >
+                    {edu.from} — {edu.to}
+                  </Typography>
+                </Box>
+                <IconButton
+                  size="small"
+                  onClick={() =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      educationDetails: prev.educationDetails.filter(
+                        (_, idx) => idx !== i
+                      ),
+                    }))
+                  }
+                  sx={{ color: "#EF4444" }}
+                >
+                  <DeleteIcon />
+                </IconButton>
+              </Box>
+            ))}
+          </Box>
+        )}
+
+        {/* Education Details Section */}
+        {/* --- Education Details --- */}
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            width: "100%",
+            mt: 4,
+          }}
+        >
+          <Box
+            sx={{
+              display: "flex",
+              border: "1px solid #0000004D",
+              borderRadius: 4,
+              width: { xs: "100%", sm: "100%", lg: "80%", md: "80%" },
+              flexDirection: "column",
+            }}
+          >
+            {/* Section Heading */}
+            <Typography
+              sx={{
+                color: "#24252C",
+                fontFamily: "Satoshi",
+                fontWeight: 700,
+                p: 2,
+                fontSize: "20px",
+              }}
+            >
+              Education Details
+            </Typography>
+
+            {/* Form Rows */}
+            <Box
+              sx={{
+                display: "flex",
+                flexDirection: { xs: "column", lg: "row" },
+                justifyContent: { lg: "space-between" },
+                width: "100%",
+              }}
+            >
+              {/* Left Column */}
+              <Box sx={{ width: { xs: "100%", lg: "48%" }, p: 2 }}>
+                <div className="mb-6">
+                  <label
+                    className="block mb-2 ml-2"
+                    style={{
+                      fontFamily: "Satoshi",
+                      fontWeight: 500,
+                      fontSize: "16px",
+                      color: "#24252C",
+                    }}
+                  >
+                    Institute Name <span style={{ color: "red" }}>*</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="educationInstitute"
+                    value={formData.educationInstitute}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 text-sm border rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    style={{ borderRadius: 50, border: "1px solid #24252C" }}
+                  />
+                  {eduErrors.institute && (
+                    <Typography
+                      sx={{
+                        color: "red",
+                        fontFamily: "Poppins",
+                        fontSize: "12px",
+                        mt: 0.5,
+                        ml: 2,
+                      }}
+                    >
+                      {eduErrors.institute}
+                    </Typography>
+                  )}
+                </div>
+
+                <div className="mb-6">
+                  <label
+                    className="block mb-2 ml-2"
+                    style={{
+                      fontFamily: "Satoshi",
+                      fontWeight: 500,
+                      fontSize: "16px",
+                      color: "#24252C",
+                    }}
+                  >
+                    Start Year <span style={{ color: "red" }}>*</span>
+                  </label>
+                  <input
+                    type="month"
+                    name="educationStart"
+                    value={formData.educationStart}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 text-sm border rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    style={{ borderRadius: 50, border: "1px solid #24252C" }}
+                  />
+                   {eduErrors.from && (
+                    <Typography
+                      sx={{
+                        color: "red",
+                        fontFamily: "Poppins",
+                        fontSize: "12px",
+                        mt: 0.5,
+                        ml: 2,
+                      }}
+                    >
+                      {eduErrors.from}
+                    </Typography>
+                  )}
+                </div>
+
+                <div className="mb-6">
+                  <label
+                    className="block mb-2 ml-2"
+                    style={{
+                      fontFamily: "Satoshi",
+                      fontWeight: 500,
+                      fontSize: "16px",
+                      color: "#24252C",
+                    }}
+                  >
+                    Specialization
+                  </label>
+                  <input
+                    type="text"
+                    name="educationSpecialization"
+                    value={formData.educationSpecialization}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 text-sm border rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    style={{ borderRadius: 50, border: "1px solid #24252C" }}
+                  />
+                  {eduErrors.specialization && (
+                    <Typography
+                      sx={{
+                        color: "red",
+                        fontFamily: "Poppins",
+                        fontSize: "12px",
+                        mt: 0.5,
+                        ml: 2,
+                      }}
+                    >
+                      {eduErrors.specialization}
+                    </Typography>
+                  )}
+                </div>
+              </Box>
+
+              {/* Right Column */}
+              <Box sx={{ width: { xs: "100%", lg: "48%" }, p: 2 }}>
+
+                
+
+                <div className="mb-6">
+                  <label
+                    className="block mb-2 ml-2"
+                    style={{
+                      fontFamily: "Satoshi",
+                      fontWeight: 500,
+                      fontSize: "16px",
+                      color: "#24252C",
+                    }}
+                  >
+                    Course Name <span style={{ color: "red" }}>*</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="educationCourse"
+                    value={formData.educationCourse}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 text-sm border rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    style={{ borderRadius: 50, border: "1px solid #24252C" }}
+                  />
+                  {eduErrors.course && (
+                    <Typography
+                      sx={{
+                        color: "red",
+                        fontFamily: "Poppins",
+                        fontSize: "12px",
+                        mt: 0.5,
+                        ml: 2,
+                      }}
+                    >
+                      {eduErrors.course}
+                    </Typography>
+                  )}
+                </div>                
+
+                <div className="mb-6">
+                  <label
+                    className="block mb-2 ml-2"
+                    style={{
+                      fontFamily: "Satoshi",
+                      fontWeight: 500,
+                      fontSize: "16px",
+                      color: "#24252C",
+                    }}
+                  >
+                    End Year <span style={{ color: "red" }}>*</span>
+                  </label>
+                  <input
+                    type="month"
+                    name="educationEnd"
+                    value={formData.educationEnd}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 text-sm border rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    style={{ borderRadius: 50, border: "1px solid #24252C" }}
+                  />
+                  {eduErrors.to && (
+                    <Typography
+                      sx={{
+                        color: "red",
+                        fontFamily: "Poppins",
+                        fontSize: "12px",
+                        mt: 0.5,
+                        ml: 2,
+                      }}
+                    >
+                      {eduErrors.to}
+                    </Typography>
+                  )}
+                </div>
+
+                <Box
+                  sx={{
+                    display: "flex",
+                    justifyContent: "flex-end",
+                    alignItems: "center",
+                    px: 2,
+                    pt: 2,
+                  }}
+                >
+                  <button
+                    className="bg-blue-500 hover:bg-blue-700 text-white py-2 px-4 sm:px-10 md:px-16  sm:w-auto rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300"
+                    onClick={handleAddEducation}
+                  >
+                    Add Education
                   </button>
                 </Box>
               </Box>
