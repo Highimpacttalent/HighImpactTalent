@@ -35,6 +35,12 @@ const UserInfoForm = () => {
   const [profilePic, setProfilePic] = useState(user?.profileUrl || ""); // Preview URL
   const [profilePicUrl, setProfilePicUrl] = useState(user?.profileUrl || ""); // Final URL to submit
   const [cities, setCities] = useState([]);
+  const [expErrors, setExpErrors] = useState({
+    companyName: "",
+    designation: "",
+    from: "",
+    to: "",
+  });
   const [SalErr, setSalErr] = useState({
     salary: "",
   });
@@ -86,11 +92,17 @@ const UserInfoForm = () => {
     lastConsultingCustomCompany: "", // For storing the custom consulting company input temporarily
     totalYearsInConsulting: "",
     hasConsultingBackground: "", // Added consulting background Yes/No
+    expCompanyName: "",
+    expDesignation: "",
+    expFrom: "",
+    expTo: "",
+    expDescription: "",
+    experienceHistory: [],
   });
 
   // --- Stage Management State ---
   const [currentStage, setCurrentStage] = useState(0); // Start at the first stage (0)
-  const totalStages = 4; // Number of content stages (Work, Personal, Pref, Consulting)
+  const totalStages = 5; // Number of content stages (Work, Personal, Pref, Consulting)
 
   // --- Effects ---
   // Fetch cities from CSV
@@ -147,6 +159,60 @@ const UserInfoForm = () => {
       location: selectedOption?.value || "",
     }));
   };
+
+  const handleAddExperience = () => {
+    const { expCompanyName, expDesignation, expFrom, expTo, expDescription } =
+      formData;
+    const errs = { companyName: "", designation: "", from: "", to: "" };
+    let hasError = false;
+    if (!expCompanyName) {
+      errs.companyName = "Company is required.";
+      hasError = true;
+    }
+    if (!expDesignation) {
+      errs.designation = "Designation is required.";
+      hasError = true;
+    }
+    if (!expFrom) {
+      errs.from = "Start date is required.";
+      hasError = true;
+    }
+    if (!expTo) {
+      errs.to = "End date is required.";
+      hasError = true;
+    }
+    if (expFrom && expTo && expFrom > expTo) {
+      errs.to = "'To' must be same or after 'From'.";
+      hasError = true;
+    }
+    setExpErrors(errs);
+    if (hasError) return;
+    setFormData((prev) => ({
+      ...prev,
+      experienceHistory: [
+        ...prev.experienceHistory,
+        {
+          companyName: expCompanyName,
+          designation: expDesignation,
+          from: expFrom,
+          to: expTo,
+          description: expDescription,
+        },
+      ],
+      expCompanyName: "",
+      expDesignation: "",
+      expFrom: "",
+      expTo: "",
+      expDescription: "",
+    }));
+    setExpErrors({ companyName: "", designation: "", from: "", to: "" });
+  };
+
+  const handleDeleteExperience = (idx) =>
+    setFormData((prev) => ({
+      ...prev,
+      experienceHistory: prev.experienceHistory.filter((_, i) => i !== idx),
+    }));
 
   // Handle skills change using react-select
   const handleSkillsChange = (selectedOptions) => {
@@ -399,6 +465,11 @@ const UserInfoForm = () => {
   const handleNext = (event) => {
     // Prevent default button click action
     event.preventDefault();
+    if (currentStage === 1) {
+      // Don't validate the input fields here
+      setCurrentStage((prev) => prev + 1);
+      return;
+    }
     const form = event.currentTarget.form;
 
     // Check validity for the current stage
@@ -902,7 +973,229 @@ const UserInfoForm = () => {
           </Box>
         );
 
-      case 1: // Consulting Background
+      case 1:
+        return (
+          <Box sx={stageBoxStyles}>
+            <Typography sx={titleStyles}>Experience History</Typography>
+            <Box sx={{mt:2, p:2}}>
+
+            {/* Entries List */}
+            {formData.experienceHistory.length > 0 && (
+              <Box className="mb-6">
+                {formData.experienceHistory.map((e, i) => (
+                  <Box
+                    key={i}
+                    sx={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      mb: 2,
+                      p: 2,
+                      bgcolor: "#f9f9f9",
+                      borderRadius: 2,
+                      border: "1px solid #ddd",
+                    }}
+                  >
+                    <Box>
+                      <Typography
+                        sx={{ fontFamily: "Satoshi", fontWeight: 500 }}
+                      >
+                        {e.designation} at {e.companyName}
+                      </Typography>
+                      <Typography
+                        variant="caption"
+                        sx={{ display: "block", mb: 0.5 }}
+                      >
+                        {e.from} - {e.to}
+                      </Typography>
+                      {e.description && (
+                        <Typography
+                          variant="caption"
+                          sx={{ display: "block", fontStyle: "italic" }}
+                        >
+                          {e.description}
+                        </Typography>
+                      )}
+                    </Box>
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      color="error"
+                      onClick={() => handleDeleteExperience(i)}
+                    >
+                      Delete
+                    </Button>
+                  </Box>
+                ))}
+              </Box>
+            )}
+
+            {/* Input Form */}
+            <Box sx={{ display: { xs: "block", lg: "flex" }, gap: 3 }}>
+              {/* Left Column */}
+              <Box flex={1}>
+                <div className="mb-4">
+                  <label
+                    className="block mb-4 ml-2"
+                    style={{
+                      fontFamily: "Satoshi",
+                      fontWeight: 500,
+                      fontSize: "16px",
+                      color: "#24252C",
+                    }}
+                  >
+                    Company Name <span style={{ color: "red" }}>*</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="expCompanyName"
+                    value={formData.expCompanyName}
+                    onChange={handleChange}
+                    required
+                    style={roundedInputStyles}
+                  />
+                  {expErrors.companyName && (
+                    <Typography color="error">
+                      {expErrors.companyName}
+                    </Typography>
+                  )}
+                </div>
+
+                <div className="mb-4">
+                  <label
+                    className="block mb-4 ml-2"
+                    style={{
+                      fontFamily: "Satoshi",
+                      fontWeight: 500,
+                      fontSize: "16px",
+                      color: "#24252C",
+                    }}
+                  >
+                    From <span style={{ color: "red" }}>*</span>
+                  </label>
+                  <input
+                    type="month"
+                    name="expFrom"
+                    value={formData.expFrom}
+                    onChange={handleChange}
+                    required
+                    style={roundedInputStyles}
+                  />
+                  {expErrors.from && (
+                    <Typography color="error">{expErrors.from}</Typography>
+                  )}
+                </div>
+
+                <div className="mb-4">
+                  <label
+                    className="block mb-4 ml-2"
+                    style={{
+                      fontFamily: "Satoshi",
+                      fontWeight: 500,
+                      fontSize: "16px",
+                      color: "#24252C",
+                    }}
+                  >
+                    To <span style={{ color: "red" }}>*</span>
+                  </label>
+                  <input
+                    type="month"
+                    name="expTo"
+                    value={formData.expTo}
+                    onChange={handleChange}
+                    required
+                    style={roundedInputStyles}
+                  />
+                  {expErrors.to && (
+                    <Typography color="error">{expErrors.to}</Typography>
+                  )}
+                </div>
+
+                <div className="mb-4">
+                  <label
+                    className="block mb-4 ml-2"
+                    style={{
+                      fontFamily: "Satoshi",
+                      fontWeight: 500,
+                      fontSize: "16px",
+                      color: "#24252C",
+                    }}
+                  >
+                    Designation <span style={{ color: "red" }}>*</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="expDesignation"
+                    value={formData.expDesignation}
+                    onChange={handleChange}
+                    required
+                    style={roundedInputStyles}
+                  />
+                  {expErrors.designation && (
+                    <Typography color="error">
+                      {expErrors.designation}
+                    </Typography>
+                  )}
+                </div>
+
+                <div className="mb-4">
+                  <label
+                    className="block mb-4 ml-2"
+                    style={{
+                      fontFamily: "Satoshi",
+                      fontWeight: 500,
+                      fontSize: "16px",
+                      color: "#24252C",
+                    }}
+                  >
+                    Description
+                  </label>
+                  <textarea
+                    name="expDescription"
+                    value={formData.expDescription}
+                    onChange={handleChange}
+                    rows={3}
+                    style={{
+                      ...baseInputStyles,
+                      border: "1px solid #24252C", 
+                      borderRadius: 10,
+                      padding: "15px 15px",
+                      resize: "vertical",
+                      minHeight: "80px",
+                    }}
+                  />
+                </div>
+              </Box>
+
+              {/* Right Column */}
+              <Box flex={1}>
+                
+
+                <Button
+                  variant="contained"
+                  onClick={handleAddExperience}
+                  sx={{ bgcolor: "#3C7EFC", // Matches original bg-blue-500 equivalent
+                "&:hover": { bgcolor: "#306CE0" }, // Matches hover:bg-blue-700 equivalent
+                color: "white", // text-white
+                px: 2, // Matches original px-6
+                py: 1, // Matches original py-2
+                borderRadius: 50, // Matches original rounded-full
+                textTransform: "none", // Matches original text-transform: none
+                fontSize: "18px", // Matches original font size
+                fontWeight: 700, // Matches original font weight
+                fontFamily: "Satoshi", // Matches original font family  
+                }}
+                >
+                  Add Experience
+                </Button>
+              </Box>
+            </Box>
+          </Box>
+                
+          </Box>
+        );
+
+      case 2: // Consulting Background
         return (
           <Box sx={stageBoxStyles}>
             <Typography sx={titleStyles}>Consulting Background</Typography>
@@ -1177,7 +1470,7 @@ const UserInfoForm = () => {
           </Box>
         );
 
-      case 2: // Personal Details
+      case 3: // Personal Details
         return (
           <Box sx={stageBoxStyles}>
             <Typography sx={titleStyles}>Personal Details</Typography>
@@ -1429,7 +1722,7 @@ const UserInfoForm = () => {
           </Box>
         );
 
-      case 3: // Preferences
+      case 4: // Preferences
         return (
           <Box sx={stageBoxStyles}>
             <Typography sx={titleStyles}>Preferences</Typography>
