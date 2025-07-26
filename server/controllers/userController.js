@@ -223,8 +223,8 @@ export const updateUser = async (req, res, next) => {
     highestQualification,
     lastConsultingCompany,
     totalYearsInConsulting,
-    experienceHistory, 
-    educationDetails
+    experienceHistory,
+    educationDetails,
   } = req.body;
 
   try {
@@ -257,7 +257,15 @@ export const updateUser = async (req, res, next) => {
       experience,
       skills: Array.isArray(skills) ? skills : [],
       ...(Array.isArray(experienceHistory) && { experienceHistory }),
-      ...(Array.isArray(educationDetails) && { educationDetails }), 
+      ...(Array.isArray(educationDetails) && {
+        educationDetails: educationDetails.map((edu) => ({
+          instituteName: edu.institute || "",
+          courseName: edu.course || "",
+          startYear: edu.from || "",
+          endYear: edu.to || "",
+          specialization: edu.specialization || "",
+        })),
+      }),
     };
 
     if (highestQualification)
@@ -272,8 +280,8 @@ export const updateUser = async (req, res, next) => {
 
     const user = await Users.findByIdAndUpdate(id, updateUser, {
       new: true,
-      runValidators: true,      // ensure your schema validators run
-      context: 'query'         // needed for some mongoose validators
+      runValidators: true, // ensure your schema validators run
+      context: "query", // needed for some mongoose validators
     });
 
     if (!user) {
@@ -434,7 +442,9 @@ export const signIn = async (req, res, next) => {
     const user = await Users.findOne({ email }).select("+password");
 
     if (!user) {
-      res.status(202).json({success:"falied",message:"Invalid email or password"});
+      res
+        .status(202)
+        .json({ success: "falied", message: "Invalid email or password" });
       return;
     }
 
