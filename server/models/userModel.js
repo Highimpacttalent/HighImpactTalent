@@ -20,21 +20,23 @@ const userSchema = new mongoose.Schema(
     },
     password: {
       type: String,
-      required: function() { return !this.authProvider; }
+      required: function () {
+        return !this.authProvider;
+      },
     },
     authProvider: {
       type: String,
-      enum: ['local', 'google', 'linkedin'],
-      default: 'local'
+      enum: ["local", "google", "linkedin"],
+      default: "local",
     },
     providerId: {
       type: String,
       unique: true,
-      sparse: true 
+      sparse: true,
     },
     isEmailVerified: {
       type: Boolean,
-      default: false
+      default: false,
     },
     accountType: { type: String, default: "seeker" },
     contactNumber: { type: String },
@@ -50,7 +52,7 @@ const userSchema = new mongoose.Schema(
     },
     currentDesignation: {
       type: String,
-      default: ""
+      default: "",
     },
     isItConsultingCompany: {
       type: String,
@@ -59,7 +61,7 @@ const userSchema = new mongoose.Schema(
     },
     linkedinLink: {
       type: String,
-      default: ""
+      default: "",
     },
     currentLocation: { type: String, default: "india" },
     openToRelocate: {
@@ -69,7 +71,7 @@ const userSchema = new mongoose.Schema(
     },
     joinConsulting: {
       type: String,
-      enum: ["Out of campus", "Lateral","no",""],
+      enum: ["Out of campus", "Lateral", "no", ""],
       default: "no",
     },
     about: { type: String },
@@ -81,48 +83,72 @@ const userSchema = new mongoose.Schema(
       type: Number,
       default: 1,
     },
-    dateOfBirth:{
-      type:String,
+    dateOfBirth: {
+      type: String,
     },
     appliedJobs: [
       {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Application",
-      }
-    ],    
+      },
+    ],
     blogs: [
       {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Blog',
-      }
+        ref: "Blog",
+      },
     ],
     likedJobs: [{ type: mongoose.Schema.Types.ObjectId, ref: "Jobs" }],
     expectedMinSalary: {
       type: String,
-      default: ""
+      default: "",
     },
     preferredLocations: {
       type: [String],
-      default: []
+      default: [],
     },
     preferredWorkTypes: {
       type: [String],
-      default: ["Full-Time"]
+      default: ["Full-Time"],
     },
     preferredWorkModes: {
       type: [String],
-      default: ["Remote"]
+      default: ["Remote"],
     },
     cultureFit: {
       strength: {
         type: String,
-        default: "", 
+        default: "",
       },
       concern: {
         type: String,
         default: "",
-  }
-},
+      },
+    },
+    educationDetails: [
+      {
+        instituteName: {
+          type: String,
+          required: true,
+        },
+        startYear: {
+          type: String,
+          required: true,
+        },
+        endYear: {
+          type: String,
+          required: true,
+        },
+        courseName: {
+          type: String,
+          required: true,
+        },
+        specialization: {
+          type: String,
+          default: "",
+        },
+      },
+    ],
     experienceHistory: [
       {
         companyName: {
@@ -143,20 +169,20 @@ const userSchema = new mongoose.Schema(
         },
         description: {
           type: String,
-          default: ""
-        }
-      }
+          default: "",
+        },
+      },
     ],
     highestQualification: {
       type: [String],
     },
     lastConsultingCompany: {
       type: String,
-      default: ""
+      default: "",
     },
     totalYearsInConsulting: {
       type: Number,
-      default: 0
+      default: 0,
     },
   },
   { timestamps: true }
@@ -181,15 +207,15 @@ userSchema.index({ highestQualification: 1 });
 
 // Text index for full-text search across multiple fields
 userSchema.index({
-  firstName: 'text',
-  lastName: 'text',
-  currentDesignation: 'text',
-  currentCompany: 'text',
-  lastConsultingCompany: 'text',
-  about: 'text',
-  'experienceHistory.companyName': 'text',
-  'experienceHistory.designation': 'text',
-  'experienceHistory.description': 'text'
+  firstName: "text",
+  lastName: "text",
+  currentDesignation: "text",
+  currentCompany: "text",
+  lastConsultingCompany: "text",
+  about: "text",
+  "experienceHistory.companyName": "text",
+  "experienceHistory.designation": "text",
+  "experienceHistory.description": "text",
 });
 
 // Compound indexes for common filter combinations
