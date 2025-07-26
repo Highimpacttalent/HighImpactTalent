@@ -223,7 +223,8 @@ export const updateUser = async (req, res, next) => {
     highestQualification,
     lastConsultingCompany,
     totalYearsInConsulting,
-    experienceHistory
+    experienceHistory, 
+    educationDetails
   } = req.body;
 
   try {
@@ -256,6 +257,7 @@ export const updateUser = async (req, res, next) => {
       experience,
       skills: Array.isArray(skills) ? skills : [],
       ...(Array.isArray(experienceHistory) && { experienceHistory }),
+      ...(Array.isArray(educationDetails) && { educationDetails }), 
     };
 
     if (highestQualification)
