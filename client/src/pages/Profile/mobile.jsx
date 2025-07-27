@@ -11,6 +11,7 @@ import Socials from "./mobile-comp/Social";
 import ExperienceHistory from "./mobile-comp/WorkEx";
 import Experience from "./mobile-comp/Experience";
 import AboutSection from "./mobile-comp/About";
+import EducationHistory from "./mobile-comp/Education";
 import PreferencesCard from "./mobile-comp/PreferencesCard";
 
 const ProfileSection = () => {
@@ -78,6 +79,13 @@ const ProfileSection = () => {
         <Box sx={{ display: "flex", flexDirection: { xs: "column", md: "row" }, gap: 3, justifyContent: "center", px: 2 }}>
           <Box sx={{ width: { xs: "100%", md: "90%" } }}>
             <ExperienceHistory userId={userInfo?._id} experienceHistory={userInfo?.experienceHistory} />
+          </Box>
+        </Box>
+       
+       {/* Education History */}
+        <Box sx={{ display: "flex", flexDirection: { xs: "column", md: "row" }, gap: 3, justifyContent: "center", px: 2 }}>
+          <Box sx={{ width: { xs: "100%", md: "90%" } }}>
+            <EducationHistory userId={userInfo?._id} educationDetails={userInfo?.educationDetails} />
           </Box>
         </Box>
       </Box>

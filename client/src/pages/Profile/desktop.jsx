@@ -12,6 +12,7 @@ import ExperienceHistory from "./components/WorkEx";
 import Experience from "./components/Experience";
 import AboutSection from "./components/About";
 import PreferencesCard from "./components/PreferencesCard";
+import EducationHistory from './components/Education';
 
 const ProfileSection = () => {
   const { user } = useSelector((state) => state.user);
@@ -20,43 +21,6 @@ const ProfileSection = () => {
   const navigate = useNavigate();
   const [image, setImage] = useState(null);
   const [imageUrl, setImageUrl] = useState("");
-
-  // const handleImageUpload = async () => {
-  //   if (image) {
-  //     const formData = new FormData();
-  //     formData.append("file", image);
-  //     formData.append("upload_preset", "ml_default");
-
-  //     try {
-  //       const response = await axios.post(
-  //         `https://api.cloudinary.com/v1_1/dk2d8tq74/image/upload`, 
-  //         formData
-  //       );
-  //       console.log(response.data.secure_url);
-  //       const profile = await axios.post(
-  //         `https://highimpacttalent.onrender.com/api-v1/user/updateprofileurl`,
-  //         { profileUrl: response.data.secure_url },
-  //         {
-  //           headers: {
-  //             Authorization: `Bearer ${user?.token}`,
-  //             "Content-Type": "application/json",
-  //           },
-  //         }
-  //       );
-  //       if (profile.data.success) {
-  //         alert("Profile URL updated");
-  //         dispatch(UpdateUser(profile.data.user));
-  //         setImageUrl(response.data.secure_url);
-  //       }
-  //     } catch (error) {
-  //       console.error("Error uploading the image", error);
-  //     }
-  //   }
-  // };
-
-  // const handleFileChange = (e) => {
-  //   setImage(e.target.files[0]);
-  // };
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -115,6 +79,13 @@ const ProfileSection = () => {
         <Box sx={{ display: "flex", flexDirection: { xs: "column", md: "row" }, gap: 3, justifyContent: "center", px: 2 }}>
           <Box sx={{ width: { xs: "100%", md: "90%" } }}>
             <ExperienceHistory userId={userInfo?._id} experienceHistory={userInfo?.experienceHistory} />
+          </Box>
+        </Box>
+        
+        {/* Education History */}
+        <Box sx={{ display: "flex", flexDirection: { xs: "column", md: "row" }, gap: 3, justifyContent: "center", px: 2 }}>
+          <Box sx={{ width: { xs: "100%", md: "90%" } }}>
+            <EducationHistory userId={userInfo?._id} educationDetails={userInfo?.educationDetails}/>
           </Box>
         </Box>
       </Box>
