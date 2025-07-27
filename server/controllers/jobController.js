@@ -209,7 +209,11 @@ export const getJobPosts = async (req, res, next) => {
         .populate({
           path: "likedJobs",
           model: "Jobs",
-          populate: { path: "company", select: "-password" }
+          select: "_id jobTitle jobLocation salary workType workMode experience tags createdAt status category functionalArea",
+          populate: { 
+            path: "company", 
+            select: "name location profileUrl" 
+          }
         })
         .lean();
 
@@ -364,19 +368,55 @@ export const getJobPosts = async (req, res, next) => {
 
     pipeline.push({ $match: matchStage });
 
-    // Add company population stage
+    // Add company population stage with limited fields
     pipeline.push({
       $lookup: {
         from: 'companies',
         localField: 'company',
         foreignField: '_id',
         as: 'company',
-        pipeline: [{ $project: { password: 0 } }] // Exclude password field
+        pipeline: [
+          { 
+            $project: { 
+              name: 1, 
+              location: 1, 
+              profileUrl: 1,
+              organizationType: 1
+            } 
+          }
+        ]
       }
     });
 
     pipeline.push({
       $unwind: '$company'
+    });
+
+    // Project only required fields
+    pipeline.push({
+      $project: {
+        _id: 1,
+        jobTitle: 1,
+        jobLocation: 1,
+        salary: 1,
+        salaryConfidential: 1,
+        salaryCategory: 1,
+        workType: 1,
+        workMode: 1,
+        experience: 1,
+        skills: 1,
+        tags: 1,
+        category: 1,
+        functionalArea: 1,
+        isPremiumJob: 1,
+        createdAt: 1,
+        status: 1,
+        company: 1,
+        // Only include jobDescription for search purposes, can be excluded if not needed in frontend
+        jobDescription: 1,
+        // Include application count instead of full array
+        applicationCount: { $size: { $ifNull: ["$application", []] } }
+      }
     });
 
     // Add sorting stage
