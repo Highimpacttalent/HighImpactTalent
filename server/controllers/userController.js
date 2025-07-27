@@ -889,6 +889,55 @@ export const updateExperienceHistory = async (req, res) => {
   }
 };
 
+
+export const updateEducationDetails = async (req, res) => {
+  try {
+    const { userId, educationDetails } = req.body;
+
+    // Validate input
+    if (!userId) {
+      return res.status(400).json({
+        success: false,
+        message: "User ID is required!",
+      });
+    }
+
+    if (!educationDetails || !Array.isArray(educationDetails)) {
+      return res.status(400).json({
+        success: false,
+        message: "Education details must be an array!",
+      });
+    }
+
+    // Update user
+    const updatedUser = await Users.findOneAndUpdate(
+      { _id: userId },
+      { educationDetails: educationDetails },
+      { new: true }
+    );
+
+    if (!updatedUser) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found!",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Education details updated successfully!",
+      user: updatedUser,
+    });
+  } catch (error) {
+    console.error("Error updating education details:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error while updating education details!",
+      error: error.message,
+    });
+  }
+};
+
 export const updateAbout = async (req, res) => {
   try {
     const { userId, about } = req.body;
