@@ -205,7 +205,7 @@ export const getJobPosts = async (req, res, next) => {
       }
       
       const user = await Users.findById(userId)
-        .select('likedJobs experience appliedJobs')
+        .select('likedJobs')
         .populate({
           path: "likedJobs",
           model: "Jobs",
@@ -224,34 +224,7 @@ export const getJobPosts = async (req, res, next) => {
         });
       }
 
-      const userExperience = user.experience || 0;
-      const userAppliedJobs = user.appliedJobs || [];
-      
-      const saved = (user.likedJobs || []).map(job => {
-        // Check eligibility for saved jobs too
-        let isEligible = true;
-        if (job.experience) {
-          if (typeof job.experience === 'object' && job.experience !== null) {
-            const { minExperience } = job.experience;
-            if (minExperience !== undefined && userExperience < minExperience) {
-              isEligible = false;
-            }
-          } else if (typeof job.experience === 'number' && userExperience < job.experience) {
-            isEligible = false;
-          }
-        }
-        
-        // Check if applied
-        const isApplied = userAppliedJobs.some(appliedJobId => 
-          appliedJobId.toString() === job._id.toString()
-        );
-        
-        return {
-          ...job,
-          isEligible,
-          isApplied
-        };
-      });
+      const saved = user.likedJobs || [];
       return res.status(200).json({
         success: true,
         totalJobs: saved.length,
@@ -480,45 +453,19 @@ export const getJobPosts = async (req, res, next) => {
     const totalJobs = result.count[0]?.total || 0;
     const numOfPage = Math.ceil(totalJobs / limit);
 
-    // Handle user preferences, eligibility, and applied status if user is logged in
+    // Handle user preferences and match calculation if user is logged in
     if (userId && jobs.length > 0) {
       const userPrefs = await Users.findById(userId)
-        .select('skills preferredLocations preferredWorkTypes preferredWorkModes expectedMinSalary experience appliedJobs')
+        .select('skills preferredLocations preferredWorkTypes preferredWorkModes expectedMinSalary experience')
         .lean();
       
       if (userPrefs) {
-        const userExperience = userPrefs.experience || 0;
-        const userAppliedJobs = userPrefs.appliedJobs || [];
-        
         jobs = jobs.map(job => {
-          // Calculate job match
           const matchData = calculateJobMatch(userPrefs, job);
-          
-          // Check eligibility based on minimum experience
-          let isEligible = true;
-          if (job.experience) {
-            if (typeof job.experience === 'object' && job.experience !== null) {
-              const { minExperience } = job.experience;
-              if (minExperience !== undefined && userExperience < minExperience) {
-                isEligible = false;
-              }
-            } else if (typeof job.experience === 'number' && userExperience < job.experience) {
-              // Fallback for old data where job.experience might be just a number (minimum)
-              isEligible = false;
-            }
-          }
-          
-          // Check if user has already applied to this job
-          const isApplied = userAppliedJobs.some(appliedJobId => 
-            appliedJobId.toString() === job._id.toString()
-          );
-          
           return {
             ...job,
             matchPercentage: matchData.matchPercentage,
-            matchDetails: matchData.matchDetails,
-            isEligible,
-            isApplied
+            matchDetails: matchData.matchDetails
           };
         });
       }
