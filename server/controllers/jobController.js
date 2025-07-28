@@ -569,15 +569,33 @@ export const getJobsBySalaryDesc = async (req, res, next) => {
 export const getJobById = async (req, res, next) => {
   try {
     const { id } = req.params;
+    
+    // Extract user ID from token
+    let userId = null;
+    const authHeader = req.headers.authorization;
+    
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      try {
+        const token = authHeader.substring(7);
+        const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
+        userId = decoded.userId || decoded.id || decoded._id;
+      } catch (err) {
+        console.log("Token validation error:", err.message);
+      }
+    }
 
-    // Use Promise.all to fetch job and similar jobs in parallel
-    const [job, similarJobs] = await Promise.all([
-      Jobs.findById(id).populate({
-        path: "company",
-        select: "-password",
-      }).lean(),
+    // Use Promise.all to fetch job, similar jobs, and user data in parallel
+    const promises = [
+      // Main job with selected fields only
+      Jobs.findById(id)
+        .select('_id jobTitle jobLocation salary salaryConfidential salaryCategory workType workMode jobDescription skills qualifications experience duration tags category functionalArea isPremiumJob createdAt status company')
+        .populate({
+          path: "company",
+          select: "name location profileUrl organizationType",
+        })
+        .lean(),
       
-      // Get similar jobs with better query
+      // Similar jobs with limited fields
       Jobs.aggregate([
         {
           $match: {
@@ -594,14 +612,55 @@ export const getJobById = async (req, res, next) => {
             localField: 'company',
             foreignField: '_id',
             as: 'company',
-            pipeline: [{ $project: { password: 0 } }]
+            pipeline: [
+              { 
+                $project: { 
+                  name: 1, 
+                  location: 1, 
+                  profileUrl: 1,
+                  organizationType: 1
+                } 
+              }
+            ]
           }
         },
         { $unwind: '$company' },
+        {
+          $project: {
+            _id: 1,
+            jobTitle: 1,
+            jobLocation: 1,
+            salary: 1,
+            salaryConfidential: 1,
+            salaryCategory: 1,
+            workType: 1,
+            workMode: 1,
+            experience: 1,
+            tags: 1,
+            category: 1,
+            functionalArea: 1,
+            isPremiumJob: 1,
+            createdAt: 1,
+            company: 1,
+            applicationCount: { $size: { $ifNull: ["$application", []] } }
+          }
+        },
         { $sort: { createdAt: -1 } },
         { $limit: 6 }
       ])
-    ]);
+    ];
+
+    // Add user data query if user is logged in
+    if (userId) {
+      promises.push(
+        Users.findById(userId)
+          .select('experience appliedJobs skills preferredLocations preferredWorkTypes preferredWorkModes expectedMinSalary')
+          .lean()
+      );
+    }
+
+    const results = await Promise.all(promises);
+    const [job, similarJobs, userData] = results;
 
     if (!job) {
       return res.status(404).json({
@@ -610,14 +669,84 @@ export const getJobById = async (req, res, next) => {
       });
     }
 
+    // Add eligibility and applied status if user is logged in
+    if (userId && userData) {
+      const userExperience = userData.experience || 0;
+      const userAppliedJobs = userData.appliedJobs || [];
+      
+      // Check eligibility for main job
+      let isEligible = true;
+      if (job.experience) {
+        if (typeof job.experience === 'object' && job.experience !== null) {
+          const { minExperience } = job.experience;
+          if (minExperience !== undefined && userExperience < minExperience) {
+            isEligible = false;
+          }
+        } else if (typeof job.experience === 'number' && userExperience < job.experience) {
+          isEligible = false;
+        }
+      }
+      
+      // Check if applied to main job
+      const isApplied = userAppliedJobs.some(appliedJobId => 
+        appliedJobId.toString() === job._id.toString()
+      );
+      
+      // Add status to main job
+      job.isEligible = isEligible;
+      job.isApplied = isApplied;
+      
+      // Calculate match percentage for main job
+      if (userData.skills || userData.preferredLocations) {
+        const matchData = calculateJobMatch(userData, job);
+        job.matchPercentage = matchData.matchPercentage;
+        job.matchDetails = matchData.matchDetails;
+      }
+      
+      // Add eligibility and applied status to similar jobs
+      similarJobs.forEach(similarJob => {
+        // Check eligibility for similar job
+        let similarIsEligible = true;
+        if (similarJob.experience) {
+          if (typeof similarJob.experience === 'object' && similarJob.experience !== null) {
+            const { minExperience } = similarJob.experience;
+            if (minExperience !== undefined && userExperience < minExperience) {
+              similarIsEligible = false;
+            }
+          } else if (typeof similarJob.experience === 'number' && userExperience < similarJob.experience) {
+            similarIsEligible = false;
+          }
+        }
+        
+        // Check if applied to similar job
+        const similarIsApplied = userAppliedJobs.some(appliedJobId => 
+          appliedJobId.toString() === similarJob._id.toString()
+        );
+        
+        similarJob.isEligible = similarIsEligible;
+        similarJob.isApplied = similarIsApplied;
+        
+        // Calculate match percentage for similar job
+        if (userData.skills || userData.preferredLocations) {
+          const matchData = calculateJobMatch(userData, similarJob);
+          similarJob.matchPercentage = matchData.matchPercentage;
+          similarJob.matchDetails = matchData.matchDetails;
+        }
+      });
+    }
+
     res.status(200).json({
       success: true,
       data: job,
       similarJobs,
+      userLoggedIn: !!userId,
     });
   } catch (error) {
-    console.log(error);
-    res.status(404).json({ message: error.message });
+    console.error("Error in getJobById:", error);
+    res.status(404).json({ 
+      success: false,
+      message: error.message || "Internal server error"
+    });
   }
 };
 
