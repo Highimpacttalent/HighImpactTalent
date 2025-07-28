@@ -28,6 +28,7 @@ const JobDetail = () => {
   const [isFetching, setIsFetching] = useState(false);
   const navigate = useNavigate();
 
+  const token = user?.token || localStorage.getItem("authToken");
   useEffect(() => {
     const getJobDetails = async () => {
       setIsFetching(true);
@@ -35,6 +36,7 @@ const JobDetail = () => {
         const res = await apiRequest({
           url: `/jobs/get-job-detail/${id}`,
           method: "GET",
+          token: token
         });
         if (res?.data) {
           setJob(res.data);
