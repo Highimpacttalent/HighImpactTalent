@@ -579,7 +579,6 @@ export const getJobById = async (req, res, next) => {
         const token = authHeader.substring(7);
         const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
         userId = decoded.userId || decoded.id || decoded._id;
-        console.log("User ID from token:", userId);
       } catch (err) {
         console.log("Token validation error:", err.message);
       }
