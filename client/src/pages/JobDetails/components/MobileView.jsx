@@ -193,15 +193,7 @@ const JobCard = ({ job, flag = false, enable = false }) => {
               },
             }}
           />
-        </Box>
-
-        {/* Job Description */}
-        {/* <Typography
-          variant="body2"
-          color="#474E68"
-          sx={{ flexGrow: 1, overflow: "hidden", textOverflow: "ellipsis", height: 40 }}>
-          {job.jobDescription !== "- " ? job?.jobDescription : "No description Provided"}
-        </Typography> */}
+        </Box>z
       </CardContent>
 
       {/* Fixed Bottom Section */}

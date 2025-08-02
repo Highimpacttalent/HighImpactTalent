@@ -31,6 +31,7 @@ import {
 import { styled } from "@mui/system";
 import { AiOutlineSearch } from "react-icons/ai";
 import { apiRequest } from "../../utils";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import StatusJob from "./StatusJob";
 import axios from "axios";
 import { AiOutlineClose } from "react-icons/ai";
@@ -1697,8 +1698,7 @@ const JobApplications = () => {
                         lineHeight: 1,
                       }}
                     >
-                      {filteredApps.length} candidate
-                      {filteredApps.length !== 1 ? "s" : ""} matched
+                      Visible Profiles {filteredApps.length}
                     </Typography>
                   </Box>
 
@@ -1982,29 +1982,37 @@ const JobApplications = () => {
                   >
                     {/* Enhanced Selection Checkbox */}
                     <Checkbox
-                      checked={selectedApplications.has(app._id)}
-                      onChange={() => handleApplicationSelect(app._id)}
-                      sx={{
-                        position: "absolute",
-                        top: 12,
-                        right: 12,
-                        zIndex: 3,
-                        bgcolor: "rgba(255, 255, 255, 0.95)",
-                        borderRadius: "50%",
-                        p: 1,
-                        boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
-                        "&:hover": {
-                          bgcolor: "white",
-                          transform: "scale(1.1)",
-                        },
-                        "& .MuiSvgIcon-root": {
-                          fontSize: 20,
-                          color: selectedApplications.has(app._id)
-                            ? "#1976d2"
-                            : "#64748b",
-                        },
-                      }}
-                    />
+  checked={selectedApplications.has(app._id)}
+  onChange={() => handleApplicationSelect(app._id)}
+  icon={
+    <CheckCircleOutlineIcon 
+      sx={{ fontSize: 24, opacity: 0.6 }} 
+    />
+  }
+  checkedIcon={
+    <CheckCircleIcon 
+      sx={{ fontSize: 24 }} 
+    />
+  }
+  sx={{
+    position: "absolute",
+    top: 12,
+    left: 12,
+    zIndex: 3,
+    bgcolor: "rgba(255,255,255,0.9)",
+    borderRadius: "50%",
+    p: 0.5,
+    boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+    transition: "transform 0.2s ease",
+    "&:hover": {
+      transform: "scale(1.2)",
+      bgcolor: "white",
+    },
+    "&.Mui-checked": {
+      bgcolor: "rgba(25,118,210,0.1)",
+    },
+  }}
+/>
 
                     {/* Enhanced Application Card */}
                     <Box
