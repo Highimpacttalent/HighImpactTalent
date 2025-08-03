@@ -588,7 +588,7 @@ export const getJobById = async (req, res, next) => {
     const promises = [
       // Main job with selected fields only
       Jobs.findById(id)
-        .select('_id jobTitle jobLocation salary salaryConfidential salaryCategory workType workMode jobDescription skills qualifications experience duration tags category functionalArea isPremiumJob createdAt status company')
+        .select('_id jobTitle jobLocation salary salaryConfidential salaryCategory workType workMode jobDescription skills qualifications experience duration tags category functionalArea isPremiumJob createdAt status company screeningQuestions')
         .populate({
           path: "company",
           select: "name location profileUrl organizationType",
