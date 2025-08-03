@@ -210,141 +210,151 @@ const ScreeningView = () => {
 
   // --- Apply Logic ---
   const applyHandler = async () => {
-  // Prevent multiple submissions
-  if (submitting) return;
-  setSubmitting(true);
+    // Prevent multiple submissions
+    if (submitting) return;
+    setSubmitting(true);
 
-  try {
-    // --- Frontend Validation ---
-    const allMandatoryAnswered = filteredQuestions.every((question, index) => {
-      if (!question.isMandatory) return true;
+    try {
+      // --- Frontend Validation ---
+      const allMandatoryAnswered = filteredQuestions.every(
+        (question, index) => {
+          if (!question.isMandatory) return true;
 
-      const answer = formData.answers[index];
+          const answer = formData.answers[index];
 
-      switch (question.questionType) {
-        case "yes/no":
-          return typeof answer === "boolean";
-        case "single_choice":
-          return typeof answer === "string" && answer.trim() !== "";
-        case "multi_choice":
-          return (
-            Array.isArray(answer) &&
-            answer.filter((opt) => opt.trim() !== "").length > 0
-          );
-        case "short_answer":
-        case "long_answer":
-        default:
-          return typeof answer === "string" && answer.trim() !== "";
-      }
-    });
+          switch (question.questionType) {
+            case "yes/no":
+              return typeof answer === "boolean";
+            case "single_choice":
+              return typeof answer === "string" && answer.trim() !== "";
+            case "multi_choice":
+              return (
+                Array.isArray(answer) &&
+                answer.filter((opt) => opt.trim() !== "").length > 0
+              );
+            case "short_answer":
+            case "long_answer":
+            default:
+              return typeof answer === "string" && answer.trim() !== "";
+          }
+        }
+      );
 
-    if (!allMandatoryAnswered) {
-      setSnackbar({
-        open: true,
-        message: "Please answer all mandatory screening questions before submitting.",
-        severity: "error",
-      });
-      return;
-    }
-
-    if (!resumeUrl) {
-      setSnackbar({
-        open: true,
-        message: "Please upload your resume before submitting.",
-        severity: "error",
-      });
-      return;
-    }
-
-    if (applied) {
-      navigate("/application-tracking");
-      return;
-    }
-
-    // --- Prepare API Payload ---
-    const screeningAnswersPayload = filteredQuestions.map((question, index) => {
-      const answerValue = formData.answers[index];
-      let formattedAnswerString;
-
-      switch (question.questionType) {
-        case "yes/no":
-          formattedAnswerString =
-            typeof answerValue === "boolean"
-              ? answerValue ? "yes" : "no"
-              : "";
-          break;
-        case "multi_choice":
-          formattedAnswerString = Array.isArray(answerValue)
-            ? answerValue
-                .filter((opt) => typeof opt === "string" && opt.trim() !== "")
-                .map((opt) => opt.trim())
-                .join(", ")
-            : "";
-          break;
-        case "single_choice":
-        case "short_answer":
-        case "long_answer":
-        default:
-          formattedAnswerString =
-            typeof answerValue === "string" ? answerValue.trim() : "";
-          break;
+      if (!allMandatoryAnswered) {
+        setSnackbar({
+          open: true,
+          message:
+            "Please answer all mandatory screening questions before submitting.",
+          severity: "error",
+        });
+        return;
       }
 
-      return {
-        questionId: question._id,
-        question: question.question,
-        questionType: question.questionType,
-        answer: formattedAnswerString,
-      };
-    });
+      if (!resumeUrl) {
+        setSnackbar({
+          open: true,
+          message: "Please upload your resume before submitting.",
+          severity: "error",
+        });
+        return;
+      }
 
-    const finalScreeningAnswersPayload = screeningAnswersPayload.filter(
-      (item) => item.answer !== ""
-    );
+      if (applied) {
+        navigate("/application-tracking");
+        return;
+      }
 
-    const res = await axios.post(
-      "https://highimpacttalent.onrender.com/api-v1/application/create",
-      {
-        job: state?.jobid,
-        company: state?.companyid,
-        applicant: user?._id,
-        screeningAnswers: finalScreeningAnswersPayload,
-        cvUrl: resumeUrl,
-        jobTitle: state?.jobTitle,
-        companyName: state?.companyName,
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${user?.token}`,
+      // --- Prepare API Payload ---
+      const screeningAnswersPayload = filteredQuestions.map(
+        (question, index) => {
+          const answerValue = formData.answers[index];
+          let formattedAnswerString;
+
+          switch (question.questionType) {
+            case "yes/no":
+              formattedAnswerString =
+                typeof answerValue === "boolean"
+                  ? answerValue
+                    ? "yes"
+                    : "no"
+                  : "";
+              break;
+            case "multi_choice":
+              formattedAnswerString = Array.isArray(answerValue)
+                ? answerValue
+                    .filter(
+                      (opt) => typeof opt === "string" && opt.trim() !== ""
+                    )
+                    .map((opt) => opt.trim())
+                    .join(", ")
+                : "";
+              break;
+            case "single_choice":
+            case "short_answer":
+            case "long_answer":
+            default:
+              formattedAnswerString =
+                typeof answerValue === "string" ? answerValue.trim() : "";
+              break;
+          }
+
+          return {
+            questionId: question._id,
+            question: question.question,
+            questionType: question.questionType,
+            answer: formattedAnswerString,
+          };
+        }
+      );
+
+      const finalScreeningAnswersPayload = screeningAnswersPayload.filter(
+        (item) => item.answer !== ""
+      );
+
+      const res = await axios.post(
+        "https://highimpacttalent.onrender.com/api-v1/application/create",
+        {
+          job: state?.jobid,
+          company: state?.companyid,
+          applicant: user?._id,
+          screeningAnswers: finalScreeningAnswersPayload,
+          cvUrl: resumeUrl,
+          jobTitle: state?.jobTitle,
+          companyName: state?.companyName,
         },
-      }
-    );
+        {
+          headers: {
+            Authorization: `Bearer ${user?.token}`,
+          },
+        }
+      );
 
-    if (res.data?.success) {
-      setApplied(true);
-      console.log(res.data);
-      if (res.data.user) {
-        dispatch(UpdateUser(res.data.user));
+      if (res.data?.success) {
+        setApplied(true);
+        console.log(res.data);
+        if (res.data.user) {
+          dispatch(UpdateUser(res.data.user));
+        }
+        setSnackbar({
+          open: true,
+          message: res.data.message || "Application submitted successfully!",
+          severity: "success",
+        });
+      } else {
+        const errorMessage =
+          res.data.message || "Failed to apply. Please try again.";
+        console.error("API Error:", errorMessage);
+        setSnackbar({ open: true, message: errorMessage, severity: "error" });
       }
-      setSnackbar({
-        open: true,
-        message: res.data.message || "Application submitted successfully!",
-        severity: "success",
-      });
-    } else {
-      const errorMessage = res.data.message || "Failed to apply. Please try again.";
-      console.error("API Error:", errorMessage);
+    } catch (error) {
+      console.error("Error while applying:", error.response?.data || error);
+      const errorMessage =
+        error.response?.data?.message || "Failed to apply. An error occurred.";
       setSnackbar({ open: true, message: errorMessage, severity: "error" });
+    } finally {
+      setSubmitting(false);
     }
-  } catch (error) {
-    console.error("Error while applying:", error.response?.data || error);
-    const errorMessage =
-      error.response?.data?.message || "Failed to apply. An error occurred.";
-    setSnackbar({ open: true, message: errorMessage, severity: "error" });
-  } finally {
-    setSubmitting(false);
-  }
-};
+  };
 
   // --- Resume Upload Logic (Kept mostly as is, applying original styling) ---
   const handleFileChange = async (e) => {
@@ -463,7 +473,6 @@ const ScreeningView = () => {
         py: 4,
       }}
     >
-
       {/* Title Section */}
       <Box sx={{ p: { xs: 3, md: 6 }, textAlign: "center", mb: 4 }}>
         <Typography
@@ -588,25 +597,78 @@ const ScreeningView = () => {
           </Typography>
         </Box>
 
-        {Array.isArray(user?.experienceHistory) && user.experienceHistory.length === 0 && (
-        <Box sx={{ mb: 3, textAlign: 'center'}}>
-          <Typography sx={{ color: '#d32f2f', fontFamily: 'Satoshi', fontWeight: 700, fontSize: '1rem' }}>
-            Hey there! It looks like your profile is missing work experience complete it to stay ahead of the competition.
+        <Box
+          sx={{
+            mb: 4,
+            px: 3,
+            py: 4,
+            borderRadius: 4,
+            background: "linear-gradient(135deg, #f5f7fa, #e4ecf7)",
+            boxShadow: "0px 4px 12px rgba(60, 126, 252, 0.15)",
+            textAlign: "center",
+            maxWidth: 600,
+            mx: "auto",
+          }}
+        >
+          <Typography
+            sx={{
+              color: "#3C7EFC",
+              fontFamily: "Satoshi",
+              fontWeight: 800,
+              fontSize: "1.3rem",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              mb: 1,
+              "& span": {
+                animation: "float 2s ease-in-out infinite",
+                marginRight: "8px",
+              },
+            }}
+          >
+             Take a Peek!
           </Typography>
+
+          <Typography
+            sx={{
+              color: "#444",
+              fontFamily: "Poppins",
+              fontSize: "1rem",
+              mb: 3,
+              px: 2,
+            }}
+          >
+            See how your profile appears to recruiters and make your first
+            impression count.
+          </Typography>
+
           <Button
             variant="contained"
-            onClick={() => navigate('/user-profile')}
-            sx={{ mt: 2, bgcolor: '#3C7EFC', color: 'white', fontFamily: 'Satoshi', fontWeight: 700, borderRadius: 16, textTransform: 'none' }}
+            onClick={() => navigate("/user-profile")}
+            sx={{
+              background: "linear-gradient(90deg, #3C7EFC 0%, #5C9DFF 100%)",
+              color: "#fff",
+              fontFamily: "Satoshi",
+              fontWeight: 600,
+              fontSize: "0.95rem",
+              borderRadius: "12px",
+              px: 4,
+              py: 1.2,
+              textTransform: "none",
+              boxShadow: "0 4px 10px rgba(60, 126, 252, 0.3)",
+              transition: "all 0.3s ease",
+              "&:hover": {
+                background: "linear-gradient(90deg, #2e6bf2 0%, #4b87fa 100%)",
+                transform: "scale(1.03)",
+              },
+            }}
           >
-            Complete Your Profile
+            View My Profile
           </Button>
         </Box>
-      )}
 
         {/* Screening Questions Section */}
         {filteredQuestions?.length > 0 && (
-
-
           <Box mb={4}>
             <Typography
               sx={{
@@ -867,38 +929,38 @@ const ScreeningView = () => {
         )}
 
         {/* Apply Button */}
-          <Button
-            fullWidth
-            variant="contained"
-            onClick={applyHandler}
-            disabled={isApplyDisabled || submitting} // Add submitting to disabled condition
-            sx={{
-              borderRadius: 16,
-              textTransform: "none",
-              fontFamily: "Satoshi",
-              fontWeight: 700,
-              py: 1.5,
-              bgcolor: applied ? "success.main" : "#3C7EFC",
-              "&:hover": {
-                bgcolor: applied ? "success.dark" : "#3C7EFC",
-              },
-              "&:disabled": { bgcolor: "#a0c3fc", color: "#fff" },
-            }}
-          >
-            {submitting ? (
-              <>
-                <CircularProgress size={20} color="inherit" sx={{ mr: 1 }} />
-                Submitting Application...
-              </>
-            ) : uploading ? (
-              <>
-                <CircularProgress size={20} color="inherit" sx={{ mr: 1 }} />
-                Uploading Resume...
-              </>
-            ) : (
-              applyButtonText
-            )}
-          </Button>
+        <Button
+          fullWidth
+          variant="contained"
+          onClick={applyHandler}
+          disabled={isApplyDisabled || submitting} // Add submitting to disabled condition
+          sx={{
+            borderRadius: 16,
+            textTransform: "none",
+            fontFamily: "Satoshi",
+            fontWeight: 700,
+            py: 1.5,
+            bgcolor: applied ? "success.main" : "#3C7EFC",
+            "&:hover": {
+              bgcolor: applied ? "success.dark" : "#3C7EFC",
+            },
+            "&:disabled": { bgcolor: "#a0c3fc", color: "#fff" },
+          }}
+        >
+          {submitting ? (
+            <>
+              <CircularProgress size={20} color="inherit" sx={{ mr: 1 }} />
+              Submitting Application...
+            </>
+          ) : uploading ? (
+            <>
+              <CircularProgress size={20} color="inherit" sx={{ mr: 1 }} />
+              Uploading Resume...
+            </>
+          ) : (
+            applyButtonText
+          )}
+        </Button>
       </Box>
 
       {/* Resume Upload Confirmation Dialog (Kept original style) */}
