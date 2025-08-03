@@ -128,9 +128,9 @@ const AppliedJobMenuCard = ({ job, flag = false, enable = false }) => {
             label={
               job?.job?.salaryConfidential || job?.job?.salaryCategory === "Confidential"
                 ? "Confidential"
-                : `${Number(job.job.salary.maxSalary || job.job.salary).toLocaleString(
-                    "en-IN"
-                  )} LPA (${job.job.salaryCategory})`
+                : job?.job?.salary
+                  ? `${job.job.salary.minSalary} - ${job.job.salary.maxSalary} LPA (${job.job.salaryCategory})`
+                  : "Salary not specified"
             }
             variant="outlined"
             size="small"
