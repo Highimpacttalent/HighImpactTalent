@@ -126,7 +126,7 @@ const AppliedJobMenuCard = ({ job, flag = false, enable = false }) => {
         <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, mb: 2 }}>
           <Chip
             label={
-              job?.job.salaryConfidential || job?.job.salaryCategory === "Confidential"
+              job?.job?.salaryConfidential || job?.job?.salaryCategory === "Confidential"
                 ? "Confidential"
                 : `${Number(job.job.salary.maxSalary || job.job.salary).toLocaleString(
                     "en-IN"
