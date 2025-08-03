@@ -37,7 +37,7 @@ const companySchema = new Schema({
   numberOfEmployees: {
     type: String,
     required: [true, "Number of Employees is required"],
-    enum: ["1-10", "11-50", "51-200", "201-500", "501-1000", "1001-5000", "50001-10000", "10000+"]
+    enum: ["1-10", "11-50", "51-200", "201-500", "501-1000", "1001-5000", "5001-10000", "10000+"]
   },
   organizationType: {
     type: String,
