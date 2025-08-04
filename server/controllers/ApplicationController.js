@@ -543,6 +543,35 @@ export const getApplicationsOfAjob = async (req, res) => {
       console.log("ℹ️ No valid salary filters found.");
     }
 
+    // ---------------- MATCH PERCENTAGE RANGE FILTER ----------------
+    const matchConditions = [];
+    const minMatch = parseFloat(filters.minMatchPercentage);
+    const maxMatch = parseFloat(filters.maxMatchPercentage);
+
+    if (!isNaN(minMatch)) {
+      matchConditions.push({
+        $gte: ["$matchPercentage", minMatch]
+      });
+    }
+
+    if (!isNaN(maxMatch)) {
+      matchConditions.push({
+        $lte: ["$matchPercentage", maxMatch]
+      });
+    }
+
+    if (matchConditions.length > 0) {
+      const matchFilter = {
+        $expr: matchConditions.length === 1
+          ? matchConditions[0]
+          : { $and: matchConditions }
+      };
+
+      console.log("✅ Adding matchPercentage filter to pipeline:", JSON.stringify(matchFilter, null, 2));
+      andConditions.push(matchFilter);
+    } else {
+      console.log("ℹ️ No valid matchPercentage filters found.");
+    }
 
 
     // Enhanced screening questions filtering with multiple choice support
