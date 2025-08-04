@@ -193,7 +193,7 @@ const JobCard = ({ job, flag = false, enable = false }) => {
               },
             }}
           />
-        </Box>z
+        </Box>
       </CardContent>
 
       {/* Fixed Bottom Section */}
