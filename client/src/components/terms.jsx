@@ -296,7 +296,7 @@ const TermsOfUsePage = () => {
                 mt:2
               }}
             >
-              @ 2025 HighImpactTalentEnquiry | <Link href="mailto:highimpacttalentenquiry@gmail.com">
+              @ 2025 High Impact Talent | <Link href="mailto:highimpacttalentenquiry@gmail.com">
             highimpacttalentenquiry@gmail.com
           </Link>
             </Typography>

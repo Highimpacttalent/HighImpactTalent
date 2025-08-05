@@ -30,7 +30,7 @@ const About = () => {
           fontSize: { xs: 16, md: 20 },
         }}
       >
-        Great careers aren’t built on luck—and great hires aren’t found by sifting through 10,000 resumes. At High Impact Talent, we bridge the gap between high-performing professionals and forward-thinking organizations.<br/><br/>
+        Great careers aren’t built on luck and great hires aren’t found by sifting through 10,000 resumes. At High Impact Talent, we bridge the gap between high-performing professionals and forward-thinking organizations.<br/><br/>
 
 We go beyond job descriptions and CVs. We match ambition with vision, culture with chemistry, and people with purpose.
       </Typography>
@@ -54,7 +54,7 @@ We go beyond job descriptions and CVs. We match ambition with vision, culture wi
               Built by Insiders. Backed by Experience. Trusted by Leaders.
 Founded by veterans from Bain & Company and the Mahindra Group, High Impact Talent was born to fix what traditional hiring platforms broke: speed, relevance, and trust.
 
-We saw the pain—founders wasting weeks skimming irrelevant profiles, and top-tier candidates lost in the noise. So we built a solution. One that’s fast, curated, and radically outcome-driven.
+We saw the pain founders wasting weeks skimming irrelevant profiles, and top-tier candidates lost in the noise. So we built a solution. One that’s fast, curated, and radically outcome-driven.
 
 Whether you're a Series A rocketship or an enterprise giant, we’re your unfair advantage in hiring strategic, high-impact talent. </Typography>
           </Stack>
@@ -81,13 +81,13 @@ Whether you're a Series A rocketship or an enterprise giant, we’re your unfair
             </Typography>
             <Typography sx={{ fontFamily: "Poppins", color: "#474E68", fontSize: 20 }}>
               To Make Every Hire Count. For Good.
-We’re not a job board. We’re a talent intelligence platform. Our vision is to redefine the way high-stakes hiring happens—through:<br/>
+We’re not just a job board. We’re a talent intelligence platform. Our vision is to redefine the way high stakes hiring happens—through:<br/>
 
 1. AI-powered shortlisting (no noise, just precision)<br/>
 2. Human-led matchmaking (we’ve been in the boardroom, not just the backend)<br/>
 3. Data-driven decisions (because gut-feel doesn’t scale)<br/>
 
-Our mission? To become the most trusted recruitment partner for high-impact roles across India and beyond.</Typography>
+Our mission? To become the most trusted recruitment partner for high impact roles across India and beyond.</Typography>
           </Stack>
         </Box>
         <Box sx={{ width: { xs: "100%", md: "30%" }, display: "flex", justifyContent: "center" }}>

@@ -331,7 +331,13 @@ const PremiumChatbot = () => {
             color="black"
             textAlign="center"
             fontFamily="Satoshi, sans-serif"
-            sx={{ letterSpacing: "0.5px" }}
+            sx={{
+              letterSpacing: "0.5px",
+              bgcolor: "white", // add white background
+              px: 0.5, // horizontal padding
+              borderRadius: 1, // slightly rounded background
+              boxShadow: "0 1px 4px rgba(0,0,0,0.08)", // optional subtle shadow
+            }}
           >
             Facing an issue?
             <br /> Ask Koustubh for help

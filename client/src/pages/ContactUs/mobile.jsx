@@ -12,37 +12,25 @@ import {
 } from "@mui/material";
 import Slider from "react-slick";
 import axios from "axios";
-import CustomCarosuel from "./Carousel/moblie"
+import CustomCarosuel from "./Carousel/moblie";
 import { LinkedIn } from "@mui/icons-material";
-
-const LinkedInCarousel = ({ linkedinProfiles }) => {
-  const settings = {
-    dots: true,
-    infinite: true,
-    speed: 500,
-    slidesToShow: 1, // Show one profile at a time
-    slidesToScroll: 1,
-    autoplay: true,
-    autoplaySpeed: 3000,
-    arrows: true,
-  };
-}
 
 const ContactUsMobile = () => {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     message: "",
+    phone: "",
   });
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
+  const [phoneError, setPhoneError] = useState("");
 
   const linkedinProfiles = [
-    "https://www.linkedin.com/embed/feed/update/urn:li:share:7253389464947892225",
-    "https://www.linkedin.com/embed/feed/update/urn:li:share:7221837885979672576",
-    "https://www.linkedin.com/embed/feed/update/urn:li:share:7224095613582213121",
-    "https://www.linkedin.com/embed/feed/update/urn:li:share:7249773333687197696",
-    "https://www.linkedin.com/embed/feed/update/urn:li:share:7255831803842748416",
+    "https://www.linkedin.com/embed/feed/update/urn:li:ugcPost:7358408328558886913",
+    "https://www.linkedin.com/embed/feed/update/urn:li:share:7356234837260652544",
+    "https://www.linkedin.com/embed/feed/update/urn:li:ugcPost:7355862775560114179",
+    "https://www.linkedin.com/embed/feed/update/urn:li:ugcPost:7354147592345116672",
   ];
 
   const settings = {
@@ -60,22 +48,61 @@ const ContactUsMobile = () => {
 
   // Handle Input Change
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+
+    if (name === "phone") {
+      // strip non-digits and limit to 10
+      const digitsOnly = value.replace(/\D/g, "").slice(0, 10);
+      setFormData((prev) => ({ ...prev, phone: digitsOnly }));
+
+      if (digitsOnly.length === 0) {
+        setPhoneError("");
+      } else if (!/^\d{10}$/.test(digitsOnly)) {
+        setPhoneError("Please enter a valid 10 digit phone number");
+      } else {
+        setPhoneError("");
+      }
+      return;
+    }
+
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   // Handle Form Submission
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
 
+    // Validate phone if provided
+    const phone = formData.phone?.trim();
+    if (phone && !/^\d{10}$/.test(phone)) {
+      setPhoneError("Please enter a valid 10 digit phone number");
+      return;
+    }
+
+    setLoading(true);
     try {
+      const finalMessage =
+        phone && phone.length === 10
+          ? `${formData.message}\n\nUser contact number: ${phone}`
+          : formData.message;
+
+      const payload = {
+        name: formData.name,
+        email: formData.email,
+        message: finalMessage,
+      };
+
       const response = await axios.post(
         "https://highimpacttalent.onrender.com/api-v1/sendmail/contactus",
-        formData
+        payload
       );
-      if (response.data.success) {
+
+      if (response.data?.success) {
         setShowModal(true);
-        setFormData({ name: "", email: "", message: "" });
+        setFormData({ name: "", email: "", message: "", phone: "" });
+        setPhoneError("");
+      } else {
+        console.warn("Contact submission returned success:false", response.data);
       }
     } catch (error) {
       console.error("Error sending message:", error);
@@ -101,7 +128,7 @@ const ContactUsMobile = () => {
         bgcolor: "white",
       }}
     >
-      <Box >
+      <Box>
         <Box sx={{ display: "flex", justifyContent: "center" }}>
           <Box textAlign="center" px={2} py={6}>
             <Typography
@@ -124,36 +151,27 @@ const ContactUsMobile = () => {
                 Listening!
               </span>
             </Typography>
-            <Typography
-              sx={{
-                textAlign: "center",
-                fontFamily: "Poppins",
-                fontWeight: 400,
-                fontSize: "12px",
-                color: "#808195",
-                mt: 2,
-              }}
-            >
-              High-paying roles are within reach. Get access to high-paying,
-              strategic roles and secure your place before someone else does.
-              Stay ahead in the hiring game with real-time updates and
-              AI-powered job matches.
-            </Typography>
           </Box>
         </Box>
 
-        <Box
-          sx={{
-            display: "flex",
-            justifyContent: "center",
-          }}
-        >
+        <Box sx={{ display: "flex", justifyContent: "center" }}>
           <Box
             component="form"
             onSubmit={handleSubmit}
-            sx={{ display: "flex", flexDirection: "column", gap: 2,height:"100%",width:"100%",px:2}}
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              gap: 2,
+              height: "100%",
+              width: "100%",
+              px: 2,
+            }}
           >
-            <Typography sx={{fontFamily:"Satoshi",fontWeight:"500",fontSize:18,color:"#24252C"}}>Name *</Typography>
+            <Typography
+              sx={{ fontFamily: "Satoshi", fontWeight: "500", fontSize: 18, color: "#24252C" }}
+            >
+              Name *
+            </Typography>
             <TextField
               name="name"
               variant="outlined"
@@ -161,11 +179,17 @@ const ContactUsMobile = () => {
               required
               onChange={handleChange}
               value={formData.name}
-              sx={{'& .MuiOutlinedInput-root': {
-      borderRadius:16, 
-    }}}
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  borderRadius: 16,
+                },
+              }}
             />
-            <Typography sx={{fontFamily:"Satoshi",fontWeight:"500",fontSize:18,color:"#24252C"}}>Email Address *</Typography>
+            <Typography
+              sx={{ fontFamily: "Satoshi", fontWeight: "500", fontSize: 18, color: "#24252C" }}
+            >
+              Email Address *
+            </Typography>
             <TextField
               name="email"
               type="email"
@@ -174,11 +198,17 @@ const ContactUsMobile = () => {
               required
               onChange={handleChange}
               value={formData.email}
-              sx={{'& .MuiOutlinedInput-root': {
-                borderRadius:16,
-              }}}
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  borderRadius: 16,
+                },
+              }}
             />
-             <Typography sx={{fontFamily:"Satoshi",fontWeight:"500",fontSize:18,color:"#24252C"}}>Message *</Typography>
+            <Typography
+              sx={{ fontFamily: "Satoshi", fontWeight: "500", fontSize: 18, color: "#24252C" }}
+            >
+              Message *
+            </Typography>
             <TextField
               name="message"
               variant="outlined"
@@ -188,79 +218,81 @@ const ContactUsMobile = () => {
               required
               onChange={handleChange}
               value={formData.message}
-              sx={{'& .MuiOutlinedInput-root': {
-                borderRadius:4, // Adjust the radius as needed
-              }}}
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  borderRadius: 4, // Adjust the radius as needed
+                },
+              }}
+            />
+
+            {/* Phone field (optional) */}
+            <Typography
+              sx={{ fontFamily: "Satoshi", fontWeight: "500", fontSize: 18, color: "#24252C" }}
+            >
+              Phone (optional)
+            </Typography>
+            <TextField
+              name="phone"
+              variant="outlined"
+              fullWidth
+              value={formData.phone}
+              onChange={handleChange}
+              error={Boolean(phoneError)}
+              helperText={phoneError || "Enter 10 digit mobile number (numbers only)."}
+              inputProps={{
+                maxLength: 10,
+                inputMode: "numeric",
+                pattern: "[0-9]*",
+              }}
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  borderRadius: 16,
+                },
+              }}
             />
 
             <Button
               variant="contained"
               color="primary"
               size="large"
-              sx={{ mt: 2, borderRadius: "25px", fontWeight: "bold",textTransform:"none",fontFamily:"Satoshi" }}
+              sx={{ mt: 2, borderRadius: "25px", fontWeight: "bold", textTransform: "none", fontFamily: "Satoshi" }}
               type="submit"
-              disabled={loading}
+              disabled={loading || Boolean(phoneError)}
             >
-              {loading ? (
-                <CircularProgress size={24} sx={{ color: "#fff" }} />
-              ) : (
-                "Send Message"
-              )}
+              {loading ? <CircularProgress size={24} sx={{ color: "#fff" }} /> : "Send Message"}
             </Button>
           </Box>
         </Box>
 
-       {/* LinkdIn Part */}
-       <Box
-      sx={{
-        p: 4,
-        borderRadius: 3,
-        display: "flex",
-        flexDirection: "column",
-        
-        mx: "auto", // Center align
-      }}
-    >
-      <Typography sx={{fontFamily:"Poppins",fontWeight:500,mb:6,fontSize:"20px",ml:5,color:"#474E68"}}>
-      Connect with us on <LinkedIn color="primary"/>
-      </Typography>
+        {/* LinkdIn Part */}
+        <Box sx={{ p: 4, borderRadius: 3, display: "flex", flexDirection: "column", mx: "auto" }}>
+          <Typography sx={{ fontFamily: "Poppins", fontWeight: 500, mb: 6, fontSize: "20px", ml: 5, color: "#474E68" }}>
+            Connect with us on <LinkedIn color="primary" />
+          </Typography>
 
-     {/* Custom Carousel Component */}
-     <CustomCarosuel
-        items={linkedinProfiles.map((link, index) => (
-          <iframe
-            key={index}
-            src={link}
-            width="100%"
-            height="450"
-            style={{
-              border: "none",
-              borderRadius: "10px",
-              boxShadow: "0 5px 15px rgba(0, 0, 0, 0.2)",
-            }}
-            allowFullScreen
-          ></iframe>
-        ))}
-      />
-    </Box>
+          {/* Custom Carousel Component */}
+          <CustomCarosuel
+            items={linkedinProfiles.map((link, index) => (
+              <iframe
+                key={index}
+                src={link}
+                width="100%"
+                height="450"
+                style={{
+                  border: "none",
+                  borderRadius: "10px",
+                  boxShadow: "0 5px 15px rgba(0, 0, 0, 0.2)",
+                }}
+                allowFullScreen
+              ></iframe>
+            ))}
+          />
+        </Box>
       </Box>
 
       {/* Success Modal */}
-      <Modal
-        open={showModal}
-        onClose={() => setShowModal(false)}
-        sx={{ display: "flex", alignItems: "center", justifyContent: "center" }}
-      >
-        <Box
-          sx={{
-            backgroundColor: "#fff",
-            p: 4,
-            borderRadius: 3,
-            boxShadow: 24,
-            textAlign: "center",
-            maxWidth: "400px",
-          }}
-        >
+      <Modal open={showModal} onClose={() => setShowModal(false)} sx={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <Box sx={{ backgroundColor: "#fff", p: 4, borderRadius: 3, boxShadow: 24, textAlign: "center", maxWidth: "400px" }}>
           <Typography variant="h6" color="primary" fontWeight="bold">
             Message Sent Successfully!
           </Typography>

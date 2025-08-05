@@ -85,6 +85,8 @@ const DesktopLanding = () => {
   const { user } = useSelector((state) => state.user);
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
+  const [userCount, setUserCount] = useState(null);
+  const [countLoading, setCountLoading] = useState(true);
 
   const handleClick = () => {
     const userInfo = localStorage.getItem("userInfo");
@@ -105,6 +107,67 @@ const DesktopLanding = () => {
     e.preventDefault();
     console.log("Subscribing:", email);
   };
+
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const fetchUserCount = async () => {
+      setCountLoading(true);
+      try {
+        const res = await fetch(
+          "https://highimpacttalent.onrender.com/api-v1/user/rounded-user-count"
+        );
+
+        if (!res.ok) {
+          throw new Error(`HTTP ${res.status}`);
+        }
+
+        const data = await res.json();
+
+        // Try to extract an integer in a few common shapes
+        let total = null;
+        if (data == null) {
+          total = null;
+        } else if (typeof data === "number") {
+          total = data;
+        } else if (typeof data.totalUsers === "number") {
+          total = data.totalUsers;
+        } else if (typeof data.count === "number") {
+          total = data.count;
+        } else if (typeof data.total === "number") {
+          total = data.total;
+        } else if (Array.isArray(data)) {
+          total = data.length;
+        } else if (Array.isArray(data.data)) {
+          total = data.data.length;
+        } else if (typeof data.data === "number") {
+          total = data.data;
+        }
+
+        if (isMounted && typeof total === "number" && !isNaN(total)) {
+          // round down to nearest 100 (2579 -> 2500)
+          const rounded = Math.floor(total / 100) * 100;
+          setUserCount(rounded);
+        } else if (isMounted) {
+          // couldn't parse, set null so UI uses fallback
+          setUserCount(null);
+        }
+      } catch (err) {
+        console.error("Error fetching user count:", err);
+        if (isMounted) setUserCount(null);
+      } finally {
+        if (isMounted) setCountLoading(false);
+      }
+    };
+
+    fetchUserCount();
+
+    // clean up
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   return (
     <Box
@@ -156,7 +219,27 @@ const DesktopLanding = () => {
                       letterSpacing: "-0.02em",
                     }}
                   >
-                    Where the right talent meets the{" "}
+                    Where the {" "}
+                    <Box
+                      component="span"
+                      sx={{
+                        fontSize: { md: "2.5rem", lg: "2.5rem" },
+                        fontWeight: 700,
+                        fontFamily:
+                          "Satoshi, -apple-system, BlinkMacSystemFont, sans-serif",
+                        lineHeight: 1.1,
+                        color: "#0a0a0a",
+                        mb: 3,
+                        letterSpacing: "-0.02em",
+                        background:
+                          "linear-gradient(135deg, #3C7EFC 0%, #1BA5EA 100%)",
+                        backgroundClip: "text",
+                        WebkitBackgroundClip: "text",
+                        WebkitTextFillColor: "transparent",
+                      }}
+                    >
+                      Right talent
+                    </Box>{" "} meets the{" "}
                     <Box
                       component="span"
                       sx={{
@@ -191,8 +274,7 @@ const DesktopLanding = () => {
                       fontWeight: 400,
                     }}
                   >
-                    Most platforms throw thousands of irrelevant profiles your
-                    way. We don't. Whether you're hiring or job hunting, we get
+                    Whether you're hiring or job hunting, we get
                     you to the shortlist faster with AI, insight,
                     and a human touch.
                   </Typography>
@@ -285,7 +367,7 @@ const DesktopLanding = () => {
                         variant="h4"
                         sx={{ fontWeight: 700, color: "#0a0a0a", mb: 0.5 }}
                       >
-                        2500+
+                         {countLoading ? "..." : userCount ? `${userCount}+` : "2500+"}
                       </Typography>
                       <Typography
                         variant="body2"
@@ -317,6 +399,117 @@ const DesktopLanding = () => {
                       height: "auto",
                       maxHeight: "500px",
                       filter: "drop-shadow(0 20px 60px rgba(0, 0, 0, 0.1))",
+                    }}
+                  />
+                </Box>
+              </AnimatedSection>
+            </Grid>
+          </Grid>
+        </Container>
+      </Box>
+
+
+       {/* Employers Section */}
+      <Box
+        component="section"
+        sx={{
+          py: { md: 12, lg: 16 },
+          bgcolor: "#f8fafc",
+        }}
+      >
+        <Container maxWidth="xl">
+          <Grid container spacing={10} alignItems="center">
+            <Grid item xs={12} md={6}>
+              <AnimatedSection>
+                <Box sx={{ pr: { md: 4 } }}>
+                  <Chip
+                    label="For Employers"
+                    sx={{
+                      mb: 3,
+                      px: 3,
+                      py: 1,
+                      bgcolor: "#f0f9ff",
+                      color: "#0284c7",
+                      fontSize: "1.125rem",
+                      fontWeight: 700,
+                      borderRadius: "50px",
+                      border: "1px solid #e0f2fe",
+                      fontStyle: "bold",
+                    }}
+                  />
+
+                  <Typography
+                    variant="h2"
+                    sx={{
+                      fontSize: { md: "2.5rem", lg: "2.5rem" },
+                      fontWeight: 600,
+                      fontFamily: "Satoshi",
+                      lineHeight: 1.2,
+                      color: "#0a0a0a",
+                      mb: 4,
+                      letterSpacing: "-0.02em",
+                    }}
+                  >
+                    Find candidates{" "}
+                    <Box component="span" sx={{ color: "#1BA5EA",fontWeight: 700 }}>
+                      you won’t want to lose.
+                    </Box>
+                  </Typography>
+
+                  <Typography
+                    variant="body1"
+                    sx={{
+                      fontSize: "1.125rem",
+                      fontFamily: "Poppins",
+                      color: "#64748b",
+                      mb: 4,
+                      lineHeight: 1.7,
+                    }}
+                  >
+                    No more CV flood. No more guesswork. Just sharp,
+                    high-retention talent vetted for skill and culture fit.
+                  </Typography>
+
+                  <Stack spacing={3}>
+                    {[
+                      "AI-driven resume screening (zero noise)",
+                      "Culture-fit insights (beyond keywords)",
+                      "Industry ready shortlist in required time",
+                    ].map((feature, index) => (
+                      <Box
+                        key={index}
+                        sx={{ display: "flex", alignItems: "center", gap: 2 }}
+                      >
+                        <CheckCircle size={20} color="#10b981" />
+                        <Typography
+                          sx={{ color: "#374151", fontFamily: "Poppins" }}
+                        >
+                          {feature}
+                        </Typography>
+                      </Box>
+                    ))}
+                  </Stack>
+                </Box>
+              </AnimatedSection>
+            </Grid>
+
+            <Grid item xs={12} md={6}>
+              <AnimatedSection delay={300}>
+                <Box
+                  sx={{
+                    display: "flex",
+                    justifyContent: "center",
+                  }}
+                >
+                  <img
+                    src={Comp3}
+                    alt="Platform interface"
+                    style={{
+                      maxWidth: "100%",
+                      height: "auto",
+                      maxHeight: "400px",
+                      filter: "drop-shadow(0 30px 80px rgba(0, 0, 0, 0.12))",
+                      borderRadius: "16px",
                     }}
                   />
                 </Box>
@@ -408,7 +601,6 @@ const DesktopLanding = () => {
                   <Stack spacing={3}>
                     {[
                       "Hyper-personalized job matches",
-                      "Direct access to top companies",
                       "Real-time application tracking (and no ghosting)",
                     ].map((feature, index) => (
                       <Box
@@ -431,116 +623,7 @@ const DesktopLanding = () => {
         </Container>
       </Box>
 
-      {/* Employers Section */}
-      <Box
-        component="section"
-        sx={{
-          py: { md: 12, lg: 16 },
-          bgcolor: "#f8fafc",
-        }}
-      >
-        <Container maxWidth="xl">
-          <Grid container spacing={10} alignItems="center">
-            <Grid item xs={12} md={6}>
-              <AnimatedSection>
-                <Box sx={{ pr: { md: 4 } }}>
-                  <Chip
-                    label="For Employers"
-                    sx={{
-                      mb: 3,
-                      px: 3,
-                      py: 1,
-                      bgcolor: "#f0f9ff",
-                      color: "#0284c7",
-                      fontSize: "1.125rem",
-                      fontWeight: 700,
-                      borderRadius: "50px",
-                      border: "1px solid #e0f2fe",
-                      fontStyle: "bold",
-                    }}
-                  />
-
-                  <Typography
-                    variant="h2"
-                    sx={{
-                      fontSize: { md: "2.5rem", lg: "2.5rem" },
-                      fontWeight: 600,
-                      fontFamily: "Satoshi",
-                      lineHeight: 1.2,
-                      color: "#0a0a0a",
-                      mb: 4,
-                      letterSpacing: "-0.02em",
-                    }}
-                  >
-                    Find candidates{" "}
-                    <Box component="span" sx={{ color: "#1BA5EA",fontWeight: 700 }}>
-                      you won’t want to lose.
-                    </Box>
-                  </Typography>
-
-                  <Typography
-                    variant="body1"
-                    sx={{
-                      fontSize: "1.125rem",
-                      fontFamily: "Poppins",
-                      color: "#64748b",
-                      mb: 4,
-                      lineHeight: 1.7,
-                    }}
-                  >
-                    No more CV flood. No more guesswork. Just sharp,
-                    high-retention talent vetted for skill and culture fit.
-                    Delivered faster than your team’s group chat.
-                  </Typography>
-
-                  <Stack spacing={3}>
-                    {[
-                      "AI-driven resume screening (zero noise)",
-                      "Culture-fit insights (beyond keywords)",
-                      "Interview-ready shortlists in short time",
-                    ].map((feature, index) => (
-                      <Box
-                        key={index}
-                        sx={{ display: "flex", alignItems: "center", gap: 2 }}
-                      >
-                        <CheckCircle size={20} color="#10b981" />
-                        <Typography
-                          sx={{ color: "#374151", fontFamily: "Poppins" }}
-                        >
-                          {feature}
-                        </Typography>
-                      </Box>
-                    ))}
-                  </Stack>
-                </Box>
-              </AnimatedSection>
-            </Grid>
-
-            <Grid item xs={12} md={6}>
-              <AnimatedSection delay={300}>
-                <Box
-                  sx={{
-                    display: "flex",
-                    justifyContent: "center",
-                  }}
-                >
-                  <img
-                    src={Comp3}
-                    alt="Platform interface"
-                    style={{
-                      maxWidth: "100%",
-                      height: "auto",
-                      maxHeight: "400px",
-                      filter: "drop-shadow(0 30px 80px rgba(0, 0, 0, 0.12))",
-                      borderRadius: "16px",
-                    }}
-                  />
-                </Box>
-              </AnimatedSection>
-            </Grid>
-          </Grid>
-        </Container>
-      </Box>
+     
 
       {/* Bottom Wave
       <Box sx={{ 

@@ -15,34 +15,22 @@ import axios from "axios";
 import CustomCarosuel from "./Carousel/view";
 import { LinkedIn } from "@mui/icons-material";
 
-const LinkedInCarousel = ({ linkedinProfiles }) => {
-  const settings = {
-    dots: true,
-    infinite: true,
-    speed: 500,
-    slidesToShow: 1, // Show one profile at a time
-    slidesToScroll: 1,
-    autoplay: true,
-    autoplaySpeed: 3000,
-    arrows: true,
-  };
-};
-
 const ContactUsDesktop = () => {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     message: "",
+    phone: "",
   });
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
+  const [phoneError, setPhoneError] = useState("");
 
   const linkedinProfiles = [
-    "https://www.linkedin.com/embed/feed/update/urn:li:share:7253389464947892225",
-    "https://www.linkedin.com/embed/feed/update/urn:li:share:7221837885979672576",
-    "https://www.linkedin.com/embed/feed/update/urn:li:share:7224095613582213121",
-    "https://www.linkedin.com/embed/feed/update/urn:li:share:7249773333687197696",
-    "https://www.linkedin.com/embed/feed/update/urn:li:share:7255831803842748416",
+    "https://www.linkedin.com/embed/feed/update/urn:li:ugcPost:7358408328558886913",
+    "https://www.linkedin.com/embed/feed/update/urn:li:share:7356234837260652544",
+    "https://www.linkedin.com/embed/feed/update/urn:li:ugcPost:7355862775560114179",
+    "https://www.linkedin.com/embed/feed/update/urn:li:ugcPost:7354147592345116672",
   ];
 
   const settings = {
@@ -60,22 +48,67 @@ const ContactUsDesktop = () => {
 
   // Handle Input Change
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+
+    if (name === "phone") {
+      // remove non-digits
+      const digitsOnly = value.replace(/\D/g, "");
+      // limit to 10 chars
+      const limited = digitsOnly.slice(0, 10);
+      setFormData((prev) => ({ ...prev, phone: limited }));
+
+      // validation feedback
+      if (limited.length === 0) {
+        setPhoneError("");
+      } else if (!/^\d{10}$/.test(limited)) {
+        setPhoneError("Please enter a valid 10 digit phone number");
+      } else {
+        setPhoneError("");
+      }
+      return;
+    }
+
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   // Handle Form Submission
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Validate phone if provided
+    const phone = formData.phone?.trim();
+    if (phone && !/^\d{10}$/.test(phone)) {
+      setPhoneError("Please enter a valid 10 digit phone number");
+      return;
+    }
+
     setLoading(true);
 
     try {
+      // Append phone to message only if provided
+      const finalMessage =
+        phone && phone.length === 10
+          ? `${formData.message}\n\nUser contact number: ${phone}`
+          : formData.message;
+
+      const payload = {
+        name: formData.name,
+        email: formData.email,
+        message: finalMessage,
+      };
+
       const response = await axios.post(
         "https://highimpacttalent.onrender.com/api-v1/sendmail/contactus",
-        formData
+        payload
       );
-      if (response.data.success) {
+
+      if (response.data?.success) {
         setShowModal(true);
-        setFormData({ name: "", email: "", message: "" });
+        setFormData({ name: "", email: "", message: "", phone: "" });
+        setPhoneError("");
+      } else {
+        // optional: show warning if needed
+        console.warn("Contact submission returned success:false", response.data);
       }
     } catch (error) {
       console.error("Error sending message:", error);
@@ -125,21 +158,6 @@ const ContactUsDesktop = () => {
               >
                 Listening!
               </span>
-            </Typography>
-            <Typography
-              sx={{
-                textAlign: "center",
-                fontFamily: "Poppins",
-                fontWeight: 400,
-                fontSize: "14px",
-                color: "#808195",
-                mt: 2,
-              }}
-            >
-              High-paying roles are within reach. Get access to high-paying,
-              strategic roles and secure your place before someone else does.
-              Stay ahead in the hiring game with real-time updates and
-              AI-powered job matches.
             </Typography>
           </Box>
         </Box>
@@ -208,6 +226,36 @@ const ContactUsDesktop = () => {
                 },
               }}
             />
+            {/* Phone field (optional) */}
+            <Typography
+              sx={{
+                fontFamily: "Satoshi",
+                fontWeight: "500",
+                fontSize: 18,
+                color: "#24252C",
+              }}
+            >
+              Phone (optional)
+            </Typography>
+            <TextField
+              name="phone"
+              variant="outlined"
+              fullWidth
+              value={formData.phone}
+              onChange={handleChange}
+              error={Boolean(phoneError)}
+              helperText={phoneError || "Enter 10 digit mobile number (numbers only)."}
+              inputProps={{
+                maxLength: 10,
+                inputMode: "numeric",
+                pattern: "[0-9]*",
+              }}
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  borderRadius: 16,
+                },
+              }}
+            />
             <Typography
               sx={{
                 fontFamily: "Satoshi",
@@ -234,6 +282,7 @@ const ContactUsDesktop = () => {
               }}
             />
 
+
             <Button
               variant="contained"
               color="primary"
@@ -246,13 +295,9 @@ const ContactUsDesktop = () => {
                 fontFamily: "Satoshi",
               }}
               type="submit"
-              disabled={loading}
+              disabled={loading || Boolean(phoneError)}
             >
-              {loading ? (
-                <CircularProgress size={24} sx={{ color: "#fff" }} />
-              ) : (
-                "Send Message"
-              )}
+              {loading ? <CircularProgress size={24} sx={{ color: "#fff" }} /> : "Send Message"}
             </Button>
           </Box>
         </Box>
@@ -265,7 +310,6 @@ const ContactUsDesktop = () => {
             display: "flex",
             flexDirection: "column",
             width: "80%",
-
             mx: "auto", // Center align
           }}
         >
