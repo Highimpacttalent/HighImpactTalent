@@ -1078,3 +1078,31 @@ export const checkEmail = async (req, res) => {
     return res.status(500).json({ success: false, message: "Server error" });
   }
 };
+
+
+
+//User Counter 
+// get rounded user count
+export const getRoundedUserCount = async (req, res) => {
+  try {
+    // get exact count of users
+    const totalUsers = await Users.countDocuments();
+
+    // round down to nearest 100 (e.g. 2579 -> 2500)
+    const roundedToHundred = Math.floor(totalUsers / 100) * 100;
+
+    // respond
+    return res.status(200).json({
+      success: true,
+      totalUsers,
+      rounded: roundedToHundred,
+    });
+  } catch (error) {
+    console.error("Error fetching user count:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error while fetching user count",
+      error: error.message,
+    });
+  }
+};

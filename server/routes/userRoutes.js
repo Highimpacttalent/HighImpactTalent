@@ -1,6 +1,6 @@
 import express from "express";
 import userAuth from "../middlewares/authMiddleware.js";
-import { getUser, updateUser,register, signIn ,deleteUser,uploadResume,getUsers, toggleJobLike, updateExperienceHistory, updateEducationDetails, updateProfileUrl, changePassword, updateSkills, updateUserDetails, updateWorkDetails, updateLinkedIn, uploadResumeMiddleware, uploadimageMiddleware, uploadImage, uploadCompanyLogo, updateAbout, updateJobPreferences, checkEmail } from "../controllers/userController.js";
+import { getUser, updateUser,register, signIn ,deleteUser,uploadResume,getUsers,getRoundedUserCount,  toggleJobLike, updateExperienceHistory, updateEducationDetails, updateProfileUrl, changePassword, updateSkills, updateUserDetails, updateWorkDetails, updateLinkedIn, uploadResumeMiddleware, uploadimageMiddleware, uploadImage, uploadCompanyLogo, updateAbout, updateJobPreferences, checkEmail } from "../controllers/userController.js";
 import { uploadAuth } from "../middlewares/uploadAuth.js";
 
 const router = express.Router();
@@ -47,5 +47,7 @@ router.post('/updateAbout', updateAbout)
 router.post('/updateJobPreferences', updateJobPreferences)
 
 router.post('/check-email', checkEmail)
+
+router.get("/rounded-user-count", getRoundedUserCount);
 // user/updateprofileurl
 export default router;
