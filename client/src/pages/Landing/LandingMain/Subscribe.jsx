@@ -213,7 +213,7 @@ const PremiumSubscribeSection = () => {
                 fontSize={{ xs: "1rem", md: "1.25rem" }}
                 mb={4}
               >
-                Join 2,500+ ambitious professionals getting handpicked job
+                Join {countLoading ? "..." : userCount ? `${userCount}+` : "2500+"} ambitious professionals getting handpicked job
                 drops, market moves, and no-fluff career advice—every week.
               </Typography>
 
