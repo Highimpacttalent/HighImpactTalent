@@ -51,7 +51,7 @@ We go beyond job descriptions and CVs. We match ambition with vision, culture wi
               Our Story
             </Typography>
             <Typography sx={{ fontFamily: "Poppins", color: "#474E68", fontSize: 20 }}>
-              Built by Insiders. Backed by Experience. Trusted by Leaders.
+              Built by Insiders. Backed by Experience. Trusted by Leaders.<br/>
 Founded by veterans from Bain & Company and the Mahindra Group, High Impact Talent was born to fix what traditional hiring platforms broke: speed, relevance, and trust.
 
 We saw the pain founders wasting weeks skimming irrelevant profiles, and top-tier candidates lost in the noise. So we built a solution. One that’s fast, curated, and radically outcome-driven.
@@ -80,8 +80,8 @@ Whether you're a Series A rocketship or an enterprise giant, we’re your unfair
               Our Vision
             </Typography>
             <Typography sx={{ fontFamily: "Poppins", color: "#474E68", fontSize: 20 }}>
-              To Make Every Hire Count. For Good.
-We’re not just a job board. We’re a talent intelligence platform. Our vision is to redefine the way high stakes hiring happens—through:<br/>
+              To Make Every Hire Count. For Good. We’re not just a job board. <br/>
+              We are a talent intelligence platform. Our vision is to redefine the way high stakes hiring happens—through:<br/>
 
 1. AI-powered shortlisting (no noise, just precision)<br/>
 2. Human-led matchmaking (we’ve been in the boardroom, not just the backend)<br/>

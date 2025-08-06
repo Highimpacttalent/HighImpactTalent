@@ -6,22 +6,33 @@ import axios from "axios";
 
 dotenv.config();
 
-const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+const client = new OAuth2Client(
+  process.env.GOOGLE_CLIENT_ID,
+  process.env.GOOGLE_CLIENT_SECRET,
+  process.env.GOOGLE_REDIRECT_URI
+);
 
 export const googleAuth = async (req, res) => {
   try {
-    const { token } = req.body;
-    if (!token) return res.status(400).json({ message: "Token is required" });
+    const { code } = req.body; // Changed from token to code
+    if (!code) return res.status(400).json({ message: "Authorization code is required" });
 
-    // Verify Google ID Token
+    // Exchange authorization code for tokens
+    const { tokens } = await client.getToken(code);
+    
+    if (!tokens.id_token) {
+      return res.status(400).json({ message: "No ID token received from Google" });
+    }
+
+    // Verify the ID token
     const ticket = await client.verifyIdToken({
-      idToken: token,
+      idToken: tokens.id_token,
       audience: process.env.GOOGLE_CLIENT_ID,
     });
 
-    // Extract user info
+    // Extract user info from verified token
     const payload = ticket.getPayload();
-    if (!payload) return res.status(400).json({ message: "Invalid token" });
+    if (!payload) return res.status(400).json({ message: "Invalid token payload" });
 
     const { 
       email, 
@@ -57,7 +68,7 @@ export const googleAuth = async (req, res) => {
       success: true,
       message: "Login successfully",
       user,
-      token : jwtToken,
+      token: jwtToken,
       isNewUser
     });
 
