@@ -74,15 +74,16 @@ const UserInfoForm = () => {
     message: "",
   });
 
+  const rawExp = defaultValues?.ProfessionalDetails?.noOfYearsExperience || "";
+  const parsedExp = rawExp.match(/\d+/)?.[0] ?? ""; // "15" from "15+"
   // Form data state
   const [formData, setFormData] = useState({
     currentCompany: defaultValues?.ProfessionalDetails?.currentCompany || "",
     currentDesignation:
       defaultValues?.ProfessionalDetails?.currentDesignation || "",
     linkedinLink: defaultValues?.PersonalInformation?.linkedinLink || "",
-    experience: defaultValues?.ProfessionalDetails?.noOfYearsExperience
-      ? Math.ceil(defaultValues?.ProfessionalDetails?.noOfYearsExperience)
-      : "",
+
+    experience: parsedExp,
     about: defaultValues?.ProfessionalDetails?.about || "",
     salary: "",
     contactNumber: defaultValues?.PersonalInformation?.contactNumber || "",
