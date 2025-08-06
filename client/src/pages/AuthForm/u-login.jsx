@@ -340,43 +340,58 @@ function UserLoginForm() {
   };
 
   // Custom styled Google button to match LinkedIn button
-  const CustomGoogleButton = ({ onClick }) => (
-    <Button
-      fullWidth
-      variant="outlined"
-      onClick={onClick}
-      disabled={googleLoading}
-      sx={{
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        gap: 1,
-        textTransform: "none",
-        fontWeight: 600,
-        color: "rgba(64, 66, 88, 1)",
-        borderColor: "rgba(64, 66, 88, 0.23)",
-        backgroundColor: "rgba(255, 255, 255, 1)",
-        boxShadow: "0px 1px 3px rgba(0, 0, 0, 0.08)",
-        height: { xs: "44px", sm: "44px", md: "44px" },
-        width: "100%",
-        padding: "6px 16px",
-        "&:hover": {
-          backgroundColor: "rgba(249, 250, 251, 1)",
-          borderColor: "rgba(64, 66, 88, 0.35)",
-        },
-      }}
-      startIcon={
-        googleLoading ? (
-          <CircularProgress size={20} />
-        ) : (
-          <GoogleIcon sx={{ color: "#DB4437" }} />
-        )
-      }
-    >
+  const CustomGoogleButton = ({ onClick, disabled }) => (
+  <Button
+    fullWidth
+    variant="outlined"
+    onClick={onClick}
+    disabled={disabled || googleLoading}
+    sx={{
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "flex-start", // Changed from center to flex-start
+      gap: 1,
+      textTransform: "none",
+      fontWeight: 600,
+      color: "rgba(64, 66, 88, 1)",
+      borderColor: "rgba(64, 66, 88, 0.23)",
+      backgroundColor: "rgba(255, 255, 255, 1)",
+      boxShadow: "0px 1px 3px rgba(0, 0, 0, 0.08)",
+      height: "44px", // Fixed height
+      minHeight: "44px", // Ensure minimum height
+      width: "100%",
+      padding: "6px 16px",
+      "&:hover": {
+        backgroundColor: "rgba(249, 250, 251, 1)",
+        borderColor: "rgba(64, 66, 88, 0.35)",
+      },
+    }}
+  >
+    {/* Icon container with fixed width */}
+    <Box sx={{ 
+      display: 'flex', 
+      alignItems: 'center', 
+      justifyContent: 'center',
+      width: '20px',
+      height: '20px',
+      flexShrink: 0 // Prevent shrinking
+    }}>
+      {googleLoading ? (
+        <CircularProgress size={20} />
+      ) : (
+        <GoogleIcon sx={{ color: "#DB4437", fontSize: '20px' }} />
+      )}
+    </Box>
+    
+    {/* Text container */}
+    <Box sx={{ 
+      flexGrow: 1, 
+      display: 'flex', 
+      justifyContent: 'center',
+      alignItems: 'center'
+    }}>
       <Typography
         sx={{
-          flexGrow: 1,
-          textAlign: "center",
           fontFamily: "Arial",
           fontSize: "0.9rem",
           textOverflow: "ellipsis",
@@ -386,8 +401,9 @@ function UserLoginForm() {
       >
         Continue with Google
       </Typography>
-    </Button>
-  );
+    </Box>
+  </Button>
+);
 
   return (
      <Box sx={{ minHeight: '100vh', display: 'flex' }}>
@@ -526,66 +542,85 @@ function UserLoginForm() {
             </Divider>
 
             <Grid container spacing={2} sx={{ mb: 3 }}>
-              <Grid item xs={12} >
-                <GoogleOAuthProvider clientId="390148996153-usdltgirc8gk0mor929tnibamu7a6tad.apps.googleusercontent.com">
-                  <GoogleLogin
-                    onSuccess={handleGoogleSuccess}
-                    onError={handleGoogleError}
-                    useOneTap={false}
-                    cookiePolicy={"single_host_origin"}
-                    render={(renderProps) => (
-                      <CustomGoogleButton onClick={renderProps.onClick} />
-                    )}
-                  />
-                </GoogleOAuthProvider>
-              </Grid>
-              <Grid item xs={12} >
-                <Button
-                  fullWidth
-                  variant="outlined"
-                  onClick={handleLinkedInLogin}
-                  disabled={linkedinLoading}
-                  sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: 1,
-                    textTransform: "none",
-                    fontWeight: 600,
-                    color: "rgba(64, 66, 88, 1)",
-                    borderColor: "rgba(64, 66, 88, 0.23)",
-                    backgroundColor: "rgba(255, 255, 255, 1)",
-                    height: { xs: "44px", sm: "44px", md: "44px" }, // Matching height with Google button
-                    padding: "6px 16px",
-                    "&:hover": {
-                      backgroundColor: "rgba(249, 250, 251, 1)",
-                      borderColor: "rgba(64, 66, 88, 0.35)",
-                    },
-                  }}
-                  startIcon={
-                    linkedinLoading ? (
-                      <CircularProgress size={20} />
-                    ) : (
-                      <LinkedInIcon sx={{ color: "#0077B5" }} />
-                    )
-                  }
-                >
-                  <Typography
-                    sx={{
-                      flexGrow: 1,
-                      textAlign: "center",
-                      fontFamily: "Arial",
-                      fontSize: "0.9rem",
-                      textOverflow: "ellipsis",
-                      whiteSpace: "nowrap",
-                      overflow: "hidden",
-                    }}
-                  >
-                    Continue with LinkedIn
-                  </Typography>
-                </Button>
-              </Grid>
-            </Grid>
+  <Grid item xs={12}>
+    <GoogleOAuthProvider clientId="390148996153-usdltgirc8gk0mor929tnibamu7a6tad.apps.googleusercontent.com">
+      <GoogleLogin
+        onSuccess={handleGoogleSuccess}
+        onError={handleGoogleError}
+        useOneTap={false}
+        cookiePolicy={"single_host_origin"}
+        render={(renderProps) => (
+          <CustomGoogleButton 
+            onClick={renderProps.onClick} 
+            disabled={renderProps.disabled}
+          />
+        )}
+      />
+    </GoogleOAuthProvider>
+  </Grid>
+  <Grid item xs={12}>
+    <Button
+      fullWidth
+      variant="outlined"
+      onClick={handleLinkedInLogin}
+      disabled={linkedinLoading}
+      sx={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "flex-start", // Changed to flex-start for consistency
+        gap: 1,
+        textTransform: "none",
+        fontWeight: 600,
+        color: "rgba(64, 66, 88, 1)",
+        borderColor: "rgba(64, 66, 88, 0.23)",
+        backgroundColor: "rgba(255, 255, 255, 1)",
+        height: "44px", // Fixed height
+        minHeight: "44px", // Ensure minimum height
+        padding: "6px 16px",
+        "&:hover": {
+          backgroundColor: "rgba(249, 250, 251, 1)",
+          borderColor: "rgba(64, 66, 88, 0.35)",
+        },
+      }}
+    >
+      {/* Icon container with fixed width */}
+      <Box sx={{ 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'center',
+        width: '20px',
+        height: '20px',
+        flexShrink: 0 // Prevent shrinking
+      }}>
+        {linkedinLoading ? (
+          <CircularProgress size={20} />
+        ) : (
+          <LinkedInIcon sx={{ color: "#0077B5", fontSize: '20px' }} />
+        )}
+      </Box>
+      
+      {/* Text container */}
+      <Box sx={{ 
+        flexGrow: 1, 
+        display: 'flex', 
+        justifyContent: 'center',
+        alignItems: 'center'
+      }}>
+        <Typography
+          sx={{
+            fontFamily: "Arial",
+            fontSize: "0.9rem",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+            overflow: "hidden",
+          }}
+        >
+          Continue with LinkedIn
+        </Typography>
+      </Box>
+    </Button>
+  </Grid>
+</Grid>
 
             <Typography
               textAlign="center"
