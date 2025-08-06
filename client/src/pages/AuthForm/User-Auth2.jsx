@@ -17,9 +17,7 @@ import { Login } from "../../redux/userSlice";
 import { apiRequest } from "../../utils";
 import Heroimg from "../../assets/CreateAccount/HeroImg.svg";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
-// Updated import - use useGoogleLogin hook instead of GoogleLogin component
-import { GoogleOAuthProvider, useGoogleLogin } from "@react-oauth/google";
-import GoogleIcon from "@mui/icons-material/Google";
+import { useGoogleLogin } from "@react-oauth/google";
 import LinkedInIcon from "@mui/icons-material/LinkedIn";
 import { useLocation } from "react-router-dom";
 import AlertModal from "../../components/Alerts/view";
