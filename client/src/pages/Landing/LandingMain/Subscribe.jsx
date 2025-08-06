@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState,useEffect } from "react";
 import {
   Box,
   Container,
@@ -26,6 +26,8 @@ const PremiumSubscribeSection = () => {
   const [hover, setHover] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
+  const [userCount, setUserCount] = useState(null);
+    const [countLoading, setCountLoading] = useState(true);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -58,6 +60,66 @@ const PremiumSubscribeSection = () => {
       setIsSubmitting(false);
     }
   };
+
+  useEffect(() => {
+      let isMounted = true;
+  
+      const fetchUserCount = async () => {
+        setCountLoading(true);
+        try {
+          const res = await fetch(
+            "https://highimpacttalent.onrender.com/api-v1/user/rounded-user-count"
+          );
+  
+          if (!res.ok) {
+            throw new Error(`HTTP ${res.status}`);
+          }
+  
+          const data = await res.json();
+  
+          // Try to extract an integer in a few common shapes
+          let total = null;
+          if (data == null) {
+            total = null;
+          } else if (typeof data === "number") {
+            total = data;
+          } else if (typeof data.totalUsers === "number") {
+            total = data.totalUsers;
+          } else if (typeof data.count === "number") {
+            total = data.count;
+          } else if (typeof data.total === "number") {
+            total = data.total;
+          } else if (Array.isArray(data)) {
+            total = data.length;
+          } else if (Array.isArray(data.data)) {
+            total = data.data.length;
+          } else if (typeof data.data === "number") {
+            total = data.data;
+          }
+  
+          if (isMounted && typeof total === "number" && !isNaN(total)) {
+            // round down to nearest 100 (2579 -> 2500)
+            const rounded = Math.floor(total / 100) * 100;
+            setUserCount(rounded);
+          } else if (isMounted) {
+            // couldn't parse, set null so UI uses fallback
+            setUserCount(null);
+          }
+        } catch (err) {
+          console.error("Error fetching user count:", err);
+          if (isMounted) setUserCount(null);
+        } finally {
+          if (isMounted) setCountLoading(false);
+        }
+      };
+  
+      fetchUserCount();
+  
+      // clean up
+      return () => {
+        isMounted = false;
+      };
+    }, []);
 
   return (
     <Box sx={{ width: "100%", bgcolor: "background.default", py: 6, px: 2 }}>
@@ -289,7 +351,7 @@ const PremiumSubscribeSection = () => {
   <Box textAlign={{ xs: "center", sm: "center" }} maxWidth={400}>
     <Typography fontFamily="Satoshi, sans-serif" color="text.secondary">
       <Box component="span" fontWeight={700} color="text.primary">
-        2500+
+        {countLoading ? "..." : userCount ? `${userCount}+` : "2500+"}
       </Box>{" "}
       professionals already joined
     </Typography>
