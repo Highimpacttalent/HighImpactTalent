@@ -68,7 +68,7 @@ export const createJob = async (req, res, next) => {
       qualifications,
       screeningQuestions,
       company: id,
-      status: "draft",
+      status: "live", 
       skills: Array.isArray(skills) ? skills : [],
       // New fields with optional handling
       ...(graduationYear && { graduationYear }),
