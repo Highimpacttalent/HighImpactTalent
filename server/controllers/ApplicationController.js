@@ -304,8 +304,8 @@ const parseFilters = (query) => {
     result.totalYearsInConsulting = query.totalYearsInConsulting;
   }
 
-  if (query.matchLevel) {
-    result.resumeMatchLevel = query.matchLevel;
+  if(query.matchPercentageTier) {
+    result.matchPercentageTier = query.matchPercentageTier.trim();
   }
 
   if (query.status) {
@@ -334,7 +334,7 @@ export const getApplicationsOfAjob = async (req, res) => {
     const baseQuery = {
       job: new mongoose.Types.ObjectId(jobId),
       ...(filters.status && { status: filters.status }),
-      ...(filters.resumeMatchLevel && { resumeMatchLevel: filters.resumeMatchLevel })
+      //...(filters.resumeMatchLevel && { resumeMatchLevel: filters.resumeMatchLevel })
     };
 
     // Build aggregation pipeline
