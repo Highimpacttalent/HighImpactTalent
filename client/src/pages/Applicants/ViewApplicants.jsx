@@ -102,9 +102,9 @@ const JobApplications = () => {
   );
   const matchTiers = [
   { id: "all", label: "All" },
-  { id: "gold", label: "Gold (90%+)" },
-  { id: "silver", label: "Silver (80-90%)" },
-  { id: "platinum", label: "Platinum (70-80%)" }
+  { id: "platinum", label: "Platinum (90%+)" },
+  { id: "gold", label: "Gold (80-90%)" },
+  { id: "silver", label: "Silver (70-80%)" }
 ];
 
   const [errorsnackbar, errorsetSnackbar] = useState({

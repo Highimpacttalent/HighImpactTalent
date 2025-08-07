@@ -551,8 +551,8 @@ export const getApplicationsOfAjob = async (req, res) => {
       let matchCondition;
       
       switch (filters.matchPercentageTier) {
-        case "gold":
-          // Gold: >90% match percentage
+        case "platinum":
+          // Platinum: >90% match percentage
           matchCondition = {
             $expr: {
               $gt: [
@@ -562,8 +562,8 @@ export const getApplicationsOfAjob = async (req, res) => {
             }
           };
           break;
-        case "silver":
-          // Silver: >80% to ≤90% match percentage
+        case "gold":
+          // Gold: ≥80% to ≤90% match percentage
           matchCondition = {
             $expr: {
               $and: [
@@ -583,8 +583,8 @@ export const getApplicationsOfAjob = async (req, res) => {
             }
           };
           break;
-        case "platinum":
-          // Platinum: ≥70% to ≤80% match percentage
+        case "silver":
+          // Silver: ≥70% to ≤80% match percentage
           matchCondition = {
             $expr: {
               $and: [
