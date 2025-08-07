@@ -94,7 +94,7 @@ function JobCardRecriter({ job, fetchJobs }) {
                 />
                 <Chip
                   icon={<WorkOutlineOutlined sx={{ color: "#474E68" }} />}
-                  label={`${job?.experience}+ years experience`}
+                  label={`${job?.experience.minExperience} - ${job?.experience.maxExperience} years experience`}
                   variant="contained"
                   sx={{ color: "#474E68", fontWeight: "400" }}
                 />
@@ -104,9 +104,9 @@ function JobCardRecriter({ job, fetchJobs }) {
                 label={
                   job.salaryConfidential
                     ? "Confidential"
-                    : `${Number(job.salary).toLocaleString("en-IN")} (${
-                        job.salaryCategory
-                      })`
+                    : job.salary?.minSalary && job.salary?.maxSalary
+                    ? `₹${job.salary.minSalary}L - ₹${job.salary.maxSalary}L (${job.salaryCategory})`
+                    : "Salary Not Specified"
                 }
                 variant="contained"
                 sx={{ color: "#474E68", fontWeight: "400" }}

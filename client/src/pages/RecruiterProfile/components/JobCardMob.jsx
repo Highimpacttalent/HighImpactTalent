@@ -125,7 +125,7 @@ function JobCardRecriter({ job, fetchJobs }) {
                 />
                 <Chip
                   icon={<WorkOutlineOutlined sx={{ color: "#474E68" }} />}
-                  label={`${job?.experience}+ years experience`}
+                  label={`${job?.experience.minExperience - job?.experience.maxExperience}+ years experience`}
                   variant="contained"
                   sx={{ color: "#474E68", fontWeight: "400" }}
                 />
