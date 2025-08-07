@@ -417,47 +417,49 @@ export const getApplicationsOfAjob = async (req, res) => {
 
     // Location filtering - search each location separately
     if (filters.locations?.length > 0) {
-  const locationConditions = [];
+      const locationConditions = [];
 
-  filters.locations.forEach(location => {
-    locationConditions.push({
-      $expr: {
-        $regexMatch: {
-          input: { $trim: { input: "$applicant.currentLocation" } },
-          regex: location,
-          options: "i"
-        }
+      filters.locations.forEach(location => {
+        locationConditions.push({
+          $expr: {
+            $regexMatch: {
+              input: { $trim: { input: "$applicant.currentLocation" } },
+              regex: location,
+              options: "i"
+            }
+          }
+        });
+      });
+
+      if (locationConditions.length > 0) {
+        andConditions.push({ $or: locationConditions });
       }
-    });
-    locationConditions.push({
-      $expr: {
-        $regexMatch: {
-          input: { $trim: { input: { $arrayElemAt: ["$applicant.preferredLocations", 0] } } },
-          regex: location,
-          options: "i"
-        }
-      }
-    });
-  });
-
-  if (locationConditions.length > 0) {
-    andConditions.push({ $or: locationConditions });
-  }
-}
-
-
+    }
 
     // Designation filtering - search each designation separately
     if (filters.designations?.length > 0) {
-      const designationConditions = filters.designations.map(designation => ({
-        $expr: {
-          $regexMatch: {
-            input: { $trim: { input: "$applicant.currentDesignation" } },
-            regex: `^\\s*${designation}\\s*$`,  // Match whole trimmed value
-            options: "i"
+      const designationConditions = [];
+
+      filters.designations.forEach(designation => {
+        // Split designation into words (by whitespace)
+        const words = designation.trim().split(/\s+/);
+
+        // For each word, create a regex condition that it exists in currentDesignation (case insensitive)
+        const wordConditions = words.map(word => ({
+          $expr: {
+            $regexMatch: {
+              input: { $toLower: { $trim: { input: "$applicant.currentDesignation" } } },
+              regex: word.toLowerCase(),
+              options: "i"
+            }
           }
-        }
-      }));
+        }));
+
+        // All words must be present, so combine with $and
+        designationConditions.push({ $and: wordConditions });
+      });
+
+      // Since user can input multiple designations (OR)
       andConditions.push({ $or: designationConditions });
     }
 
