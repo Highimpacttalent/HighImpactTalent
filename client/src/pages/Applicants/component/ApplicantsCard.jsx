@@ -28,6 +28,7 @@ import {
   LinkedIn,
   MoreVert as MoreVertIcon,
   Close as CloseIcon,
+  Check,
   Info as InfoIcon,
   QuestionAnswerOutlined,
   Download,
@@ -37,7 +38,9 @@ import {
   TrendingUp,
 } from "@mui/icons-material";
 import { useTheme } from "@mui/material";
-import PersonOutline from '@mui/icons-material/PersonOutline';
+import PersonOutline from "@mui/icons-material/PersonOutline";
+import CheckCircleRounded from "@mui/icons-material/CheckCircleRounded";
+import CloseRounded from "@mui/icons-material/CloseRounded";
 import ScreeningModal from "./ScreeningModal";
 import { useMediaQuery } from "@mui/material";
 import { useSelector } from "react-redux";
@@ -113,6 +116,7 @@ const ApplicationCard = ({ app, navigate, markAsViewed, onStageSelect }) => {
     navigate("/view-profile", {
       state: { applicant, status, applicationId: app._id, screeningAnswers },
     });
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   if (isMobile) {
@@ -195,7 +199,13 @@ const ApplicationCard = ({ app, navigate, markAsViewed, onStageSelect }) => {
                     lineHeight: 1.2,
                     mb: 0.5,
                     color: "white",
+                    cursor: "pointer",
+                    "&:hover": {
+                      textDecoration: "underline",
+                      color: "#e0e7ff",
+                    },
                   }}
+                  onClick={handleViewProfile} // Navigate to profile on click
                 >
                   {applicant.firstName} {applicant.lastName}
                 </Typography>
@@ -512,28 +522,6 @@ const ApplicationCard = ({ app, navigate, markAsViewed, onStageSelect }) => {
             )}
 
             <Button
-              variant="outlined"
-              size="small"
-              onClick={handleViewProfile}
-              sx={{
-                textTransform: "none",
-                fontFamily: "Satoshi, sans-serif",
-                fontWeight: 600,
-                borderColor: "#6366f1",
-                color: "#6366f1",
-                py: 1,
-                fontSize: "0.75rem",
-                "&:hover": {
-                  borderColor: "#4f46e5",
-                  backgroundColor: "#f0f4ff",
-                },
-              }}
-            >
-              <Visibility sx={{ fontSize: 16, mr: 0.5 }} />
-              Profile
-            </Button>
-
-            <Button
               variant="contained"
               size="small"
               onClick={handleViewResume}
@@ -668,21 +656,6 @@ const ApplicationCard = ({ app, navigate, markAsViewed, onStageSelect }) => {
         >
           {/* Left Side - Avatar and Basic Info */}
           <Box sx={{ display: "flex", gap: 2, flex: 1 }}>
-            <Avatar
-              src={applicant.profileUrl}
-              sx={{
-                width: 60,
-                height: 60,
-                border: "2px solid #f3f4f6",
-                fontSize: "1.25rem",
-                fontWeight: 600,
-                color: "#374151",
-                backgroundColor: "#f9fafb",
-              }}
-            >
-              {applicant.firstName?.[0]}
-              {applicant.lastName?.[0]}
-            </Avatar>
 
             <Box sx={{ flex: 1, minWidth: 0 }}>
               <Box
@@ -696,38 +669,43 @@ const ApplicationCard = ({ app, navigate, markAsViewed, onStageSelect }) => {
                     color: "#111827",
                     fontSize: "1.125rem",
                     lineHeight: 1.2,
+                    ml: 3, 
+                    cursor: "pointer",
+                    "&:hover": {
+                      textDecoration: "underline",
+                      color: "#1f2937",
+                    },
                   }}
+                  onClick={handleViewProfile} // Navigate to profile on click
                 >
                   {applicant.firstName} {applicant.lastName}
                 </Typography>
-
                 <Chip
-                  label={`${matchPercentage}% Match`}
-                  size="small"
-                  sx={{
-                    backgroundColor: matchColor.bg,
-                    color: matchColor.fg,
-                    border: `1px solid ${matchColor.border}`,
-                    fontFamily: "Satoshi, sans-serif",
-                    fontWeight: 600,
-                    fontSize: "0.75rem",
-                    height: 24,
-                  }}
-                />
-
-                <Chip
-                  label={status}
-                  size="small"
-                  variant="outlined"
-                  sx={{
-                    borderColor: "#d1d5db",
-                    color: "#6b7280",
-                    fontFamily: "Satoshi, sans-serif",
-                    fontWeight: 500,
-                    fontSize: "0.75rem",
-                    height: 24,
-                  }}
-                />
+                    label={`${matchPercentage}% Match`}
+                    size="small"
+                    sx={{
+                      backgroundColor: matchColor.bg,
+                      color: matchColor.fg,
+                      border: `1px solid ${matchColor.border}`,
+                      fontFamily: "Satoshi, sans-serif",
+                      fontWeight: 600,
+                      fontSize: "0.75rem",
+                      height: 24,
+                    }}
+                  />
+                  <Chip
+                    label={status}
+                    size="small"
+                    variant="outlined"
+                    sx={{
+                      borderColor: "#d1d5db",
+                      color: "#6b7280",
+                      fontFamily: "Satoshi, sans-serif",
+                      fontWeight: 500,
+                      fontSize: "0.75rem",
+                      height: 24,
+                    }}
+                  />
               </Box>
 
               <Typography
@@ -756,7 +734,7 @@ const ApplicationCard = ({ app, navigate, markAsViewed, onStageSelect }) => {
                     variant="caption"
                     sx={{ fontFamily: "Satoshi, sans-serif", fontWeight: 500 }}
                   >
-                    {applicant.experience} yrs exp
+                    {applicant.experience}y
                   </Typography>
                 </Box>
                 <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
@@ -778,10 +756,6 @@ const ApplicationCard = ({ app, navigate, markAsViewed, onStageSelect }) => {
                     {applicant.currentSalary
                       ? `₹${applicant.currentSalary}L`
                       : "Not Specified"}{" "}
-                    | Expected Min:{" "}
-                    {applicant.expectedMinSalary
-                      ? `₹${applicant.expectedMinSalary}L`
-                      : "Not Specified"}
                   </Typography>
                 </Box>
               </Box>
@@ -791,108 +765,169 @@ const ApplicationCard = ({ app, navigate, markAsViewed, onStageSelect }) => {
           {/* Right Side - Actions */}
           <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
             {!isMobile ? (
-              <>
-                {applicant.linkedinLink && (
-                  <Tooltip title="LinkedIn Profile">
-                    <IconButton
-                      href={applicant.linkedinLink}
-                      target="_blank"
-                      size="small"
-                      sx={{
-                        color: "#0077b5",
-                        "&:hover": { backgroundColor: "#f0f8ff" },
-                      }}
-                    >
-                      <LinkedIn fontSize="small" />
-                    </IconButton>
-                  </Tooltip>
-                )}
-                <Button
-                  variant="outlined"
-                  size="small"
-                  startIcon={<QuestionAnswerOutlined />}
-                  onClick={() => setScreeningModalOpen(true)}
+              <Box
+                sx={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "flex-end",
+                }}
+              >
+                {/* Top row - LinkedIn, Screening, Actions, Resume */}
+                <Box
                   sx={{
-                    textTransform: "none",
-                    fontFamily: "Satoshi, sans-serif",
-                    fontWeight: 600,
-                    borderColor: "#d1d5db",
-                    color: "#374151",
-                    "&:hover": {
-                      borderColor: "#9ca3af",
-                      backgroundColor: "#f9fafb",
-                    },
-                    minWidth: 100,
+                    display: "flex",
+                    flexDirection: "row",
+                    gap: 1,
+                    alignItems: "center",
                   }}
                 >
-                  Screening
-                </Button>
+                  {applicant.linkedinLink && (
+                    <Tooltip title="LinkedIn Profile">
+                      <IconButton
+                        href={applicant.linkedinLink}
+                        target="_blank"
+                        size="small"
+                        sx={{
+                          color: "#0077b5",
+                          "&:hover": { backgroundColor: "#f0f8ff" },
+                        }}
+                      >
+                        <LinkedIn fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                  )}
 
-                <Button
-                  variant="outlined"
-                  size="small"
-                  startIcon={<PersonOutline />}
-                  onClick={handleViewProfile}
-                  sx={{
-                    textTransform: "none",
-                    fontFamily: "Satoshi, sans-serif",
-                    fontWeight: 600,
-                    borderColor: "#d1d5db",
-                    color: "#374151",
-                    "&:hover": {
-                      borderColor: "#9ca3af",
-                      backgroundColor: "#f9fafb",
-                    },
-                    minWidth: 100,
-                  }}
-                >
-                  Profile
-                </Button>
-                <Button
-                  variant="outlined"
-                  size="small"
-                  onClick={openActionsMenu}
-                  disabled={action} // ✅ Disable button during loading
-                  endIcon={
-                    action ? (
-                      <CircularProgress size={16} sx={{ color: "#6b7280" }} />
-                    ) : (
-                      <MoreVertIcon />
-                    )
-                  }
-                  sx={{
-                    textTransform: "none",
-                    fontFamily: "Satoshi, sans-serif",
-                    fontWeight: 600,
-                    borderColor: "#d1d5db",
-                    color: "#374151",
-                    "&:hover": {
-                      borderColor: "#9ca3af",
-                      backgroundColor: "#f9fafb",
-                    },
-                    minWidth: 100,
-                  }}
-                >
-                  {action ? "Loading..." : "Actions"}
-                </Button>
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    startIcon={<QuestionAnswerOutlined />}
+                    onClick={() => setScreeningModalOpen(true)}
+                    sx={{
+                      textTransform: "none",
+                      fontFamily: "Satoshi, sans-serif",
+                      fontWeight: 600,
+                      borderColor: "#d1d5db",
+                      color: "#374151",
+                      "&:hover": {
+                        borderColor: "#9ca3af",
+                        backgroundColor: "#f9fafb",
+                      },
+                      minWidth: 100,
+                    }}
+                  >
+                    Screening
+                  </Button>
 
-                <Button
-                  variant="contained"
-                  size="small"
-                  startIcon={<Visibility />}
-                  onClick={handleViewResume}
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    onClick={openActionsMenu}
+                    disabled={action}
+                    endIcon={
+                      action ? (
+                        <CircularProgress size={16} sx={{ color: "#6b7280" }} />
+                      ) : (
+                        <MoreVertIcon />
+                      )
+                    }
+                    sx={{
+                      textTransform: "none",
+                      fontFamily: "Satoshi, sans-serif",
+                      fontWeight: 600,
+                      borderColor: "#d1d5db",
+                      color: "#374151",
+                      "&:hover": {
+                        borderColor: "#9ca3af",
+                        backgroundColor: "#f9fafb",
+                      },
+                      minWidth: 100,
+                    }}
+                  >
+                    {action ? "Loading..." : "Actions"}
+                  </Button>
+                  <Button
+                    variant="contained"
+                    size="small"
+                    startIcon={<Visibility />}
+                    onClick={handleViewResume}
+                    sx={{
+                      textTransform: "none",
+                      fontFamily: "Satoshi, sans-serif",
+                      fontWeight: 600,
+                      backgroundColor: "#374151",
+                      "&:hover": { backgroundColor: "#1f2937" },
+                      minWidth: 100,
+                    }}
+                  >
+                    Resume
+                  </Button>
+                </Box>
+
+                {/* Bottom row - Chips */}
+
+                <Box
                   sx={{
-                    textTransform: "none",
-                    fontFamily: "Satoshi, sans-serif",
-                    fontWeight: 600,
-                    backgroundColor: "#374151",
-                    "&:hover": { backgroundColor: "#1f2937" },
-                    minWidth: 100,
+                    display: "flex",
+                    gap: 1.5,
+                    mt: 1,
+                    alignItems: "center",
+                    justifyContent: "flex-end",
                   }}
                 >
-                  Resume
-                </Button>
-              </>
+                   
+                  {/* Accept/Reject buttons here */}
+                  <Button
+                    variant="outlined"
+                    size="medium"
+                    startIcon={<CloseRounded />}
+                    sx={{
+                      borderRadius: "999px",
+                      borderColor: "#F87171",
+                      color: "#EF4444",
+                      backgroundColor: "#FFF",
+                      fontWeight: 600,
+                      fontFamily: "Satoshi, sans-serif",
+                      padding: "3px 12px",
+                      boxShadow: "0 2px 12px 0 rgba(239, 68, 68, 0.05)",
+                      letterSpacing: 0,
+                      textTransform: "none",
+                      transition: "all .2s",
+                      "&:hover": {
+                        backgroundColor: "#FEF2F2",
+                        borderColor: "#DC2626",
+                        color: "#B91C1C",
+                      },
+                    }}
+                    onClick={() => handleStageSelect("Not Progressing")}
+                  >
+                    Reject
+                  </Button>
+                  <Button
+                    variant="contained"
+                    size="medium"
+                    startIcon={<CheckCircleRounded />}
+                    sx={{
+                      borderRadius: "999px",
+                      background:
+                        "linear-gradient(90deg, #10B981 30%, #6EE7B7 100%)",
+                      color: "#fff",
+                      fontWeight: 600,
+                      fontFamily: "Satoshi, sans-serif",
+                      boxShadow: "0 2px 18px 0 rgba(16, 185, 129, 0.08)",
+                       padding: "3px 12px",
+                      letterSpacing: 0,
+                      textTransform: "none",
+                      "&:hover": {
+                        background:
+                          "linear-gradient(90deg, #059669 30%, #10B981 100%)",
+                      },
+                    }}
+                    onClick={() => handleStageSelect("Shortlisted")}
+                  >
+                    Accept
+                  </Button>
+                </Box>
+              </Box>
             ) : (
               <>
                 <IconButton onClick={openMenu} size="small">
@@ -962,7 +997,7 @@ const ApplicationCard = ({ app, navigate, markAsViewed, onStageSelect }) => {
                 />
                 <DetailItem
                   icon={<School sx={{ fontSize: 16, color: "#6b7280" }} />}
-                  label="Education"
+                  label="Highest Education"
                   value={applicant.highestQualification?.[0] || "N/A"}
                 />
               </Stack>

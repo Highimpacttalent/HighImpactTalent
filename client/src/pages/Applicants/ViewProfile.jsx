@@ -175,7 +175,10 @@ const ViewProfile = () => {
       <Container maxWidth="xl">
         <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 2 }}>
           <Button
-            onClick={() => navigate(-1)}
+            onClick={() => {
+              navigate(-1); 
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
             startIcon={<ArrowBackIcon />}
             sx={{
               textTransform: "none",

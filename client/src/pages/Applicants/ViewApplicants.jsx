@@ -47,6 +47,15 @@ import SelectAllIcon from "@mui/icons-material/SelectAll";
 import { useSelector } from "react-redux";
 
 
+const loadFromSession = (key, fallback) => {
+  try {
+    const raw = sessionStorage.getItem(key);
+    return raw != null ? JSON.parse(raw) : fallback;
+  } catch {
+    return fallback;
+  }
+};
+
 const JobApplications = () => {
   const steps = [
     "Applied",
@@ -61,12 +70,19 @@ const JobApplications = () => {
   const [allApplications, setAllApplications] = useState([]);
   const [filteredApps, setFilteredApps] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [currentPage, setCurrentPage] = useState(1);
+  const [currentPage, setCurrentPage] = useState(() =>
+    loadFromSession("apps_page", 1)
+  );
+
   const [totalPages, setTotalPages] = useState(1);
-  const limit = 20;
+  const [limit, setLimit] = useState(() =>
+    loadFromSession("apps_limit", 20)
+  );
   const [filterLoading, setFilterLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [activeStep, setActiveStep] = useState(0);
+  const [activeStep, setActiveStep] = useState(
+    loadFromSession("apps_activeStep", 0)
+  );
   const [searchKeyword, setSearchKeyword] = useState("");
   const navigate = useNavigate();
   const [openBreakdownId, setOpenBreakdownId] = useState(null);
@@ -78,17 +94,21 @@ const JobApplications = () => {
   const [stageCounts, setStageCounts] = useState({});
   const [cities, setCities] = useState();
   const currentUser = useSelector((state) => state.user.user);
-  const [sortOption, setSortOption] = useState("matchHighToLow"); // default
-  const [matchTab, setMatchTab] = useState("all");
+  const [sortOption, setSortOption] = useState(() =>
+    loadFromSession("apps_sort", "matchHighToLow")
+  );
+  const [matchTab, setMatchTab] = useState(() =>
+    loadFromSession("apps_tab", "all")
+  );
   const [errorsnackbar, errorsetSnackbar] = useState({
     open: false,
-    message: '',
-    severity: 'error', // can be 'success' | 'error' | 'warning' | 'info'
+    message: "",
+    severity: "error", // can be 'success' | 'error' | 'warning' | 'info'
   });
 
   useEffect(() => {
     applyFilters();
-  }, [matchTab, sortOption]);
+  }, [matchTab, sortOption, limit]);
 
   const categorizedApps = {
     relevant: filteredApps.filter((app) => app.resumeMatchLevel === "relevant"),
@@ -116,21 +136,39 @@ const JobApplications = () => {
   });
 
   // Filter states
-  const [filters, setFilters] = useState({
-    keywords: [],
-    locations: [],
-    designations: [],
-    totalYearsInConsulting: "",
-    screeningFilters: {},
-    minExperience: "",
-    maxExperience: "",
-    minSalary: "",
-    maxSalary: "",
-  });
+  const [filters, setFilters] = useState(() =>
+    loadFromSession("apps_filters", {
+      keywords: [],
+      locations: [],
+      designations: [],
+      totalYearsInConsulting: "",
+      screeningFilters: {},
+      minExperience: "",
+      maxExperience: "",
+      minSalary: "",
+      maxSalary: "",
+    })
+  );
   const [keywordInput, setKeywordInput] = useState("");
   const [locationInput, setLocationInput] = useState("");
   const [designationInput, setDesignationInput] = useState("");
   const [screeningQuestions, setScreeningQuestions] = useState([]);
+
+  useEffect(() => {
+    sessionStorage.setItem("apps_page", JSON.stringify(currentPage));
+    sessionStorage.setItem("apps_limit", JSON.stringify(limit));
+    sessionStorage.setItem("apps_sort", JSON.stringify(sortOption));
+    sessionStorage.setItem("apps_tab", JSON.stringify(matchTab));
+    sessionStorage.setItem("apps_filters", JSON.stringify(filters));
+    sessionStorage.setItem("apps_activeStep", JSON.stringify(activeStep));
+  }, [
+    currentPage,
+    limit,
+    sortOption,
+    matchTab,
+    filters,
+    activeStep,
+  ]); 
 
   // Fetch applications with server-side filtering
   const fetchApplications = async (
@@ -161,7 +199,7 @@ const JobApplications = () => {
       });
 
       queryParams.append("page", page);
-      queryParams.append("limit", limit);
+      queryParams.append("limit", limit.toString());
       queryParams.append("sortBy", sortOption);
       if (matchTab !== "all") {
         queryParams.append("matchLevel", matchTab);
@@ -239,7 +277,7 @@ const JobApplications = () => {
       try {
         // Filter by current step
         const currentStatus = steps[activeStep];
-        
+
         // Fetch all applications for initial load
         const allApps = await fetchApplications({}, currentStatus);
         setAllApplications(allApps);
@@ -375,9 +413,8 @@ const JobApplications = () => {
   };
 
   const handleSnackbarClose = () => {
-  errorsetSnackbar((prev) => ({ ...prev, open: false }));
+    errorsetSnackbar((prev) => ({ ...prev, open: false }));
   };
-
 
   // Apply filters function
   const applyFilters = async () => {
@@ -419,8 +456,8 @@ const JobApplications = () => {
     if (!isNaN(minExp) && !isNaN(maxExp) && minExp > maxExp) {
       setSnackbar({
         open: true,
-        message: 'Minimum experience cannot be greater than maximum.',
-        severity: 'error',
+        message: "Minimum experience cannot be greater than maximum.",
+        severity: "error",
       });
       return false;
     }
@@ -428,51 +465,49 @@ const JobApplications = () => {
     if (!isNaN(minSal) && !isNaN(maxSal) && minSal > maxSal) {
       setSnackbar({
         open: true,
-        message: 'Minimum salary cannot be greater than maximum.',
-        severity: 'error',
+        message: "Minimum salary cannot be greater than maximum.",
+        severity: "error",
       });
       return false;
     }
 
     return true;
-    };
-
+  };
 
   // Clear filters function
   const clearFilters = async () => {
-  // Reset all filters
-  setFilters({
-    keywords: [],
-    locations: [],
-    designations: [],
-    totalYearsInConsulting: "",
-    screeningFilters: {},
-    minExperience: "",
-    maxExperience: "",
-    minSalary: "",
-    maxSalary: "",
-  });
+    // Reset all filters
+    setFilters({
+      keywords: [],
+      locations: [],
+      designations: [],
+      totalYearsInConsulting: "",
+      screeningFilters: {},
+      minExperience: "",
+      maxExperience: "",
+      minSalary: "",
+      maxSalary: "",
+    });
 
-  setKeywordInput("");
-  setLocationInput("");
-  setDesignationInput("");
+    setKeywordInput("");
+    setLocationInput("");
+    setDesignationInput("");
 
-  // Fetch fresh data filtered by current tab's status
-  const currentStatus = steps[activeStep];
-  const allApps = await fetchApplications({}, currentStatus);
-  setAllApplications(allApps);
-  setApplications(allApps);
-  setFilteredApps(allApps);
+    // Fetch fresh data filtered by current tab's status
+    const currentStatus = steps[activeStep];
+    const allApps = await fetchApplications({}, currentStatus);
+    setAllApplications(allApps);
+    setApplications(allApps);
+    setFilteredApps(allApps);
 
-  // Refresh counts
-  await fetchStageCounts();
-  setSelectedApplications(new Set());
+    // Refresh counts
+    await fetchStageCounts();
+    setSelectedApplications(new Set());
 
-  if (isMobile) {
-    setDrawerOpen(false);
-  }
-};
-
+    if (isMobile) {
+      setDrawerOpen(false);
+    }
+  };
 
   // Filter component styles
   const filterLabelStyle = {
@@ -724,7 +759,7 @@ const JobApplications = () => {
       {/* General Experience (Years) */}
       <Box sx={{ mb: 3 }}>
         <Typography variant="subtitle2" sx={filterLabelStyle}>
-          Experience (Years)
+          Total Experience (Years)
         </Typography>
         <Box sx={{ display: "flex", gap: 1 }}>
           <TextField
@@ -783,7 +818,6 @@ const JobApplications = () => {
         </Box>
       </Box>
 
-
       {/* Years in Consulting Field */}
       <Box sx={{ mb: 3 }}>
         <Typography variant="subtitle2" sx={filterLabelStyle}>
@@ -813,101 +847,101 @@ const JobApplications = () => {
       </Box>
 
       {/* Screening Questions Section */}
-        {screeningQuestions.length > 0 && (
-          <Box sx={{ mb: 4 }}>
-            <Box sx={sectionHeaderStyle}>
-              <Box sx={sectionHeaderAccent} />
-              <Typography variant="subtitle1" sx={sectionHeaderText}>
-                Screening Questions
-              </Typography>
-            </Box>
-
-            {screeningQuestions.map((question) => {
-              const type = question.questionType;
-              const isYesNo = type === "yes/no";
-              const isMulti = type === "multi_choice";
-              const isShortAnswer = type === "short_answer";
-              const isLongAnswer = type === "long_answer";
-              const options = isYesNo ? ["Yes", "No"] : question.options || [];
-
-              return (
-                <Box key={question._id} sx={{ mb: 3 }}>
-                  <Typography variant="subtitle2" sx={filterLabelStyle}>
-                    {question.question}
-                  </Typography>
-
-                  <FormControl fullWidth>
-                    {isMulti ? (
-                      <Select
-                        multiple
-                        value={filters.screeningFilters[question._id] || []}
-                        onChange={(e) =>
-                          handleScreeningFilterChange(
-                            question._id,
-                            e.target.value
-                          )
-                        }
-                        renderValue={(selected) => selected.join(", ")}
-                        sx={selectFieldStyle}
-                      >
-                        {options.map((opt) => (
-                          <MenuItem key={opt} value={opt}>
-                            <Checkbox
-                              checked={(
-                                filters.screeningFilters[question._id] || []
-                              ).includes(opt)}
-                            />
-                            {opt}
-                          </MenuItem>
-                        ))}
-                      </Select>
-                    ) : isYesNo ? (
-                      <Select
-                        value={filters.screeningFilters[question._id] || ""}
-                        onChange={(e) =>
-                          handleScreeningFilterChange(
-                            question._id,
-                            e.target.value
-                          )
-                        }
-                        sx={selectFieldStyle}
-                      >
-                        <MenuItem value="">
-                          <em>Select an option</em>
-                        </MenuItem>
-                        {options.map((opt) => (
-                          <MenuItem key={opt} value={opt}>
-                            {opt}
-                          </MenuItem>
-                        ))}
-                      </Select>
-                    ) : (
-                      <TextField
-                        value={filters.screeningFilters[question._id] || ""}
-                        onChange={(e) =>
-                          handleScreeningFilterChange(
-                            question._id,
-                            e.target.value
-                          )
-                        }
-                        placeholder={
-                          isShortAnswer 
-                            ? "Enter short answer" 
-                            : "Enter long answer"
-                        }
-                        size="small"
-                        fullWidth
-                        sx={textFieldStyle}
-                        multiline={isLongAnswer}
-                        rows={isLongAnswer ? 3 : 1}
-                      />
-                    )}
-                  </FormControl>
-                </Box>
-              );
-            })}
+      {screeningQuestions.length > 0 && (
+        <Box sx={{ mb: 4 }}>
+          <Box sx={sectionHeaderStyle}>
+            <Box sx={sectionHeaderAccent} />
+            <Typography variant="subtitle1" sx={sectionHeaderText}>
+              Screening Questions
+            </Typography>
           </Box>
-        )}
+
+          {screeningQuestions.map((question) => {
+            const type = question.questionType;
+            const isYesNo = type === "yes/no";
+            const isMulti = type === "multi_choice";
+            const isShortAnswer = type === "short_answer";
+            const isLongAnswer = type === "long_answer";
+            const options = isYesNo ? ["Yes", "No"] : question.options || [];
+
+            return (
+              <Box key={question._id} sx={{ mb: 3 }}>
+                <Typography variant="subtitle2" sx={filterLabelStyle}>
+                  {question.question}
+                </Typography>
+
+                <FormControl fullWidth>
+                  {isMulti ? (
+                    <Select
+                      multiple
+                      value={filters.screeningFilters[question._id] || []}
+                      onChange={(e) =>
+                        handleScreeningFilterChange(
+                          question._id,
+                          e.target.value
+                        )
+                      }
+                      renderValue={(selected) => selected.join(", ")}
+                      sx={selectFieldStyle}
+                    >
+                      {options.map((opt) => (
+                        <MenuItem key={opt} value={opt}>
+                          <Checkbox
+                            checked={(
+                              filters.screeningFilters[question._id] || []
+                            ).includes(opt)}
+                          />
+                          {opt}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  ) : isYesNo ? (
+                    <Select
+                      value={filters.screeningFilters[question._id] || ""}
+                      onChange={(e) =>
+                        handleScreeningFilterChange(
+                          question._id,
+                          e.target.value
+                        )
+                      }
+                      sx={selectFieldStyle}
+                    >
+                      <MenuItem value="">
+                        <em>Select an option</em>
+                      </MenuItem>
+                      {options.map((opt) => (
+                        <MenuItem key={opt} value={opt}>
+                          {opt}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  ) : (
+                    <TextField
+                      value={filters.screeningFilters[question._id] || ""}
+                      onChange={(e) =>
+                        handleScreeningFilterChange(
+                          question._id,
+                          e.target.value
+                        )
+                      }
+                      placeholder={
+                        isShortAnswer
+                          ? "Enter short answer"
+                          : "Enter long answer"
+                      }
+                      size="small"
+                      fullWidth
+                      sx={textFieldStyle}
+                      multiline={isLongAnswer}
+                      rows={isLongAnswer ? 3 : 1}
+                    />
+                  )}
+                </FormControl>
+              </Box>
+            );
+          })}
+        </Box>
+      )}
 
       {/* Action Buttons */}
       <Box sx={filterActionsStyle}>
@@ -1293,17 +1327,6 @@ const JobApplications = () => {
     }
   };
 
-  const getNextStepName = () => {
-    const currentStatus = steps[activeStep];
-    const statusFlow = {
-      Applied: "Application Viewed",
-      "Application Viewed": "Shortlisted",
-      Shortlisted: "Interviewing",
-      Interviewing: "Hired",
-    };
-    return statusFlow[currentStatus] || "Next Stage";
-  };
-
   const visibleApps =
     matchTab === "all" ? filteredApps : categorizedApps[matchTab] || [];
 
@@ -1677,30 +1700,61 @@ const JobApplications = () => {
                   </Button>
 
                   <Box
-                    sx={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 1,
-                      bgcolor: "#f0f7ff",
-                      px: 2.5,
-                      py: 1,
-                      borderRadius: 2.5,
-                      border: "1px solid #bfdbfe",
-                      minHeight: "36px",
-                    }}
-                  >
-                    <Typography
-                      sx={{
-                        color: "#1976d2",
-                        fontFamily: "Satoshi",
-                        fontWeight: 700,
-                        fontSize: "15px",
-                        lineHeight: 1,
-                      }}
-                    >
-                      Visible Profiles {filteredApps.length}
-                    </Typography>
-                  </Box>
+  sx={{
+    display: "flex",
+    alignItems: "center",
+    gap: 1,
+    bgcolor: "#f0f7ff",
+    px: 2.5,
+    py: 1,
+    borderRadius: 2.5,
+    border: "1px solid #bfdbfe",
+    minHeight: "36px",
+  }}
+>
+  <Typography
+    sx={{
+      color: "#1976d2",
+      fontFamily: "Satoshi, sans-serif",
+      fontWeight: 700,
+      fontSize: "15px",
+      lineHeight: 1,
+      whiteSpace: "nowrap",
+    }}
+  >
+    Visible Profiles
+  </Typography>
+
+  <FormControl size="small" variant="standard">
+    <Select
+      value={limit}
+      onChange={(e) => setLimit(+e.target.value)}
+      disableUnderline
+      sx={{
+        fontFamily: "Satoshi, sans-serif",
+        fontWeight: 700,
+        fontSize: "15px",
+        color: "#1976d2",
+        minWidth: 48,
+        "& .MuiSelect-select": {
+          py: 0,
+          px: 0.5,
+          textAlign: "right",
+        },
+        "& .MuiSvgIcon-root": {
+          color: "#1976d2",
+          fontSize: "1rem",
+        },
+      }}
+    >
+      {[20, 50, 100].map((n) => (
+        <MenuItem key={n} value={n}>
+          {n}
+        </MenuItem>
+      ))}
+    </Select>
+  </FormControl>
+</Box>
 
                   {/* Selection Badge */}
                   {selectedApplications.size > 0 && (
@@ -1759,7 +1813,7 @@ const JobApplications = () => {
                     disabled={
                       selectedApplications.size === 0 ||
                       bulkActionLoading ||
-                      activeStep === steps.length - 1
+                      steps[activeStep] === "Shortlisted"
                     }
                     onClick={() =>
                       openConfirmDialog(
@@ -1767,7 +1821,7 @@ const JobApplications = () => {
                         "Advance Selected Candidates",
                         `Move ${selectedApplications.size} selected candidate${
                           selectedApplications.size !== 1 ? "s" : ""
-                        } to "${getNextStepName()}" stage?`
+                        } to Shortlisted stage?`
                       )
                     }
                     startIcon={
@@ -1853,42 +1907,6 @@ const JobApplications = () => {
                       mx: 0.5,
                     }}
                   />
-
-                  {/* Secondary Action */}
-                  <Button
-                    variant="text"
-                    disabled={filteredApps.length === 0 || bulkActionLoading}
-                    onClick={() =>
-                      openConfirmDialog(
-                        "rejectAll",
-                        "Reject All at This Stage",
-                        `Mark all ${filteredApps.length} candidate${
-                          filteredApps.length !== 1 ? "s" : ""
-                        } at "${steps[activeStep]}" stage as "Not Progressing"?`
-                      )
-                    }
-                    startIcon={<CancelOutlinedIcon sx={{ fontSize: 16 }} />}
-                    sx={{
-                      fontFamily: "Satoshi",
-                      fontWeight: 600,
-                      fontSize: "13px",
-                      textTransform: "none",
-                      borderRadius: 2.5,
-                      px: 2,
-                      py: 1,
-                      minHeight: "36px",
-                      color: "#64748b",
-                      "&:hover": {
-                        bgcolor: "#f1f5f9",
-                        color: "#ef4444",
-                      },
-                      "&:disabled": {
-                        color: "#cbd5e1",
-                      },
-                    }}
-                  >
-                    Reject All
-                  </Button>
                   <FormControl
                     size="small"
                     sx={{
@@ -1966,149 +1984,146 @@ const JobApplications = () => {
               <Box sx={{ display: "flex", justifyContent: "center", mb: 3 }}>
                 <CircularProgress sx={{ color: "#1976d2" }} size={40} />
               </Box>
-            ): (<Grid container spacing={3}>
-              {visibleApps.map((app) => (
-                <Grid item xs={12} key={app._id}>
-                  <Box
-                    sx={{
-                      position: "relative",
-                      borderRadius: 3,
-                      overflow: "hidden",
-                      transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-                      "&:hover": {
-                        transform: "translateY(-2px)",
-                      },
-                    }}
-                  >
-                    {/* Enhanced Selection Checkbox */}
-                    <Checkbox
-  checked={selectedApplications.has(app._id)}
-  onChange={() => handleApplicationSelect(app._id)}
-  icon={
-    <CheckCircleOutlineIcon 
-      sx={{ fontSize: 24, opacity: 0.6 }} 
-    />
-  }
-  checkedIcon={
-    <CheckCircleIcon 
-      sx={{ fontSize: 24 }} 
-    />
-  }
-  sx={{
-    position: "absolute",
-    top: 12,
-    left: 12,
-    zIndex: 3,
-    bgcolor: "rgba(255,255,255,0.9)",
-    borderRadius: "50%",
-    p: 0.5,
-    boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
-    transition: "transform 0.2s ease",
-    "&:hover": {
-      transform: "scale(1.2)",
-      bgcolor: "white",
-    },
-    "&.Mui-checked": {
-      bgcolor: "rgba(25,118,210,0.1)",
-    },
-  }}
-/>
-
-                    {/* Enhanced Application Card */}
+            ) : (
+              <Grid container spacing={3}>
+                {visibleApps.map((app) => (
+                  <Grid item xs={12} key={app._id}>
                     <Box
                       sx={{
-                        border: selectedApplications.has(app._id)
-                          ? "3px solid #1976d2"
-                          : "3px solid transparent",
-                        borderRadius: 3,
-                        transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-                        background: selectedApplications.has(app._id)
-                          ? "linear-gradient(135deg, #f0f7ff 0%, #ffffff 100%)"
-                          : "white",
                         position: "relative",
-                        "&::before": selectedApplications.has(app._id)
-                          ? {
-                              content: '""',
-                              position: "absolute",
-                              top: 0,
-                              left: 0,
-                              right: 0,
-                              height: 4,
-                              bgcolor: "#1976d2",
-                              borderRadius: "3px 3px 0 0",
-                            }
-                          : {},
+                        borderRadius: 3,
+                        overflow: "hidden",
+                        transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+                        "&:hover": {
+                          transform: "translateY(-2px)",
+                        },
                       }}
                     >
-                      <ApplicationCard
-                        app={app}
-                        setSelectedBreakdown={setSelectedBreakdown}
-                        setBreakdownDialogOpen={setBreakdownDialogOpen}
-                        navigate={navigate}
-                        markAsViewed={markAsViewed}
-                        onStageSelect={handleStageSelect}
+                      {/* Enhanced Selection Checkbox */}
+                      <Checkbox
+                        checked={selectedApplications.has(app._id)}
+                        onChange={() => handleApplicationSelect(app._id)}
+                        icon={
+                          <CheckCircleOutlineIcon
+                            sx={{ fontSize: 24, opacity: 0.6 }}
+                          />
+                        }
+                        checkedIcon={<CheckCircleIcon sx={{ fontSize: 24 }} />}
+                        sx={{
+                          position: "absolute",
+                          top: 12,
+                          left: 12,
+                          zIndex: 3,
+                          bgcolor: "rgba(255,255,255,0.9)",
+                          borderRadius: "50%",
+                          p: 0.5,
+                          boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+                          transition: "transform 0.2s ease",
+                          "&:hover": {
+                            transform: "scale(1.2)",
+                            bgcolor: "white",
+                          },
+                          "&.Mui-checked": {
+                            bgcolor: "rgba(25,118,210,0.1)",
+                          },
+                        }}
                       />
-                    </Box>
-                  </Box>
-                </Grid>
-              ))}
-              {/* Pagination */}
-              <div className="flex justify-center mt-4 space-x-1 flex-wrap w-full">
-                {/* Previous Button */}
-                <button
-                  onClick={() => handlePageChange(currentPage - 1)}
-                  disabled={currentPage === 1}
-                  className="px-3 py-1 border rounded disabled:opacity-50"
-                >
-                  Prev
-                </button>
 
-                {/* Page Numbers */}
-                {Array.from({ length: totalPages }, (_, i) => i + 1)
-                  .filter(
-                    (page) =>
-                      page === 1 ||
-                      page === totalPages ||
-                      Math.abs(page - currentPage) <= 1
-                  )
-                  .reduce((acc, page, idx, arr) => {
-                    if (idx > 0 && page - arr[idx - 1] > 1) {
-                      acc.push("ellipsis");
-                    }
-                    acc.push(page);
-                    return acc;
-                  }, [])
-                  .map((item, idx) =>
-                    item === "ellipsis" ? (
-                      <span key={idx} className="px-2 py-1 text-gray-500">
-                        ...
-                      </span>
-                    ) : (
-                      <button
-                        key={item}
-                        onClick={() => handlePageChange(item)}
-                        className={`px-3 py-1 border rounded ${
-                          currentPage === item
-                            ? "bg-blue-600 text-white"
-                            : "bg-white text-blue-600"
-                        }`}
+                      {/* Enhanced Application Card */}
+                      <Box
+                        sx={{
+                          border: selectedApplications.has(app._id)
+                            ? "3px solid #1976d2"
+                            : "3px solid transparent",
+                          borderRadius: 3,
+                          transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+                          background: selectedApplications.has(app._id)
+                            ? "linear-gradient(135deg, #f0f7ff 0%, #ffffff 100%)"
+                            : "white",
+                          position: "relative",
+                          "&::before": selectedApplications.has(app._id)
+                            ? {
+                                content: '""',
+                                position: "absolute",
+                                top: 0,
+                                left: 0,
+                                right: 0,
+                                height: 4,
+                                bgcolor: "#1976d2",
+                                borderRadius: "3px 3px 0 0",
+                              }
+                            : {},
+                        }}
                       >
-                        {item}
-                      </button>
-                    )
-                  )}
+                        <ApplicationCard
+                          app={app}
+                          setSelectedBreakdown={setSelectedBreakdown}
+                          setBreakdownDialogOpen={setBreakdownDialogOpen}
+                          navigate={navigate}
+                          markAsViewed={markAsViewed}
+                          onStageSelect={handleStageSelect}
+                        />
+                      </Box>
+                    </Box>
+                  </Grid>
+                ))}
+                {/* Pagination */}
+                <div className="flex justify-center mt-4 space-x-1 flex-wrap w-full">
+                  {/* Previous Button */}
+                  <button
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    disabled={currentPage === 1}
+                    className="px-3 py-1 border rounded disabled:opacity-50"
+                  >
+                    Prev
+                  </button>
 
-                {/* Next Button */}
-                <button
-                  onClick={() => handlePageChange(currentPage + 1)}
-                  disabled={currentPage === totalPages}
-                  className="px-3 py-1 border rounded disabled:opacity-50"
-                >
-                  Next
-                </button>
-              </div>
-            </Grid>)}
-            
+                  {/* Page Numbers */}
+                  {Array.from({ length: totalPages }, (_, i) => i + 1)
+                    .filter(
+                      (page) =>
+                        page === 1 ||
+                        page === totalPages ||
+                        Math.abs(page - currentPage) <= 1
+                    )
+                    .reduce((acc, page, idx, arr) => {
+                      if (idx > 0 && page - arr[idx - 1] > 1) {
+                        acc.push("ellipsis");
+                      }
+                      acc.push(page);
+                      return acc;
+                    }, [])
+                    .map((item, idx) =>
+                      item === "ellipsis" ? (
+                        <span key={idx} className="px-2 py-1 text-gray-500">
+                          ...
+                        </span>
+                      ) : (
+                        <button
+                          key={item}
+                          onClick={() => handlePageChange(item)}
+                          className={`px-3 py-1 border rounded ${
+                            currentPage === item
+                              ? "bg-blue-600 text-white"
+                              : "bg-white text-blue-600"
+                          }`}
+                        >
+                          {item}
+                        </button>
+                      )
+                    )}
+
+                  {/* Next Button */}
+                  <button
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                    className="px-3 py-1 border rounded disabled:opacity-50"
+                  >
+                    Next
+                  </button>
+                </div>
+              </Grid>
+            )}
 
             {/* Enhanced Empty States */}
             {!loading &&
@@ -2444,13 +2459,16 @@ const JobApplications = () => {
         open={snackbar.open}
         autoHideDuration={3000}
         onClose={handleSnackbarClose}
-        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
       >
-        <Alert onClose={handleSnackbarClose} severity={snackbar.severity} sx={{ width: '100%' }}>
+        <Alert
+          onClose={handleSnackbarClose}
+          severity={snackbar.severity}
+          sx={{ width: "100%" }}
+        >
           {snackbar.message}
         </Alert>
       </Snackbar>
-
 
       {/* Enhanced Success/Error Snackbar */}
       <Snackbar
