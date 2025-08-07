@@ -39,6 +39,7 @@ import {
 } from "@mui/icons-material";
 import { useTheme } from "@mui/material";
 import PersonOutline from "@mui/icons-material/PersonOutline";
+import CheckRounded from "@mui/icons-material/CheckRounded";
 import CheckCircleRounded from "@mui/icons-material/CheckCircleRounded";
 import CloseRounded from "@mui/icons-material/CloseRounded";
 import ScreeningModal from "./ScreeningModal";
@@ -656,7 +657,6 @@ const ApplicationCard = ({ app, navigate, markAsViewed, onStageSelect }) => {
         >
           {/* Left Side - Avatar and Basic Info */}
           <Box sx={{ display: "flex", gap: 2, flex: 1 }}>
-
             <Box sx={{ flex: 1, minWidth: 0 }}>
               <Box
                 sx={{ display: "flex", alignItems: "center", gap: 2, mb: 1 }}
@@ -669,7 +669,7 @@ const ApplicationCard = ({ app, navigate, markAsViewed, onStageSelect }) => {
                     color: "#111827",
                     fontSize: "1.125rem",
                     lineHeight: 1.2,
-                    ml: 3, 
+                    ml: 3,
                     cursor: "pointer",
                     "&:hover": {
                       textDecoration: "underline",
@@ -681,31 +681,31 @@ const ApplicationCard = ({ app, navigate, markAsViewed, onStageSelect }) => {
                   {applicant.firstName} {applicant.lastName}
                 </Typography>
                 <Chip
-                    label={`${matchPercentage}% Match`}
-                    size="small"
-                    sx={{
-                      backgroundColor: matchColor.bg,
-                      color: matchColor.fg,
-                      border: `1px solid ${matchColor.border}`,
-                      fontFamily: "Satoshi, sans-serif",
-                      fontWeight: 600,
-                      fontSize: "0.75rem",
-                      height: 24,
-                    }}
-                  />
-                  <Chip
-                    label={status}
-                    size="small"
-                    variant="outlined"
-                    sx={{
-                      borderColor: "#d1d5db",
-                      color: "#6b7280",
-                      fontFamily: "Satoshi, sans-serif",
-                      fontWeight: 500,
-                      fontSize: "0.75rem",
-                      height: 24,
-                    }}
-                  />
+                  label={`${matchPercentage}% Match`}
+                  size="small"
+                  sx={{
+                    backgroundColor: matchColor.bg,
+                    color: matchColor.fg,
+                    border: `1px solid ${matchColor.border}`,
+                    fontFamily: "Satoshi, sans-serif",
+                    fontWeight: 600,
+                    fontSize: "0.75rem",
+                    height: 24,
+                  }}
+                />
+                <Chip
+                  label={status}
+                  size="small"
+                  variant="outlined"
+                  sx={{
+                    borderColor: "#d1d5db",
+                    color: "#6b7280",
+                    fontFamily: "Satoshi, sans-serif",
+                    fontWeight: 500,
+                    fontSize: "0.75rem",
+                    height: 24,
+                  }}
+                />
               </Box>
 
               <Typography
@@ -714,10 +714,20 @@ const ApplicationCard = ({ app, navigate, markAsViewed, onStageSelect }) => {
                   color: "#4b5563",
                   fontFamily: "Satoshi, sans-serif",
                   fontWeight: 500,
-                  mb: 0.5,
                 }}
               >
-                {applicant.currentDesignation} • {applicant.currentCompany}
+                {applicant.currentDesignation}
+              </Typography>
+              <Typography
+                variant="body2"
+                sx={{
+                  color: "#4b5563",
+                  fontFamily: "Satoshi, sans-serif",
+                  fontWeight: 500,
+                  mb: 1,
+                }}
+              >
+                {applicant.currentCompany}
               </Typography>
 
               <Box
@@ -818,6 +828,46 @@ const ApplicationCard = ({ app, navigate, markAsViewed, onStageSelect }) => {
                     Screening
                   </Button>
 
+                  <Tooltip title="Reject">
+                    <IconButton
+                      onClick={() => handleStageSelect("Not Progressing")}
+                      sx={{
+                        backgroundColor: "#FFF",
+                        border: "2px solid #F87171",
+                        color: "#EF4444",
+                        borderRadius: "0.25rem", // Square with slightly rounded corners
+                        width: "30px",
+                        height: "30px",
+                        "&:hover": {
+                          backgroundColor: "#FEF2F2",
+                          color: "#B91C1C",
+                          borderColor: "#DC2626",
+                        },
+                      }}
+                    >
+                      <CloseRounded />
+                    </IconButton>
+                  </Tooltip>
+
+                  <Tooltip title="Accept">
+                    <IconButton
+                      onClick={() => handleStageSelect("Shortlisted")}
+                      sx={{
+                        backgroundColor: "#FFFFFF",
+                        border: "2px solid #10B981",
+                        color: "#10B981",
+                        borderRadius: "0.25rem",
+                        width: "30px",
+                        height: "30px",
+                        "&:hover": {
+                          backgroundColor: "#F0FDF4",
+                        },
+                      }}
+                    >
+                      <CheckRounded />
+                    </IconButton>
+                  </Tooltip>
+
                   <Button
                     variant="outlined"
                     size="small"
@@ -860,71 +910,6 @@ const ApplicationCard = ({ app, navigate, markAsViewed, onStageSelect }) => {
                     }}
                   >
                     Resume
-                  </Button>
-                </Box>
-
-                {/* Bottom row - Chips */}
-
-                <Box
-                  sx={{
-                    display: "flex",
-                    gap: 1.5,
-                    mt: 1,
-                    alignItems: "center",
-                    justifyContent: "flex-end",
-                  }}
-                >
-                   
-                  {/* Accept/Reject buttons here */}
-                  <Button
-                    variant="outlined"
-                    size="medium"
-                    startIcon={<CloseRounded />}
-                    sx={{
-                      borderRadius: "999px",
-                      borderColor: "#F87171",
-                      color: "#EF4444",
-                      backgroundColor: "#FFF",
-                      fontWeight: 600,
-                      fontFamily: "Satoshi, sans-serif",
-                      padding: "3px 12px",
-                      boxShadow: "0 2px 12px 0 rgba(239, 68, 68, 0.05)",
-                      letterSpacing: 0,
-                      textTransform: "none",
-                      transition: "all .2s",
-                      "&:hover": {
-                        backgroundColor: "#FEF2F2",
-                        borderColor: "#DC2626",
-                        color: "#B91C1C",
-                      },
-                    }}
-                    onClick={() => handleStageSelect("Not Progressing")}
-                  >
-                    Reject
-                  </Button>
-                  <Button
-                    variant="contained"
-                    size="medium"
-                    startIcon={<CheckCircleRounded />}
-                    sx={{
-                      borderRadius: "999px",
-                      background:
-                        "linear-gradient(90deg, #10B981 30%, #6EE7B7 100%)",
-                      color: "#fff",
-                      fontWeight: 600,
-                      fontFamily: "Satoshi, sans-serif",
-                      boxShadow: "0 2px 18px 0 rgba(16, 185, 129, 0.08)",
-                       padding: "3px 12px",
-                      letterSpacing: 0,
-                      textTransform: "none",
-                      "&:hover": {
-                        background:
-                          "linear-gradient(90deg, #059669 30%, #10B981 100%)",
-                      },
-                    }}
-                    onClick={() => handleStageSelect("Shortlisted")}
-                  >
-                    Accept
                   </Button>
                 </Box>
               </Box>
@@ -971,7 +956,24 @@ const ApplicationCard = ({ app, navigate, markAsViewed, onStageSelect }) => {
         <Grid container spacing={3}>
           {/* Professional Details */}
           <Grid item xs={12} sm={6} md={3}>
-            <Box>
+            <Box
+              sx={{
+                height: "100%",
+                pr: { md: 3 },
+                position: "relative",
+              }}
+            >
+              {/* Simulated divider */}
+              <Box
+                sx={{
+                  position: "absolute",
+                  right: 0,
+                  width: "2px",
+                  height: "100%", // Takes more of the full height
+                  backgroundColor: "#e5e7eb",
+                  display: { xs: "none", md: "block" },
+                }}
+              />
               <Typography
                 variant="subtitle2"
                 sx={{
@@ -1006,7 +1008,24 @@ const ApplicationCard = ({ app, navigate, markAsViewed, onStageSelect }) => {
 
           {/* Location & Preferences */}
           <Grid item xs={12} sm={6} md={3}>
-            <Box>
+            <Box
+              sx={{
+                height: "100%",
+                pr: { md: 3 },
+                position: "relative",
+              }}
+            >
+              {/* Simulated divider */}
+              <Box
+                sx={{
+                  position: "absolute",
+                  right: 0,
+                  width: "2px",
+                  height: "100%", // Takes more of the full height
+                  backgroundColor: "#e5e7eb",
+                  display: { xs: "none", md: "block" },
+                }}
+              />
               <Typography
                 variant="subtitle2"
                 sx={{
