@@ -1189,6 +1189,7 @@ export const bulkRejectApplications = async (req, res) => {
 };
 
 // Bulk advance applications to next round
+// Bulk advance applications to "Shortlisted" status only
 export const bulkAdvanceApplications = async (req, res) => {
   const { applicationIds } = req.body;
 
@@ -1224,7 +1225,7 @@ export const bulkAdvanceApplications = async (req, res) => {
 
     // Check authorization - ensure all applications belong to the company
     for (let application of applications) {
-      if (companyId != application.company._id) {
+      if (companyId != application.company._id.toString()) {
         return res.status(401).json({
           success: false,
           message: "Not authorized to update status",
@@ -1232,21 +1233,11 @@ export const bulkAdvanceApplications = async (req, res) => {
       }
     }
 
-    // Define status progression logic
-    const getNextStatus = (currentStatus) => {
-      const statusFlow = {
-        Applied: "Application Viewed",
-        "Application Viewed": "Shortlisted",
-        Shortlisted: "Interviewing",
-        Interviewing: "Hired",
-      };
+    const newStatus = "Shortlisted";
 
-      return statusFlow[currentStatus] || currentStatus;
-    };
-
+    // Send status update emails all for "Shortlisted"
     await Promise.all(
       applications.map((app) => {
-        const nextStatus = getNextStatus(app.status);
         const email = app.applicant.email;
         const name = app.applicant.firstName;
         const jobTitle = app.job?.jobTitle || "Position";
@@ -1254,7 +1245,7 @@ export const bulkAdvanceApplications = async (req, res) => {
 
         return sendStatusUpdateEmail(
           email,
-          nextStatus,
+          newStatus,
           name,
           jobTitle,
           companyName
@@ -1262,25 +1253,21 @@ export const bulkAdvanceApplications = async (req, res) => {
       })
     );
 
-    // Prepare bulk operations
-    const bulkOps = applications.map((app) => {
-      const nextStatus = getNextStatus(app.status);
-
-      return {
-        updateOne: {
-          filter: { _id: app._id },
-          update: {
-            $set: { status: nextStatus },
-            $push: {
-              statusHistory: {
-                status: nextStatus,
-                changedAt: new Date(),
-              },
+    // Prepare bulk operations to set status to "Shortlisted"
+    const bulkOps = applications.map((app) => ({
+      updateOne: {
+        filter: { _id: app._id },
+        update: {
+          $set: { status: newStatus },
+          $push: {
+            statusHistory: {
+              status: newStatus,
+              changedAt: new Date(),
             },
           },
         },
-      };
-    });
+      },
+    }));
 
     const result = await Application.bulkWrite(bulkOps);
 
@@ -1291,7 +1278,7 @@ export const bulkAdvanceApplications = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: `${result.modifiedCount} applications advanced successfully`,
+      message: `${result.modifiedCount} applications moved to Shortlisted successfully`,
       modifiedCount: result.modifiedCount,
       updatedApplications: updatedApplications,
     });
@@ -1303,6 +1290,7 @@ export const bulkAdvanceApplications = async (req, res) => {
     });
   }
 };
+
 
 export const updateSingleApplicationStatus = async (req, res) => {
   const { applicationId, status } = req.body;
