@@ -86,6 +86,7 @@ const JobApplications = () => {
   const [searchKeyword, setSearchKeyword] = useState("");
   const navigate = useNavigate();
   const [openBreakdownId, setOpenBreakdownId] = useState(null);
+  const [jobTitle, setJobTitle] = useState("");
   const [breakdownDialogOpen, setBreakdownDialogOpen] = useState(false);
   const [selectedBreakdown, setSelectedBreakdown] = useState("");
   const theme = useTheme();
@@ -217,6 +218,7 @@ const JobApplications = () => {
       }
 
       const totalCount = response.totalApplications || response.totalCount || 0;
+      setJobTitle(response.applications[0].job.jobTitle); 
       setTotalPages(Math.ceil(totalCount / limit));
       setCurrentPage(page);
 
@@ -1468,7 +1470,7 @@ const JobApplications = () => {
                 mb: 1,
               }}
             >
-              Job Applications
+               {jobTitle ? `${jobTitle} - Job Applications` : "Job Applications"}
             </Typography>
           </Box>
           {/* Premium Tab Navigation */}
