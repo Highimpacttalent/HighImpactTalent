@@ -304,8 +304,8 @@ const parseFilters = (query) => {
     result.totalYearsInConsulting = query.totalYearsInConsulting;
   }
 
-  if (query.matchLevel) {
-    result.resumeMatchLevel = query.matchLevel;
+  if(query.matchPercentageTier) {
+    result.matchPercentageTier = query.matchPercentageTier.trim();
   }
 
   if (query.status) {
@@ -318,7 +318,7 @@ const parseFilters = (query) => {
 // Main function to get applications
 export const getApplicationsOfAjob = async (req, res) => {
   try {
-    console.log("🔵 ENTERED getApplicationsOfAjob");
+    console.log("ENTERED getApplicationsOfAjob");
     const startTime = Date.now();
     const jobId = req.params.jobid;
     const { page = 1, limit = 20, sortBy } = req.query;
@@ -327,11 +327,14 @@ export const getApplicationsOfAjob = async (req, res) => {
     // Parse filters with multiple words support
     const filters = parseFilters(req.query);
     
+    console.log("🔍 Received filters:", JSON.stringify(filters, null, 2));
+    console.log("📄 Pagination - Page:", page, "Limit:", limit);
+    
     // Build base query
     const baseQuery = {
       job: new mongoose.Types.ObjectId(jobId),
       ...(filters.status && { status: filters.status }),
-      ...(filters.resumeMatchLevel && { resumeMatchLevel: filters.resumeMatchLevel })
+      //...(filters.resumeMatchLevel && { resumeMatchLevel: filters.resumeMatchLevel })
     };
 
     // Build aggregation pipeline
@@ -463,7 +466,6 @@ export const getApplicationsOfAjob = async (req, res) => {
       andConditions.push({ $or: designationConditions });
     }
 
-
     // Experience filtering
     if (filters.totalYearsInConsulting) {
       const minExp = parseFloat(filters.totalYearsInConsulting);
@@ -509,7 +511,6 @@ export const getApplicationsOfAjob = async (req, res) => {
       console.log("ℹ️ No valid experience filters found.");
     }
 
-
     // ---------------- SALARY RANGE FILTER ----------------
     const salaryConditions = [];
     const minSalary = parseFloat(filters.minSalary);
@@ -545,36 +546,74 @@ export const getApplicationsOfAjob = async (req, res) => {
       console.log("ℹ️ No valid salary filters found.");
     }
 
-    // ---------------- MATCH PERCENTAGE RANGE FILTER ----------------
-    const matchConditions = [];
-    const minMatch = parseFloat(filters.minMatchPercentage);
-    const maxMatch = parseFloat(filters.maxMatchPercentage);
-
-    if (!isNaN(minMatch)) {
-      matchConditions.push({
-        $gte: ["$matchPercentage", minMatch]
-      });
+    // ---------------- MATCH PERCENTAGE FILTER (NEW) ----------------
+    if (filters.matchPercentageTier) {
+      let matchCondition;
+      
+      switch (filters.matchPercentageTier) {
+        case "platinum":
+          // Platinum: >90% match percentage
+          matchCondition = {
+            $expr: {
+              $gt: [
+                { $convert: { input: "$matchPercentage", to: "double", onError: 0, onNull: 0 } },
+                90
+              ]
+            }
+          };
+          break;
+        case "gold":
+          // Gold: ≥80% to ≤90% match percentage
+          matchCondition = {
+            $expr: {
+              $and: [
+                {
+                  $gt: [
+                    { $convert: { input: "$matchPercentage", to: "double", onError: 0, onNull: 0 } },
+                    80
+                  ]
+                },
+                {
+                  $lte: [
+                    { $convert: { input: "$matchPercentage", to: "double", onError: 0, onNull: 0 } },
+                    90
+                  ]
+                }
+              ]
+            }
+          };
+          break;
+        case "silver":
+          // Silver: ≥70% to ≤80% match percentage
+          matchCondition = {
+            $expr: {
+              $and: [
+                {
+                  $gte: [
+                    { $convert: { input: "$matchPercentage", to: "double", onError: 0, onNull: 0 } },
+                    70
+                  ]
+                },
+                {
+                  $lte: [
+                    { $convert: { input: "$matchPercentage", to: "double", onError: 0, onNull: 0 } },
+                    80
+                  ]
+                }
+              ]
+            }
+          };
+          break;
+        default:
+          console.log("⚠️ Unknown match percentage tier:", filters.matchPercentageTier);
+          matchCondition = null;
+      }
+      
+      if (matchCondition) {
+        console.log(`✅ Adding ${filters.matchPercentageTier} match filter to pipeline`);
+        andConditions.push(matchCondition);
+      }
     }
-
-    if (!isNaN(maxMatch)) {
-      matchConditions.push({
-        $lte: ["$matchPercentage", maxMatch]
-      });
-    }
-
-    if (matchConditions.length > 0) {
-      const matchFilter = {
-        $expr: matchConditions.length === 1
-          ? matchConditions[0]
-          : { $and: matchConditions }
-      };
-
-      console.log("✅ Adding matchPercentage filter to pipeline:", JSON.stringify(matchFilter, null, 2));
-      andConditions.push(matchFilter);
-    } else {
-      console.log("ℹ️ No valid matchPercentage filters found.");
-    }
-
 
     // Enhanced screening questions filtering with multiple choice support
     if (filters.screeningFilters && Object.keys(filters.screeningFilters).length > 0) {
@@ -660,7 +699,8 @@ export const getApplicationsOfAjob = async (req, res) => {
         designations: filters.designations || [],
         totalYearsInConsulting: filters.totalYearsInConsulting,
         screeningFilters: filters.screeningFilters || {},
-        matchLevel: filters.resumeMatchLevel,
+        //matchLevel: filters.resumeMatchLevel,
+        matchPercentageTier: filters.matchPercentageTier, // NEW: Include match tier in response
       },
       performance: {
         totalTime: Date.now() - startTime,

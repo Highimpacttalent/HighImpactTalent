@@ -101,6 +101,13 @@ const JobApplications = () => {
   const [matchTab, setMatchTab] = useState(() =>
     loadFromSession("apps_tab", "all")
   );
+  const matchTiers = [
+  { id: "all", label: "All" },
+  { id: "platinum", label: "Platinum (90%+)" },
+  { id: "gold", label: "Gold (80-90%)" },
+  { id: "silver", label: "Silver (70-80%)" }
+];
+
   const [errorsnackbar, errorsetSnackbar] = useState({
     open: false,
     message: "",
@@ -110,16 +117,6 @@ const JobApplications = () => {
   useEffect(() => {
     applyFilters();
   }, [matchTab, sortOption, limit]);
-
-  const categorizedApps = {
-    relevant: filteredApps.filter((app) => app.resumeMatchLevel === "relevant"),
-    recommended: filteredApps.filter(
-      (app) => app.resumeMatchLevel === "recommended"
-    ),
-    not_relevant: filteredApps.filter(
-      (app) => app.resumeMatchLevel === "not_relevant"
-    ),
-  };
 
   // Bulk selection states
   const [selectedApplications, setSelectedApplications] = useState(new Set());
@@ -148,6 +145,7 @@ const JobApplications = () => {
       maxExperience: "",
       minSalary: "",
       maxSalary: "",
+      matchPercentageTier: ""
     })
   );
   const [keywordInput, setKeywordInput] = useState("");
@@ -203,7 +201,7 @@ const JobApplications = () => {
       queryParams.append("limit", limit.toString());
       queryParams.append("sortBy", sortOption);
       if (matchTab !== "all") {
-        queryParams.append("matchLevel", matchTab);
+        queryParams.append("matchPercentageTier", matchTab);
       }
 
       console.log("Fetching applications with params:", queryParams.toString());
@@ -1329,8 +1327,7 @@ const JobApplications = () => {
     }
   };
 
-  const visibleApps =
-    matchTab === "all" ? filteredApps : categorizedApps[matchTab] || [];
+  const visibleApps = filteredApps;
 
   return (
     <Box sx={{ bgcolor: "#fff", minHeight: "100vh", p: { xs: 2, md: 4 } }}>
@@ -1583,59 +1580,46 @@ const JobApplications = () => {
               {steps[activeStep]}
             </Typography>
 
-            <Box sx={{ display: "flex", gap: 1 }}>
-              {["all", "relevant", "recommended", "not_relevant"].map(
-                (level) => {
-                  const isActive = matchTab === level;
-                  const label =
-                    level === "all"
-                      ? "All"
-                      : level
-                          .replace("_", " ")
-                          .replace(/\b\w/g, (l) => l.toUpperCase());
-                  const count =
-                    level === "all"
-                      ? filteredApps.length
-                      : categorizedApps[level]?.length || 0;
-
-                  return (
-                    <Box
-                      key={level}
-                      onClick={() => setMatchTab(level)}
-                      sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 0.5,
-                        px: 1.5,
-                        py: 0.6,
-                        cursor: "pointer",
-                        borderRadius: "16px",
-                        border: isActive
-                          ? "1px solid #1976d2"
-                          : "1px solid #cbd5e1",
-                        backgroundColor: isActive ? "#e3f2fd" : "transparent",
-                        transition: "all 0.2s ease-in-out",
-                        "&:hover": {
-                          backgroundColor: isActive ? "#dbeafe" : "#f1f5f9",
-                        },
-                      }}
-                    >
-                      <Typography
-                        sx={{
-                          fontFamily: "Satoshi",
-                          fontWeight: isActive ? 700 : 500,
-                          fontSize: "13px",
-                          color: isActive ? "#1976d2" : "#334155",
-                          whiteSpace: "nowrap",
-                        }}
-                      >
-                        {label}
-                      </Typography>
-                    </Box>
-                  );
-                }
-              )}
-            </Box>
+            <Box sx={{ display: "flex", gap: 1.5, alignItems: "center", flexWrap: "wrap" }}>
+            {matchTiers.map((tier) => {
+              const isActive = matchTab === tier.id;
+              return (
+                <Box
+                  key={tier.id}
+                  onClick={() => setMatchTab(tier.id)}
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 0.5,
+                    px: 1.5,
+                    py: 0.6,
+                    cursor: "pointer",
+                    borderRadius: "16px",
+                    border: isActive
+                      ? "1px solid #1976d2"
+                      : "1px solid #cbd5e1",
+                    backgroundColor: isActive ? "#e3f2fd" : "transparent",
+                    transition: "all 0.2s ease-in-out",
+                    "&:hover": {
+                      backgroundColor: isActive ? "#dbeafe" : "#f1f5f9",
+                    },
+                  }}
+                >
+                  <Typography
+                    sx={{
+                      fontFamily: "Satoshi",
+                      fontWeight: isActive ? 700 : 500,
+                      fontSize: "13px",
+                      color: isActive ? "#1976d2" : "#334155",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {tier.label}
+                  </Typography>
+                </Box>
+              );
+            })}
+          </Box>
           </Box>
 
           {/* Enhanced Bulk Actions */}
