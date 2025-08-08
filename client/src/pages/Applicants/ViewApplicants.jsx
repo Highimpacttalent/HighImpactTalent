@@ -2048,6 +2048,7 @@ const JobApplications = () => {
                           navigate={navigate}
                           markAsViewed={markAsViewed}
                           onStageSelect={handleStageSelect}
+                          filterKeywords={filters?.keywords || []}
                         />
                       </Box>
                     </Box>

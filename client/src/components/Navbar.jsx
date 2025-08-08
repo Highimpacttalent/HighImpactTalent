@@ -11,6 +11,7 @@ import {
   List,
   ListItem,
   ListItemText,
+  ListItemIcon,
   Avatar,
   Box,
 } from "@mui/material";
@@ -26,7 +27,21 @@ import { Link } from "react-router-dom";
 import { CiUser } from "react-icons/ci";
 import { useSelector, useDispatch } from "react-redux";
 import { Logout as LogoutAction } from "../redux/userSlice";
+import CalendarTodayRounded from "@mui/icons-material/CalendarTodayRounded";
+import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import logo from "../assets/tlogo.png";
+
+const navBtnSx = {
+  textTransform: "none",
+  fontFamily: "Poppins",
+  fontWeight: 500,
+  fontSize: "18px",
+  color: "#24252C",
+  bgcolor: "transparent",
+  minWidth: 0,
+  px: 2,
+  boxShadow: "none",
+};
 
 const Navbar = () => {
   const { user } = useSelector((state) => state.user);
@@ -62,7 +77,14 @@ const Navbar = () => {
         </IconButton>
 
         {/* Logo */}
-        <Box sx={{ display: "flex", alignItems: "center",width:{xs:"100%",sm:"100%",md:"28%",lg:"28%"}, ml: 4}}>
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            width: { xs: "100%", sm: "100%", md: "28%", lg: "28%" },
+            ml: 4,
+          }}
+        >
           <Link
             to={user.token ? "/" : "/"}
             style={{
@@ -72,16 +94,18 @@ const Navbar = () => {
               color: "inherit",
             }}
           >
-            <Avatar src={logo} sx={{ width: "40px", height: "40px", mr: 1.5 }} />
+            <Avatar
+              src={logo}
+              sx={{ width: "40px", height: "40px", mr: 1.5 }}
+            />
             <Typography
               variant="h6"
               sx={{
                 color: "#3C7EFC",
                 fontWeight: "500",
                 whiteSpace: "nowrap",
-                fontFamily:"Poppins",
-                fontSize:"20px"
-
+                fontFamily: "Poppins",
+                fontSize: "20px",
               }}
             >
               High Impact Talent
@@ -103,25 +127,25 @@ const Navbar = () => {
             open={Boolean(menuAnchor)}
             onClose={handleMenuClose}
           >
-           {user?.accountType === "seeker" && (
-            <MenuItem
-              component={Link}
-              to="/user-profile"
-              onClick={handleMenuClose}
-            >
-              <AccountCircle sx={{ mr: 1 }} /> User Profile
-            </MenuItem>
-            )} 
-           
-           {user?.accountType !== "seeker" && (
-            <MenuItem
-              component={Link}
-              to="/rec-profile"
-              onClick={handleMenuClose}
-            >
-              <AccountCircle sx={{ mr: 1 }} /> User Profile
-            </MenuItem>
-            )} 
+            {user?.accountType === "seeker" && (
+              <MenuItem
+                component={Link}
+                to="/user-profile"
+                onClick={handleMenuClose}
+              >
+                <AccountCircle sx={{ mr: 1 }} /> User Profile
+              </MenuItem>
+            )}
+
+            {user?.accountType !== "seeker" && (
+              <MenuItem
+                component={Link}
+                to="/rec-profile"
+                onClick={handleMenuClose}
+              >
+                <AccountCircle sx={{ mr: 1 }} /> User Profile
+              </MenuItem>
+            )}
             <MenuItem component={Link} to="/password" onClick={handleMenuClose}>
               <LockReset sx={{ mr: 1 }} /> Change Password
             </MenuItem>
@@ -188,108 +212,265 @@ const Navbar = () => {
 };
 
 const LoggedInMenu = ({ user, handleMenuOpen }) => (
-  <Box sx={{ display: { xs: "none", md: "flex" }, gap: 3,mr: 2,flexGrow:1 ,justifyContent:"space-between"}}>
-    <Box sx={{display:"flex",width:"65%",justifyContent:"space-evenly"}}>
-    <Button
-      component={Link}
-      to={user?.accountType === "seeker" ? "/find-jobs" : "/view-jobs"}
-      sx={{textTransform:"none",fontFamily:"Poppins",fontWeight:"500",fontSize:"18px",color:"#24252C"}}
-    >
-      {user?.accountType === "seeker" ? "Jobs" : "Job Posts"}
-    </Button>
-    {user?.accountType === "seeker" && (
+  <Box
+    sx={{
+      display: { xs: "none", md: "flex" },
+      gap: 3,
+      mr: 2,
+      flexGrow: 1,
+      justifyContent: "space-between",
+    }}
+  >
+    <Box sx={{ display: "flex", width: "65%", justifyContent: "space-evenly" }}>
       <Button
-        color="inherit"
         component={Link}
-        to="/application-tracking"
-        sx={{textTransform:"none",fontFamily:"Poppins",fontWeight:"500",fontSize:"18px",color:"#24252C"}}
+        to={user?.accountType === "seeker" ? "/find-jobs" : "/view-jobs"}
+        sx={{
+          textTransform: "none",
+          fontFamily: "Poppins",
+          fontWeight: "500",
+          fontSize: "18px",
+          color: "#24252C",
+        }}
       >
-        Job Tracker
+        {user?.accountType === "seeker" ? "Jobs" : "Job Posts"}
       </Button>
-    )}
-    {user?.accountType !== "seeker" && (
-      <Button
-        color="inherit"
-        component={Link}
-        to="/resumesearch"
-        sx={{textTransform:"none",fontFamily:"Poppins",fontWeight:"500",fontSize:"18px",color:"#24252C"}}
-      >
-        Resume Search
-      </Button>
-    )}
-    {/* {user?.accountType === "seeker" && (
+      {user?.accountType === "seeker" && (
+        <Button
+          color="inherit"
+          component={Link}
+          to="/application-tracking"
+          sx={{
+            textTransform: "none",
+            fontFamily: "Poppins",
+            fontWeight: "500",
+            fontSize: "18px",
+            color: "#24252C",
+          }}
+        >
+          Job Tracker
+        </Button>
+      )}
+      {user?.accountType !== "seeker" && (
+        <Button
+          color="inherit"
+          component={Link}
+          to="/resumesearch"
+          sx={{
+            textTransform: "none",
+            fontFamily: "Poppins",
+            fontWeight: "500",
+            fontSize: "18px",
+            color: "#24252C",
+          }}
+        >
+          Resume Search
+        </Button>
+      )}
+      {/* {user?.accountType === "seeker" && (
       <Button component={Link} to="/companies" color="inherit">
         Companies
       </Button>
     )} */}
-    <Button component={Link} to="/about-us" sx={{textTransform:"none",fontFamily:"Poppins",fontWeight:"500",fontSize:"18px",color:"#24252C"}}>
-      About
-    </Button>
-    <Button component={Link} to="/blog" sx={{textTransform:"none",fontFamily:"Poppins",fontWeight:"500",fontSize:"18px",color:"#24252C"}}>
-      Blog
-    </Button>
-    <Button component={Link} to="/contact-us" sx={{textTransform:"none",fontFamily:"Poppins",fontWeight:"500",fontSize:"18px",color:"#24252C"}}>
-      Contact Us
-    </Button>
+      <Button
+        component={Link}
+        to="/about-us"
+        sx={{
+          textTransform: "none",
+          fontFamily: "Poppins",
+          fontWeight: "500",
+          fontSize: "18px",
+          color: "#24252C",
+        }}
+      >
+        About
+      </Button>
+      <Button
+        component={Link}
+        to="/blog"
+        sx={{
+          textTransform: "none",
+          fontFamily: "Poppins",
+          fontWeight: "500",
+          fontSize: "18px",
+          color: "#24252C",
+        }}
+      >
+        Blog
+      </Button>
+      <Button
+        component={Link}
+        to="/contact-us"
+        sx={{
+          textTransform: "none",
+          fontFamily: "Poppins",
+          fontWeight: "500",
+          fontSize: "18px",
+          color: "#24252C",
+        }}
+      >
+        Contact Us
+      </Button>
     </Box>
     <IconButton
-  onClick={handleMenuOpen}
-  sx={{
-    display: "flex",
-    alignItems: "center",
-    gap: 1,
-    textTransform: "none",
-    fontFamily: "Poppins",
-    fontWeight: "500",
-    fontSize: { xs: "14px", sm: "16px", md: "18px" }, // Responsive Font
-    color: "#24252C",
-    bgcolor: "white",
-    px: { xs: 1, sm: 2 }, // Adjust padding
-    borderRadius: 16,
-    "&:hover": {
-      bgcolor: "#f5f5f5",
-    },
-  }}
->
-  {user?.profileUrl ? (
-    <Avatar src={user?.profileUrl} sx={{ width: { xs: 30, sm: 40 }, height: { xs: 30, sm: 40 } }} />
-  ) : (
-    <CiUser size={24} style={{ strokeWidth: 1,width: { xs: 30, sm: 40 }, height: { xs: 30, sm: 40 } }}/>
-  )}
-  <Typography sx={{textTransform:"none",fontFamily:"Poppins",fontWeight:"500",fontSize:"18px",color:"#24252C"}}>Your Profile</Typography>
-</IconButton>
-
-    </Box>
+      onClick={handleMenuOpen}
+      sx={{
+        display: "flex",
+        alignItems: "center",
+        gap: 1,
+        textTransform: "none",
+        fontFamily: "Poppins",
+        fontWeight: "500",
+        fontSize: { xs: "14px", sm: "16px", md: "18px" }, // Responsive Font
+        color: "#24252C",
+        bgcolor: "white",
+        px: { xs: 1, sm: 2 }, // Adjust padding
+        borderRadius: 16,
+        "&:hover": {
+          bgcolor: "#f5f5f5",
+        },
+      }}
+    >
+      {user?.profileUrl ? (
+        <Avatar
+          src={user?.profileUrl}
+          sx={{ width: { xs: 30, sm: 40 }, height: { xs: 30, sm: 40 } }}
+        />
+      ) : (
+        <CiUser
+          size={24}
+          style={{
+            strokeWidth: 1,
+            width: { xs: 30, sm: 40 },
+            height: { xs: 30, sm: 40 },
+          }}
+        />
+      )}
+      <Typography
+        sx={{
+          textTransform: "none",
+          fontFamily: "Poppins",
+          fontWeight: "500",
+          fontSize: "18px",
+          color: "#24252C",
+        }}
+      >
+        Your Profile
+      </Typography>
+    </IconButton>
+  </Box>
 );
 
 const LoggedOutMenu = () => (
-  <Box sx={{ display: { xs: "none", md: "flex" }, gap: 3,mr: 2,flexGrow:1 ,justifyContent:"space-between"}}>
-    <Box sx={{display:"flex",width:"65%",justifyContent:"space-evenly"}}>
-    <Button component={Link} to="/find-jobs" color="inherit" sx={{textTransform:"none",fontFamily:"Poppins",fontWeight:"500",fontSize:"18px",color:"#24252C"}}>
-      Jobs
-    </Button>
-    <Button component={Link} to="/contact-us" color="inherit" sx={{textTransform:"none",fontFamily:"Poppins",fontWeight:"500",fontSize:"18px",color:"#24252C"}}>
-      Contact Us
-    </Button>
-    <Button component={Link} to="/about-us" color="inherit" sx={{textTransform:"none",fontFamily:"Poppins",fontWeight:"500",fontSize:"18px",color:"#24252C"}}>
-      About
-    </Button>
-    <Button component={Link} to="/blog" color="inherit" sx={{textTransform:"none",fontFamily:"Poppins",fontWeight:"500",fontSize:"18px",color:"#24252C"}}>
-      Blog
-    </Button>
+  <Box
+    sx={{
+      display: { xs: "none", md: "flex" },
+      gap: 3,
+      mr: 2,
+      flexGrow: 1,
+      justifyContent: "space-between",
+    }}
+  >
+    <Box sx={{ display: "flex", width: "65%", justifyContent: "space-evenly" }}>
+      <Button
+        component={Link}
+        to="/find-jobs"
+        color="inherit"
+        sx={{
+          textTransform: "none",
+          fontFamily: "Poppins",
+          fontWeight: "500",
+          fontSize: "18px",
+          color: "#24252C",
+        }}
+      >
+        Jobs
+      </Button>
+      <Button
+        component={Link}
+        to="/contact-us"
+        color="inherit"
+        sx={{
+          textTransform: "none",
+          fontFamily: "Poppins",
+          fontWeight: "500",
+          fontSize: "18px",
+          color: "#24252C",
+        }}
+      >
+        Contact Us
+      </Button>
+      <Button
+        component={Link}
+        to="/about-us"
+        color="inherit"
+        sx={{
+          textTransform: "none",
+          fontFamily: "Poppins",
+          fontWeight: "500",
+          fontSize: "18px",
+          color: "#24252C",
+        }}
+      >
+        About
+      </Button>
+      <Button
+        component={Link}
+        to="/blog"
+        color="inherit"
+        sx={{
+          textTransform: "none",
+          fontFamily: "Poppins",
+          fontWeight: "500",
+          fontSize: "18px",
+          color: "#24252C",
+        }}
+      >
+        Blog
+      </Button>
     </Box>
-    {/* <Button
-      variant="contained"
-      component={Link}
-      to="/u-login"
-      sx={{
-        bgcolor: "#3C7EFC",
-        borderRadius: 8,
-        fontFamily: "Poppins",
-      }}
-    >
-      Login
-    </Button> */}
+    <Button
+  component="a"
+  href="https://calendly.com/koustubhharidas"
+  target="_blank"
+  rel="noopener noreferrer"
+  aria-label="Book a call"
+  startIcon={<CalendarTodayRounded sx={{ fontSize: 20 }} />}
+  sx={{
+    display: "inline-flex",
+    alignItems: "center",
+    gap: 1.5,
+    background: "linear-gradient(90deg, #3C7EFC 0%, #6AA8FF 50%, #2D67F0 100%)",
+    color: "#fff",
+    borderRadius: "30px",
+    px: 4,
+    py: 1.3,
+    fontWeight: 600,
+    fontFamily: "Poppins, sans-serif",
+    fontSize: "16px",
+    letterSpacing: 0.3,
+    textTransform: "none",
+    boxShadow:
+      "0 6px 18px rgba(60,126,252,0.22), inset 0 -1px 0 rgba(255,255,255,0.06)",
+    transition:
+      "transform 250ms ease, box-shadow 250ms ease, background-position 400ms ease",
+    backgroundSize: "200% 100%",
+    backgroundPosition: "0% 50%",
+    "&:hover": {
+      transform: "translateY(-3px)",
+      boxShadow: "0 10px 25px rgba(60,126,252,0.28)",
+      backgroundPosition: "100% 50%",
+    },
+    "&:active": { transform: "translateY(-1px) scale(0.98)" },
+    "&:focus-visible": {
+      outline: "none",
+      boxShadow: "0 0 0 4px rgba(60,126,252,0.2)",
+    },
+  }}
+>
+  Book a Call
+</Button>
+
   </Box>
 );
 
@@ -327,6 +508,66 @@ const LoggedOutDrawer = ({ setDrawerOpen }) => (
     >
       <ListItemText primary="Blog" />
     </ListItem>
+
+  <ListItem
+  button
+  component="a"
+  href="https://calendly.com/koustubhharidas"
+  target="_blank"
+  rel="noopener noreferrer"
+  onClick={() => setDrawerOpen(false)}
+  aria-label="Book a call"
+  sx={{
+    mt: 2,
+    mx: 2,
+    borderRadius: 3,
+    px: 2.5,
+    py: 1.3,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 1,
+    background: "linear-gradient(90deg, #3C7EFC 0%, #6AA8FF 60%, #2D67F0 100%)",
+    color: "#FFF",
+    fontWeight: 600,
+    fontFamily: "Poppins, sans-serif",
+    fontSize: "15px",
+    letterSpacing: 0.3,
+    boxShadow:
+      "0 6px 18px rgba(60,126,252,0.2), inset 0 -1px 0 rgba(255,255,255,0.05)",
+    textTransform: "none",
+    transition:
+      "transform 200ms ease, box-shadow 200ms ease, background-position 350ms",
+    backgroundSize: "200% 100%",
+    backgroundPosition: "0% 50%",
+    "&:hover": {
+      transform: "translateY(-3px)",
+      backgroundPosition: "100% 50%",
+      boxShadow: "0 10px 25px rgba(60,126,252,0.26)",
+    },
+    "&:active": { transform: "translateY(-1px) scale(0.98)" },
+    "&:focus-visible": { boxShadow: "0 0 0 4px rgba(60,126,252,0.18)" },
+  }}
+>
+  <ListItemIcon
+    sx={{
+      minWidth: 0,
+      mr: 1.25,
+      color: "inherit",
+      display: "flex",
+      alignItems: "center",
+    }}
+  >
+    <CalendarTodayRounded sx={{ fontSize: 20 }} />
+  </ListItemIcon>
+  <ListItemText
+    primary="Book a Call"
+    primaryTypographyProps={{
+      sx: { color: "inherit", fontWeight: 600, fontSize: "15px" },
+    }}
+  />
+</ListItem>
+
   </List>
 );
 
@@ -350,7 +591,6 @@ const LoggedInDrawer = ({ user, handleLogout, setDrawerOpen }) => (
         onClick={() => setDrawerOpen(false)}
       >
         <ListItemText primary=" Job Tracker" />
-        
       </ListItem>
     )}
     {user?.accountType !== "seeker" && (
@@ -425,7 +665,7 @@ const LoggedInDrawer = ({ user, handleLogout, setDrawerOpen }) => (
     >
       <ListItemText primary="Change Password" />
     </ListItem>
-    
+
     <ListItem
       button
       onClick={() => {

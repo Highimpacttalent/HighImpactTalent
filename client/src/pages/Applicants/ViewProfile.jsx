@@ -34,10 +34,56 @@ import LinkedInIcon from "@mui/icons-material/LinkedIn";
 import axios from "axios";
 import { useLocation } from "react-router-dom";
 
+
+const escapeRegExp = (s = "") => String(s).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+const highlight = (text, keywords) => {
+  const str = String(text ?? "");
+  if (!keywords) return str;
+
+  // normalize to tokens array
+  let tokens = [];
+  if (Array.isArray(keywords)) {
+    tokens = keywords.map((k) => String(k || "").trim()).filter(Boolean);
+  } else {
+    tokens = String(keywords)
+      .split(/[\s,]+/)
+      .map((k) => k.trim())
+      .filter(Boolean);
+  }
+
+  if (!tokens.length) return str;
+
+  // sort by length desc: multi-word phrases match before single words
+  tokens.sort((a, b) => b.length - a.length);
+
+  const pattern = tokens.map(escapeRegExp).join("|");
+  const parts = str.split(new RegExp(`(${pattern})`, "gi"));
+
+  return parts.map((part, idx) =>
+    tokens.some((t) => part.toLowerCase() === t.toLowerCase()) ? (
+      <span
+        key={idx}
+        style={{
+          backgroundColor: "#fff59d",
+          padding: "0 4px",
+          borderRadius: 4,
+          display: "inline-block",
+        }}
+      >
+        {part}
+      </span>
+    ) : (
+      <span key={idx}>{part}</span>
+    )
+  );
+};
+
 const ViewProfile = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const userData = location.state?.applicant || {};
+  const filterKeywords = location.state?.filterKeywords || [];
   const ScreeningQues = location.state?.screeningAnswers || [];
   console.log(userData);
   const applicationId = location.state?.applicationId || "";
@@ -268,7 +314,7 @@ const ViewProfile = () => {
                     lineHeight: 1.2,
                   }}
                 >
-                  {userData?.firstName} {userData?.lastName}
+                  {highlight(`${userData.firstName || ""} ${userData.lastName || ""}`, filterKeywords)}
                 </Typography>
                 <Typography
                   sx={{
@@ -279,7 +325,7 @@ const ViewProfile = () => {
                     mb: 1,
                   }}
                 >
-                  {userData?.currentDesignation}
+                  {highlight(userData.currentDesignation || "", filterKeywords)}
                 </Typography>
                 <Typography
                   sx={{
@@ -289,7 +335,7 @@ const ViewProfile = () => {
                     color: "#9CA3AF",
                   }}
                 >
-                  {userData?.currentCompany}
+                  {highlight(userData.currentCompany || "", filterKeywords)}
                 </Typography>
               </Box>
 
@@ -647,8 +693,7 @@ const ViewProfile = () => {
                     lineHeight: 1.6,
                   }}
                 >
-                  {userData?.about ||
-                    "No description provided by the candidate."}
+                  {highlight(userData?.about || "No description provided by the candidate.", filterKeywords)}
                 </Typography>
               </ProfileSection>
 
@@ -678,7 +723,7 @@ const ViewProfile = () => {
                     <InfoField
                       label="Current Designation"
                       value={
-                        `${userData?.currentDesignation}` || "Not Provided"
+                        `${highlight(userData?.currentDesignation || "Not Provided", filterKeywords)}`
                       }
                     />
                   </Grid>

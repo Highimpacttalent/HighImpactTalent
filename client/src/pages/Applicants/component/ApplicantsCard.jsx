@@ -46,7 +46,56 @@ import ScreeningModal from "./ScreeningModal";
 import { useMediaQuery } from "@mui/material";
 import { useSelector } from "react-redux";
 
-const ApplicationCard = ({ app, navigate, markAsViewed, onStageSelect }) => {
+
+export const escapeRegExp = (s = "") =>
+  String(s).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+export function highlight(text, keywords) {
+  const str = String(text ?? "");
+  if (!keywords) return str;
+
+  // normalize keywords -> array of non-empty tokens
+  let tokens = [];
+  if (Array.isArray(keywords)) {
+    tokens = keywords.map((k) => String(k || "").trim()).filter(Boolean);
+  } else {
+    // if single string (e.g., "react node"), split on space/comma
+    tokens = String(keywords)
+      .split(/[\s,]+/)
+      .map((k) => k.trim())
+      .filter(Boolean);
+  }
+
+  if (!tokens.length) return str;
+
+  // sort by length desc so "react native" matched before "react"
+  tokens.sort((a, b) => b.length - a.length);
+
+  const pattern = tokens.map(escapeRegExp).join("|");
+  const parts = str.split(new RegExp(`(${pattern})`, "gi"));
+
+  return parts.map((part, idx) =>
+    tokens.some((t) => part.toLowerCase() === t.toLowerCase()) ? (
+      <span
+        key={idx}
+        style={{
+          backgroundColor: "#fff59d",
+          padding: "0 4px",
+          borderRadius: 4,
+          display: "inline-block",
+        }}
+      >
+        {part}
+      </span>
+    ) : (
+      <span key={idx}>{part}</span>
+    )
+  );
+}
+
+
+
+const ApplicationCard = ({ app, navigate, markAsViewed, onStageSelect, filterKeywords = [] }) => {
   const { applicant, matchPercentage, status, screeningAnswers, cvUrl } = app;
   const [showAll, setShowAll] = useState(false);
   const [resumeOpen, setResumeOpen] = useState(false);
@@ -115,7 +164,7 @@ const ApplicationCard = ({ app, navigate, markAsViewed, onStageSelect }) => {
   const handleViewProfile = () => {
     if (status === "Applied") markAsViewed(app._id);
     navigate("/view-profile", {
-      state: { applicant, status, applicationId: app._id, screeningAnswers },
+      state: { applicant, status, applicationId: app._id, screeningAnswers, filterKeywords },
     });
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -208,7 +257,7 @@ const ApplicationCard = ({ app, navigate, markAsViewed, onStageSelect }) => {
                   }}
                   onClick={handleViewProfile} // Navigate to profile on click
                 >
-                  {applicant.firstName} {applicant.lastName}
+                  {highlight(`${applicant.firstName || ""} ${applicant.lastName || ""}`, filterKeywords)}
                 </Typography>
 
                 <Typography
@@ -221,7 +270,7 @@ const ApplicationCard = ({ app, navigate, markAsViewed, onStageSelect }) => {
                     mb: 1,
                   }}
                 >
-                  {applicant.currentDesignation}
+                  {highlight(applicant.currentDesignation || "", filterKeywords)}
                 </Typography>
 
                 <Typography
@@ -233,7 +282,7 @@ const ApplicationCard = ({ app, navigate, markAsViewed, onStageSelect }) => {
                     fontSize: "0.8rem",
                   }}
                 >
-                  {applicant.currentCompany}
+                  {highlight(applicant.currentCompany || "", filterKeywords)}
                 </Typography>
               </Box>
             </Box>
@@ -360,7 +409,7 @@ const ApplicationCard = ({ app, navigate, markAsViewed, onStageSelect }) => {
               {displayedSkills.map((skill, index) => (
                 <Chip
                   key={skill}
-                  label={skill}
+                  label={highlight(skill, filterKeywords)}
                   size="small"
                   sx={{
                     backgroundColor: index < 2 ? "#e0f2fe" : "#f1f5f9",
@@ -678,7 +727,7 @@ const ApplicationCard = ({ app, navigate, markAsViewed, onStageSelect }) => {
                   }}
                   onClick={handleViewProfile} // Navigate to profile on click
                 >
-                  {applicant.firstName} {applicant.lastName}
+                  {highlight(`${applicant.firstName || ""} ${applicant.lastName || ""}`, filterKeywords)}
                 </Typography>
                 <Chip
                   label={`${matchPercentage}% Match`}
@@ -716,7 +765,7 @@ const ApplicationCard = ({ app, navigate, markAsViewed, onStageSelect }) => {
                   fontWeight: 500,
                 }}
               >
-                {applicant.currentDesignation}
+                {highlight(applicant.currentDesignation || "", filterKeywords)}
               </Typography>
               <Typography
                 variant="body2"
@@ -727,7 +776,7 @@ const ApplicationCard = ({ app, navigate, markAsViewed, onStageSelect }) => {
                   mb: 1,
                 }}
               >
-                {applicant.currentCompany}
+                {highlight(applicant.currentCompany || "", filterKeywords)}
               </Typography>
 
               <Box
@@ -1082,7 +1131,7 @@ const ApplicationCard = ({ app, navigate, markAsViewed, onStageSelect }) => {
                   visibleSkills.map((skill) => (
                     <Chip
                       key={skill}
-                      label={skill}
+                      label={highlight(skill, filterKeywords)}
                       size="small"
                       sx={{
                         backgroundColor: "#f3f4f6",
