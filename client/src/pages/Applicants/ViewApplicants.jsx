@@ -171,63 +171,68 @@ const JobApplications = () => {
 
   // Fetch applications with server-side filtering
   const fetchApplications = async (
-    filterParams = {},
-    status = null,
-    page = currentPage
-  ) => {
-    try {
-      setFilterLoading(true);
+  filterParams = {},
+  status = null,
+  page = currentPage
+) => {
+  try {
+    setFilterLoading(true);
 
-      const queryParams = new URLSearchParams();
+    const queryParams = new URLSearchParams();
 
-      // Add status if provided
-      if (status) {
-        queryParams.append("status", status);
-      }
-
-      // Add filter parameters
-      Object.entries(filterParams).forEach(([key, value]) => {
-        if (value !== undefined && value !== null && value !== "") {
-          // Special handling for screeningFilters
-          if (key === "screeningFilters" && typeof value === "object") {
-            queryParams.append(key, JSON.stringify(value));
-          } else {
-            queryParams.append(key, value.toString().trim());
-          }
-        }
-      });
-
-      queryParams.append("page", page);
-      queryParams.append("limit", limit.toString());
-      queryParams.append("sortBy", sortOption);
-      if (matchTab !== "all") {
-        queryParams.append("matchPercentageTier", matchTab);
-      }
-
-      console.log("Fetching applications with params:", queryParams.toString());
-
-      const response = await apiRequest({
-        url: `application/get-applications/${jobId}?${queryParams.toString()}`,
-        method: "GET",
-      });
-
-      if (!response.success) {
-        throw new Error(response.message || "Failed to fetch applications");
-      }
-
-      const totalCount = response.totalApplications || response.totalCount || 0;
-      setJobTitle(response.applications[0].job.jobTitle); 
-      setTotalPages(Math.ceil(totalCount / limit));
-      setCurrentPage(page);
-
-      return response.applications;
-    } catch (err) {
-      setError(err.message);
-      return [];
-    } finally {
-      setFilterLoading(false);
+    // Add status if provided
+    if (status) {
+      queryParams.append("status", status);
     }
-  };
+
+    // Add filter parameters
+    Object.entries(filterParams).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== "") {
+        // Special handling for screeningFilters
+        if (key === "screeningFilters" && typeof value === "object") {
+          queryParams.append(key, JSON.stringify(value));
+        } else {
+          queryParams.append(key, value.toString().trim());
+        }
+      }
+    });
+
+    queryParams.append("page", page);
+    queryParams.append("limit", limit.toString());
+    queryParams.append("sortBy", sortOption);
+    if (matchTab !== "all") {
+      queryParams.append("matchPercentageTier", matchTab);
+    }
+
+    console.log("Fetching applications with params:", queryParams.toString());
+
+    const response = await apiRequest({
+      url: `application/get-applications/${jobId}?${queryParams.toString()}`,
+      method: "GET",
+    });
+
+    if (!response.success) {
+      throw new Error(response.message || "Failed to fetch applications");
+    }
+
+    const totalCount = response.totalApplications || response.totalCount || 0;
+    
+    // Safe check for job title - only set if applications exist
+    if (response.applications && response.applications.length > 0) {
+      setJobTitle(response.applications[0].job.jobTitle);
+    }
+    
+    setTotalPages(Math.ceil(totalCount / limit));
+    setCurrentPage(page);
+
+    return response.applications || []; // Ensure we always return an array
+  } catch (err) {
+    setError(err.message);
+    return [];
+  } finally {
+    setFilterLoading(false);
+  }
+};
 
   //Fetch stage counts
   const fetchStageCounts = async () => {
