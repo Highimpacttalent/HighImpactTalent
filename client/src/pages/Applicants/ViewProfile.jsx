@@ -35,13 +35,14 @@ import axios from "axios";
 import { useLocation } from "react-router-dom";
 
 
-const escapeRegExp = (s = "") => String(s).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+export const escapeRegExp = (s = "") =>
+  String(s).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
-const highlight = (text, keywords) => {
+export function highlight(text, keywords) {
   const str = String(text ?? "");
   if (!keywords) return str;
 
-  // normalize to tokens array
+  // normalize keywords -> array of non-empty tokens
   let tokens = [];
   if (Array.isArray(keywords)) {
     tokens = keywords.map((k) => String(k || "").trim()).filter(Boolean);
@@ -54,14 +55,15 @@ const highlight = (text, keywords) => {
 
   if (!tokens.length) return str;
 
-  // sort by length desc: multi-word phrases match before single words
+  // sort by length desc so longer matches come first
   tokens.sort((a, b) => b.length - a.length);
 
+  // create regex to match even partial words
   const pattern = tokens.map(escapeRegExp).join("|");
   const parts = str.split(new RegExp(`(${pattern})`, "gi"));
 
   return parts.map((part, idx) =>
-    tokens.some((t) => part.toLowerCase() === t.toLowerCase()) ? (
+    tokens.some((t) => part.toLowerCase().includes(t.toLowerCase())) ? (
       <span
         key={idx}
         style={{
@@ -77,7 +79,8 @@ const highlight = (text, keywords) => {
       <span key={idx}>{part}</span>
     )
   );
-};
+}
+
 
 const ViewProfile = () => {
   const location = useLocation();

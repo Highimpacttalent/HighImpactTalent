@@ -59,7 +59,6 @@ export function highlight(text, keywords) {
   if (Array.isArray(keywords)) {
     tokens = keywords.map((k) => String(k || "").trim()).filter(Boolean);
   } else {
-    // if single string (e.g., "react node"), split on space/comma
     tokens = String(keywords)
       .split(/[\s,]+/)
       .map((k) => k.trim())
@@ -68,14 +67,15 @@ export function highlight(text, keywords) {
 
   if (!tokens.length) return str;
 
-  // sort by length desc so "react native" matched before "react"
+  // sort by length desc so longer matches come first
   tokens.sort((a, b) => b.length - a.length);
 
+  // create regex to match even partial words
   const pattern = tokens.map(escapeRegExp).join("|");
   const parts = str.split(new RegExp(`(${pattern})`, "gi"));
 
   return parts.map((part, idx) =>
-    tokens.some((t) => part.toLowerCase() === t.toLowerCase()) ? (
+    tokens.some((t) => part.toLowerCase().includes(t.toLowerCase())) ? (
       <span
         key={idx}
         style={{
@@ -92,6 +92,7 @@ export function highlight(text, keywords) {
     )
   );
 }
+
 
 
 
