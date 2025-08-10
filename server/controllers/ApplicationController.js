@@ -931,7 +931,7 @@ export const getScreeningFilterOptions = async (req, res) => {
 export const getApplicationStageCounts = async (req, res) => {
   try {
     const jobId = req.params.jobid;
-  
+
     // Validate job ID
     if (!mongoose.Types.ObjectId.isValid(jobId)) {
       return res.status(400).json({
@@ -940,7 +940,7 @@ export const getApplicationStageCounts = async (req, res) => {
       });
     }
 
-    // Get counts grouped by status, removing duplicates by keeping latest application per user
+    // Get counts grouped by status
     const statuses = [
       "Applied",
       "Application Viewed",
@@ -951,27 +951,8 @@ export const getApplicationStageCounts = async (req, res) => {
     ];
 
     const result = await Application.aggregate([
-      // Match applications for the specific job
       { $match: { job: new mongoose.Types.ObjectId(jobId) } },
-      
-      // Sort by createdAt descending to get latest applications first
-      { $sort: { createdAt: -1 } },
-      
-      // Group by user to remove duplicates, keeping the first (latest) application
-      {
-        $group: {
-          _id: "$user", // Group by user ID
-          latestApplication: { $first: "$$ROOT" } // Keep the first (latest) document
-        }
-      },
-      
-      // Replace root with the latest application document
-      { $replaceRoot: { newRoot: "$latestApplication" } },
-      
-      // Now group by status to get counts
       { $group: { _id: "$status", count: { $sum: 1 } } },
-      
-      // Project to clean up the output
       { $project: { _id: 0, status: "$_id", count: 1 } }
     ]);
 
@@ -988,13 +969,9 @@ export const getApplicationStageCounts = async (req, res) => {
       }
     });
 
-    // Calculate total unique applications
-    const totalApplications = Object.values(stageCounts).reduce((sum, count) => sum + count, 0);
-
     res.status(200).json({
       success: true,
       stageCounts,
-      totalApplications, 
     });
   } catch (error) {
     console.error("Error getting stage counts:", error);
@@ -1003,7 +980,7 @@ export const getApplicationStageCounts = async (req, res) => {
       error: error.message,
     });
   }
-};
+}
 
 export const getallApplicationOfApplicant = async (req, res) => {
   try {
