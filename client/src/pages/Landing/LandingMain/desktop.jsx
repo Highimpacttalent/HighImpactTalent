@@ -78,6 +78,103 @@ const AnimatedSection = ({ children, delay = 0, ...props }) => {
   );
 };
 
+function useSmoothNumber(to, { duration = 900 } = {}) {
+  const [value, setValue] = React.useState(
+    typeof to === "number" ? Math.round(to) : 0
+  );
+  const rafRef = React.useRef(null);
+  const startRef = React.useRef(null);
+  const fromRef = React.useRef(value);
+
+  React.useEffect(() => {
+    if (typeof to !== "number" || isNaN(to)) {
+      setValue(0);
+      fromRef.current = 0;
+      return;
+    }
+    cancelAnimationFrame(rafRef.current);
+    const from = fromRef.current ?? 0;
+    const diff = to - from;
+    if (diff === 0) {
+      setValue(Math.round(to));
+      fromRef.current = Math.round(to);
+      return;
+    }
+    startRef.current = null;
+    const step = (timestamp) => {
+      if (!startRef.current) startRef.current = timestamp;
+      const elapsed = timestamp - startRef.current;
+      const t = Math.min(1, elapsed / duration);
+      const eased = 1 - (1 - t) * (1 - t); // easeOutQuad
+      const current = Math.round(from + diff * eased);
+      setValue(current);
+      if (t < 1) {
+        rafRef.current = requestAnimationFrame(step);
+      } else {
+        fromRef.current = Math.round(to);
+      }
+    };
+    rafRef.current = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(rafRef.current);
+  }, [to, duration]);
+
+  return value;
+}
+
+// Small live stat display (keeps original look — h4 + body2)
+function LiveStat({ target, fallbackText, label, loading, bigNumber }) {
+  const animated = useSmoothNumber(typeof target === "number" ? target : 0, {
+    duration: 1000,
+  });
+  const displayText = loading
+    ? "..."
+    : typeof target === "number"
+    ? animated.toLocaleString()
+    : fallbackText;
+  const [pop, setPop] = React.useState(false);
+
+  React.useEffect(() => {
+    if (loading) return;
+    setPop(true);
+    const t = setTimeout(() => setPop(false), 250);
+    return () => clearTimeout(t);
+  }, [animated, loading]);
+
+  return (
+    <Box sx={{ textAlign: "center" }}>
+      <Typography
+        variant="h2"
+        sx={{
+          fontWeight: 800,
+          color: "#22223B",
+          fontSize: bigNumber
+            ? { xs: "2.5rem", sm: "3.5rem", md: "4.5rem" }
+            : { xs: "2.1rem", sm: "2.5rem" },
+          lineHeight: 1.13,
+          fontFamily: "Satoshi, -apple-system, BlinkMacSystemFont, sans-serif",
+          letterSpacing: "-0.01em",
+          transition: "transform 160ms cubic-bezier(.2,.9,.2,1)",
+          transform: pop ? "scale(1.07)" : "scale(1)",
+          mb: bigNumber ? 0.5 : 0,
+        }}
+      >
+        {displayText}{" "}
+      </Typography>
+      {!!label && (
+        <Typography
+          sx={{
+            color: "#64748b",
+            fontFamily: "Poppins, sans-serif",
+            fontSize: "1rem",
+          }}
+        >
+          {label}
+        </Typography>
+      )}
+    </Box>
+  );
+}
+
 const DesktopLanding = () => {
   const theme = useTheme();
   const [email, setEmail] = useState("");
@@ -108,7 +205,6 @@ const DesktopLanding = () => {
     console.log("Subscribing:", email);
   };
 
-
   useEffect(() => {
     let isMounted = true;
 
@@ -125,34 +221,7 @@ const DesktopLanding = () => {
 
         const data = await res.json();
 
-        // Try to extract an integer in a few common shapes
-        let total = null;
-        if (data == null) {
-          total = null;
-        } else if (typeof data === "number") {
-          total = data;
-        } else if (typeof data.totalUsers === "number") {
-          total = data.totalUsers;
-        } else if (typeof data.count === "number") {
-          total = data.count;
-        } else if (typeof data.total === "number") {
-          total = data.total;
-        } else if (Array.isArray(data)) {
-          total = data.length;
-        } else if (Array.isArray(data.data)) {
-          total = data.data.length;
-        } else if (typeof data.data === "number") {
-          total = data.data;
-        }
-
-        if (isMounted && typeof total === "number" && !isNaN(total)) {
-          // round down to nearest 100 (2579 -> 2500)
-          const rounded = Math.floor(total / 100) * 100;
-          setUserCount(rounded);
-        } else if (isMounted) {
-          // couldn't parse, set null so UI uses fallback
-          setUserCount(null);
-        }
+        setUserCount(data.totalUsers);
       } catch (err) {
         console.error("Error fetching user count:", err);
         if (isMounted) setUserCount(null);
@@ -219,7 +288,7 @@ const DesktopLanding = () => {
                       letterSpacing: "-0.02em",
                     }}
                   >
-                    Where the {" "}
+                    Where the{" "}
                     <Box
                       component="span"
                       sx={{
@@ -238,8 +307,10 @@ const DesktopLanding = () => {
                         WebkitTextFillColor: "transparent",
                       }}
                     >
+                      {" "}
                       Right talent
-                    </Box>{" "} meets the{" "}
+                    </Box>{" "}
+                    meets the{" "}
                     <Box
                       component="span"
                       sx={{
@@ -274,9 +345,8 @@ const DesktopLanding = () => {
                       fontWeight: 400,
                     }}
                   >
-                    Whether you're hiring or job hunting, we get
-                    you to the shortlist faster with AI, insight,
-                    and a human touch.
+                    Whether you're hiring or job hunting, we get you to the
+                    shortlist faster with AI, insight, and a human touch.
                   </Typography>
 
                   <Stack direction="row" spacing={3} sx={{ mb: 6 }}>
@@ -331,76 +401,111 @@ const DesktopLanding = () => {
                       Hire Top Talent
                     </Button>
                   </Stack>
-
-                  {/* Trust indicators */}
-                  <Box sx={{ display: "flex", alignItems: "center", gap: 4 }}>
-                    <Box sx={{ textAlign: "center" }}>
-                      <Typography
-                        variant="h4"
-                        sx={{ fontWeight: 700, color: "#0a0a0a", mb: 0.5 }}
-                      >
-                        500+
-                      </Typography>
-                      <Typography
-                        variant="body2"
-                        sx={{ color: "#64748b", fontSize: "0.875rem" }}
-                      >
-                        Jobs Parsed
-                      </Typography>
-                    </Box>
-                    <Box sx={{ textAlign: "center" }}>
-                      <Typography
-                        variant="h4"
-                        sx={{ fontWeight: 700, color: "#0a0a0a", mb: 0.5 }}
-                      >
-                        50+
-                      </Typography>
-                      <Typography
-                        variant="body2"
-                        sx={{ color: "#64748b", fontSize: "0.875rem" }}
-                      >
-                        Companies
-                      </Typography>
-                    </Box>
-                    <Box sx={{ textAlign: "center" }}>
-                      <Typography
-                        variant="h4"
-                        sx={{ fontWeight: 700, color: "#0a0a0a", mb: 0.5 }}
-                      >
-                         {countLoading ? "..." : userCount ? `${userCount}+` : "2500+"}
-                      </Typography>
-                      <Typography
-                        variant="body2"
-                        sx={{ color: "#64748b", fontSize: "0.875rem" }}
-                      >
-                        Professionals Onboarded
-                      </Typography>
-                    </Box>
-                  </Box>
                 </Box>
               </AnimatedSection>
             </Grid>
 
-            {/* Right Column - Hero Image */}
-            <Grid item xs={12} md={6} sx={{ display: "flex", justifyContent: "center", pb:12}}>
+            <Grid
+              item
+              xs={12}
+              md={6}
+              sx={{
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                minHeight: { xs: "260px", md: "460px" },
+                py: { xs: 3, md: 0 },
+              }}
+            >
               <AnimatedSection delay={200}>
                 <Box
                   sx={{
+                    width: { xs: "100%", sm: 360, md: 410 },
+                    bgcolor: "#fff",
+                    borderRadius: "32px",
+                    boxShadow: "0 8px 40px rgba(0,20,60,0.08)",
+                    px: { xs: 3, sm: 6, md: 8 },
+                    py: { xs: 4, sm: 6, md: 8 },
                     display: "flex",
-                    justifyContent: "center",
+                    flexDirection: "column",
+                    alignItems: "center",
                     position: "relative",
                   }}
                 >
-                  <img
-                    src={Landing}
-                    alt="Professional hiring platform"
-                    style={{
-                      maxWidth: "100%",
-                      height: "auto",
-                      maxHeight: "500px",
-                      filter: "drop-shadow(0 20px 60px rgba(0, 0, 0, 0.1))",
+                  {/* Optional: Subtitle */}
+                  <Typography
+                    variant="subtitle2"
+                    sx={{
+                      fontFamily: "Poppins",
+                      color: "#3C7EFC",
+                      fontWeight: 600,
+                      letterSpacing: "0.1em",
+                      fontSize: "0.92rem",
+                      mb: 2,
+                    }}
+                  >
+                    TRUSTED BY PROFESSIONALS
+                  </Typography>
+
+                  {/* LIVE COUNTER */}
+                  <LiveStat
+                    target={userCount}
+                    fallbackText={"2,500+"}
+                    label={null}
+                    loading={countLoading}
+                    /* Add bigNumber prop to control style */
+                    bigNumber
+                  />
+
+                  <Typography
+                    variant="subtitle1"
+                    sx={{
+                      color: "#374151",
+                      fontFamily: "Poppins, sans-serif",
+                      fontWeight: 700,
+                      mt: 1,
+                      fontSize: { xs: "1.18rem", md: "1.28rem" },
+                      letterSpacing: "-0.01em",
+                    }}
+                  >
+                    Professionals Onboarded
+                  </Typography>
+
+                  {/* Divider */}
+                  <Box
+                    sx={{
+                      height: 1,
+                      width: "54%",
+                      bgcolor: "#EEF2F6",
+                      my: 3,
                     }}
                   />
+
+                  {/* Jobs Parsed stat (smaller underneath) */}
+                  <Box sx={{ textAlign: "center", mt: 1 }}>
+                    <Typography
+                      variant="h6"
+                      sx={{
+                        fontWeight: 700,
+                        fontSize: "1.25rem",
+                        color: "#0a0a0a",
+                        fontFamily:
+                          "Satoshi, -apple-system, BlinkMacSystemFont, sans-serif",
+                      }}
+                    >
+                      500+
+                    </Typography>
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        color: "#8794A1",
+                        fontSize: "0.95rem",
+                        fontFamily: "Poppins, sans-serif",
+                      }}
+                    >
+                      Jobs Parsed
+                    </Typography>
+                  </Box>
                 </Box>
               </AnimatedSection>
             </Grid>
@@ -408,8 +513,7 @@ const DesktopLanding = () => {
         </Container>
       </Box>
 
-
-       {/* Employers Section */}
+      {/* Employers Section */}
       <Box
         component="section"
         sx={{
@@ -451,7 +555,10 @@ const DesktopLanding = () => {
                     }}
                   >
                     Find candidates{" "}
-                    <Box component="span" sx={{ color: "#1BA5EA",fontWeight: 700 }}>
+                    <Box
+                      component="span"
+                      sx={{ color: "#1BA5EA", fontWeight: 700 }}
+                    >
                       you won’t want to lose.
                     </Box>
                   </Typography>
@@ -578,7 +685,10 @@ const DesktopLanding = () => {
                     }}
                   >
                     Your career deserves better{" "}
-                    <Box component="span" sx={{ color: "#3C7EFC",fontWeight: 700 }}>
+                    <Box
+                      component="span"
+                      sx={{ color: "#3C7EFC", fontWeight: 700 }}
+                    >
                       than job boards.
                     </Box>
                   </Typography>
@@ -622,8 +732,6 @@ const DesktopLanding = () => {
           </Grid>
         </Container>
       </Box>
-
-     
 
       {/* Bottom Wave
       <Box sx={{ 
