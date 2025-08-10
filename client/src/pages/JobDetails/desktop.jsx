@@ -15,8 +15,11 @@ import {
   Grid,
   Stack,
   CircularProgress,
+  Alert,
+  AlertTitle,
 } from "@mui/material";
 import { AiOutlineSafetyCertificate } from "react-icons/ai";
+import { Warning } from "@mui/icons-material";
 import ReactMarkdown from "react-markdown";
 
 const JobDetail = () => {
@@ -29,6 +32,126 @@ const JobDetail = () => {
   const navigate = useNavigate();
 
   const token = user?.token || localStorage.getItem("authToken");
+
+  // Profile completion check function
+  const checkProfileCompletion = () => {
+    const profileFields = [
+      "firstName",
+      "lastName", 
+      "email",
+      "currentSalary",
+      "currentCompany",
+      "currentDesignation",
+      "linkedinLink",
+      "currentLocation",
+      "experienceHistory",
+      "cvUrl",
+      "contactNumber",
+      "skills",
+      "educationDetails", 
+      "experience",
+      "preferredJobTypes", // mapped to preferredWorkTypes
+      "preferredJobLocations", // mapped to preferredLocations
+      "preferredWorkModes", // mapped to preferredWorkModes
+      "expectedSalary", // mapped to expectedMinSalary
+    ];
+
+    let filledFieldsCount = 0;
+    const missingFields = [];
+    
+    profileFields.forEach(field => {
+      let fieldValue;
+      let displayName;
+      
+      // Handle field mapping and display names
+      switch(field) {
+        case 'preferredJobTypes':
+          fieldValue = user?.preferredWorkTypes;
+          displayName = 'Preferred Job Types';
+          break;
+        case 'preferredJobLocations':
+          fieldValue = user?.preferredLocations;
+          displayName = 'Preferred Job Locations';
+          break;
+        case 'preferredWorkModes':
+          fieldValue = user?.preferredWorkModes;
+          displayName = 'Preferred Work Modes';
+          break;
+        case 'expectedSalary':
+          fieldValue = user?.expectedMinSalary;
+          displayName = 'Expected Salary';
+          break;
+        case 'contactNumber':
+          fieldValue = user?.contactNumber;
+          displayName = 'Contact Number';
+          break;
+        case 'educationDetails':
+          fieldValue = user?.educationDetails;
+          displayName = 'Education Details';
+          break;
+        case 'experienceHistory':
+          fieldValue = user?.experienceHistory;
+          displayName = 'Experience History';
+          break;
+        case 'currentSalary':
+          fieldValue = user?.currentSalary;
+          displayName = 'Current Salary';
+          break;
+        case 'currentCompany':
+          fieldValue = user?.currentCompany;
+          displayName = 'Current Company';
+          break;
+        case 'currentDesignation':
+          fieldValue = user?.currentDesignation;
+          displayName = 'Current Designation';
+          break;
+        case 'linkedinLink':
+          fieldValue = user?.linkedinLink;
+          displayName = 'LinkedIn Link';
+          break;
+        case 'currentLocation':
+          fieldValue = user?.currentLocation;
+          displayName = 'Current Location';
+          break;
+        default:
+          fieldValue = user?.[field];
+          displayName = field.replace(/([A-Z])/g, " $1").replace(/^./, (str) => str.toUpperCase());
+      }
+      
+      // Check if field is filled based on its type
+      let isFilled = false;
+      
+      if (fieldValue !== null && fieldValue !== undefined) {
+        if (Array.isArray(fieldValue)) {
+          isFilled = fieldValue.length > 0;
+        } else if (typeof fieldValue === 'object') {
+          isFilled = Object.keys(fieldValue).length > 0;
+        } else if (typeof fieldValue === 'string') {
+          isFilled = fieldValue.toString().trim() !== "";
+        } else if (typeof fieldValue === 'number') {
+          isFilled = !isNaN(fieldValue) && fieldValue >= 0;
+        }
+      }
+      
+      if (isFilled) {
+        filledFieldsCount += 1;
+      } else {
+        missingFields.push(displayName);
+      }
+    });
+
+    const totalFields = profileFields.length;
+    const profileCompletion = Math.round((filledFieldsCount / totalFields) * 100);
+    
+    return {
+      isComplete: profileCompletion === 100,
+      percentage: profileCompletion,
+      missingFields
+    };
+  };
+
+  const profileStatus = checkProfileCompletion();
+
   useEffect(() => {
     const getJobDetails = async () => {
       setIsFetching(true);
@@ -67,10 +190,54 @@ const JobDetail = () => {
 
   return (
     <Box sx={{ mx: "auto", p: 3, bgcolor: "#fff" }}>
+      {/* Profile Completion Caution Banner */}
+      {user?.token && user?.accountType === "seeker" && !profileStatus.isComplete && (
+        <Alert 
+          severity="warning" 
+          icon={<Warning />}
+          sx={{ 
+            mb: 3, 
+            borderRadius: 2,
+            border: "1px solid #ed6c02",
+            bgcolor: "#fff3e0",
+            "& .MuiAlert-message": {
+              width: "100%"
+            }
+          }}
+        >
+          <AlertTitle sx={{ fontWeight: "bold", color: "#e65100" }}>
+            Complete Your Profile to Apply
+          </AlertTitle>
+          <Box sx={{ mt: 1 }}>
+            <Typography variant="body2" sx={{ mb: 2, color: "#e65100" }}>
+              Your profile is {profileStatus.percentage}% complete. Please fill in all required details to apply for jobs.
+            </Typography>
+            <Typography variant="body2" sx={{ mb: 2, color: "#bf360c", fontWeight: 500 }}>
+              Missing fields: {profileStatus.missingFields.join(", ")}
+            </Typography>
+            <Button
+              variant="contained"
+              size="small"
+              onClick={() => navigate("/user-profile")}
+              sx={{
+                bgcolor: "#ed6c02",
+                color: "white",
+                fontWeight: "bold",
+                "&:hover": {
+                  bgcolor: "#e65100"
+                }
+              }}
+            >
+              Complete Profile Now
+            </Button>
+          </Box>
+        </Alert>
+      )}
+
       <Grid container spacing={2}>
         <Grid item xs={12} md={8}>
           <Box sx={{ mt: 2, mb: 2 }}>
-            <JobCard job={job} enable={true} />
+            <JobCard job={job} enable={true} profileComplete={profileStatus.isComplete} />
           </Box>
 
           {/* About the Job Section */}
@@ -632,84 +799,84 @@ const JobDetail = () => {
           </Typography>
           <Grid container spacing={2}>
             {similarJobs && similarJobs.length > 0 ? (
-  // Show similar jobs when available
-  similarJobs.slice(0, 2).map((job, index) => (
-    <Grid item xs={12} key={index} sx={{ cursor: "pointer" }}>
-      <JobCard job={job} flag={true} />
-    </Grid>
-  ))
-) : (
-  // Premium message when no similar jobs found
-  <Grid item xs={12}>
-    <Box
-      sx={{
-        textAlign: 'center',
-        py: 8,
-        px: 3,
-        backgroundColor: '#fafafa',
-        borderRadius: 1,
-        border: '1px solid #f0f0f0',
-        position: 'relative',
-      }}
-    >
-      {/* Subtle accent line */}
-      <Box
-        sx={{
-          width: 48,
-          height: 2,
-          backgroundColor: '#333',
-          margin: '0 auto 32px auto',
-          borderRadius: 1,
-        }}
-      />
+              // Show similar jobs when available
+              similarJobs.slice(0, 2).map((job, index) => (
+                <Grid item xs={12} key={index} sx={{ cursor: "pointer" }}>
+                  <JobCard job={job} flag={true} />
+                </Grid>
+              ))
+            ) : (
+              // Premium message when no similar jobs found
+              <Grid item xs={12}>
+                <Box
+                  sx={{
+                    textAlign: 'center',
+                    py: 8,
+                    px: 3,
+                    backgroundColor: '#fafafa',
+                    borderRadius: 1,
+                    border: '1px solid #f0f0f0',
+                    position: 'relative',
+                  }}
+                >
+                  {/* Subtle accent line */}
+                  <Box
+                    sx={{
+                      width: 48,
+                      height: 2,
+                      backgroundColor: '#333',
+                      margin: '0 auto 32px auto',
+                      borderRadius: 1,
+                    }}
+                  />
 
-      {/* Main Message */}
-      <Typography
-        sx={{
-          fontFamily: 'Satoshi, sans-serif',
-          fontWeight: 600,
-          fontSize: '24px',
-          color: '#1a1a1a',
-          mb: 3,
-          letterSpacing: '-0.01em',
-        }}
-      >
-        Great Minds Think Alike!
-      </Typography>
+                  {/* Main Message */}
+                  <Typography
+                    sx={{
+                      fontFamily: 'Satoshi, sans-serif',
+                      fontWeight: 600,
+                      fontSize: '24px',
+                      color: '#1a1a1a',
+                      mb: 3,
+                      letterSpacing: '-0.01em',
+                    }}
+                  >
+                    Great Minds Think Alike!
+                  </Typography>
 
-      {/* Witty Professional Message */}
-      <Typography
-        sx={{
-          fontFamily: 'Poppins, sans-serif',
-          fontWeight: 400,
-          fontSize: '16px',
-          color: '#666',
-          lineHeight: 1.6,
-          maxWidth: 420,
-          margin: '0 auto 32px auto',
-        }}
-      >
-        This role is so exceptional that we're still curating matches worthy of its caliber. 
-        Our team is working behind the scenes to discover opportunities that match 
-        your impeccable taste.
-      </Typography>
+                  {/* Witty Professional Message */}
+                  <Typography
+                    sx={{
+                      fontFamily: 'Poppins, sans-serif',
+                      fontWeight: 400,
+                      fontSize: '16px',
+                      color: '#666',
+                      lineHeight: 1.6,
+                      maxWidth: 420,
+                      margin: '0 auto 32px auto',
+                    }}
+                  >
+                    This role is so exceptional that we're still curating matches worthy of its caliber. 
+                    Our team is working behind the scenes to discover opportunities that match 
+                    your impeccable taste.
+                  </Typography>
 
-      {/* Minimal Call to Action */}
-      <Typography
-        sx={{
-          fontFamily: 'Satoshi, sans-serif',
-          fontWeight: 500,
-          fontSize: '14px',
-          color: '#999',
-          textTransform: 'uppercase',
-          letterSpacing: '0.5px',
-        }}
-      >
-        Stay tuned for extraordinary matches
-      </Typography>
-    </Box>
-  </Grid>
-)}
+                  {/* Minimal Call to Action */}
+                  <Typography
+                    sx={{
+                      fontFamily: 'Satoshi, sans-serif',
+                      fontWeight: 500,
+                      fontSize: '14px',
+                      color: '#999',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.5px',
+                    }}
+                  >
+                    Stay tuned for extraordinary matches
+                  </Typography>
+                </Box>
+              </Grid>
+            )}
           </Grid>
         </Grid>
       </Grid>

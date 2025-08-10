@@ -19,6 +19,7 @@ import {
   useTheme,
   CircularProgress,
   LinearProgress,
+  Tooltip,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import {
@@ -32,11 +33,12 @@ import {
   ReportProblem,
   CurrencyRupee,
   HomeWork,
+  Warning,
 } from "@mui/icons-material";
 import { UpdateUser } from "../redux/userSlice";
 import { AttachMoney } from "@mui/icons-material";
 
-const JobCard = ({ job, flag = false, enable = false }) => {
+const JobCard = ({ job, flag = false, enable = false, profileComplete = null }) => {
   const dispatch = useDispatch();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
@@ -50,6 +52,130 @@ const JobCard = ({ job, flag = false, enable = false }) => {
 
   const isAlreadyApplied = user?.appliedJobs?.includes(job._id);
 
+  // Profile completion check function
+  const checkProfileCompletion = () => {
+    if (!user) return { isComplete: false, percentage: 0, missingFields: [] };
+    
+    const profileFields = [
+      "firstName",
+      "lastName", 
+      "email",
+      "currentSalary",
+      "currentCompany",
+      "currentDesignation",
+      "linkedinLink",
+      "currentLocation",
+      "experienceHistory",
+      "cvUrl",
+      "contactNumber",
+      "skills",
+      "educationDetails", 
+      "experience",
+      "preferredJobTypes", // mapped to preferredWorkTypes
+      "preferredJobLocations", // mapped to preferredLocations
+      "preferredWorkModes", // mapped to preferredWorkModes
+      "expectedSalary", // mapped to expectedMinSalary
+    ];
+
+    let filledFieldsCount = 0;
+    const missingFields = [];
+    
+    profileFields.forEach(field => {
+      let fieldValue;
+      let displayName;
+      
+      // Handle field mapping and display names
+      switch(field) {
+        case 'preferredJobTypes':
+          fieldValue = user?.preferredWorkTypes;
+          displayName = 'Preferred Job Types';
+          break;
+        case 'preferredJobLocations':
+          fieldValue = user?.preferredLocations;
+          displayName = 'Preferred Job Locations';
+          break;
+        case 'preferredWorkModes':
+          fieldValue = user?.preferredWorkModes;
+          displayName = 'Preferred Work Modes';
+          break;
+        case 'expectedSalary':
+          fieldValue = user?.expectedMinSalary;
+          displayName = 'Expected Salary';
+          break;
+        case 'contactNumber':
+          fieldValue = user?.contactNumber;
+          displayName = 'Contact Number';
+          break;
+        case 'educationDetails':
+          fieldValue = user?.educationDetails;
+          displayName = 'Education Details';
+          break;
+        case 'experienceHistory':
+          fieldValue = user?.experienceHistory;
+          displayName = 'Experience History';
+          break;
+        case 'currentSalary':
+          fieldValue = user?.currentSalary;
+          displayName = 'Current Salary';
+          break;
+        case 'currentCompany':
+          fieldValue = user?.currentCompany;
+          displayName = 'Current Company';
+          break;
+        case 'currentDesignation':
+          fieldValue = user?.currentDesignation;
+          displayName = 'Current Designation';
+          break;
+        case 'linkedinLink':
+          fieldValue = user?.linkedinLink;
+          displayName = 'LinkedIn Link';
+          break;
+        case 'currentLocation':
+          fieldValue = user?.currentLocation;
+          displayName = 'Current Location';
+          break;
+        default:
+          fieldValue = user?.[field];
+          displayName = field.replace(/([A-Z])/g, " $1").replace(/^./, (str) => str.toUpperCase());
+      }
+      
+      // Check if field is filled based on its type
+      let isFilled = false;
+      
+      if (fieldValue !== null && fieldValue !== undefined) {
+        if (Array.isArray(fieldValue)) {
+          isFilled = fieldValue.length > 0;
+        } else if (typeof fieldValue === 'object') {
+          isFilled = Object.keys(fieldValue).length > 0;
+        } else if (typeof fieldValue === 'string') {
+          isFilled = fieldValue.toString().trim() !== "";
+        } else if (typeof fieldValue === 'number') {
+          isFilled = !isNaN(fieldValue) && fieldValue >= 0;
+        }
+      }
+      
+      if (isFilled) {
+        filledFieldsCount += 1;
+      } else {
+        missingFields.push(displayName);
+      }
+    });
+
+    const totalFields = profileFields.length;
+    const profileCompletion = Math.round((filledFieldsCount / totalFields) * 100);
+    
+    return {
+      isComplete: profileCompletion === 100,
+      percentage: profileCompletion,
+      missingFields
+    };
+  };
+
+  // Use passed profileComplete prop or calculate it
+  const profileStatus = profileComplete !== null ? 
+    { isComplete: profileComplete } : 
+    checkProfileCompletion();
+
   // if the candidate has _too little_ experience…
   if (minExperience != null && experience < minExperience) {
     noteligible = true;
@@ -57,7 +183,7 @@ const JobCard = ({ job, flag = false, enable = false }) => {
 
   // // …or the candidate has _too much_ (i.e. you only want juniors)…
   // if (maxExperience != null && experience > maxExperience) {
-  //   noteligible = true;
+  //   noteligible = true;
   // }
 
   const formatExperience = (exp) => {
@@ -202,6 +328,95 @@ const JobCard = ({ job, flag = false, enable = false }) => {
         />
       </Box>
     );
+  };
+
+  // Function to render the apply button with proper state
+  const renderApplyButton = () => {
+    if (user?.token == null) {
+      return (
+        <Button
+          variant="contained"
+          color="primary"
+          sx={{ borderRadius: 40, fontFamily: "Poppins" }}
+          onClick={() =>
+            navigate("/u-login", {
+              state: { refer: `/job-detail/${job._id}` },
+            })
+          }
+        >
+          Login/Register To Apply
+        </Button>
+      );
+    }
+
+    if (user?.accountType !== "seeker") {
+      return null;
+    }
+
+    const isDisabled = noteligible || isAlreadyApplied || !profileStatus.isComplete;
+
+    const getButtonText = () => {
+      if (isAlreadyApplied) return "Already Applied";
+      if (!profileStatus.isComplete) return "Complete Profile to Apply";
+      return "Apply Now";
+    };
+
+    const getTooltipText = () => {
+      if (!profileStatus.isComplete) {
+        return "Please complete your profile to apply for jobs";
+      }
+      if (noteligible) {
+        return `This role requires minimum ${minExperience} years of experience`;
+      }
+      return "";
+    };
+
+    const button = (
+      <Button
+        variant="contained"
+        color="primary"
+        disabled={isDisabled}
+        sx={{ 
+          borderRadius: 40, 
+          fontFamily: "Poppins",
+          ...(isDisabled && {
+            backgroundColor: "#f0f0f0",
+            color: "#999"
+          })
+        }}
+        onClick={() => {
+          if (!profileStatus.isComplete) {
+            navigate("/user-profile");
+            return;
+          }
+          
+          if (job?.applicationLink && job?.applicationLink.trim() !== "") {
+            window.open(job.applicationLink, "_blank");
+          } else {
+            navigate("screening-questions", {
+              state: {
+                questions: job?.screeningQuestions ?? [],
+                jobid: job?._id,
+                companyid: job?.company?._id,
+                userid: user?._id,
+              },
+            });
+          }
+        }}
+      >
+        {getButtonText()}
+      </Button>
+    );
+
+    if (getTooltipText()) {
+      return (
+        <Tooltip title={getTooltipText()} arrow>
+          {button}
+        </Tooltip>
+      );
+    }
+
+    return button;
   };
 
   const mobileView = (
@@ -402,7 +617,7 @@ const JobCard = ({ job, flag = false, enable = false }) => {
           gap: 1,
         }}
       >
-        {/* View Button */}
+        {/* View Button or Apply Button based on enable prop */}
         {enable !== true ? (
           <Button
             variant="contained"
@@ -413,51 +628,44 @@ const JobCard = ({ job, flag = false, enable = false }) => {
           >
             View Details
           </Button>
-        ) : user?.token == null ? (
-          <Button
-            variant="contained"
-            color="primary"
-            sx={{ borderRadius: 40, fontFamily: "Poppins" }}
-            onClick={() =>
-              navigate("/u-login", {
-                state: { refer: `/job-detail/${job._id}` },
-              })
-            }
-          >
-            Login/Register To Apply
-          </Button>
-        ) : user?.accountType === "seeker" ? (
-          <Button
-            variant="contained"
-            color="primary"
-            disabled={noteligible || isAlreadyApplied}
-            sx={{ borderRadius: 40, fontFamily: "Poppins" }}
-            onClick={() => {
-              if (job?.applicationLink && job?.applicationLink.trim() !== "") {
-                window.open(job.applicationLink, "_blank");
-              } else {
-                navigate("screening-questions", {
-                  state: {
-                    questions: job?.screeningQuestions ?? [],
-                    jobid: job?._id,
-                    companyid: job?.company?._id,
-                    userid: user?._id,
-                  },
-                });
-              }
-            }}
-          >
-            {isAlreadyApplied ? "Already Applied" : "Apply Now"}
-          </Button>
-        ) : null}
+        ) : (
+          renderApplyButton()
+        )}
       </CardActions>
+      
+      {/* Warning Messages */}
       {noteligible && (
-        <Box sx={{ display: "flex", justifyContent: "flex-start", ml: 2, mt: 1 }}>
-          <ReportProblem color="error" sx={{ mb: 1 }} />
+        <Box sx={{ display: "flex", justifyContent: "flex-start", ml: 2, mt: 1, mb: 1 }}>
+          <ReportProblem color="error" sx={{ mt: 0.5 }} />
           <Typography variant="body2" color="error" sx={{ px: 1, mt: 0.5 }}>
             We appreciate your interest, but this role requires a minimum of{" "}
             {minExperience} years of experience, while your profile currently shows{" "}
             {experience} years.
+          </Typography>
+        </Box>
+      )}
+      
+      {user?.accountType === "seeker" && !profileStatus.isComplete && enable === true && (
+        <Box sx={{ display: "flex", justifyContent: "flex-start", ml: 2, mt: 1, mb: 1 }}>
+          <Warning color="warning" sx={{ mt: 0.5 }} />
+          <Typography variant="body2" color="warning.main" sx={{ px: 1, mt: 0.5 }}>
+            Complete your profile to apply for this job. 
+            <Typography 
+              component="span" 
+              variant="body2" 
+              sx={{ 
+                color: "primary.main", 
+                cursor: "pointer", 
+                textDecoration: "underline",
+                ml: 0.5
+              }}
+              onClick={(e) => {
+                e.stopPropagation();
+                navigate("/user-profile");
+              }}
+            >
+              Complete now
+            </Typography>
           </Typography>
         </Box>
       )}

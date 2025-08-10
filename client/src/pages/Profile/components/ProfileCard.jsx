@@ -87,12 +87,6 @@ const LocationDropdown = ({ value, onChange, isRequired = false }) => {
       padding: 2,
       width: "100%",
       fontSize: "0.875rem",
-      //borderRadius: 0,
-      //border: state.isFocused? "1px black" :"none",
-      // boxShadow: state.isFocused ? "black" : "none",
-      // "&:hover": {
-      //   borderColor: "#d1d5db",
-      // },
     }),
     menu: (provided) => ({
       ...provided,
@@ -243,6 +237,7 @@ const UserInfoCard = () => {
     }
   };
 
+  // Updated profile fields to include all required fields
   const profileFields = [
     "firstName",
     "lastName",
@@ -254,35 +249,81 @@ const UserInfoCard = () => {
     "currentLocation",
     "experienceHistory",
     "cvUrl",
+    "contactNumber", 
+    "skills", 
+    "educationDetails", 
+    "experience", 
+    "preferredJobTypes", // (mapped to preferredWorkTypes)
+    "preferredJobLocations", //  (mapped to preferredLocations)
+    "preferredWorkModes", // (mapped to preferredWorkModes)
+    "expectedSalary", // (mapped to expectedMinSalary)
   ];
 
   console.log(user);
-  let filledFieldsCount = profileFields.reduce((count, field) => {
-    if (user[field] && user[field].toString().trim() !== "") {
-      return count + 1;
+  
+  // Updated calculation to properly handle all field types
+  let filledFieldsCount = 0;
+  
+  profileFields.forEach(field => {
+    let fieldValue;
+    
+    // Handle field mapping for different property names
+    switch(field) {
+      case 'preferredJobTypes':
+        fieldValue = user?.preferredWorkTypes;
+        break;
+      case 'preferredJobLocations':
+        fieldValue = user?.preferredLocations;
+        break;
+      case 'preferredWorkModes':
+        fieldValue = user?.preferredWorkModes;
+        break;
+      case 'expectedSalary':
+        fieldValue = user?.expectedMinSalary;
+        break;
+      default:
+        fieldValue = user?.[field];
     }
-    return count;
-  }, 0);
+    
+    // Check if field is filled based on its type
+    if (fieldValue !== null && fieldValue !== undefined) {
+      if (Array.isArray(fieldValue)) {
+        // For arrays (skills, educationDetails, experienceHistory, preferredLocations, etc.)
+        if (fieldValue.length > 0) {
+          filledFieldsCount += 1;
+        }
+      } else if (typeof fieldValue === 'object') {
+        // For objects - check if it has meaningful content
+        if (Object.keys(fieldValue).length > 0) {
+          filledFieldsCount += 1;
+        }
+      } else if (typeof fieldValue === 'string') {
+        // For strings - check if not empty after trimming
+        if (fieldValue.toString().trim() !== "") {
+          filledFieldsCount += 1;
+        }
+      } else if (typeof fieldValue === 'number') {
+        // For numbers - consider filled if it's a valid number
+        if (!isNaN(fieldValue) && fieldValue >= 0) {
+          filledFieldsCount += 1;
+        }
+      }
+    }
+  });
 
-  // Add 1 to count if skills exist and are not empty
-  if (user.skills && Array.isArray(user.skills) && user.skills.length > 0) {
-    filledFieldsCount += 1;
-  }
-
-  // Update total fields count to include skills
-  const totalFields = profileFields.length + 1;
-
+  const totalFields = profileFields.length;
   const profileCompletion = Math.round((filledFieldsCount / totalFields) * 100);
+
   const handleSaveClick = async () => {
     if (!updatedUserInfo.contactNumber || updatedUserInfo.contactNumber.trim() === "") {
-    setAlert({
-      open: true,
-      type: "warning",
-      title: "Missing Phone Number",
-      message: "Please enter your phone number before saving your profile.",
-    });
-    return;
-  }
+      setAlert({
+        open: true,
+        type: "warning",
+        title: "Missing Phone Number",
+        message: "Please enter your phone number before saving your profile.",
+      });
+      return;
+    }
     setLoading(true);
     try {
       const response = await fetch(
@@ -323,13 +364,87 @@ const UserInfoCard = () => {
     }
   };
 
-  // Determine which fields are missing
-  const missingFields = profileFields
-    .filter((field) => !(user[field] && user[field].toString().trim() !== ""))
-    .map((field) =>
-      field.replace(/([A-Z])/g, " $1").replace(/^./, (str) => str.toUpperCase())
-    );
-  if (!user.skills?.length) missingFields.push("Skills");
+  // Updated missing fields calculation
+  const missingFields = [];
+  
+  profileFields.forEach(field => {
+    let fieldValue;
+    let displayName;
+    
+    // Handle field mapping and display names
+    switch(field) {
+      case 'preferredJobTypes':
+        fieldValue = user?.preferredWorkTypes;
+        displayName = 'Preferred Job Types';
+        break;
+      case 'preferredJobLocations':
+        fieldValue = user?.preferredLocations;
+        displayName = 'Preferred Job Locations';
+        break;
+      case 'preferredWorkModes':
+        fieldValue = user?.preferredWorkModes;
+        displayName = 'Preferred Work Modes';
+        break;
+      case 'expectedSalary':
+        fieldValue = user?.expectedMinSalary;
+        displayName = 'Expected Salary';
+        break;
+      case 'contactNumber':
+        fieldValue = user?.contactNumber;
+        displayName = 'Contact Number';
+        break;
+      case 'educationDetails':
+        fieldValue = user?.educationDetails;
+        displayName = 'Education Details';
+        break;
+      case 'experienceHistory':
+        fieldValue = user?.experienceHistory;
+        displayName = 'Experience History';
+        break;
+      case 'currentSalary':
+        fieldValue = user?.currentSalary;
+        displayName = 'Current Salary';
+        break;
+      case 'currentCompany':
+        fieldValue = user?.currentCompany;
+        displayName = 'Current Company';
+        break;
+      case 'currentDesignation':
+        fieldValue = user?.currentDesignation;
+        displayName = 'Current Designation';
+        break;
+      case 'linkedinLink':
+        fieldValue = user?.linkedinLink;
+        displayName = 'LinkedIn Link';
+        break;
+      case 'currentLocation':
+        fieldValue = user?.currentLocation;
+        displayName = 'Current Location';
+        break;
+      default:
+        fieldValue = user?.[field];
+        displayName = field.replace(/([A-Z])/g, " $1").replace(/^./, (str) => str.toUpperCase());
+    }
+    
+    // Check if field is missing based on its type
+    let isMissing = true;
+    
+    if (fieldValue !== null && fieldValue !== undefined) {
+      if (Array.isArray(fieldValue)) {
+        isMissing = fieldValue.length === 0;
+      } else if (typeof fieldValue === 'object') {
+        isMissing = Object.keys(fieldValue).length === 0;
+      } else if (typeof fieldValue === 'string') {
+        isMissing = fieldValue.toString().trim() === "";
+      } else if (typeof fieldValue === 'number') {
+        isMissing = isNaN(fieldValue) || fieldValue < 0;
+      }
+    }
+    
+    if (isMissing) {
+      missingFields.push(displayName);
+    }
+  });
 
   const desktopView = (
     <Box
@@ -447,12 +562,12 @@ const UserInfoCard = () => {
               <PhoneInput
                 defaultCountry="IN"
                 value={updatedUserInfo.contactNumber}
-                maxLength={15} // value like "+919876543210"
+                maxLength={15}
                 onChange={(phone) => {
                   handleChange({
                     target: {
                       name: "contactNumber",
-                      value: phone, // already includes country code like +91
+                      value: phone,
                     },
                   });
                 }}
