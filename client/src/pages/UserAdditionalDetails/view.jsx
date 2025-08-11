@@ -430,9 +430,39 @@ const UserInfoForm = () => {
 };
 
 
+const calculateExperienceYears = (history = []) => {
+    if (!Array.isArray(history) || history.length === 0) return 0;
+    const now = new Date();
+    let totalMonths = 0;
+    for (const entry of history) {
+      let { from, to } = entry;
+      if (!from) continue;
+
+      // from expected format "YYYY-MM"
+      const [fy, fm] = (from || "").split("-").map(Number);
+      let ty, tm;
+      if (!to || String(to).toLowerCase() === "present") {
+        ty = now.getFullYear();
+        tm = now.getMonth() + 1;
+      } else {
+        [ty, tm] = (to || "").split("-").map(Number);
+      }
+
+      if ([fy, fm, ty, tm].some((v) => Number.isNaN(v))) continue;
+
+      // inclusive months: e.g. 2020-01 -> 2020-12 = 12 months
+      const months = (ty - fy) * 12 + (tm - fm) + 1;
+      if (months > 0) totalMonths += months;
+    }
+    return Math.floor(totalMonths / 12); // floor years
+  };
+
+
   // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    const computedYears = calculateExperienceYears(formData.experienceHistory);
 
     const ConsultingCompany =
       formData.lastConsultingCompany === "Other"
@@ -441,7 +471,7 @@ const UserInfoForm = () => {
 
     const updatedFormData = {
       ...formData,
-      experience: Number(formData.experience),
+      experience: Number(computedYears),
       educationDetails: formData.educationDetails,
       contactNumber: phoneValue,
       profilePic: profilePicUrl,
@@ -710,34 +740,6 @@ const UserInfoForm = () => {
                     style={{ borderRadius: 50, border: "1px solid #24252C" }}
                     required
                   />
-                </div>
-                <div className="mb-6">
-                  <label
-                    className="block mb-4 ml-2"
-                    style={{
-                      fontFamily: "Satoshi",
-                      fontWeight: 500,
-                      fontSize: "16px",
-                      color: "#24252C",
-                    }}
-                  >
-                    Experience <span style={{ color: "red" }}>*</span>
-                  </label>
-                  <select
-                    name="experience"
-                    value={formData.experience}
-                    onChange={handleChange}
-                    className="w-full px-4 py-3 pr-12 text-sm border rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none"
-                    style={{ borderRadius: 50, border: "1px solid #24252C" }}
-                    required
-                  >
-                    <option value="">Select experience</option>
-                    {Array.from({ length: 15 }, (_, i) => (
-                      <option key={i + 1} value={(i + 1).toString()}>{`${
-                        i + 1
-                      }+`}</option>
-                    ))}
-                  </select>
                 </div>
                 <div className="mb-6">
                   <label

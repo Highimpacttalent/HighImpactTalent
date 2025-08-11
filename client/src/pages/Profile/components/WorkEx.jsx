@@ -120,6 +120,25 @@ const ExperienceHistory = ({ userId, experienceHistory, about }) => {
     }));
   };
 
+
+  const calculateExperienceYears = (history = []) => {
+    if (!Array.isArray(history) || history.length === 0) return 0;
+    let totalMonths = 0;
+    const now = dayjs();
+
+    for (const entry of history) {
+      // entry.from / entry.to are stored as ISO strings (or null)
+      const from = entry?.from ? dayjs(entry.from) : null;
+      const to = entry?.to ? dayjs(entry.to) : now;
+
+      if (!from || !from.isValid()) continue;
+      const months = to.diff(from, "month") + 1; // inclusive
+      if (months > 0) totalMonths += months;
+    }
+
+    return Math.floor(totalMonths / 12); // floor years (4.2 -> 4)
+  };
+
   // --- MODIFIED handleAddExperience ---
   // Adds the new experience from modal form to the local state AND SAVES IMMEDIATELY
   const handleAddExperience = async () => {
@@ -246,12 +265,14 @@ const ExperienceHistory = ({ userId, experienceHistory, about }) => {
 
   // updateExperienceHistory function remains the same, called by add/delete handlers
   const updateExperienceHistory = async (userId, experienceData) => {
+    const computedYears = calculateExperienceYears(experienceData);
     try {
       const res = await axios.post(
         "https://highimpacttalent.onrender.com/api-v1/user/update-exp",
         {
           userId,
           experienceHistory: experienceData,
+          experience: computedYears,
         }
       );
       return res.data;

@@ -451,10 +451,44 @@ const UserInfoForm = () => {
     }
   };
 
+
+  // helper: compute experience years from experienceHistory (used at submit)
+const calculateExperienceYears = (history = []) => {
+  if (!Array.isArray(history) || history.length === 0) return 0;
+  const now = new Date();
+  let totalMonths = 0;
+
+  for (const entry of history) {
+    let { from, to } = entry;
+    if (!from) continue;
+
+    // from/to expected format "YYYY-MM"
+    const [fy, fm] = (from || "").split("-").map(Number);
+    let ty, tm;
+    if (!to || String(to).toLowerCase() === "present") {
+      ty = now.getFullYear();
+      tm = now.getMonth() + 1;
+    } else {
+      [ty, tm] = (to || "").split("-").map(Number);
+    }
+
+    if ([fy, fm, ty, tm].some((v) => Number.isNaN(v))) continue;
+
+    // inclusive months calculation (e.g. 2020-01 -> 2020-12 = 12 months)
+    const months = (ty - fy) * 12 + (tm - fm) + 1;
+    if (months > 0) totalMonths += months;
+  }
+
+  return Math.floor(totalMonths / 12); // floor to whole years
+};
+
+
   // Handle form submission - Called only on the final stage's submit button click
   const handleSubmit = async (e) => {
     // Prevent default browser submission to handle it manually after validation
     e.preventDefault();
+
+    const computedYears = calculateExperienceYears(formData.experienceHistory);
 
     // Check validity for the final stage before proceeding with API call
     const form = e.target;
@@ -473,7 +507,7 @@ const UserInfoForm = () => {
     const updatedFormData = {
       ...formData,
       lastConsultingCompany: finalConsultingCompany, // Use custom location if 'Other' was selected
-      experience: Number(formData.experience), // Convert experience to number
+      experience: Number(computedYears), // Convert experience to number
       salary: Number(formData.salary), // Convert salary to number
       expectedMinSalary: Number(formData.expectedMinSalary), // Convert salary to number
       contactNumber: phoneValue, // Use the state from PhoneInput
@@ -837,49 +871,6 @@ const UserInfoForm = () => {
                     className="w-full px-4 py-3 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     style={{ borderRadius: 50, border: "1px solid #24252C" }}
                     required
-                  />
-                </div>
-                {/* Experience */}
-                <div className="mb-6">
-                  <label
-                    className="block mb-4 ml-2"
-                    style={{
-                      fontFamily: "Satoshi",
-                      fontWeight: 500,
-                      fontSize: "18px", // Reverted font size
-                      color: "#24252C",
-                    }}
-                  >
-                    Experience <span style={{ color: "red" }}>*</span>
-                  </label>
-                  <Select
-                    name="experience"
-                    options={[
-                      { value: "", label: "Select experience" },
-                      ...Array.from({ length: 15 }, (_, i) => {
-                        const val = (i + 1).toString();
-                        return { value: val, label: `${val}+` };
-                      }),
-                    ]}
-                    value={
-                      formData.experience
-                        ? {
-                            value: formData.experience,
-                            label: `${formData.experience}+`,
-                          }
-                        : { value: "", label: "Select experience" }
-                    }
-                    onChange={(option) =>
-                      handleChange({
-                        target: {
-                          name: "experience",
-                          value: option ? option.value : "",
-                        },
-                      })
-                    }
-                    styles={customStyles}
-                    placeholder="Select experience"
-                    isClearable={false}
                   />
                 </div>
                 {/* Skills */}

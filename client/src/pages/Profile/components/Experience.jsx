@@ -32,7 +32,6 @@ const Experience = ({ experienceData }) => {
     currentSalary: "",
     isItConsultingCompany: "",
     joinConsulting: "",
-    experience: "",
   });
 
   // State to store validation errors
@@ -51,7 +50,6 @@ const Experience = ({ experienceData }) => {
         currentSalary: experienceData.currentSalary || "",
         isItConsultingCompany: experienceData.isItConsultingCompany || "",
         joinConsulting: experienceData.joinConsulting || "",
-        experience: experienceData.experience || "",
       });
       // Optionally, validate initial data when it loads if you want the button disabled initially
       // const initialErrors = validateForm({
@@ -293,45 +291,6 @@ const Experience = ({ experienceData }) => {
                 fontFamily="Poppins"
               >
                 {formData.currentDesignation || "N/A"}
-              </Typography>
-            )}
-          </Grid>
-
-          {/* Experience */}
-          <Grid item xs={12} md={6}>
-            <Typography variant="body2" color="textSecondary">
-              Experience (Years)
-            </Typography>
-            {isEditing ? (
-              <FormControl sx={{ width: "95%", mt: 1 }} size="small">
-                <Select
-                  name="experience"
-                  value={formData.experience}
-                  onChange={handleChange} // handleChange will handle this field as well
-                  sx={{
-                    borderRadius: 16,
-                    height: "35px",
-                  }}
-                >
-                  <MenuItem value="">Select experience</MenuItem>
-                  {Array.from({ length: 15 }, (_, i) => (
-                    <MenuItem key={i + 1} value={(i + 1).toString()}>
-                      {i + 1}+
-                    </MenuItem>
-                  ))}
-                </Select>
-                 {/* Add error/helper text if Experience becomes mandatory */}
-                 {/* {!!validationErrors.experience && <Typography color="error" variant="caption">{validationErrors.experience}</Typography>} */}
-              </FormControl>
-            ) : (
-              <Typography
-                variant="subtitle1"
-                fontWeight="400"
-                fontSize="14px"
-                color="#808195"
-                fontFamily="Poppins"
-              >
-                {formData.experience ? `${formData.experience}+ years` : "N/A"}
               </Typography>
             )}
           </Grid>
