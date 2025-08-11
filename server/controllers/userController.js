@@ -736,8 +736,7 @@ export const updateWorkDetails = async (req, res) => {
       currentDesignation,
       currentSalary,
       isItConsultingCompany,
-      joinConsulting,
-      experience,
+      joinConsulting
     } = req.body;
 
     if (!userId) {
@@ -759,7 +758,6 @@ export const updateWorkDetails = async (req, res) => {
       updateFields.isItConsultingCompany = isItConsultingCompany;
     if (joinConsulting !== undefined)
       updateFields.joinConsulting = joinConsulting;
-    if (experience !== undefined) updateFields.experience = experience;
 
     const updatedUser = await Users.findOneAndUpdate(
       { _id: userId },
@@ -841,7 +839,7 @@ export const updateLinkedIn = async (req, res) => {
 
 export const updateExperienceHistory = async (req, res) => {
   try {
-    const { userId, experienceHistory } = req.body;
+    const { userId, experienceHistory, experience } = req.body;
 
     // Validate input
     if (!userId) {
@@ -861,7 +859,9 @@ export const updateExperienceHistory = async (req, res) => {
     // Find and update user
     const updatedUser = await Users.findOneAndUpdate(
       { _id: userId },
-      { experienceHistory: experienceHistory },
+      { experienceHistory: experienceHistory,
+        experience: experience,
+      },
       { new: true }
     );
 
