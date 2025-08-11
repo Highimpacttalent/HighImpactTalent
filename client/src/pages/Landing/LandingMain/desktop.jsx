@@ -124,7 +124,7 @@ function useSmoothNumber(to, { duration = 900 } = {}) {
 // Small live stat display (keeps original look — h4 + body2)
 function LiveStat({ target, fallbackText, label, loading, bigNumber }) {
   const animated = useSmoothNumber(typeof target === "number" ? target : 0, {
-    duration: 1000,
+    duration: target*4,
   });
   const displayText = loading
     ? "..."

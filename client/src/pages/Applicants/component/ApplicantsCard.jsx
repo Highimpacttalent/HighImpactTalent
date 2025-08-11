@@ -899,7 +899,7 @@ const ApplicationCard = ({ app, navigate, markAsViewed, onStageSelect, filterKey
                     </IconButton>
                   </Tooltip>
 
-                  <Tooltip title="Accept">
+                  <Tooltip title="Shortlist">
                     <IconButton
                       onClick={() => handleStageSelect("Shortlisted")}
                       sx={{

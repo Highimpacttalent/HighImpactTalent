@@ -287,7 +287,10 @@ function JobCardRecriter({ job, fetchJobs }) {
                         bgcolor: "#3C7EFC08",
                       },
                     }}
-                    onClick={() => navigate(`/applicant/${job._id}`)}
+                    onClick={() =>{ 
+                      navigate(`/applicant/${job._id}`);
+                      window.scrollTo({ top: 0, behavior: "smooth" });
+                    }}
                   >
                     View Applications
                   </Button>

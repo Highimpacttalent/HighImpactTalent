@@ -818,6 +818,16 @@ const UserInfoForm = () => {
                     }}
                   >
                     Current Company <span style={{ color: "red" }}>*</span>
+                    <span 
+                      style={{
+                        display: "block",
+                        fontSize: "12px",
+                        fontWeight: 400,
+                        color: "#555",
+                      }}
+                    >
+                     Please enter the name of your most recent company
+                    </span>
                   </label>
                   <input
                     type="text"

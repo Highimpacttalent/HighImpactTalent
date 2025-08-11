@@ -11,11 +11,12 @@ import {
   Divider,
   Grid,
   Stack,
-  Snackbar, 
+  Snackbar,
   Badge,
 } from "@mui/material";
 import MailIcon from "@mui/icons-material/Mail";
 import PhoneIcon from "@mui/icons-material/Phone";
+import AssignmentIcon from "@mui/icons-material/Assignment";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import { useNavigate } from "react-router-dom";
@@ -33,7 +34,6 @@ import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import LinkedInIcon from "@mui/icons-material/LinkedIn";
 import axios from "axios";
 import { useLocation } from "react-router-dom";
-
 
 export const escapeRegExp = (s = "") =>
   String(s).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -80,7 +80,6 @@ export function highlight(text, keywords) {
     )
   );
 }
-
 
 const ViewProfile = () => {
   const location = useLocation();
@@ -187,7 +186,7 @@ const ViewProfile = () => {
 
   const [snackbarOpen, setSnackbarOpen] = useState(false);
 
-// Reject handler
+  // Reject handler
   const handleReject = async () => {
     try {
       const currentUser = JSON.parse(localStorage.getItem("currentUser"));
@@ -225,8 +224,8 @@ const ViewProfile = () => {
         <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 2 }}>
           <Button
             onClick={() => {
-              navigate(-1); 
-              window.scrollTo({ top: 0, behavior: 'smooth' });
+              navigate(-1);
+              window.scrollTo({ top: 0, behavior: "smooth" });
             }}
             startIcon={<ArrowBackIcon />}
             sx={{
@@ -317,7 +316,10 @@ const ViewProfile = () => {
                     lineHeight: 1.2,
                   }}
                 >
-                  {highlight(`${userData.firstName || ""} ${userData.lastName || ""}`, filterKeywords)}
+                  {highlight(
+                    `${userData.firstName || ""} ${userData.lastName || ""}`,
+                    filterKeywords
+                  )}
                 </Typography>
                 <Typography
                   sx={{
@@ -345,6 +347,7 @@ const ViewProfile = () => {
               {/* Key Stats */}
               <Box sx={{ mb: 4 }}>
                 <Grid container spacing={2}>
+                  {/* Years Exp. */}
                   <Grid item xs={6}>
                     <Box
                       sx={{
@@ -376,35 +379,56 @@ const ViewProfile = () => {
                       </Typography>
                     </Box>
                   </Grid>
+
+                  {/* Resume */}
                   <Grid item xs={6}>
                     <Box
                       sx={{
                         textAlign: "center",
-                        py: 2,
+                        py: 1.5, // was 2 → reduced height
                         bgcolor: "#F8FAFC",
                         borderRadius: "8px",
                       }}
                     >
-                      <Typography
+                      <Button
+                        onClick={() => {
+                          if (userData?.cvUrl) {
+                            window.open(userData.cvUrl, "_blank");
+                          } else {
+                            alert("Resume link not available...");
+                          }
+                        }}
                         sx={{
-                          fontSize: "20px",
-                          fontWeight: 700,
+                          display: "flex",
+                          flexDirection: "column",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          width: "100%",
+                          height: "100%",
+                          textTransform: "none",
                           fontFamily: "Satoshi",
-                          color: "#111827",
+                          fontWeight: 600,
+                          fontSize: "11px", // slightly smaller text
+                          color: "#3C7EFC",
+                          "&:hover": {
+                            bgcolor: "transparent",
+                          },
                         }}
                       >
-                        {userData?.experienceHistory?.length || 0}
-                      </Typography>
-                      <Typography
-                        sx={{
-                          fontSize: "12px",
-                          fontWeight: 500,
-                          fontFamily: "Poppins",
-                          color: "#6B7280",
-                        }}
-                      >
-                        Companies
-                      </Typography>
+                        <AssignmentIcon
+                          sx={{ fontSize: 28, color: "#3C7EFC", mb: 0.3 }} // icon smaller + less margin
+                        />
+                        <Typography
+                          sx={{
+                            fontSize: "12px",
+                            fontWeight: 500,
+                            fontFamily: "Poppins",
+                            color: "#6B7280",
+                          }}
+                        >
+                          Resume
+                        </Typography>
+                      </Button>
                     </Box>
                   </Grid>
                 </Grid>
@@ -589,32 +613,6 @@ const ViewProfile = () => {
 
               {/* Action Buttons */}
               <Stack spacing={2}>
-                <Button
-                  fullWidth
-                  variant="outlined"
-                  startIcon={<LaunchIcon />}
-                  onClick={() => {
-                    if (userData?.cvUrl) {
-                      window.open(userData.cvUrl, "_blank");
-                    } else {
-                      alert("Resume link not available...");
-                    }
-                  }}
-                  sx={{
-                    py: 1.5,
-                    borderColor: "#D1D5DB",
-                    color: "#374151",
-                    fontFamily: "Satoshi",
-                    fontWeight: 600,
-                    textTransform: "none",
-                    "&:hover": {
-                      borderColor: "#9CA3AF",
-                      bgcolor: "#F9FAFB",
-                    },
-                  }}
-                >
-                  View Resume
-                </Button>
 
                 {currentStatus === "Hired" ? (
                   <Button
@@ -696,7 +694,11 @@ const ViewProfile = () => {
                     lineHeight: 1.6,
                   }}
                 >
-                  {highlight(userData?.about || "No description provided by the candidate.", filterKeywords)}
+                  {highlight(
+                    userData?.about ||
+                      "No description provided by the candidate.",
+                    filterKeywords
+                  )}
                 </Typography>
               </ProfileSection>
 
@@ -725,9 +727,10 @@ const ViewProfile = () => {
                   <Grid item xs={12} sm={6}>
                     <InfoField
                       label="Current Designation"
-                      value={
-                        `${highlight(userData?.currentDesignation || "Not Provided", filterKeywords)}`
-                      }
+                      value={`${highlight(
+                        userData?.currentDesignation || "Not Provided",
+                        filterKeywords
+                      )}`}
                     />
                   </Grid>
                   <Grid item xs={12} sm={6}>
@@ -1044,7 +1047,7 @@ const ViewProfile = () => {
         onClose={() => setSnackbarOpen(false)}
         message="Candidate Rejected"
       />
-      </Box>
+    </Box>
   );
 };
 

@@ -1308,7 +1308,7 @@ const JobUploadPage = () => {
           {/* Company Type - Added as per backend schema */}
           <div className="mb-4">
             <Typography sx={{ ...formLabelStyle }}>
-              Industry <span style={{ color: "red" }}>*</span>
+              Sector of Impact <span style={{ color: "red" }}>*</span>
             </Typography>{" "}
             {/* Not required in image or backend */}
             <Select
@@ -1340,7 +1340,7 @@ const JobUploadPage = () => {
           <Grid container spacing={2} className="mb-4">
             <Grid item xs={12} sm={6}>
               <Typography sx={{ ...formLabelStyle }}>
-                Category <span style={{ color: "red" }}>*</span>
+                Talent Focus Area  <span style={{ color: "red" }}>*</span>
               </Typography>
               <Select
                 options={categorySelectOptions}
@@ -1368,7 +1368,7 @@ const JobUploadPage = () => {
             </Grid>
             <Grid item xs={12} sm={6}>
               <Typography sx={{ ...formLabelStyle }}>
-                Functional Area <span style={{ color: "red" }}>*</span>
+                Domain of Expertise <span style={{ color: "red" }}>*</span>
               </Typography>
               <Select
                 options={functionalAreaSelectOptions}
@@ -1398,7 +1398,7 @@ const JobUploadPage = () => {
 
           {/* Tags Multi-Select - Now using CreatableSelect with predefined options */}
           <div className="mb-4">
-            <Typography sx={{ ...formLabelStyle }}>Tags</Typography>
+            <Typography sx={{ ...formLabelStyle }}>Spotlight Tags</Typography>
             <CreatableSelect
               isMulti
               options={tagSelectOptions} // Use the mapped tag list as base options
@@ -1785,7 +1785,7 @@ const JobUploadPage = () => {
           {/* Diversity Preferences Checkboxes */}
           <div className="mb-4">
             <Typography sx={{ ...formLabelStyle }}>
-              Diversity Preferences
+              Inclusion Priorities
             </Typography>
             <FormGroup row sx={{ flexWrap: "wrap", gap: 0 }}>
               {" "}
