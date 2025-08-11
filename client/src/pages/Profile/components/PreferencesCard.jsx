@@ -447,15 +447,12 @@ const PreferencesCard = ({ userInfo }) => {
 
       const result = await response.json();
       if (response.ok) {
-        // Update the user state in Redux with the new preferences
-        // Merge the jobPreferences update into the existing user state
-        const updatedUser = {
-             ...user,
-             jobPreferences: result.jobPreferences // Assuming the API returns the updated jobPreferences
-             // Or use payload if API doesn't return the updated part:
-             // jobPreferences: payload
-        };
-        dispatch(UpdateUser(updatedUser)); // Dispatch the action to update Redux
+        // FIXED: Update Redux with the complete updated user object from the backend
+        //console.log("Backend response:", result); // Debug log
+        
+        // The backend returns the complete updated user object in result.user
+        dispatch(UpdateUser(result.user)); // Use the complete user object from backend
+        
         setIsEditing(false);
          // Clear validation errors on successful save
          setValidationErrors({

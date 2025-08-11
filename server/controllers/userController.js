@@ -1037,8 +1037,7 @@ export const updateJobPreferences = async (req, res) => {
         message: "User not found!",
       });
     }
-
-
+    
     return res.status(200).json({
       success: true,
       message: "Job preferences updated successfully!",

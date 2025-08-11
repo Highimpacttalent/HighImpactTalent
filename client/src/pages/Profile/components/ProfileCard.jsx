@@ -240,7 +240,7 @@ const UserInfoCard = () => {
   // Updated profile fields to include all required fields
   const profileFields = [
     "firstName",
-    "lastName",
+    //"lastName",
     "email",
     "currentSalary",
     "currentCompany",
