@@ -45,6 +45,9 @@ import CancelOutlinedIcon from "@mui/icons-material/CancelOutlined";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import SelectAllIcon from "@mui/icons-material/SelectAll";
 import { useSelector } from "react-redux";
+import JSZip from 'jszip';
+import { saveAs } from 'file-saver';
+import GetAppIcon from '@mui/icons-material/GetApp';
 
 
 const loadFromSession = (key, fallback) => {
@@ -92,6 +95,7 @@ const JobApplications = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [downloadLoading, setDownloadLoading] = useState(false);
   const [stageCounts, setStageCounts] = useState({});
   const [cities, setCities] = useState();
   const currentUser = useSelector((state) => state.user.user);
@@ -1046,6 +1050,79 @@ const JobApplications = () => {
     setSearchKeyword("");
   };
 
+const handleBulkDownload = async () => {
+  if (selectedApplications.size === 0) return;
+
+  setDownloadLoading(true);
+  try {
+    const zip = new JSZip();
+    const selectedApps = filteredApps.filter(app => 
+      selectedApplications.has(app._id)
+    );
+
+    
+    const resumeFolder = zip.folder("resumes");
+
+    const downloadPromises = selectedApps.map(async (app, index) => {
+      try {
+        const applicantName = `${app.applicant.firstName || 'Unknown'}_${app.applicant.lastName || 'User'}`;
+        const response = await fetch(app.applicant.cvUrl);
+        
+        if (!response.ok) {
+          throw new Error(`Failed to fetch resume for ${applicantName}`);
+        }
+
+        const blob = await response.blob();
+        
+        let fileExtension = 'pdf';
+        if (app.applicant.cvUrl.includes('.doc')) fileExtension = 'doc';
+        else if (app.applicant.cvUrl.includes('.docx')) fileExtension = 'docx';
+        
+        const fileName = `${index + 1}_${applicantName}_Resume.${fileExtension}`;
+        resumeFolder.file(fileName, blob);
+        
+        return { success: true, name: applicantName };
+      } catch (error) {
+        console.error(`Error downloading resume for ${app.applicant.firstName}:`, error);
+        return { success: false, name: `${app.applicant.firstName}_${app.applicant.lastName}`, error: error.message };
+      }
+    });
+
+    const results = await Promise.allSettled(downloadPromises);
+    
+    const successful = results.filter(result => 
+      result.status === 'fulfilled' && result.value.success
+    ).length;
+    
+    if (successful === 0) {
+      throw new Error('Failed to download any resumes');
+    }
+
+    const zipBlob = await zip.generateAsync({ type: 'blob' });
+    const timestamp = new Date().toISOString().split('T')[0];
+    const zipFileName = `${jobTitle || 'Job'}_Selected_Resumes_${timestamp}.zip`;
+    
+    saveAs(zipBlob, zipFileName);
+
+    setSnackbar({
+      open: true,
+      message: `Successfully downloaded ${successful} out of ${selectedApplications.size} resumes`,
+      severity: successful === selectedApplications.size ? 'success' : 'warning',
+    });
+    setSelectedApplications(new Set());
+
+  } catch (error) {
+    console.error('Error creating zip file:', error);
+    setSnackbar({
+      open: true,
+      message: `Failed to download resumes: ${error.message}`,
+      severity: 'error',
+    });
+  } finally {
+    setDownloadLoading(false);
+  }
+};
+
   const handleStageSelect = async (applicationId, newStatus) => {
     try {
       const token = currentUser?.token;
@@ -1846,6 +1923,43 @@ const JobApplications = () => {
                   >
                     {bulkActionLoading ? "Processing..." : "Shortlist"}
                   </Button>
+
+                  <Button
+                    variant="contained"
+                    disabled={selectedApplications.size === 0 || downloadLoading}
+                    onClick={handleBulkDownload}
+                    startIcon={
+                      downloadLoading ? (
+                        <CircularProgress size={14} color="inherit" />
+                      ) : (
+                        <GetAppIcon sx={{ fontSize: 16 }} />
+                      )
+                    }
+                    sx={{
+                      fontFamily: "Satoshi",
+                      fontWeight: 600,
+                      fontSize: "13px",
+                      textTransform: "none",
+                      borderRadius: 2.5,
+                      px: 2.5,
+                      py: 1,
+                      minHeight: "36px",
+                      bgcolor: "#10b981",
+                      boxShadow: "0 2px 8px rgba(16, 185, 129, 0.25)",
+                      "&:hover": {
+                        bgcolor: "#059669",
+                        transform: "translateY(-1px)",
+                        boxShadow: "0 4px 12px rgba(16, 185, 129, 0.35)",
+                      },
+                      "&:disabled": {
+                        bgcolor: "#e2e8f0",
+                        color: "#94a3b8",
+                      },
+                    }}
+                  >
+                    {downloadLoading ? "Downloading" : "Download Resumes"}
+                  </Button>
+
 
                   <Button
                     variant="outlined"
