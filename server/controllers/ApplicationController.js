@@ -931,7 +931,7 @@ export const getScreeningFilterOptions = async (req, res) => {
 export const getApplicationStageCounts = async (req, res) => {
   try {
     const jobId = req.params.jobid;
-  
+
     // Validate job ID
     if (!mongoose.Types.ObjectId.isValid(jobId)) {
       return res.status(400).json({
@@ -980,7 +980,7 @@ export const getApplicationStageCounts = async (req, res) => {
       error: error.message,
     });
   }
-};
+}
 
 export const getallApplicationOfApplicant = async (req, res) => {
   try {
