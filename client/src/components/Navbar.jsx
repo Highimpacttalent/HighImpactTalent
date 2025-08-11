@@ -429,48 +429,6 @@ const LoggedOutMenu = () => (
         Blog
       </Button>
     </Box>
-    <Button
-  component="a"
-  href="https://calendly.com/koustubhharidas"
-  target="_blank"
-  rel="noopener noreferrer"
-  aria-label="Book a call"
-  startIcon={<CalendarTodayRounded sx={{ fontSize: 20 }} />}
-  sx={{
-    display: "inline-flex",
-    alignItems: "center",
-    gap: 1.5,
-    background: "linear-gradient(90deg, #3C7EFC 0%, #6AA8FF 50%, #2D67F0 100%)",
-    color: "#fff",
-    borderRadius: "30px",
-    px: 4,
-    py: 1.3,
-    fontWeight: 600,
-    fontFamily: "Poppins, sans-serif",
-    fontSize: "16px",
-    letterSpacing: 0.3,
-    textTransform: "none",
-    boxShadow:
-      "0 6px 18px rgba(60,126,252,0.22), inset 0 -1px 0 rgba(255,255,255,0.06)",
-    transition:
-      "transform 250ms ease, box-shadow 250ms ease, background-position 400ms ease",
-    backgroundSize: "200% 100%",
-    backgroundPosition: "0% 50%",
-    "&:hover": {
-      transform: "translateY(-3px)",
-      boxShadow: "0 10px 25px rgba(60,126,252,0.28)",
-      backgroundPosition: "100% 50%",
-    },
-    "&:active": { transform: "translateY(-1px) scale(0.98)" },
-    "&:focus-visible": {
-      outline: "none",
-      boxShadow: "0 0 0 4px rgba(60,126,252,0.2)",
-    },
-  }}
->
-  Book a Call
-</Button>
-
   </Box>
 );
 
@@ -508,65 +466,6 @@ const LoggedOutDrawer = ({ setDrawerOpen }) => (
     >
       <ListItemText primary="Blog" />
     </ListItem>
-
-  <ListItem
-  button
-  component="a"
-  href="https://calendly.com/koustubhharidas"
-  target="_blank"
-  rel="noopener noreferrer"
-  onClick={() => setDrawerOpen(false)}
-  aria-label="Book a call"
-  sx={{
-    mt: 2,
-    mx: 2,
-    borderRadius: 3,
-    px: 2.5,
-    py: 1.3,
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 1,
-    background: "linear-gradient(90deg, #3C7EFC 0%, #6AA8FF 60%, #2D67F0 100%)",
-    color: "#FFF",
-    fontWeight: 600,
-    fontFamily: "Poppins, sans-serif",
-    fontSize: "15px",
-    letterSpacing: 0.3,
-    boxShadow:
-      "0 6px 18px rgba(60,126,252,0.2), inset 0 -1px 0 rgba(255,255,255,0.05)",
-    textTransform: "none",
-    transition:
-      "transform 200ms ease, box-shadow 200ms ease, background-position 350ms",
-    backgroundSize: "200% 100%",
-    backgroundPosition: "0% 50%",
-    "&:hover": {
-      transform: "translateY(-3px)",
-      backgroundPosition: "100% 50%",
-      boxShadow: "0 10px 25px rgba(60,126,252,0.26)",
-    },
-    "&:active": { transform: "translateY(-1px) scale(0.98)" },
-    "&:focus-visible": { boxShadow: "0 0 0 4px rgba(60,126,252,0.18)" },
-  }}
->
-  <ListItemIcon
-    sx={{
-      minWidth: 0,
-      mr: 1.25,
-      color: "inherit",
-      display: "flex",
-      alignItems: "center",
-    }}
-  >
-    <CalendarTodayRounded sx={{ fontSize: 20 }} />
-  </ListItemIcon>
-  <ListItemText
-    primary="Book a Call"
-    primaryTypographyProps={{
-      sx: { color: "inherit", fontWeight: 600, fontSize: "15px" },
-    }}
-  />
-</ListItem>
 
   </List>
 );

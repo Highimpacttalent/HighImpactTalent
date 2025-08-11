@@ -400,6 +400,35 @@ const DesktopLanding = () => {
                     >
                       Hire Top Talent
                     </Button>
+
+                    <Button
+                    variant="contained"
+                    component="a"
+                    href="https://calendly.com/koustubhharidas"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    size="large"
+                    sx={{
+                      background: "linear-gradient(135deg, #1f2937 0%, #111827 100%)",  
+                      px: 4,
+                      py: 1.5,
+                      borderRadius: "12px",
+                      fontFamily: "Poppins",
+                      fontSize: "1rem",
+                      fontWeight: 600,
+                      textTransform: "none",
+                    border: "1px solid #facc15", // Subtle gold border
+                  boxShadow: "0 2px 12px rgba(250, 204, 21, 0.15)",
+                      transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+                      "&:hover": {
+                        background: "linear-gradient(135deg, #111827 0%, #0f172a 100%)",
+                        boxShadow: "0 8px 30px rgba(250, 204, 21, 0.3)",
+                        transform: "translateY(-2px)",
+                      }
+                    }}
+                  >
+                    Book 1-1 Hiring Strategy Call
+                  </Button>
                   </Stack>
                 </Box>
               </AnimatedSection>
