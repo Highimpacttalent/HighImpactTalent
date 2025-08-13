@@ -250,7 +250,7 @@ export const sendStatusUpdateEmail = async (email, status, name = 'Candidate', j
       secondaryColor: "#dbeafe", // Light blue
       content: `
         <p style="font-size: 16px; line-height: 1.6; margin-bottom: 20px; color: #374151;">
-          <em>(Cue spotlight...)</em> Our experienced recruiter just took center stage, reviewing your profile for the <strong>${jobTitle}</strong> position and let out a resounding "Bravo!" Your expertise in <strong>[relevant skills]</strong> truly stole the show.
+          <em>(Cue spotlight...)</em> Our experienced recruiter just took center stage, reviewing your profile for the <strong>${jobTitle}</strong> position and let out a resounding "Bravo!" Your expertise in <strong>relevant skills</strong> truly stole the show.
         </p>
         <p style="font-size: 16px; line-height: 1.6; margin-bottom: 20px; color: #374151;">
           We are now transitioning you to your next act—your official "call to the wings" (next steps) will arrive shortly in a follow-up message.
