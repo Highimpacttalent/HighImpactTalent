@@ -263,31 +263,6 @@ const ContactUsMobile = () => {
             </Button>
           </Box>
         </Box>
-
-        {/* LinkdIn Part */}
-        <Box sx={{ p: 4, borderRadius: 3, display: "flex", flexDirection: "column", mx: "auto" }}>
-          <Typography sx={{ fontFamily: "Poppins", fontWeight: 500, mb: 6, fontSize: "20px", ml: 5, color: "#474E68" }}>
-            Connect with us on <LinkedIn color="primary" />
-          </Typography>
-
-          {/* Custom Carousel Component */}
-          <CustomCarosuel
-            items={linkedinProfiles.map((link, index) => (
-              <iframe
-                key={index}
-                src={link}
-                width="100%"
-                height="450"
-                style={{
-                  border: "none",
-                  borderRadius: "10px",
-                  boxShadow: "0 5px 15px rgba(0, 0, 0, 0.2)",
-                }}
-                allowFullScreen
-              ></iframe>
-            ))}
-          />
-        </Box>
       </Box>
 
       {/* Success Modal */}
