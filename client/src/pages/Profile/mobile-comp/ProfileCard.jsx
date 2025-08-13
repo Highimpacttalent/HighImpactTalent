@@ -7,8 +7,11 @@ import {
   Button,
   LinearProgress,
   CircularProgress,
+  IconButton,
+  Tooltip,
 } from "@mui/material";
 import { AiOutlineMail, AiOutlinePlus } from "react-icons/ai";
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import { FiPhoneCall } from "react-icons/fi";
 import { HiLocationMarker } from "react-icons/hi";
 import "react-phone-number-input/style.css";
@@ -101,12 +104,6 @@ const LocationDropdown = ({ value, onChange, isRequired = false }) => {
       padding: 2,
       width: "100%",
       fontSize: "0.875rem",
-      //borderRadius: 0,
-      //border: state.isFocused? "1px black" :"none",
-      // boxShadow: state.isFocused ? "black" : "none",
-      // "&:hover": {
-      //   borderColor: "#d1d5db",
-      // },
     }),
     menu: (provided) => ({
       ...provided,
@@ -257,9 +254,10 @@ const UserInfoCard = () => {
     }
   };
 
+  // Updated profile fields to include all required fields (same as desktop version)
   const profileFields = [
     "firstName",
-    "lastName",
+    //"lastName",
     "email",
     "currentSalary",
     "currentCompany",
@@ -268,25 +266,71 @@ const UserInfoCard = () => {
     "currentLocation",
     "experienceHistory",
     "cvUrl",
+    "contactNumber", 
+    "skills", 
+    "educationDetails", 
+    "experience", 
+    "preferredJobTypes", // (mapped to preferredWorkTypes)
+    "preferredJobLocations", //  (mapped to preferredLocations)
+    "preferredWorkModes", // (mapped to preferredWorkModes)
+    "expectedSalary", // (mapped to expectedMinSalary)
   ];
 
   console.log(user);
-  let filledFieldsCount = profileFields.reduce((count, field) => {
-    if (user[field] && user[field].toString().trim() !== "") {
-      return count + 1;
+  
+  // Updated calculation to properly handle all field types (same as desktop version)
+  let filledFieldsCount = 0;
+  
+  profileFields.forEach(field => {
+    let fieldValue;
+    
+    // Handle field mapping for different property names
+    switch(field) {
+      case 'preferredJobTypes':
+        fieldValue = user?.preferredWorkTypes;
+        break;
+      case 'preferredJobLocations':
+        fieldValue = user?.preferredLocations;
+        break;
+      case 'preferredWorkModes':
+        fieldValue = user?.preferredWorkModes;
+        break;
+      case 'expectedSalary':
+        fieldValue = user?.expectedMinSalary;
+        break;
+      default:
+        fieldValue = user?.[field];
     }
-    return count;
-  }, 0);
+    
+    // Check if field is filled based on its type
+    if (fieldValue !== null && fieldValue !== undefined) {
+      if (Array.isArray(fieldValue)) {
+        // For arrays (skills, educationDetails, experienceHistory, preferredLocations, etc.)
+        if (fieldValue.length > 0) {
+          filledFieldsCount += 1;
+        }
+      } else if (typeof fieldValue === 'object') {
+        // For objects - check if it has meaningful content
+        if (Object.keys(fieldValue).length > 0) {
+          filledFieldsCount += 1;
+        }
+      } else if (typeof fieldValue === 'string') {
+        // For strings - check if not empty after trimming
+        if (fieldValue.toString().trim() !== "") {
+          filledFieldsCount += 1;
+        }
+      } else if (typeof fieldValue === 'number') {
+        // For numbers - consider filled if it's a valid number
+        if (!isNaN(fieldValue) && fieldValue >= 0) {
+          filledFieldsCount += 1;
+        }
+      }
+    }
+  });
 
-  // Add 1 to count if skills exist and are not empty
-  if (user.skills && Array.isArray(user.skills) && user.skills.length > 0) {
-    filledFieldsCount += 1;
-  }
-
-  // Update total fields count to include skills
-  const totalFields = profileFields.length + 1;
-
+  const totalFields = profileFields.length;
   const profileCompletion = Math.round((filledFieldsCount / totalFields) * 100);
+
   const handleSaveClick = async () => {
     if (
       !updatedUserInfo.contactNumber ||
@@ -341,20 +385,101 @@ const UserInfoCard = () => {
     }
   };
 
+  // Updated missing fields calculation (same as desktop version)
+  const missingFields = [];
+  
+  profileFields.forEach(field => {
+    let fieldValue;
+    let displayName;
+    
+    // Handle field mapping and display names
+    switch(field) {
+      case 'preferredJobTypes':
+        fieldValue = user?.preferredWorkTypes;
+        displayName = 'Preferred Job Types';
+        break;
+      case 'preferredJobLocations':
+        fieldValue = user?.preferredLocations;
+        displayName = 'Preferred Job Locations';
+        break;
+      case 'preferredWorkModes':
+        fieldValue = user?.preferredWorkModes;
+        displayName = 'Preferred Work Modes';
+        break;
+      case 'expectedSalary':
+        fieldValue = user?.expectedMinSalary;
+        displayName = 'Expected Salary';
+        break;
+      case 'contactNumber':
+        fieldValue = user?.contactNumber;
+        displayName = 'Contact Number';
+        break;
+      case 'educationDetails':
+        fieldValue = user?.educationDetails;
+        displayName = 'Education Details';
+        break;
+      case 'experienceHistory':
+        fieldValue = user?.experienceHistory;
+        displayName = 'Experience History';
+        break;
+      case 'currentSalary':
+        fieldValue = user?.currentSalary;
+        displayName = 'Current Salary';
+        break;
+      case 'currentCompany':
+        fieldValue = user?.currentCompany;
+        displayName = 'Current Company';
+        break;
+      case 'currentDesignation':
+        fieldValue = user?.currentDesignation;
+        displayName = 'Current Designation';
+        break;
+      case 'linkedinLink':
+        fieldValue = user?.linkedinLink;
+        displayName = 'LinkedIn Link';
+        break;
+      case 'currentLocation':
+        fieldValue = user?.currentLocation;
+        displayName = 'Current Location';
+        break;
+      default:
+        fieldValue = user?.[field];
+        displayName = field.replace(/([A-Z])/g, " $1").replace(/^./, (str) => str.toUpperCase());
+    }
+    
+    // Check if field is missing based on its type
+    let isMissing = true;
+    
+    if (fieldValue !== null && fieldValue !== undefined) {
+      if (Array.isArray(fieldValue)) {
+        isMissing = fieldValue.length === 0;
+      } else if (typeof fieldValue === 'object') {
+        isMissing = Object.keys(fieldValue).length === 0;
+      } else if (typeof fieldValue === 'string') {
+        isMissing = fieldValue.toString().trim() === "";
+      } else if (typeof fieldValue === 'number') {
+        isMissing = isNaN(fieldValue) || fieldValue < 0;
+      }
+    }
+    
+    if (isMissing) {
+      missingFields.push(displayName);
+    }
+  });
+
   const mobileView = (
     <Box
       display="flex"
-      flexDirection={{ xs: "column", sm: "row" }}
+      flexDirection="column"
       alignItems="center"
-      justifyContent="space-evenly"
-      flexWrap="wrap"
-      gap={2}
+      justifyContent="center"
+      gap={3}
       sx={{
-        maxWidth: "90%",
-        width: { xs: "100%", sm: "80%", md: "60%", lg: "50%" },
+        width: { xs: "95%", sm: "85%", md: "70%", lg: "60%" },
+        minWidth: { xs: "320px", sm: "400px" },
         margin: "auto",
         border: "3px solid #00000040",
-        p: 2,
+        p: { xs: 3, sm: 4 },
         borderRadius: 4,
       }}
     >
@@ -365,14 +490,15 @@ const UserInfoCard = () => {
         title={alert.title}
         message={alert.message}
       />
-      {/* Profile Image */}
+      
+      {/* Profile Image - Centered at top */}
       <Box sx={{ position: "relative", display: "inline-block" }}>
         <Avatar
           src={profilePicUrl || user?.profileUrl}
           alt="Profile"
           sx={{
-            width: { xs: 80, md: 80, lg: 100 },
-            height: { xs: 80, md: 80, lg: 100 },
+            width: { xs: 90, sm: 100, md: 110 },
+            height: { xs: 90, sm: 100, md: 110 },
             transition: "0.3s",
           }}
         />
@@ -413,127 +539,260 @@ const UserInfoCard = () => {
         </Box>
       </Box>
 
-      {/* User Info */}
-      <Box>
+      {/* User Name - Centered */}
+      <Typography
+        variant="h5"
+        fontWeight="bold"
+        sx={{
+          textTransform: "capitalize",
+          color: "#404258",
+          fontWeight: 700,
+          textAlign: "center",
+          fontFamily: "Satoshi",
+          fontSize: { xs: 20, sm: 22, md: 24 },
+        }}
+      >
+        {user?.firstName + " " + user?.lastName}
+      </Typography>
+
+      {/* User Info - Stacked vertically */}
+      <Box
+        sx={{ 
+          display: "flex", 
+          flexDirection: "column", 
+          gap: 1.5, 
+          width: "100%",
+          alignItems: "center"
+        }}
+      >
+        {/* Email */}
         <Typography
-          variant="h5"
-          fontWeight="bold"
-          sx={{
-            textTransform: "capitalize",
-            mb: 1,
-            color: "#404258",
-            fontWeight: 700,
-            textAlign: "center",
-            fontFamily: "Satoshi",
-            fontSize: { xs: 20, md: 25, lg: 30 },
-          }}
+          display="flex"
+          alignItems="center"
+          justifyContent="center"
+          gap={1}
+          color="#404258"
+          fontWeight="400"
+          fontSize="0.9rem"
+          sx={{ wordBreak: "break-word", textAlign: "center" }}
         >
-          {user?.firstName + " " + user?.lastName}
+          <AiOutlineMail /> <EmailWithBreak email={updatedUserInfo.email} />
         </Typography>
 
-        <Box
-          textAlign="center"
-          sx={{ display: "flex", flexDirection: "column", gap: 2 }}
-        >
-          {/* Email */}
+        {/* Contact */}
+        {isEditing ? (
+          <PhoneInput
+            defaultCountry="IN"
+            value={updatedUserInfo.contactNumber}
+            maxLength={15}
+            onChange={(phone) => {
+              handleChange({
+                target: {
+                  name: "contactNumber",
+                  value: phone,
+                },
+              });
+            }}
+            className="rounded-full px-4 py-2.5 border focus:outline-none focus:ring-2 focus:ring-blue-500"
+            style={{ borderRadius: 50, border: "1px solid #24252C" }}
+          />
+        ) : (
           <Typography
             display="flex"
             alignItems="center"
+            justifyContent="center"
             gap={1}
             color="#404258"
             fontWeight="400"
+            fontSize="0.9rem"
           >
-            <AiOutlineMail /> <EmailWithBreak email={updatedUserInfo.email} />
+            <FiPhoneCall /> {updatedUserInfo.contactNumber}
           </Typography>
+        )}
 
-          {/* Contact */}
-          {isEditing ? (
-            <PhoneInput
-              defaultCountry="IN"
-              value={updatedUserInfo.contactNumber}
-              maxLength={15} // value like "+919876543210"
-              onChange={(phone) => {
-                handleChange({
-                  target: {
-                    name: "contactNumber",
-                    value: phone, // already includes country code like +91
-                  },
-                });
-              }}
-              className="rounded-full px-4 py-2.5 border focus:outline-none focus:ring-2 focus:ring-blue-500"
-              style={{ borderRadius: 50, border: "1px solid #24252C" }}
+        {/* Location */}
+        {isEditing ? (
+          <Box sx={{ width: "100%", maxWidth: "300px" }}>
+            <LocationDropdown
+              value={updatedUserInfo.currentLocation}
+              onChange={handleLocationChange}
             />
-          ) : (
-            <Typography
-              display="flex"
-              alignItems="center"
-              gap={1}
-              color="#404258"
-              fontWeight="400"
-            >
-              <FiPhoneCall /> {updatedUserInfo.contactNumber}
-            </Typography>
-          )}
+          </Box>
+        ) : (
+          <Typography
+            display="flex"
+            alignItems="center"
+            justifyContent="center"
+            gap={1}
+            color="#404258"
+            fontWeight="400"
+            fontSize="0.9rem"
+            sx={{ wordBreak: "break-word", textAlign: "center" }}
+          >
+            <HiLocationMarker /> {updatedUserInfo.currentLocation}
+          </Typography>
+        )}
 
-          {/* Location */}
+        {/* Edit & Save Button - Below location */}
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            mt: 1,
+          }}
+        >
           {isEditing ? (
-            <Box sx={{ width: "250px" }}>
-              <LocationDropdown
-                value={updatedUserInfo.currentLocation}
-                onChange={handleLocationChange}
-              />
-            </Box>
-          ) : (
-            <Typography
-              display="flex"
-              alignItems="center"
-              gap={1}
-              color="#404258"
-              fontWeight="400"
+            <Button
+              variant="contained"
+              size="medium"
+              onClick={handleSaveClick}
+              sx={{ 
+                bgcolor: "#3C7EFC", 
+                color: "white", 
+                borderRadius: 16,
+                px: 3,
+                py: 1,
+                fontSize: { xs: "0.9rem", sm: "1rem" }
+              }}
+              disabled={loading || uploadingProfilePic}
             >
-              <HiLocationMarker /> {updatedUserInfo.currentLocation}
-            </Typography>
+              {loading ? (
+                <CircularProgress size={20} sx={{ color: "white" }} />
+              ) : (
+                "Save Changes"
+              )}
+            </Button>
+          ) : (
+            <Box
+              sx={{
+                color: "#3C7EFC",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                gap: 0.8,
+                fontSize: { xs: "0.9rem", sm: "1rem" },
+                fontWeight: 500,
+                "&:hover": {
+                  opacity: 0.8,
+                }
+              }}
+              onClick={handleEditClick}
+            >
+              <EditIcon sx={{ color: "#3C7EFC", fontSize: "1.1rem" }} />
+              <Typography
+                sx={{
+                  color: "#3C7EFC",
+                  fontSize: "inherit",
+                  fontWeight: "inherit",
+                }}
+              >
+                Edit Profile
+              </Typography>
+            </Box>
           )}
         </Box>
       </Box>
 
-      {/* Edit & Save Buttons */}
+      {/* Profile Progress Bar */}
       <Box
         sx={{
+          width: "100%",
+          px: { xs: 2, sm: 3 },
+          py: { xs: 2, sm: 2.5 },
+          borderRadius: 3,
+          border: "1px solid #00000040",
+          bgcolor: "#fafafa",
           display: "flex",
-          flexDirection: "column",
-          mr: 5.5,
-          justifyContent: "center",
           alignItems: "center",
+          justifyContent: "space-between",
+          gap: 1,
         }}
       >
-        {isEditing ? (
-          <Button
-            variant="contained"
-            size="small"
-            onClick={handleSaveClick}
-            sx={{ bgcolor: "#3C7EFC", color: "white", borderRadius: 16 }}
-            disabled={loading || uploadingProfilePic}
+        <Box sx={{ flex: 1 }}>
+          {profileCompletion === 100 ? (
+            <Typography
+              sx={{ 
+                fontFamily: "Poppins", 
+                fontWeight: 500, 
+                fontSize: { xs: 12, sm: 14 },
+                color: "#2e7d32",
+                textAlign: "center"
+              }}
+            >
+              Your profile is complete and ready to land you an amazing role!
+            </Typography>
+          ) : (
+            <>
+              <Typography
+                sx={{ 
+                  fontFamily: "Poppins", 
+                  fontWeight: 500, 
+                  fontSize: { xs: 12, sm: 14 },
+                  mb: 0.5,
+                  textAlign: "center"
+                }}
+              >
+                Your Profile is {profileCompletion}% Complete
+              </Typography>
+              <LinearProgress
+                variant="determinate"
+                value={profileCompletion}
+                sx={{ 
+                  width: "100%", 
+                  height: 8, 
+                  borderRadius: 4,
+                  mb: 0.5,
+                  bgcolor: "#e0e0e0",
+                  "& .MuiLinearProgress-bar": {
+                    bgcolor: profileCompletion < 50 ? "#f44336" : profileCompletion < 80 ? "#ff9800" : "#4caf50",
+                  }
+                }}
+              />
+              <Typography
+                sx={{
+                  fontFamily: "Poppins",
+                  fontWeight: 400,
+                  fontSize: { xs: 10, sm: 12 },
+                  color: "#666",
+                  textAlign: "center",
+                }}
+              >
+                Complete your profile to unlock job applications
+              </Typography>
+            </>
+          )}
+        </Box>
+
+        {/* Info Tooltip */}
+        {profileCompletion < 100 && (
+          <Tooltip
+            title={
+              <Box sx={{ maxWidth: 250 }}>
+                <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600 }}>
+                  To reach 100%, please add:
+                </Typography>
+                <Box component="ul" sx={{ margin: 0, paddingLeft: "20px", fontSize: "0.8rem" }}>
+                  {missingFields.slice(0, 8).map((field) => (
+                    <Box component="li" key={field} sx={{ mb: 0.3 }}>
+                      {field}
+                    </Box>
+                  ))}
+                  {missingFields.length > 8 && (
+                    <Box component="li" sx={{ fontStyle: "italic", color: "#666" }}>
+                      ...and {missingFields.length - 8} more fields
+                    </Box>
+                  )}
+                </Box>
+              </Box>
+            }
+            placement="top"
+            arrow
           >
-            {loading ? (
-              <CircularProgress size={20} sx={{ color: "white" }} />
-            ) : (
-              "Save"
-            )}
-          </Button>
-        ) : (
-          <Typography
-            sx={{
-              color: "#3C7EFC",
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              gap: 1,
-            }}
-            onClick={handleEditClick}
-          >
-            <EditIcon sx={{ color: "#3C7EFC" }} /> Edit Profile
-          </Typography>
+            <IconButton sx={{ ml: 1, p: 0.5 }}>
+              <InfoOutlinedIcon sx={{ fontSize: "1.2rem", color: "#666" }} />
+            </IconButton>
+          </Tooltip>
         )}
       </Box>
     </Box>
