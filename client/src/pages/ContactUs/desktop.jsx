@@ -301,64 +301,6 @@ const ContactUsDesktop = () => {
             </Button>
           </Box>
         </Box>
-
-        {/* LinkdIn Part */}
-        <Box
-          sx={{
-            p: 4,
-            borderRadius: 3,
-            display: "flex",
-            flexDirection: "column",
-            width: "80%",
-            mx: "auto", // Center align
-          }}
-        >
-          <Typography
-            sx={{
-              fontFamily: "Poppins",
-              fontWeight: 500,
-              mb: 6,
-              fontSize: "20px",
-              ml: 5,
-              color: "#474E68",
-            }}
-          >
-            Connect with us on{" "}
-            <span
-              onClick={() =>
-                window.open(
-                  "https://www.linkedin.com/company/highimpacttalent/",
-                  "_blank"
-                )
-              }
-              style={{
-                cursor: "pointer",
-                display: "inline-flex",
-                verticalAlign: "middle",
-              }}
-            >
-              <LinkedIn color="primary" />
-            </span>
-          </Typography>
-
-          {/* Custom Carousel Component */}
-          <CustomCarosuel
-            items={linkedinProfiles.map((link, index) => (
-              <iframe
-                key={index}
-                src={link}
-                width="100%"
-                height="450"
-                style={{
-                  border: "none",
-                  borderRadius: "10px",
-                  boxShadow: "0 5px 15px rgba(0, 0, 0, 0.2)",
-                }}
-                allowFullScreen
-              ></iframe>
-            ))}
-          />
-        </Box>
       </Box>
 
       {/* Success Modal */}
