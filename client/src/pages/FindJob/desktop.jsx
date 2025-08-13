@@ -126,30 +126,11 @@ const DesktopView = () => {
     "Kolkata",
     "Others",
   ];
-
-  // Frontend: Update experienceOptions to ensure proper ranges
-  const experienceOptions = [
-    { value: "0-2", label: "0-2 years" },
-    { value: "2-5", label: "2-5 years" },
-    { value: "5-8", label: "5-8 years" },
-    { value: "8-11", label: "8-11 years" },
-    { value: "11-100", label: "Over 11 years" },
-  ];
+  
 
   const workModeOptions = ["Remote", "Hybrid", "Work From Office"];
   const workTypeOptions = ["Full-Time", "Part-Time", "Contract", "Temporary"];
-  const salaryRangeOptions = [
-    "0-5",
-    "5-10",
-    "10-15",
-    "15-20",
-    "20-30",
-    "30-50",
-    "50-80",
-    "80-120",
-    "120-150",
-    "150-1000",
-  ];
+
   const datePostedOptions = [
     "Last 24 hours",
     "Last one week",
@@ -616,7 +597,7 @@ const DesktopView = () => {
             >
               <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                 <Typography variant="h6" color="#404258" fontFamily="Satoshi, sans-serif">
-                  Experience {experienceFilter.length > 0 && `(${experienceFilter.length})`}
+                  Experience (in years) {experienceFilter.length > 0 && `(${experienceFilter.length})`}
                 </Typography>
               </AccordionSummary>
               <AccordionDetails>
