@@ -337,8 +337,8 @@ export const getJobPosts = async (req, res, next) => {
         if (range.includes('-')) {
           const [min, max] = range.split('-').map(Number);
           if (!isNaN(min) && !isNaN(max)) {
-            const minSalary = min * 100000;
-            const maxSalary = max * 100000;
+            const minSalary = min;
+            const maxSalary = max;
             
             salaryConditions.push({
               $or: [
