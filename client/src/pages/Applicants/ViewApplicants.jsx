@@ -10,6 +10,7 @@ import {
   Autocomplete,
   FormControl,
   TextField,
+  Tooltip,
   InputLabel,
   Select,
   MenuItem,
@@ -45,6 +46,8 @@ import CancelOutlinedIcon from "@mui/icons-material/CancelOutlined";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import SelectAllIcon from "@mui/icons-material/SelectAll";
 import { useSelector } from "react-redux";
+import CloseRounded from "@mui/icons-material/CloseRounded";
+import CheckRounded from "@mui/icons-material/CheckRounded";
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
 import GetAppIcon from '@mui/icons-material/GetApp';
@@ -1875,55 +1878,7 @@ const handleBulkDownload = async () => {
                     flexWrap: "wrap",
                   }}
                 >
-                  {/* Primary Actions */}
-                  <Button
-                    variant="contained"
-                    disabled={
-                      selectedApplications.size === 0 ||
-                      bulkActionLoading ||
-                      steps[activeStep] === "Shortlisted"
-                    }
-                    onClick={() =>
-                      openConfirmDialog(
-                        "advance",
-                        "Advance Selected Candidates",
-                        `Move ${selectedApplications.size} selected candidate${
-                          selectedApplications.size !== 1 ? "s" : ""
-                        } to Shortlisted stage?`
-                      )
-                    }
-                    startIcon={
-                      bulkActionLoading ? (
-                        <CircularProgress size={14} color="inherit" />
-                      ) : (
-                        <ArrowForwardIcon sx={{ fontSize: 16 }} />
-                      )
-                    }
-                    sx={{
-                      fontFamily: "Satoshi",
-                      fontWeight: 600,
-                      fontSize: "13px",
-                      textTransform: "none",
-                      borderRadius: 2.5,
-                      px: 2.5,
-                      py: 1,
-                      minHeight: "36px",
-                      bgcolor: "#1976d2",
-                      boxShadow: "0 2px 8px rgba(25, 118, 210, 0.25)",
-                      "&:hover": {
-                        bgcolor: "#1565c0",
-                        transform: "translateY(-1px)",
-                        boxShadow: "0 4px 12px rgba(25, 118, 210, 0.35)",
-                      },
-                      "&:disabled": {
-                        bgcolor: "#e2e8f0",
-                        color: "#94a3b8",
-                      },
-                    }}
-                  >
-                    {bulkActionLoading ? "Processing..." : "Shortlist"}
-                  </Button>
-
+                  
                   <Button
                     variant="contained"
                     disabled={selectedApplications.size === 0 || downloadLoading}
@@ -1960,9 +1915,54 @@ const handleBulkDownload = async () => {
                     {downloadLoading ? "Downloading" : "Download Resumes"}
                   </Button>
 
+                  {/* Primary Actions */}
+                  <Tooltip title="Shortlist">
+                  <span>
+                    <IconButton
+                      disabled={
+                        selectedApplications.size === 0 ||
+                        bulkActionLoading ||
+                        steps[activeStep] === "Shortlisted"
+                      }
+                      onClick={() =>
+                        openConfirmDialog(
+                          "advance",
+                          "Advance Selected Candidates",
+                          `Move ${selectedApplications.size} selected candidate${
+                            selectedApplications.size !== 1 ? "s" : ""
+                          } to Shortlisted stage?`
+                        )
+                      }
+                      sx={{
+                        backgroundColor: "#FFFFFF",
+                        border: "2px solid #10B981",
+                        color: "#10B981",
+                        borderRadius: "0.25rem",
+                        width: "30px",
+                        height: "30px",
+                        "&:hover": {
+                          backgroundColor: "#F0FDF4",
+                        },
+                        "&.Mui-disabled": {
+                          backgroundColor: "#F9FAFB",
+                          borderColor: "#E5E7EB",
+                          color: "#9CA3AF",
+                        },
+                      }}
+                    >
+                      {bulkActionLoading ? (
+                        <CircularProgress size={16} color="inherit" />
+                      ) : (
+                        <CheckRounded />
+                      )}
+                    </IconButton>
+                  </span>
+                </Tooltip>
 
-                  <Button
-                    variant="outlined"
+
+                <Tooltip title="Reject">
+                <span>
+                  <IconButton
                     disabled={
                       selectedApplications.size === 0 || bulkActionLoading
                     }
@@ -1975,33 +1975,34 @@ const handleBulkDownload = async () => {
                         } as "Not Progressing"?`
                       )
                     }
-                    startIcon={<CancelOutlinedIcon sx={{ fontSize: 16 }} />}
                     sx={{
-                      fontFamily: "Satoshi",
-                      fontWeight: 600,
-                      fontSize: "13px",
-                      textTransform: "none",
-                      borderRadius: 2.5,
-                      px: 2.5,
-                      py: 1,
-                      minHeight: "36px",
-                      border: "1.5px solid #ef4444",
-                      color: "#ef4444",
-                      bgcolor: "white",
+                      backgroundColor: "#FFF",
+                      border: "2px solid #F87171",
+                      color: "#EF4444",
+                      borderRadius: "0.25rem", // Square with slightly rounded corners
+                      width: "30px",
+                      height: "30px",
                       "&:hover": {
-                        bgcolor: "#fef2f2",
-                        border: "1.5px solid #dc2626",
-                        color: "#dc2626",
-                        transform: "translateY(-1px)",
+                        backgroundColor: "#FEF2F2",
+                        color: "#B91C1C",
+                        borderColor: "#DC2626",
                       },
-                      "&:disabled": {
-                        border: "1.5px solid #e2e8f0",
-                        color: "#94a3b8",
+                      "&.Mui-disabled": {
+                        backgroundColor: "#F9FAFB",
+                        borderColor: "#E5E7EB",
+                        color: "#9CA3AF",
                       },
                     }}
                   >
-                    Reject
-                  </Button>
+                    {bulkActionLoading ? (
+                      <CircularProgress size={16} color="inherit" />
+                    ) : (
+                      <CloseRounded />
+                    )}
+                  </IconButton>
+                </span>
+              </Tooltip>
+
 
                   {/* Divider */}
                   <Divider
