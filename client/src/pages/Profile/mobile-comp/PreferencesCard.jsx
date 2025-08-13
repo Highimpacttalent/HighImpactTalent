@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react"; // Import useMemo
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Typography,
@@ -6,8 +6,8 @@ import {
   Tab,
   Card,
   IconButton,
-  TextField,
   Button,
+  TextField,
   Grid,
   Chip,
   CircularProgress,
@@ -21,29 +21,26 @@ import Select from "react-select";
 
 const PreferencesCard = ({ userInfo }) => {
   const dispatch = useDispatch();
-  const user = useSelector((state) => state.user);
+  const user = useSelector((state) => state.user); // Assume user contains the token and potentially updated jobPreferences
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [formData, setFormData] = useState({
     workMode: [],
     jobType: [],
-    preferredLocations: [], // This will store the actual values to be saved
+    preferredLocations: [], 
     expectedSalary: "",
   });
 
-  const [cities, setCities] = useState([]);
-  // This state tracks the selected options for the react-select component
+  
   const [selectedLocations, setSelectedLocations] = useState([]);
-  // This state tracks the value in the 'Other' text field
   const [otherLocation, setOtherLocation] = useState("");
-
-  // State to store validation errors for each field
   const [validationErrors, setValidationErrors] = useState({
     workMode: "",
     jobType: "",
-    preferredLocations: "", // Covers both empty selection and empty 'Other' text
+    preferredLocations: "", 
     expectedSalary: "",
   });
+
 
   const workModeOptions = ["Remote", "Hybrid", "Work From Office"].map((option) => ({
     value: option,
@@ -56,107 +53,84 @@ const PreferencesCard = ({ userInfo }) => {
       label: option,
     })
   );
-
-  // Fetch cities from CSV
+  const [cities, setCities] = useState([]);
   useEffect(() => {
     const fetchCities = async () => {
       try {
-        const response = await fetch("/cities.csv"); // Make sure this path is correct for your project structure
+        const response = await fetch("/cities.csv");
         const text = await response.text();
         const rows = text.split("\n");
         const cityList = rows
-          .slice(1)
+          .slice(1) 
           .map((row) => row.trim())
           .filter(Boolean)
-          .sort();
-        setCities([...new Set(cityList)]);
+          .sort(); 
+        setCities([...new Set(cityList)]); 
       } catch (error) {
         console.error("Error loading cities:", error);
         setCities([]);
       }
     };
     fetchCities();
-  }, []); // Run once on mount
-
-  // Effect to load user data into form state when userInfo prop changes
+  }, []); 
   useEffect(() => {
     if (userInfo) {
       const initialData = {
         workMode: userInfo.preferredWorkModes || [],
         jobType: userInfo.preferredWorkTypes || [],
-        preferredLocations: userInfo.preferredLocations || [], // This is the saved value(s)
+        preferredLocations: userInfo.preferredLocations || [],
         expectedSalary: userInfo.expectedMinSalary || "",
       };
-
       setFormData(initialData);
-
-      // Determine initial selectedLocations for react-select and otherLocation text
-      let initialSelected = [];
-      let initialOtherLocation = "";
-
-      if (initialData.preferredLocations && initialData.preferredLocations.length > 0) {
-          const savedLocations = initialData.preferredLocations;
-          // If there's only one saved location and it's not in the cities list, assume it's a custom 'Other' location
-          if (savedLocations.length === 1 && cities.length > 0 && !cities.includes(savedLocations[0])) {
+      let initialSelected = (initialData.preferredLocations || []).map((loc) => ({
+        value: loc,
+        label: loc,
+      }));
+       if (initialData.preferredLocations.length === 1 && cities.length > 0) {
+           const savedLocation = initialData.preferredLocations[0];
+           if (!cities.includes(savedLocation)) {
                initialSelected = [{ value: "Other", label: "Other" }];
-               initialOtherLocation = savedLocations[0]; // Set the custom value
+               setOtherLocation(savedLocation);
            } else {
-               // Otherwise, map the saved locations to react-select options
-               initialSelected = savedLocations.map((loc) => ({
-                   value: loc,
-                   label: loc,
-               }));
-               initialOtherLocation = ""; // Ensure otherLocation is empty if not 'Other'
+               initialSelected = [{ value: savedLocation, label: savedLocation }];
+               setOtherLocation(""); 
            }
-      }
+       } else if (initialData.preferredLocations.length > 1) {
+           initialSelected = (initialData.preferredLocations || []).map((loc) => ({
+               value: loc,
+               label: loc,
+           }));
+           setOtherLocation("");
+       } else {
+            initialSelected = [];
+            setOtherLocation("");
+       }
 
       setSelectedLocations(initialSelected);
-      setOtherLocation(initialOtherLocation);
-
-      // Note: Validation is not run here on load, it will run on handleEditClick
     }
-  }, [userInfo, cities]); // Depend on userInfo and cities (since cities affect interpretation of saved location)
-
-  // Validation function - adapted to take relevant state pieces
+  }, [userInfo, cities]); 
   const validateForm = (currentFormData, currentSelectedLocations, currentOtherLocation) => {
     const errors = {};
-
-    // Validate Work Mode (Required - at least one)
     if (!currentFormData.workMode || currentFormData.workMode.length === 0) {
       errors.workMode = "At least one Work Mode is required.";
     } else {
       errors.workMode = "";
     }
-
-    // Validate Job Type (Required - at least one)
     if (!currentFormData.jobType || currentFormData.jobType.length === 0) {
       errors.jobType = "At least one Job Type is required.";
     } else {
       errors.jobType = "";
     }
-
-    // Validate Preferred Locations (Required - at least one + handle 'Other' text)
-    // Validation logic should use the state variables that directly reflect user interaction
-     if (!currentSelectedLocations || currentSelectedLocations.length === 0) {
-         errors.preferredLocations = "At least one Preferred Location is required.";
-     } else {
-         // Check if 'Other' is selected in the react-select component
-         const otherSelected = currentSelectedLocations.some(opt => opt.value === "Other");
-         if (otherSelected) {
-              // If 'Other' is selected, check if the 'Other' text field is empty
-             if (!currentOtherLocation || currentOtherLocation.trim() === "") {
-                 errors.preferredLocations = "Please specify the other location.";
-             } else {
-                 errors.preferredLocations = ""; // Clear error if 'Other' text is provided
-             }
-         } else {
-             // If 'Other' is NOT selected, just ensure at least one location was picked (already checked above)
-             errors.preferredLocations = ""; // Clear error if valid selection made
-         }
-     }
-
-
-    // Validate Expected Salary (Required, Numeric, Max 1000, No negatives)
+    if (!currentSelectedLocations || currentSelectedLocations.length === 0) {
+      errors.preferredLocations = "At least one Preferred Location is required.";
+    } else {
+        const otherSelected = currentSelectedLocations.some(opt => opt.value === "Other");
+        if (otherSelected && (!currentOtherLocation || currentOtherLocation.trim() === "")) {
+             errors.preferredLocations = "Please specify the other location.";
+        } else {
+             errors.preferredLocations = ""; 
+        }
+    }
     const salary = parseFloat(currentFormData.expectedSalary);
     if (!currentFormData.expectedSalary || currentFormData.expectedSalary.trim() === "") {
          errors.expectedSalary = "Expected Salary is required.";
@@ -165,11 +139,11 @@ const PreferencesCard = ({ userInfo }) => {
     } else if (salary > 1000) {
       errors.expectedSalary = "Expected Salary cannot exceed 1000 LPA.";
     }
-     else if (salary < 0) {
+     else if (salary < 0) { 
         errors.expectedSalary = "Salary cannot be negative.";
      }
      else {
-      errors.expectedSalary = ""; // Clear error if valid
+      errors.expectedSalary = ""; 
     }
 
     return errors;
@@ -182,24 +156,18 @@ const PreferencesCard = ({ userInfo }) => {
       padding: 4,
       width: "100%",
       fontSize: "0.875rem",
-      borderRadius: 4,
-      borderColor: state.isFocused ? '#3B82F6' : provided.borderColor,
-      boxShadow: state.isFocused ? '0 0 0 1px #3B82F6' : null,
-      // Add error border based on validationErrors state
-      border: validationErrors.workMode && state.selectProps.name === 'workMode' ? '1px solid red' :
-              validationErrors.jobType && state.selectProps.name === 'jobType' ? '1px solid red' :
-              validationErrors.preferredLocations && state.selectProps.name === 'preferredLocations' ? '1px solid red' :
-              provided.border,
-
+      borderRadius: 4, 
+      borderColor: state.isFocused ? '#3B82F6' : provided.borderColor, 
+      boxShadow: state.isFocused ? '0 0 0 1px #3B82F6' : null, 
     }),
      multiValue: (provided) => ({
          ...provided,
-         backgroundColor: "#E3EDFF",
-         color: "#474E68",
-         borderRadius: 16,
+         backgroundColor: "#E3EDFF", // Chip background color
+         color: "#474E68", // Chip text color
+         borderRadius: 16, // Chip border radius
          fontFamily: "Poppins",
-         fontSize: "12px",
-         margin: "2px",
+         fontSize: "12px", // Smaller font size for chips
+         margin: "2px", // Spacing between chips
      }),
       multiValueLabel: (provided) => ({
           ...provided,
@@ -210,47 +178,46 @@ const PreferencesCard = ({ userInfo }) => {
          ...provided,
           color: "#474E68",
          ':hover': {
-             backgroundColor: '#FFDCDC',
-             color: '#D9534F',
+             backgroundColor: '#FFDCDC', // Hover background
+             color: '#D9534F', // Hover icon color
           },
       }),
     menu: (provided) => ({
       ...provided,
       boxShadow: "0 2px 10px rgba(0, 0, 0, 0.1)",
       border: "1px solid #d1d5db",
-      zIndex: 9999,
+      zIndex: 9999, // Ensure menu is above other elements
     }),
     option: (provided, state) => ({
       ...provided,
-      backgroundColor: state.isSelected ? "#E3EDFF" : "white",
-      color: state.isSelected ? "#474E68" : "black",
+      backgroundColor: state.isSelected ? "#E3EDFF" : "white", // Selected option background
+      color: state.isSelected ? "#474E68" : "black", // Selected option text color
       "&:hover": {
-        backgroundColor: "#f3f4f6",
+        backgroundColor: "#f3f4f6", // Hover background
       },
     }),
      placeholder: (provided) => ({
          ...provided,
-         color: "#808195",
+         color: "#808195", // Placeholder color
          fontSize: "0.875rem",
      }),
       dropdownIndicator: (provided) => ({
           ...provided,
-           padding: 4,
+           padding: 4, // Adjust padding
       }),
        clearIndicator: (provided) => ({
           ...provided,
-           padding: 4,
+           padding: 4, // Adjust padding
       }),
        indicatorSeparator: (provided) => ({
             ...provided,
-             display: 'none',
+             display: 'none', // Hide the separator line
        }),
   };
 
-
   const handleEditClick = () => {
     setIsEditing(true);
-    // Validate current data when entering edit mode to show initial errors if any
+    // Validate current data when entering edit mode
     const initialErrors = validateForm(formData, selectedLocations, otherLocation);
     setValidationErrors(initialErrors);
   };
@@ -266,26 +233,33 @@ const PreferencesCard = ({ userInfo }) => {
       };
       setFormData(initialData);
 
-       let initialSelected = [];
-       let initialOtherLocation = "";
+       let initialSelected = (initialData.preferredLocations || []).map((loc) => ({
+           value: loc,
+           label: loc,
+       }));
 
-       if (initialData.preferredLocations && initialData.preferredLocations.length > 0) {
-           const savedLocations = initialData.preferredLocations;
-           // If only one saved location and not a city, assume it's custom 'Other'
-           if (savedLocations.length === 1 && cities.length > 0 && !cities.includes(savedLocations[0])) {
+       // Re-apply logic to determine if it was a custom 'Other' location
+       if (initialData.preferredLocations.length === 1 && cities.length > 0) {
+            const savedLocation = initialData.preferredLocations[0];
+            if (!cities.includes(savedLocation)) {
                 initialSelected = [{ value: "Other", label: "Other" }];
-                initialOtherLocation = savedLocations[0];
+                setOtherLocation(savedLocation);
             } else {
-                initialSelected = savedLocations.map((loc) => ({
-                    value: loc,
-                    label: loc,
-                }));
-                initialOtherLocation = "";
+                 initialSelected = [{ value: savedLocation, label: savedLocation }];
+                 setOtherLocation("");
             }
+       } else if (initialData.preferredLocations.length > 1) {
+           initialSelected = (initialData.preferredLocations || []).map((loc) => ({
+               value: loc,
+               label: loc,
+           }));
+           setOtherLocation("");
+       } else {
+           initialSelected = [];
+           setOtherLocation("");
        }
 
       setSelectedLocations(initialSelected);
-      setOtherLocation(initialOtherLocation);
     }
     setIsEditing(false);
      // Clear validation errors when cancelling
@@ -297,7 +271,7 @@ const PreferencesCard = ({ userInfo }) => {
      });
   };
 
-  const handleSelectChange = (field) => (selectedOptions) => {
+  const handleSelectChange = (field, selectedOptions) => {
     const selectedValues = selectedOptions ? selectedOptions.map((option) => option.value) : [];
     const newFormData = {
       ...formData,
@@ -306,7 +280,7 @@ const PreferencesCard = ({ userInfo }) => {
     setFormData(newFormData);
 
     // Validate after state update
-    // Note: Locations validation needs selectedLocations and otherLocation
+    // Note: Validation of 'locations' relies on selectedLocations and otherLocation states
     const updatedErrors = validateForm(newFormData, selectedLocations, otherLocation);
     setValidationErrors(updatedErrors);
   };
@@ -316,56 +290,58 @@ const PreferencesCard = ({ userInfo }) => {
     const hasOther = newLocations.some(opt => opt.value === "Other");
 
     let limitedLocations;
-    let updatedOtherLocation = otherLocation; // Keep existing otherLocation value by default
-
     if (hasOther) {
-        // If 'Other' is selected, keep only 'Other' in the selection
+        // If 'Other' is selected, ensure only 'Other' is in the list and clear other locations
         limitedLocations = newLocations.filter(opt => opt.value === "Other");
-        // If 'Other' was just selected, and otherLocation is empty, don't clear it immediately.
-        // The validation will handle the required text input.
+         // Keep existing otherLocation text if available, or clear if 'Other' was just added
+        // The formData update will happen in handleOtherLocationChange if text exists,
+        // or will be handled below if 'Other' was just selected and text is empty.
     } else {
         // Limit to 5 locations if 'Other' is not selected
         limitedLocations = newLocations.slice(0, 5);
-         updatedOtherLocation = ""; // Clear otherLocation if 'Other' is deselected
+         setOtherLocation(""); // Clear otherLocation if 'Other' is deselected
     }
 
     setSelectedLocations(limitedLocations);
-    setOtherLocation(updatedOtherLocation); // Update otherLocation state
 
-    // Update formData based on the new selectedLocations and potentially cleared otherLocation
-    const newFormData = {
-        ...formData,
-        preferredLocations: hasOther
-            ? (updatedOtherLocation.trim() !== "" ? [updatedOtherLocation] : []) // If 'Other' selected & text exists, use text
-            : limitedLocations.map(loc => loc.value), // Otherwise use selected city values
-    };
+    // Update formData based on the new selectedLocations list
+     const newFormData = {
+         ...formData,
+         preferredLocations: hasOther
+             ? (otherLocation.trim() !== "" ? [otherLocation] : []) // If 'Other' selected and text exists, use text
+             : limitedLocations.map(loc => loc.value), // Otherwise use selected city values
+     };
     setFormData(newFormData);
 
-
-     // Validate after state update with the new states
-    const updatedErrors = validateForm(newFormData, limitedLocations, updatedOtherLocation);
+     // Validate after state update (use the updated formData for location validation)
+     const updatedErrors = validateForm(newFormData, limitedLocations, otherLocation);
     setValidationErrors(updatedErrors);
   };
 
 
   const handleOtherLocationChange = (e) => {
     const value = e.target.value;
-    setOtherLocation(value); // Update otherLocation state
+    setOtherLocation(value);
 
     // Update formData.preferredLocations only if "Other" is selected in react-select
     const hasOther = selectedLocations.some(loc => loc.value === "Other");
-    let newFormData = formData; // Start with current formData
+    let newFormData = formData;
     if (hasOther) {
        newFormData = {
           ...formData,
           preferredLocations: [value], // Replace the placeholder/empty array with the custom value
        };
-       setFormData(newFormData); // Update formData state if needed
+       setFormData(newFormData);
+    } else {
+        // If "Other" was deselected but the text field somehow still has value,
+        // clear it or ignore its value for formData unless 'Other' is re-selected.
+        // In this implementation, we clear otherLocation if 'Other' is deselected in handleLocationChange.
+        // So this case shouldn't happen unless there's a complex interaction.
+        // We'll rely on the logic in handleLocationChange and the validation to cover this.
     }
-    // Note: If 'Other' is NOT selected in react-select, changing this text field
-    // does NOT affect formData.preferredLocations in this logic, which is correct.
 
-    // Validate after state update using the potentially updated formData and the new otherLocation value
+
+    // Validate after state update (use the potentially updated formData and the new otherLocation)
     const updatedErrors = validateForm(newFormData, selectedLocations, value);
     setValidationErrors(updatedErrors);
   };
@@ -377,7 +353,7 @@ const PreferencesCard = ({ userInfo }) => {
       ...formData,
       [field]: value,
     };
-    setFormData(newFormData); // Update formData state
+    setFormData(newFormData);
 
      // Validate after state update
      const updatedErrors = validateForm(newFormData, selectedLocations, otherLocation);
@@ -385,7 +361,8 @@ const PreferencesCard = ({ userInfo }) => {
   };
 
   const handleSaveClick = async () => {
-    // Perform final validation using the current states
+    // Perform final validation before saving
+    // Note: We need the latest states for validation
     const finalErrors = validateForm(formData, selectedLocations, otherLocation);
     setValidationErrors(finalErrors);
 
@@ -394,21 +371,25 @@ const PreferencesCard = ({ userInfo }) => {
 
     if (!isValid) {
       console.log("Validation failed. Cannot save.");
-      // The errors are already displayed via setValidationErrors
       return; // Stop the save process if validation fails
     }
 
     // If validation passes, prepare payload and proceed with saving
     setIsSaving(true);
 
-    // The formData.preferredLocations state should already hold the correct final values
-    // (custom text if 'Other' selected, or city names otherwise)
+    // The formData.preferredLocations state already contains the correct value
+    // ('Other' text if 'Other' is selected, or city names otherwise)
+    // due to the updates in handleLocationChange and handleOtherLocationChange.
     const payload = {
         ...formData,
-        // Ensure salary is sent as a number. parseFloat results in NaN if not a number,
-        // but validation ensures it *is* a valid number <= 1000 here.
+        // Ensure salary is sent as a number if backend expects it as such.
+        // parseFloat handles potential non-numeric input gracefully (results in NaN),
+        // which our validation already catches. Sending NaN might be okay or not
+        // depending on the backend; a safe bet is to send null or 0 if it's not a valid number.
+        // However, our validation ensures it *is* a valid number <= 1000 if we reach here.
         expectedSalary: parseFloat(formData.expectedSalary)
     };
+
 
     console.log("Payload being sent:", payload); // Keep if needed for debugging
 
@@ -419,24 +400,23 @@ const PreferencesCard = ({ userInfo }) => {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${user?.token}`,
+            Authorization: `Bearer ${user?.token}`, // Ensure token is included
           },
           body: JSON.stringify({
-            user: { userId: userInfo?._id },
-            jobPreferences: payload, // Send the validated payload
+            user: { userId: userInfo?._id }, // Check user ID structure expected by backend
+            jobPreferences: payload,
           }),
         }
       );
 
       const result = await response.json();
       if (response.ok) {
-        // Update the user state in Redux
-        // Assuming the API response contains the updated jobPreferences object
-        const updatedUser = {
-             ...user, // Keep other user properties
-             jobPreferences: result.jobPreferences // Use the updated data from the API response
-        };
-        dispatch(UpdateUser(updatedUser)); // Dispatch action
+        // FIXED: Update Redux with the complete updated user object from the backend
+        console.log("Backend response:", result); // Debug log
+        
+        // The backend returns the complete updated user object in result.user
+        dispatch(UpdateUser(result.user)); // Use the complete user object from backend
+        
         setIsEditing(false);
          // Clear validation errors on successful save
          setValidationErrors({
@@ -447,25 +427,27 @@ const PreferencesCard = ({ userInfo }) => {
          });
       } else {
         console.error("Failed to save preferences:", result.message);
-        // Optionally display API error message to the user
+        // Optionally display a general error message to the user
       }
     } catch (error) {
       console.error("Error saving preferences:", error);
-       // Optionally display network/other error message to the user
+       // Optionally display a general error message to the user
     } finally {
       setIsSaving(false);
     }
   };
 
   // Prepare location options with "Other" at the bottom
-  // Use useMemo to prevent recreating this array unnecessarily on every render
-  const locationOptions = useMemo(() => {
+  // Memoize this if cities list is very large or frequently updated
+  const locationOptions = React.useMemo(() => {
       const cityOptions = cities.map((city) => ({ value: city, label: city }));
       return [...cityOptions, { value: "Other", label: "Other" }];
-  }, [cities]); // Only re-calculate if the cities list changes
+  }, [cities]); // Recreate options only if cities list changes
+
 
   // Determine if the Save button should be disabled
-  const isSaveButtonDisabled = isSaving || Object.values(validationErrors).some(error => error !== '');
+   const isSaveButtonDisabled = isSaving || Object.values(validationErrors).some(error => error !== '');
+
 
   return (
     <Box>
@@ -494,11 +476,12 @@ const PreferencesCard = ({ userInfo }) => {
         {isEditing ? (
           <Box sx={{ display: "flex", gap: 1 }}>
             <Button
-              variant="contained" // Use contained for primary action
+              variant="contained" // Changed to contained for better visual distinction of primary action
               onClick={handleSaveClick}
-              disabled={isSaveButtonDisabled} // Disable based on validation/saving state
+              disabled={isSaveButtonDisabled} // Use the calculated disabled state
               sx={{
-                height: "35px", // Added height
+                 height: "35px", // Added height for consistency
+                // Style disabled state differently
                 bgcolor: isSaveButtonDisabled ? "grey.400" : "#3C7EFC",
                 color: "white",
                 "&:hover": { bgcolor: isSaveButtonDisabled ? "grey.400" : "#3361cb" },
@@ -584,6 +567,7 @@ const PreferencesCard = ({ userInfo }) => {
                 Preferred Locations
               </Typography>
               <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
+                 {/* Display logic for saved 'Other' location */}
                 {formData.preferredLocations && formData.preferredLocations.length > 0 ? (
                   formData.preferredLocations.map((location) => (
                     <Chip
@@ -630,15 +614,22 @@ const PreferencesCard = ({ userInfo }) => {
               </Typography>
               <Select
                 isMulti
-                name="workMode" // Add name prop to Select for customStyles
                 options={workModeOptions}
                 value={formData.workMode.map((mode) => ({
                   value: mode,
                   label: mode,
                 }))}
-                onChange={handleSelectChange("workMode")}
+                onChange={(selected) => handleSelectChange("workMode", selected)}
                 styles={customStyles}
                 placeholder="Select work modes..."
+                // Add error border and helper text for Select component manually
+                 sx={{
+                    borderColor: validationErrors.workMode ? 'red' : undefined,
+                    '&:hover': {
+                       borderColor: validationErrors.workMode ? 'red' : undefined,
+                    },
+                    // react-select doesn't have an 'error' prop like MUI TextField
+                 }}
               />
                {validationErrors.workMode && (
                   <Typography variant="caption" color="error" sx={{ mt: 0.5, display: 'block' }}>
@@ -654,16 +645,21 @@ const PreferencesCard = ({ userInfo }) => {
               </Typography>
               <Select
                 isMulti
-                 name="jobType" // Add name prop
                 options={workTypeOptions}
                 value={formData.jobType.map((type) => ({
                   value: type,
                   label: type,
                 }))}
-                onChange={handleSelectChange("jobType")}
+                onChange={(selected) => handleSelectChange("jobType", selected)}
                 styles={customStyles}
                 placeholder="Select job types..."
                 menuPosition="fixed"
+                 sx={{
+                    borderColor: validationErrors.jobType ? 'red' : undefined,
+                    '&:hover': {
+                       borderColor: validationErrors.jobType ? 'red' : undefined,
+                    },
+                 }}
               />
                {validationErrors.jobType && (
                   <Typography variant="caption" color="error" sx={{ mt: 0.5, display: 'block' }}>
@@ -679,10 +675,9 @@ const PreferencesCard = ({ userInfo }) => {
               </Typography>
               <Select
                 isMulti
-                 name="preferredLocations" // Add name prop
                 options={locationOptions}
-                value={selectedLocations} // Controlled by selectedLocations state
-                onChange={handleLocationChange} // Custom handler for locations
+                value={selectedLocations}
+                onChange={handleLocationChange}
                 styles={customStyles}
                 placeholder="Search or select locations..."
                 isClearable
@@ -692,9 +687,14 @@ const PreferencesCard = ({ userInfo }) => {
                 menuPortalTarget={document.body}
                 menuPosition="fixed"
                 menuPlacement="bottom"
+                 sx={{
+                    borderColor: validationErrors.preferredLocations ? 'red' : undefined,
+                    '&:hover': {
+                       borderColor: validationErrors.preferredLocations ? 'red' : undefined,
+                    },
+                 }}
               />
-               {/* Display error text below the Select component */}
-               {validationErrors.preferredLocations && !selectedLocations.some((loc) => loc.value === "Other") && (
+               {validationErrors.preferredLocations && (
                   <Typography variant="caption" color="error" sx={{ mt: 0.5, display: 'block' }}>
                       {validationErrors.preferredLocations}
                   </Typography>
@@ -706,28 +706,16 @@ const PreferencesCard = ({ userInfo }) => {
                   size="small"
                   placeholder="Enter your location"
                   value={otherLocation}
-                  onChange={handleOtherLocationChange} // Custom handler for 'Other' text
-                   // Show error state on this TextField if the location error exists
-                   error={!!validationErrors.preferredLocations}
-                   // Display helper text here *only* if the error is specific to the 'Other' field being empty
-                   helperText={
-                        validationErrors.preferredLocations && selectedLocations.some((loc) => loc.value === "Other")
-                        ? validationErrors.preferredLocations
-                        : '' // Don't show helper text otherwise
-                   }
+                  onChange={handleOtherLocationChange}
+                   error={!!validationErrors.preferredLocations} // Use location error for this too
+                   helperText={validationErrors.preferredLocations} // Display error here if Other text is missing
                    FormHelperTextProps={{
-                         sx: { mt: validationErrors.preferredLocations ? 0.5 : 0, mx: 0 },
+                        // Add a class or style to position helper text correctly if needed
+                         sx: { mt: validationErrors.preferredLocations ? 0.5 : 0, mx: 0 }, // Adjust margin if error is shown
                    }}
                   sx={{ mt: 1 }}
                 />
               )}
-               {/* Display error text below the Other location TextField if it's the source of the error */}
-               {/* This is redundant with the helperText on the TextField, but kept for clarity if needed */}
-              {/* {validationErrors.preferredLocations && selectedLocations.some((loc) => loc.value === "Other") && (
-                  <Typography variant="caption" color="error" sx={{ mt: 0.5, display: 'block' }}>
-                      {validationErrors.preferredLocations}
-                  </Typography>
-              )} */}
             </Grid>
 
             {/* Expected Salary */}
@@ -740,7 +728,6 @@ const PreferencesCard = ({ userInfo }) => {
                 size="small"
                 type="number"
                 placeholder="Enter expected salary"
-                name="expectedSalary" // Add name prop
                 value={formData.expectedSalary}
                 onChange={handleInputChange("expectedSalary")}
                 error={!!validationErrors.expectedSalary} // Set error prop based on state
