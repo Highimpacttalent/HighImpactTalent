@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import {
   Box,
   Typography,
@@ -60,6 +61,15 @@ const loadFromSession = (key, fallback, jobId) => {
   } catch {
     return fallback;
   }
+};
+
+const clearJobFiltersFromSession = (jobId) => {
+  sessionStorage.removeItem(`${jobId}_apps_page`);
+  sessionStorage.removeItem(`${jobId}_apps_limit`);
+  sessionStorage.removeItem(`${jobId}_apps_sort`);
+  sessionStorage.removeItem(`${jobId}_apps_tab`);
+  sessionStorage.removeItem(`${jobId}_apps_filters`);
+  sessionStorage.removeItem(`${jobId}_apps_activeStep`);
 };
 
 const JobApplications = () => {
@@ -170,6 +180,25 @@ const JobApplications = () => {
     sessionStorage.setItem(`${jobId}_apps_filters`, JSON.stringify(filters));
     sessionStorage.setItem(`${jobId}_apps_activeStep`, JSON.stringify(activeStep));
   }, [jobId, currentPage, limit, sortOption, matchTab, filters, activeStep]);
+
+
+  const location = useLocation();
+
+  useEffect(() => {
+    return () => {
+      // This cleanup runs when JobApplications unmounts
+      const nextPath = window.location.pathname;
+
+      // Allow going to a candidate profile for this job (adjust path check to your route)
+      const profilePattern = new RegExp(`/view-profile`);
+
+      if (!profilePattern.test(nextPath)) {
+        // If it's NOT a profile page, clear stored filters for this job
+        clearJobFiltersFromSession(jobId);
+      }
+    };
+  }, [jobId]);
+
 
   // Fetch applications with server-side filtering
   const fetchApplications = async (
