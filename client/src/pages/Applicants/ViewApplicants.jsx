@@ -2586,26 +2586,10 @@ const handleBulkDownload = async () => {
         </DialogActions>
       </Dialog>
 
-      {/** Error SnackBar */}
+      {/* Global Snackbar */}
       <Snackbar
         open={snackbar.open}
-        autoHideDuration={3000}
-        onClose={handleSnackbarClose}
-        anchorOrigin={{ vertical: "top", horizontal: "center" }}
-      >
-        <Alert
-          onClose={handleSnackbarClose}
-          severity={snackbar.severity}
-          sx={{ width: "100%" }}
-        >
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
-
-      {/* Enhanced Success/Error Snackbar */}
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={6000}
+        autoHideDuration={4000}
         onClose={() => setSnackbar({ ...snackbar, open: false })}
         anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
       >
@@ -2633,6 +2617,7 @@ const handleBulkDownload = async () => {
           {snackbar.message}
         </Alert>
       </Snackbar>
+
     </Box>
   );
 };
