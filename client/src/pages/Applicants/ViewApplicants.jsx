@@ -675,6 +675,7 @@ const JobApplications = () => {
     setAllApplications(apps);
     setApplications(apps);
     setFilteredApps(apps);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   // Filters Content Component
