@@ -358,7 +358,7 @@ export const sendStatusUpdateEmail = async (
 
         <div class="footer">
           <p style="margin:12px 0 0 0;">
-            ${companyName} • © ${currentYear} • 📧 <a href="mailto:highimpacttalentenquiry@gmail.com">highimpacttalentenquiry@gmail.com</a>
+            ${companyName} • © ${currentYear} • 📧 <a href="mailto:update@highimpacttalent.com">update@highimpacttalent.com</a>
           </p>
           <p style="margin:8px 0 0 0;">
             You are receiving this because you applied for a role via ${companyName}. <a href="#">Manage preferences</a> • <a href="#">Unsubscribe</a>
