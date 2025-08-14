@@ -756,14 +756,7 @@ const ViewProfile = () => {
                 }
               >
                 <Grid container spacing={3}>
-                  <Grid item xs={12} sm={6}>
-                    <InfoField
-                      label="Expected Salary"
-                      value={
-                        `${userData?.expectedMinSalary} LPA` || "Not specified"
-                      }
-                    />
-                  </Grid>
+                  
                   <Grid item xs={12} sm={6}>
                     <InfoField
                       label="Work Type Preference"
