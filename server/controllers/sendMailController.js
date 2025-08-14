@@ -373,9 +373,9 @@ export const sendStatusUpdateEmail = async (
   const plainText = `${content.subject}\n\n${content.body.replace(/<\/?[^>]+(>|$)/g, "").replace(/\s+/g, " ").trim()}\n\nVisit: https://www.highimpacttalent.com\n\nTeam ${companyName}`;
 
   const mailOptions = {
-    from: {
-      name: companyName,
-      address: process.env.EMAIL_FROM || "hello@highimpacttalent.com"
+    from: { 
+      name: "High Impact Talent",
+      address: "hello@highimpacttalent.com" 
     },
     to: email,
     subject: content.subject,
@@ -387,8 +387,8 @@ export const sendStatusUpdateEmail = async (
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
+        user: "developerhighimpact@gmail.com",
+        pass: "lpyu zhks kpne qrsc",
       },
       pool: true,
       maxConnections: 1,
