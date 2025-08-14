@@ -76,7 +76,7 @@ export function highlight(text, keywords) {
         {part}
       </span>
     ) : (
-      <span key={idx}>{part}</span>
+      <span key={idx} style={{fontWeight: 500}}>{part}</span>
     )
   );
 }
@@ -613,7 +613,6 @@ const ViewProfile = () => {
 
               {/* Action Buttons */}
               <Stack spacing={2}>
-
                 {currentStatus === "Hired" ? (
                   <Button
                     fullWidth
@@ -727,10 +726,14 @@ const ViewProfile = () => {
                   <Grid item xs={12} sm={6}>
                     <InfoField
                       label="Current Designation"
-                      value={`${highlight(
-                        userData?.currentDesignation || "Not Provided",
-                        filterKeywords
-                      )}`}
+                      value={
+                        <span style={{ fontWeight: 700 }}>
+                          {highlight(
+                            userData.currentDesignation || "",
+                            filterKeywords
+                          )}
+                        </span>
+                      }
                     />
                   </Grid>
                   <Grid item xs={12} sm={6}>
@@ -756,7 +759,6 @@ const ViewProfile = () => {
                 }
               >
                 <Grid container spacing={3}>
-                  
                   <Grid item xs={12} sm={6}>
                     <InfoField
                       label="Work Type Preference"
