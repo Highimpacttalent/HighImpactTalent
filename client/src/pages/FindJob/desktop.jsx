@@ -24,6 +24,8 @@ import {
   FormControlLabel,
   Chip,
   Stack,
+  TextField,
+  InputAdornment,
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { apiRequest } from "../../utils"; // Ensure this utility is correctly set up for API calls
@@ -45,6 +47,10 @@ const DesktopView = () => {
   const [isFetching, setIsFetching] = useState(false);
   const [selectedTab, setSelectedTab] = useState(0);
   const [filteredJobs, setFilteredJobs] = useState([]);
+  const [minExperience, setMinExperience] = useState('');
+  const [maxExperience, setMaxExperience] = useState('');
+  const [minSalary, setMinSalary] = useState('');
+  const [maxSalary, setMaxSalary] = useState('');
 
   // Search states - separate tracking states from actual query states
   const [searchKeyword, setSearchKeyword] = useState(searchKeywordProp || "");
@@ -120,30 +126,11 @@ const DesktopView = () => {
     "Kolkata",
     "Others",
   ];
-
-  // Frontend: Update experienceOptions to ensure proper ranges
-  const experienceOptions = [
-    { value: "0-2", label: "0-2 years" },
-    { value: "2-5", label: "2-5 years" },
-    { value: "5-8", label: "5-8 years" },
-    { value: "8-11", label: "8-11 years" },
-    { value: "11-100", label: "Over 11 years" },
-  ];
+  
 
   const workModeOptions = ["Remote", "Hybrid", "Work From Office"];
   const workTypeOptions = ["Full-Time", "Part-Time", "Contract", "Temporary"];
-  const salaryRangeOptions = [
-    "0-5",
-    "5-10",
-    "10-15",
-    "15-20",
-    "20-30",
-    "30-50",
-    "50-80",
-    "80-120",
-    "120-150",
-    "150-1000",
-  ];
+
   const datePostedOptions = [
     "Last 24 hours",
     "Last one week",
@@ -603,35 +590,129 @@ const DesktopView = () => {
           </Box>
 
           {/* Experience Filter */}
-          <Accordion
-            expanded={expandedAccordions.experience}
-            onChange={handleAccordionChange("experience")}
-            sx={{ mb: 2, boxShadow: "none" }}
-          >
-            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-              <Typography
-                variant="h6"
-                color="#404258"
-                fontFamily="Satoshi, sans-serif"
-              >
-                Experience{" "}
-                {experienceFilter.length > 0 && `(${experienceFilter.length})`}
-              </Typography>
-            </AccordionSummary>
-            <AccordionDetails>
-              <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-                {experienceOptions.map((option) => (
-                  <FilterOption
-                    key={option.value}
-                    label={option.label}
-                    value={option.value}
-                    state={experienceFilter}
-                    setState={setExperienceFilter}
-                  />
-                ))}
-              </Box>
-            </AccordionDetails>
-          </Accordion>
+            <Accordion
+              expanded={expandedAccordions.experience}
+              onChange={handleAccordionChange("experience")}
+              sx={{ mb: 2, boxShadow: "none" }}
+            >
+              <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                <Typography variant="h6" color="#404258" fontFamily="Satoshi, sans-serif">
+                  Experience (in years) {experienceFilter.length > 0 && `(${experienceFilter.length})`}
+                </Typography>
+              </AccordionSummary>
+              <AccordionDetails>
+                <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                  <Box sx={{ display: "flex", gap: 2 }}>
+                    <TextField
+                      label="Min Experience"
+                      type="number"
+                      value={minExperience}
+                      onChange={(e) => setMinExperience(e.target.value)}
+                      sx={{ flex: 1 }}
+                      InputProps={{
+                        endAdornment: <InputAdornment position="end"></InputAdornment>,
+                      }}
+                    />
+                    <TextField
+                      label="Max Experience"
+                      type="number"
+                      value={maxExperience}
+                      onChange={(e) => setMaxExperience(e.target.value)}
+                      sx={{ flex: 1 }}
+                      InputProps={{
+                        endAdornment: <InputAdornment position="end"></InputAdornment>,
+                      }}
+                    />
+                  </Box>
+                  <Button
+                    variant="contained"
+                    onClick={() => {
+                      if (minExperience && maxExperience) {
+                        const range = `${minExperience}-${maxExperience}`;
+                        if (!experienceFilter.includes(range)) {
+                          setExperienceFilter([...experienceFilter, range]);
+                        }
+                      }
+                    }}
+                    sx={{ alignSelf: 'flex-end' }}
+                  >
+                    Add Range
+                  </Button>
+                  <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
+                    {experienceFilter.map((range) => (
+                      <Chip
+                        key={range}
+                        label={range.includes('-') ? `${range} years` : `${range}+ years`}
+                        onDelete={() => setExperienceFilter(experienceFilter.filter(r => r !== range))}
+                        sx={{ mb: 1 }}
+                      />
+                    ))}
+                  </Box>
+                </Box>
+              </AccordionDetails>
+            </Accordion>
+
+            <Accordion
+              expanded={expandedAccordions.salary}
+              onChange={handleAccordionChange("salary")}
+              sx={{ mb: 2, boxShadow: "none" }}
+            >
+              <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                <Typography variant="h6" color="#404258" fontFamily="Satoshi, sans-serif">
+                  Salary Range (in LPA) {salaryRangeFilter.length > 0 && `(${salaryRangeFilter.length})`}
+                </Typography>
+              </AccordionSummary>
+              <AccordionDetails>
+                <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                  <Box sx={{ display: "flex", gap: 2 }}>
+                    <TextField
+                      label="Min Salary"
+                      type="number"
+                      value={minSalary}
+                      onChange={(e) => setMinSalary(e.target.value)}
+                      sx={{ flex: 1 }}
+                      InputProps={{
+                        endAdornment: <InputAdornment position="end"></InputAdornment>,
+                      }}
+                    />
+                    <TextField
+                      label="Max Salary"
+                      type="number"
+                      value={maxSalary}
+                      onChange={(e) => setMaxSalary(e.target.value)}
+                      sx={{ flex: 1 }}
+                      InputProps={{
+                        endAdornment: <InputAdornment position="end"></InputAdornment>,
+                      }}
+                    />
+                  </Box>
+                  <Button
+                    variant="contained"
+                    onClick={() => {
+                      if (minSalary && maxSalary) {
+                        const range = `${minSalary}-${maxSalary}`;
+                        if (!salaryRangeFilter.includes(range)) {
+                          setSalaryRangeFilter([...salaryRangeFilter, range]);
+                        }
+                      }
+                    }}
+                    sx={{ alignSelf: 'flex-end' }}
+                  >
+                    Add Range
+                  </Button>
+                  <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
+                    {salaryRangeFilter.map((range) => (
+                      <Chip
+                        key={range}
+                        label={`${range} LPA`}
+                        onDelete={() => setSalaryRangeFilter(salaryRangeFilter.filter(r => r !== range))}
+                        sx={{ mb: 1 }}
+                      />
+                    ))}
+                  </Box>
+                </Box>
+              </AccordionDetails>
+            </Accordion>
 
           {/* Work Mode Filter */}
           <Accordion
@@ -722,65 +803,6 @@ const DesktopView = () => {
                     setState={setLocationFilter}
                   />
                 ))}
-              </Box>
-            </AccordionDetails>
-          </Accordion>
-
-          {/* Salary Filter */}
-          <Accordion
-            expanded={expandedAccordions.salary}
-            onChange={handleAccordionChange("salary")}
-            sx={{ mb: 2, boxShadow: "none" }}
-          >
-            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-              <Typography
-                variant="h6"
-                color="#404258"
-                fontFamily="Satoshi, sans-serif"
-              >
-                Salary Range{" "}
-                {salaryRangeFilter.length > 0 &&
-                  `(${salaryRangeFilter.length})`}
-              </Typography>
-            </AccordionSummary>
-            <AccordionDetails>
-              <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-                {salaryRangeOptions.map((range) => {
-                  const [min, max] = range.split("-").map(Number);
-                  let displayText;
-
-                  if (min === 0 && max === 5) {
-                    displayText = "0-5 Lakhs";
-                  } else if (min === 5 && max === 10) {
-                    displayText = "5-10 Lakhs";
-                  } else if (min === 10 && max === 15) {
-                    displayText = "10-15 Lakhs";
-                  } else if (min === 15 && max === 20) {
-                    displayText = "15-20 Lakhs";
-                  } else if (min === 20 && max === 30) {
-                    displayText = "20-30 Lakhs";
-                  } else if (min === 30 && max === 50) {
-                    displayText = "30-50 Lakhs";
-                  } else if (min === 50 && max === 80) {
-                    displayText = "50-80 Lakhs";
-                  } else if (min === 80 && max === 120) {
-                    displayText = "80 Lakhs - 1.2 Crore";
-                  } else if (min === 120 && max === 150) {
-                    displayText = "1.2 - 1.5 Crore";
-                  } else if (min === 150 && max === 1000) {
-                    displayText = "1.5 Crore & Above";
-                  }
-
-                  return (
-                    <FilterOption
-                      key={range}
-                      label={displayText}
-                      value={range}
-                      state={salaryRangeFilter}
-                      setState={setSalaryRangeFilter}
-                    />
-                  );
-                })}
               </Box>
             </AccordionDetails>
           </Accordion>

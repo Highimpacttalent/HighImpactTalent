@@ -274,7 +274,6 @@ export const getJobPosts = async (req, res, next) => {
       matchStage.workMode = { $in: workModes };
     }
 
-    // Experience filter
     if (exp) {
       const experienceRanges = exp.split(',');
       const expConditions = [];
@@ -283,11 +282,43 @@ export const getJobPosts = async (req, res, next) => {
         if (range.includes('-')) {
           const [min, max] = range.split('-').map(Number);
           if (!isNaN(min) && !isNaN(max)) {
-            if (max === 100) {
-              expConditions.push({ experience: { $gte: min } });
-            } else {
-              expConditions.push({ experience: { $gte: min, $lt: max } });
-            }
+            expConditions.push({
+              $or: [
+                // Job has min/max experience and overlaps with filter range
+                {
+                  $and: [
+                    { "experience.minExperience": { $exists: true } },
+                    { "experience.maxExperience": { $exists: true } },
+                    { "experience.minExperience": { $lte: max } },
+                    { "experience.maxExperience": { $gte: min } }
+                  ]
+                },
+                // Job has only min experience and it's within filter range
+                {
+                  $and: [
+                    { "experience.minExperience": { $exists: true } },
+                    { "experience.maxExperience": { $exists: false } },
+                    { "experience.minExperience": { $lte: max } }
+                  ]
+                },
+                // Job has only max experience and it's within filter range
+                {
+                  $and: [
+                    { "experience.minExperience": { $exists: false } },
+                    { "experience.maxExperience": { $exists: true } },
+                    { "experience.maxExperience": { $gte: min } }
+                  ]
+                },
+                // Fallback for old data where experience is a single number
+                {
+                  $and: [
+                    { experience: { $type: "number" } },
+                    { experience: { $gte: min } },
+                    { experience: { $lte: max } }
+                  ]
+                }
+              ]
+            });
           }
         }
       });
@@ -298,7 +329,6 @@ export const getJobPosts = async (req, res, next) => {
       }
     }
 
-    // Salary filter with optimized numeric conversion
     if (salary) {
       const salaryRanges = salary.split(',');
       const salaryConditions = [];
@@ -307,13 +337,44 @@ export const getJobPosts = async (req, res, next) => {
         if (range.includes('-')) {
           const [min, max] = range.split('-').map(Number);
           if (!isNaN(min) && !isNaN(max)) {
-            const minSalary = min * 100000;
-            const maxSalary = max * 100000;
+            const minSalary = min;
+            const maxSalary = max;
             
             salaryConditions.push({
-              $and: [
-                { salary: { $type: "number", $gte: minSalary } },
-                { salary: { $lt: maxSalary } }
+              $or: [
+                // Job has min/max salary and overlaps with filter range
+                {
+                  $and: [
+                    { "salary.minSalary": { $exists: true } },
+                    { "salary.maxSalary": { $exists: true } },
+                    { "salary.minSalary": { $lte: maxSalary } },
+                    { "salary.maxSalary": { $gte: minSalary } }
+                  ]
+                },
+                // Job has only min salary and it's within filter range
+                {
+                  $and: [
+                    { "salary.minSalary": { $exists: true } },
+                    { "salary.maxSalary": { $exists: false } },
+                    { "salary.minSalary": { $lte: maxSalary } }
+                  ]
+                },
+                // Job has only max salary and it's within filter range
+                {
+                  $and: [
+                    { "salary.minSalary": { $exists: false } },
+                    { "salary.maxSalary": { $exists: true } },
+                    { "salary.maxSalary": { $gte: minSalary } }
+                  ]
+                },
+                // Fallback for old data where salary is a single number
+                {
+                  $and: [
+                    { salary: { $type: "number" } },
+                    { salary: { $gte: minSalary } },
+                    { salary: { $lte: maxSalary } }
+                  ]
+                }
               ]
             });
           }
@@ -325,7 +386,6 @@ export const getJobPosts = async (req, res, next) => {
         matchStage.$and.push({ $or: salaryConditions });
       }
     }
-
     // Date posted filter
     if (datePosted && !datePosted.includes("Any Time")) {
       const dateOptions = datePosted.split(',');
