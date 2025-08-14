@@ -726,15 +726,7 @@ const ViewProfile = () => {
                   <Grid item xs={12} sm={6}>
                     <InfoField
                       label="Current Designation"
-                      value={
-                        <span style={{ fontWeight: 700 }}>
-                          {highlight(
-                            userData.currentDesignation || "",
-                            filterKeywords
-                          )}
-                        </span>
-                      }
-                    />
+                      value={highlight(userData.currentDesignation || "", filterKeywords)} />
                   </Grid>
                   <Grid item xs={12} sm={6}>
                     <InfoField
