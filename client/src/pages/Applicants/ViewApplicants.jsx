@@ -53,9 +53,9 @@ import { saveAs } from 'file-saver';
 import GetAppIcon from '@mui/icons-material/GetApp';
 
 
-const loadFromSession = (key, fallback) => {
+const loadFromSession = (key, fallback, jobId) => {
   try {
-    const raw = sessionStorage.getItem(key);
+    const raw = sessionStorage.getItem(`${jobId}_${key}`);
     return raw != null ? JSON.parse(raw) : fallback;
   } catch {
     return fallback;
@@ -77,17 +77,17 @@ const JobApplications = () => {
   const [filteredApps, setFilteredApps] = useState([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(() =>
-    loadFromSession("apps_page", 1)
+    loadFromSession("apps_page", 1, jobId)
   );
 
   const [totalPages, setTotalPages] = useState(1);
   const [limit, setLimit] = useState(() =>
-    loadFromSession("apps_limit", 20)
+    loadFromSession("apps_limit", 20, jobId)
   );
   const [filterLoading, setFilterLoading] = useState(false);
   const [error, setError] = useState(null);
   const [activeStep, setActiveStep] = useState(
-    loadFromSession("apps_activeStep", 0)
+    loadFromSession("apps_activeStep", 0, jobId)
   );
   const [searchKeyword, setSearchKeyword] = useState("");
   const navigate = useNavigate();
@@ -103,10 +103,10 @@ const JobApplications = () => {
   const [cities, setCities] = useState();
   const currentUser = useSelector((state) => state.user.user);
   const [sortOption, setSortOption] = useState(() =>
-    loadFromSession("apps_sort", "matchHighToLow")
+    loadFromSession("apps_sort", "matchHighToLow", jobId)
   );
   const [matchTab, setMatchTab] = useState(() =>
-    loadFromSession("apps_tab", "all")
+    loadFromSession("apps_tab", "all", jobId)
   );
   const matchTiers = [
   { id: "all", label: "All" },
@@ -153,7 +153,7 @@ const JobApplications = () => {
       minSalary: "",
       maxSalary: "",
       matchPercentageTier: ""
-    })
+    }, jobId)
   );
   const [keywordInput, setKeywordInput] = useState("");
   const [locationInput, setLocationInput] = useState("");
@@ -161,20 +161,15 @@ const JobApplications = () => {
   const [screeningQuestions, setScreeningQuestions] = useState([]);
 
   useEffect(() => {
-    sessionStorage.setItem("apps_page", JSON.stringify(currentPage));
-    sessionStorage.setItem("apps_limit", JSON.stringify(limit));
-    sessionStorage.setItem("apps_sort", JSON.stringify(sortOption));
-    sessionStorage.setItem("apps_tab", JSON.stringify(matchTab));
-    sessionStorage.setItem("apps_filters", JSON.stringify(filters));
-    sessionStorage.setItem("apps_activeStep", JSON.stringify(activeStep));
-  }, [
-    currentPage,
-    limit,
-    sortOption,
-    matchTab,
-    filters,
-    activeStep,
-  ]); 
+    if (!jobId) return; // Ensure jobId is available
+
+    sessionStorage.setItem(`${jobId}_apps_page`, JSON.stringify(currentPage));
+    sessionStorage.setItem(`${jobId}_apps_limit`, JSON.stringify(limit));
+    sessionStorage.setItem(`${jobId}_apps_sort`, JSON.stringify(sortOption));
+    sessionStorage.setItem(`${jobId}_apps_tab`, JSON.stringify(matchTab));
+    sessionStorage.setItem(`${jobId}_apps_filters`, JSON.stringify(filters));
+    sessionStorage.setItem(`${jobId}_apps_activeStep`, JSON.stringify(activeStep));
+  }, [jobId, currentPage, limit, sortOption, matchTab, filters, activeStep]);
 
   // Fetch applications with server-side filtering
   const fetchApplications = async (
