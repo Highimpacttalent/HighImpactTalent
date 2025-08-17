@@ -46,6 +46,7 @@ const ExperienceHistory = ({ userId, experienceHistory, about }) => {
   const dispatch = useDispatch();
   const user = useSelector((state) => state.user);
   const [experiences, setExperiences] = useState(experienceHistory || []);
+  const [dateError, setDateError] = useState("");
   const [desc, setDesc] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [alert, setAlert] = useState({
@@ -95,17 +96,25 @@ const ExperienceHistory = ({ userId, experienceHistory, about }) => {
   };
 
   const handleFromChange = (date) => {
-    setNewExperience((prev) => ({
-      ...prev,
-      from: date ? date.toISOString() : null,
-    }));
+    const newFrom = date ? date.toISOString() : null;
+    setNewExperience((prev) => ({ ...prev, from: newFrom }));
+
+    if (newFrom && newExperience.to && dayjs(newFrom).isAfter(dayjs(newExperience.to))) {
+      setDateError('"From" date cannot be after "To" date.');
+    } else {
+      setDateError("");
+    }
   };
 
   const handleToChange = (date) => {
-    setNewExperience((prev) => ({
-      ...prev,
-      to: date ? date.toISOString() : null,
-    }));
+    const newTo = date ? date.toISOString() : null;
+    setNewExperience((prev) => ({ ...prev, to: newTo }));
+
+    if (newExperience.from && newTo && dayjs(newExperience.from).isAfter(dayjs(newTo))) {
+      setDateError('"From" date cannot be after "To" date.');
+    } else {
+      setDateError("");
+    }
   };
 
   const calculateExperienceYears = (history = []) => {
@@ -126,6 +135,15 @@ const ExperienceHistory = ({ userId, experienceHistory, about }) => {
   };
 
   const handleAddExperience = async () => {
+    if (dateError) {
+      setAlert({
+        open: true,
+        type: "warning",
+        title: "Invalid Dates",
+        message: dateError,
+      });
+      return;
+    }
     if (!newExperience.companyName || !newExperience.designation) {
       setAlert({
         open: true,
@@ -553,6 +571,8 @@ const ExperienceHistory = ({ userId, experienceHistory, about }) => {
                       textField: {
                         fullWidth: true,
                         size: "medium",
+                        error: !!dateError,          
+                        helperText: dateError,
                         inputProps: {
                           readOnly: true,
                         },
@@ -573,6 +593,8 @@ const ExperienceHistory = ({ userId, experienceHistory, about }) => {
                       textField: {
                         fullWidth: true,
                         size: "medium",
+                        error: !!dateError,          
+                        helperText: dateError,
                         inputProps: {
                           readOnly: true,
                         },

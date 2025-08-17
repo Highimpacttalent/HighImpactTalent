@@ -52,6 +52,7 @@ const ExperienceHistory = ({ userId, experienceHistory, about }) => {
   const [desc, setDesc] = useState(false); // Controls visibility of Description *in the display list*
   // isEditing state is removed
   const [isSaving, setIsSaving] = useState(false); // Used for saving progress (Add or Delete)
+  const [dateError, setDateError] = useState(""); 
   const [alert, setAlert] = useState({
     open: false,
     type: "",
@@ -106,19 +107,29 @@ const ExperienceHistory = ({ userId, experienceHistory, about }) => {
 
   // Handler for DatePicker 'From'
   const handleFromChange = (date) => {
-    setNewExperience((prev) => ({
-      ...prev,
-      from: date ? date.toISOString() : null, // Store as ISO string or null
-    }));
-  };
+  const newFrom = date ? date.toISOString() : null;
+  setNewExperience((prev) => ({ ...prev, from: newFrom }));
 
-  // Handler for DatePicker 'To'
-  const handleToChange = (date) => {
-    setNewExperience((prev) => ({
-      ...prev,
-      to: date ? date.toISOString() : null, // Store as ISO string or null
-    }));
-  };
+  // Validation: From cannot be after To
+  if (newFrom && newExperience.to && dayjs(newFrom).isAfter(dayjs(newExperience.to))) {
+    setDateError('"From" date cannot be after "To" date.');
+  } else {
+    setDateError("");
+  }
+};
+
+const handleToChange = (date) => {
+  const newTo = date ? date.toISOString() : null;
+  setNewExperience((prev) => ({ ...prev, to: newTo }));
+
+  // Validation: To cannot be before From
+  if (newExperience.from && newTo && dayjs(newExperience.from).isAfter(dayjs(newTo))) {
+    setDateError('"From" date cannot be after "To" date.');
+  } else {
+    setDateError("");
+  }
+};
+
 
 
   const calculateExperienceYears = (history = []) => {
@@ -142,6 +153,15 @@ const ExperienceHistory = ({ userId, experienceHistory, about }) => {
   // --- MODIFIED handleAddExperience ---
   // Adds the new experience from modal form to the local state AND SAVES IMMEDIATELY
   const handleAddExperience = async () => {
+    if (dateError) {
+    setAlert({
+      open: true,
+      type: "warning",
+      title: "Invalid Dates",
+      message: dateError,
+    });
+    return; // Stop execution
+  }
     // Basic validation
     if (!newExperience.companyName || !newExperience.designation) {
       setAlert({
@@ -606,6 +626,8 @@ const ExperienceHistory = ({ userId, experienceHistory, about }) => {
                       textField: {
                         fullWidth: true,
                         size: "medium",
+                        error: !!dateError,                 // ✅ show error
+                        helperText: dateError,
                         inputProps: {
                           readOnly: true, // Prevent manual typing
                         },
@@ -625,6 +647,8 @@ const ExperienceHistory = ({ userId, experienceHistory, about }) => {
                     slotProps={{
                       textField: {
                         fullWidth: true,
+                        error: !!dateError,                 // ✅ show error
+                        helperText: dateError,   
                         size: "medium",
                         inputProps: {
                           readOnly: true,
