@@ -614,65 +614,96 @@ const DesktopView = () => {
               </Typography>
             </AccordionSummary>
             <AccordionDetails>
-              <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                <Box sx={{ display: "flex", gap: 2 }}>
+              <Box sx={{ px: 0.5 }}>
+                <Box sx={{ mb: 1.5 }}>
                   <TextField
-                    label="Min Experience"
+                    variant="outlined"
+                    placeholder="Min Experience"
                     type="number"
                     value={minExperience}
                     onChange={(e) => setMinExperience(e.target.value)}
-                    sx={{ flex: 1 }}
+                    fullWidth
+                    size="small"
+                    sx={{
+                      background: "#fff",
+                      borderRadius: "10px",
+                      mb: 1,
+                      "& .MuiOutlinedInput-root": { borderRadius: "10px" },
+                    }}
                     InputProps={{
                       endAdornment: (
-                        <InputAdornment position="end"></InputAdornment>
+                        <InputAdornment position="end">yrs</InputAdornment>
                       ),
                     }}
                   />
                   <TextField
-                    label="Max Experience"
+                    variant="outlined"
+                    placeholder="Max Experience"
                     type="number"
                     value={maxExperience}
                     onChange={(e) => setMaxExperience(e.target.value)}
-                    sx={{ flex: 1 }}
+                    fullWidth
+                    size="small"
+                    sx={{
+                      background: "#fff",
+                      borderRadius: "10px",
+                      mb: 1,
+                      "& .MuiOutlinedInput-root": { borderRadius: "10px" },
+                    }}
                     InputProps={{
                       endAdornment: (
-                        <InputAdornment position="end"></InputAdornment>
+                        <InputAdornment position="end">yrs</InputAdornment>
                       ),
                     }}
                   />
+                  <Button
+                    variant="outlined"
+                    fullWidth
+                    sx={{
+                      borderRadius: "10px",
+                      fontWeight: 600,
+                      mt: 0.5,
+                      py: 1,
+                      borderColor: "#d1d5db",
+                      textTransform: "none",
+                      letterSpacing: "0.01em",
+                      color: "#404258",
+                    }}
+                    onClick={() => {
+                      if (minExperience && maxExperience) {
+                        const range = `${minExperience}-${maxExperience}`;
+                        if (!experienceFilter.includes(range)) {
+                          setExperienceFilter([...experienceFilter, range]);
+                        }
+                      }
+                    }}
+                  >
+                    Add Range
+                  </Button>
                 </Box>
-                <Button
-                  variant="contained"
-                  onClick={() => {
-                    if (minExperience && maxExperience) {
-                      const range = `${minExperience}-${maxExperience}`;
-                      if (!experienceFilter.includes(range)) {
-                        setExperienceFilter([...experienceFilter, range]);
-                      }
-                    }
-                  }}
-                  sx={{ alignSelf: "flex-end" }}
-                >
-                  Add Range
-                </Button>
-                <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
-                  {experienceFilter.map((range) => (
-                    <Chip
-                      key={range}
-                      label={
-                        range.includes("-")
-                          ? `${range} years`
-                          : `${range}+ years`
-                      }
-                      onDelete={() =>
-                        setExperienceFilter(
-                          experienceFilter.filter((r) => r !== range)
-                        )
-                      }
-                      sx={{ mb: 1 }}
-                    />
-                  ))}
-                </Box>
+                {experienceFilter.length > 0 && (
+                  <Stack direction="row" flexWrap="wrap" spacing={1}>
+                    {experienceFilter.map((range) => (
+                      <Chip
+                        key={range}
+                        label={
+                          range.includes("-") ? `${range} yrs` : `${range}+ yrs`
+                        }
+                        onDelete={() =>
+                          setExperienceFilter(
+                            experienceFilter.filter((r) => r !== range)
+                          )
+                        }
+                        sx={{
+                          borderRadius: "8px",
+                          fontWeight: 500,
+                          bgcolor: "#f5f6fa",
+                          color: "#444",
+                        }}
+                      />
+                    ))}
+                  </Stack>
+                )}
               </Box>
             </AccordionDetails>
           </Accordion>
@@ -694,61 +725,94 @@ const DesktopView = () => {
               </Typography>
             </AccordionSummary>
             <AccordionDetails>
-              <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                <Box sx={{ display: "flex", gap: 2 }}>
+              <Box sx={{ px: 0.5 }}>
+                <Box sx={{ mb: 1.5 }}>
                   <TextField
-                    label="Min Salary"
+                    variant="outlined"
+                    placeholder="Min Salary"
                     type="number"
                     value={minSalary}
                     onChange={(e) => setMinSalary(e.target.value)}
-                    sx={{ flex: 1 }}
+                    fullWidth
+                    size="small"
+                    sx={{
+                      background: "#fff",
+                      borderRadius: "10px",
+                      mb: 1,
+                      "& .MuiOutlinedInput-root": { borderRadius: "10px" },
+                    }}
                     InputProps={{
                       endAdornment: (
-                        <InputAdornment position="end"></InputAdornment>
+                        <InputAdornment position="end">LPA</InputAdornment>
                       ),
                     }}
                   />
                   <TextField
-                    label="Max Salary"
+                    variant="outlined"
+                    placeholder="Max Salary"
                     type="number"
                     value={maxSalary}
                     onChange={(e) => setMaxSalary(e.target.value)}
-                    sx={{ flex: 1 }}
+                    fullWidth
+                    size="small"
+                    sx={{
+                      background: "#fff",
+                      borderRadius: "10px",
+                      mb: 1,
+                      "& .MuiOutlinedInput-root": { borderRadius: "10px" },
+                    }}
                     InputProps={{
                       endAdornment: (
-                        <InputAdornment position="end"></InputAdornment>
+                        <InputAdornment position="end">LPA</InputAdornment>
                       ),
                     }}
                   />
-                </Box>
-                <Button
-                  variant="contained"
-                  onClick={() => {
-                    if (minSalary && maxSalary) {
-                      const range = `${minSalary}-${maxSalary}`;
-                      if (!salaryRangeFilter.includes(range)) {
-                        setSalaryRangeFilter([...salaryRangeFilter, range]);
+                  <Button
+                    variant="outlined"
+                    fullWidth
+                    sx={{
+                      borderRadius: "10px",
+                      fontWeight: 600,
+                      mt: 0.5,
+                      py: 1,
+                      borderColor: "#d1d5db",
+                      textTransform: "none",
+                      color: "#404258",
+                      letterSpacing: "0.01em",
+                    }}
+                    onClick={() => {
+                      if (minSalary && maxSalary) {
+                        const range = `${minSalary}-${maxSalary}`;
+                        if (!salaryRangeFilter.includes(range)) {
+                          setSalaryRangeFilter([...salaryRangeFilter, range]);
+                        }
                       }
-                    }
-                  }}
-                  sx={{ alignSelf: "flex-end" }}
-                >
-                  Add Range
-                </Button>
-                <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
-                  {salaryRangeFilter.map((range) => (
-                    <Chip
-                      key={range}
-                      label={`${range} LPA`}
-                      onDelete={() =>
-                        setSalaryRangeFilter(
-                          salaryRangeFilter.filter((r) => r !== range)
-                        )
-                      }
-                      sx={{ mb: 1 }}
-                    />
-                  ))}
+                    }}
+                  >
+                    Add Range
+                  </Button>
                 </Box>
+                {salaryRangeFilter.length > 0 && (
+                  <Stack direction="row" flexWrap="wrap" spacing={1}>
+                    {salaryRangeFilter.map((range) => (
+                      <Chip
+                        key={range}
+                        label={`${range} LPA`}
+                        onDelete={() =>
+                          setSalaryRangeFilter(
+                            salaryRangeFilter.filter((r) => r !== range)
+                          )
+                        }
+                        sx={{
+                          borderRadius: "8px",
+                          fontWeight: 500,
+                          bgcolor: "#f5f6fa",
+                          color: "#444",
+                        }}
+                      />
+                    ))}
+                  </Stack>
+                )}
               </Box>
             </AccordionDetails>
           </Accordion>
