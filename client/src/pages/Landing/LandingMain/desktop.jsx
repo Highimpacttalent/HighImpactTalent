@@ -402,33 +402,34 @@ const DesktopLanding = () => {
                     </Button>
 
                     <Button
-                    variant="contained"
-                    component="a"
-                    href="https://calendly.com/koustubhharidas"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    size="large"
-                    sx={{
-                      background: "linear-gradient(135deg, #1f2937 0%, #111827 100%)",  
-                      px: 4,
-                      py: 1.5,
-                      borderRadius: "12px",
-                      fontFamily: "Poppins",
-                      fontSize: "1rem",
-                      fontWeight: 600,
-                      textTransform: "none",
-                    border: "1px solid #facc15", // Subtle gold border
-                  boxShadow: "0 2px 12px rgba(250, 204, 21, 0.15)",
-                      transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-                      "&:hover": {
-                        background: "linear-gradient(135deg, #111827 0%, #0f172a 100%)",
-                        boxShadow: "0 8px 30px rgba(250, 204, 21, 0.3)",
-                        transform: "translateY(-2px)",
-                      }
-                    }}
-                  >
-                    Book 1-1 Hiring Strategy Call
-                  </Button>
+                      variant="contained"
+                      component="a"
+                      href="https://calendly.com/koustubhharidas"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      size="large"
+                      sx={{
+                        background:
+                          "linear-gradient(135deg, #059669 0%, #047857 100%)",
+                        color: "white",
+                        px: 4,
+                        py: 1.5,
+                        borderRadius: "12px",
+                        fontFamily: "Poppins",
+                        fontWeight: 600,
+                        textTransform: "none",
+                        boxShadow: "0 2px 10px rgba(252, 211, 77, 0.2)",
+                        transition: "all 0.3s ease",
+                        "&:hover": {
+                          background:
+                            "linear-gradient(135deg, #047857 0%, #065f46 100%)",
+                          boxShadow: "0 8px 24px rgba(252, 211, 77, 0.35)",
+                          transform: "translateY(-2px)",
+                        },
+                      }}
+                    >
+                      Book 1-1 Hiring Strategy Call
+                    </Button>
                   </Stack>
                 </Box>
               </AnimatedSection>
