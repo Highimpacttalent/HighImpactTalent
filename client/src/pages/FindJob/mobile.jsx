@@ -652,7 +652,7 @@ const mobileView = () => {
                   <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
                     <Box sx={{ display: "flex", gap: 2 }}>
                       <TextField
-                        label="Min Experience"
+                        placeholder="Min"
                         type="number"
                         value={minExperience}
                         onChange={(e) => setMinExperience(e.target.value)}
@@ -662,7 +662,7 @@ const mobileView = () => {
                         }}
                       />
                       <TextField
-                        label="Max Experience"
+                        placeholder="Max"
                         type="number"
                         value={maxExperience}
                         onChange={(e) => setMaxExperience(e.target.value)}
@@ -673,7 +673,7 @@ const mobileView = () => {
                       />
                     </Box>
                     <Button
-                      variant="contained"
+                      variant="outlined"
                       onClick={() => {
                         if (minExperience && maxExperience) {
                           const range = `${minExperience}-${maxExperience}`;
@@ -682,7 +682,7 @@ const mobileView = () => {
                           }
                         }
                       }}
-                      sx={{ alignSelf: 'flex-end' }}
+                      sx={{ alignSelf: 'flex-end', color: "#404258" }}
                     >
                       Add Range
                     </Button>
@@ -715,7 +715,7 @@ const mobileView = () => {
                   <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
                     <Box sx={{ display: "flex", gap: 2 }}>
                       <TextField
-                        label="Min Salary"
+                        label="Min"
                         type="number"
                         value={minSalary}
                         onChange={(e) => setMinSalary(e.target.value)}
@@ -725,7 +725,7 @@ const mobileView = () => {
                         }}
                       />
                       <TextField
-                        label="Max Salary"
+                        label="Max"
                         type="number"
                         value={maxSalary}
                         onChange={(e) => setMaxSalary(e.target.value)}
@@ -736,7 +736,7 @@ const mobileView = () => {
                       />
                     </Box>
                     <Button
-                      variant="contained"
+                      variant="outlined"
                       onClick={() => {
                         if (minSalary && maxSalary) {
                           const range = `${minSalary}-${maxSalary}`;
@@ -745,7 +745,7 @@ const mobileView = () => {
                           }
                         }
                       }}
-                      sx={{ alignSelf: 'flex-end' }}
+                     sx={{ alignSelf: 'flex-end', color: "#404258" }}
                     >
                       Add Range
                     </Button>
