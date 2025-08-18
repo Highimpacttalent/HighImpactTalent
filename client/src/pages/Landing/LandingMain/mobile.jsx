@@ -7,6 +7,7 @@ import {
   Users,
   Search,
 } from "lucide-react";
+import { Button,Box,Stack } from "@mui/material";
 import { Link } from "lucide-react";
 
 
@@ -53,20 +54,46 @@ const MobileLanding = () => {
             </div>
 
             {/* CTA Buttons */}
-            <div className="flex justify-center gap-4">
-              <button
-                onClick={() => navigate("/u-login")}
-                className="bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-blue-600/30 transition-all duration-300 font-medium min-w-32"
-              >
-                Get a job
-              </button>
-              <button
-                onClick={() => navigate("/r-login")}
-                className="bg-emerald-500 text-white px-8 py-3 rounded-lg hover:bg-emerald-600 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-emerald-500/30 transition-all duration-300 font-medium min-w-32"
-              >
-                Hire Now
-              </button>
-            </div>
+           <div className="flex flex-col items-center gap-3 px-4 py-4">
+  {/* Two buttons in one row */}
+  <div className="flex gap-3 w-full max-w-md">
+    <button
+      onClick={() => navigate("/u-login")}
+      aria-label="Get a job"
+      className="flex-1 text-white py-3 rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 transform-gpu transition duration-300 ease-out shadow-md hover:-translate-y-0.5 font-semibold text-sm"
+    >
+      Get a job
+    </button>
+
+    <button
+      onClick={() => navigate("/r-login")}
+      aria-label="Hire now"
+      className="flex-1 text-white py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 transform-gpu transition duration-300 ease-out shadow-md hover:-translate-y-0.5 font-semibold text-sm"
+    >
+      Hire Now
+    </button>
+  </div>
+
+  {/* Third button on the next line — dominant CTA */}
+  <a
+    href="https://calendly.com/koustubhharidas"
+    target="_blank"
+    rel="noopener noreferrer"
+    className="w-full max-w-md"
+  >
+    <button
+      aria-label="Book 1-1 Hiring Strategy Call"
+      className="w-full text-white py-3 rounded-2xl bg-gradient-to-r from-yellow-500 via-amber-500 to-amber-600 hover:from-amber-500 hover:to-amber-700 transform-gpu transition duration-300 ease-out shadow-xl hover:-translate-y-1 font-bold text-sm"
+      style={{ background:"linear-gradient(135deg, #059669 0%, #047857 100%)",}}
+    >
+      Book 1-1 Hiring Strategy Call
+    </button>
+  </a>
+</div>
+
+
+
+            
 
             {/* Bottom Image */}
             <div>
