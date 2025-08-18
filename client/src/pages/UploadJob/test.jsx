@@ -238,7 +238,7 @@ const JobUploadPage = () => {
   // Initial formData state matching backend schema and original fields
   const [formData, setFormData] = useState({
     jobTitle: "", // string
-    companyType: "", // string
+    companyType: "N/A",// string
     jobLocation: "", // string (set from city select/custom)
     salary: { minSalary: "", maxSalary: "" }, // object
     salaryCategory: "", // string
@@ -260,7 +260,7 @@ const JobUploadPage = () => {
     applicationLink: "", // string
     skills: [], // [string]
     graduationYear: { minBatch: "", maxBatch: "" }, // object
-    tags: [], // [string]
+    tags: ["N/A"], // [string]
     diversityPreferences: {
       // object
       femaleCandidates: false,
@@ -269,8 +269,8 @@ const JobUploadPage = () => {
       differentlyAbledCandidates: false,
       workFromHome: false,
     },
-    category: "", // string - Now handled by Select
-    functionalArea: "", // string - Now handled by Select
+    category: "N/A", // string - Now handled by Select
+    functionalArea: "N/A", // string - Now handled by Select
     isPremiumJob: false, // boolean
   });
 
@@ -703,10 +703,9 @@ const JobUploadPage = () => {
       "jobDescription",
       "workType",
       "workMode",
-      "category",
-      "functionalArea",
       "salaryCategory",
     ];
+
 
     if (formData.experience.minExperience === "" || formData.experience.maxExperience === "") {
         alert("Please provide both minimum and maximum years of experience.");
@@ -1300,116 +1299,6 @@ const JobUploadPage = () => {
                 />
               ))}
             </RadioGroup>
-          </div>
-
-          {/* Section: Targeting */}
-          <Typography sx={{ ...sectionTitleStyle }}>Targeting</Typography>
-
-          {/* Company Type - Added as per backend schema */}
-          <div className="mb-4">
-            <Typography sx={{ ...formLabelStyle }}>
-              Sector of Impact <span style={{ color: "red" }}>*</span>
-            </Typography>{" "}
-            {/* Not required in image or backend */}
-            <Select
-              options={industrySelectOptions}
-              value={
-                formData.companyType
-                  ? industrySelectOptions.find(
-                      (opt) => opt.value === formData.companyType
-                    )
-                  : null
-              }
-              onChange={(selectedOption) =>
-                handleChange({
-                  target: {
-                    name: "companyType",
-                    value: selectedOption ? selectedOption.value : "",
-                  },
-                })
-              }
-              placeholder="Select Industry..."
-              isClearable
-              isSearchable
-              styles={customSelectStyle}
-              // Required validation handled in handleSubmit
-            />
-          </div>
-
-          {/* Category and Functional Area (Side by Side) - Now using Select */}
-          <Grid container spacing={2} className="mb-4">
-            <Grid item xs={12} sm={6}>
-              <Typography sx={{ ...formLabelStyle }}>
-                Talent Focus Area  <span style={{ color: "red" }}>*</span>
-              </Typography>
-              <Select
-                options={categorySelectOptions}
-                value={
-                  formData.category
-                    ? categorySelectOptions.find(
-                        (opt) => opt.value === formData.category
-                      )
-                    : null
-                }
-                onChange={(selectedOption) =>
-                  handleChange({
-                    target: {
-                      name: "category",
-                      value: selectedOption ? selectedOption.value : "",
-                    },
-                  })
-                }
-                placeholder="Select Category..."
-                isClearable
-                isSearchable
-                styles={customSelectStyle}
-                // Required validation handled in handleSubmit
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <Typography sx={{ ...formLabelStyle }}>
-                Domain of Expertise <span style={{ color: "red" }}>*</span>
-              </Typography>
-              <Select
-                options={functionalAreaSelectOptions}
-                value={
-                  formData.functionalArea
-                    ? functionalAreaSelectOptions.find(
-                        (opt) => opt.value === formData.functionalArea
-                      )
-                    : null
-                }
-                onChange={(selectedOption) =>
-                  handleChange({
-                    target: {
-                      name: "functionalArea",
-                      value: selectedOption ? selectedOption.value : "",
-                    },
-                  })
-                }
-                placeholder="Select Functional Area..."
-                isClearable
-                isSearchable
-                styles={customSelectStyle}
-                // Required validation handled in handleSubmit
-              />
-            </Grid>
-          </Grid>
-
-          {/* Tags Multi-Select - Now using CreatableSelect with predefined options */}
-          <div className="mb-4">
-            <Typography sx={{ ...formLabelStyle }}>Spotlight Tags</Typography>
-            <CreatableSelect
-              isMulti
-              options={tagSelectOptions} // Use the mapped tag list as base options
-              value={formData.tags.map((tag) => ({ value: tag, label: tag }))} // Map current tags array
-              onChange={(selectedOptions) =>
-                handleMultiSelectChange("tags", selectedOptions)
-              }
-              styles={customSelectStyle}
-              placeholder="Select or create tags..."
-              // isCreatable={true} is default for CreatableSelect
-            />
           </div>
 
           {/* Section: Education Details */}

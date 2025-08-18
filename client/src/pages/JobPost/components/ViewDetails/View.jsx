@@ -189,10 +189,10 @@ export default function JobEditForm() {
       },
     ], // Structure based on UploadJob example
     experience: { minExperience: "", maxExperience: "" }, // Kept as TextFields based on original edit UI
-    companyType: "", // Acts as Industry, changed to Select based on UploadJob example
+    companyType: "N/A",  // Acts as Industry, changed to Select based on UploadJob example
     applicationLink: "",
     graduationYear: { minBatch: "", maxBatch: "" }, // Kept as TextFields based on original edit UI
-    tags: [], // Creatable Multi-select
+    tags: ["N/A"], // Creatable Multi-select
     diversityPreferences: {
       femaleCandidates: false,
       womenJoiningBackforce: false, // Assuming this key based on initial code
@@ -200,8 +200,8 @@ export default function JobEditForm() {
       differentlyAbledCandidates: false,
       workFromHome: false,
     },
-    category: "", // Changed to Select
-    functionalArea: "", // Changed to Select
+    category: "N/A", // Changed to Select
+    functionalArea: "N/A", // Changed to Select
     isPremiumJob: false, // Switch
   });
 
@@ -1538,31 +1538,6 @@ export default function JobEditForm() {
                       />
                     </Grid>
 
-                    <Grid item xs={12} md={6}>
-                      <Box>
-                        <Typography variant="body2" sx={{ ...formLabelStyle }}>
-                          Industry<span style={{ color: "red" }}>*</span>
-                        </Typography>
-                        <Select
-                          options={industryOptions}
-                          value={
-                            jobData.companyType
-                              ? industryOptions.find(
-                                  (opt) => opt.value === jobData.companyType
-                                )
-                              : null
-                          }
-                          onChange={(selectedOption) =>
-                            handleSelectChange("companyType", selectedOption)
-                          }
-                          placeholder="Select Industry..."
-                          isClearable
-                          isSearchable
-                          required
-                          styles={customSelectStyle}
-                        />
-                      </Box>
-                    </Grid>
 
                     <Grid item xs={12} md={4}>
                       <Box>
@@ -2338,72 +2313,6 @@ export default function JobEditForm() {
                     InputLabelProps={{ shrink: !!jobData.applicationLink }}
                     size="small"
                   />
-
-                  <Box sx={{ mb: 2 }}>
-                    <Typography variant="body2" sx={{ ...formLabelStyle }}>
-                      Category<span style={{ color: "red" }}>*</span>
-                    </Typography>
-                    <Select
-                      options={categoryOptions}
-                      value={
-                        categoryOptions.find(
-                          (opt) => opt.value === jobData.category
-                        ) || null
-                      }
-                      onChange={(selectedOption) =>
-                        handleSelectChange("category", selectedOption)
-                      }
-                      placeholder="Select Category..."
-                      isClearable
-                      isSearchable
-                      styles={customSelectStyle}
-                      required
-                    />
-                  </Box>
-
-                  <Box sx={{ mb: 2 }}>
-                    <Typography variant="body2" sx={{ ...formLabelStyle }}>
-                      Functional Area <span style={{ color: "red" }}>*</span>
-                    </Typography>
-                    <Select
-                      options={functionalAreaOptions}
-                      value={
-                        functionalAreaOptions.find(
-                          (opt) => opt.value === jobData.functionalArea
-                        ) || null
-                      }
-                      onChange={(selectedOption) =>
-                        handleSelectChange("functionalArea", selectedOption)
-                      }
-                      placeholder="Select Functional Area..."
-                      isClearable
-                      isSearchable
-                      styles={customSelectStyle}
-                      required
-                    />
-                  </Box>
-
-                  {/* Tags (Creatable Multi-select) */}
-                  <Box sx={{ mb: 3 }}>
-                    <Typography variant="body2" sx={{ ...formLabelStyle }}>
-                      Tags (Add multiple)
-                    </Typography>
-                    <CreatableSelect
-                      isMulti
-                      options={tagOptions}
-                      value={jobData.tags.map((tag) => ({
-                        value: tag,
-                        label: tag,
-                      }))}
-                      onChange={(selectedOptions) =>
-                        handleSelectChange("tags", selectedOptions)
-                      }
-                      placeholder="Select or create tags..."
-                      isClearable
-                      isSearchable
-                      styles={customSelectStyle}
-                    />
-                  </Box>
                 </Box>
 
                 {/* Is Premium Job Switch */}
