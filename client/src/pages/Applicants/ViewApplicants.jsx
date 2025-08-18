@@ -139,6 +139,7 @@ const JobApplications = () => {
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [downloadLoading, setDownloadLoading] = useState(false);
+  const [currentCount, setCurrentCount] = useState("");
   const [stageCounts, setStageCounts] = useState({});
   const [cities, setCities] = useState();
   const currentUser = useSelector((state) => state.user.user);
@@ -220,6 +221,64 @@ const JobApplications = () => {
 
   const location = useLocation();
 
+  function areFiltersActive(filters) {
+  if (!filters) return false;
+
+  const {
+    keywords = [],
+    locations = [],
+    designations = [],
+    screeningFilters = {},
+    totalYearsInConsulting = "",
+    minExperience = "",
+    maxExperience = "",
+    minSalary = "",
+    maxSalary = "",
+    matchPercentageTier = "",
+  } = filters;
+
+  // 1) any array-type filters non-empty?
+  if (Array.isArray(keywords) && keywords.length > 0) return true;
+  if (Array.isArray(locations) && locations.length > 0) return true;
+  if (Array.isArray(designations) && designations.length > 0) return true;
+
+  // 2) screeningFilters: consider nested arrays or non-empty values
+  if (
+    screeningFilters &&
+    typeof screeningFilters === "object" &&
+    Object.keys(screeningFilters).length > 0
+  ) {
+    for (const key of Object.keys(screeningFilters)) {
+      const val = screeningFilters[key];
+      if (Array.isArray(val) && val.length > 0) return true;
+      if (val !== undefined && val !== null && String(val).trim() !== "") {
+        return true;
+      }
+    }
+  }
+
+  // 3) simple scalar fields (treat non-empty strings / numbers as active)
+  const simpleFields = [
+    totalYearsInConsulting,
+    minExperience,
+    maxExperience,
+    minSalary,
+    maxSalary,
+    matchPercentageTier,
+  ];
+
+  if (simpleFields.some((v) => v !== undefined && v !== null && String(v).trim() !== "")) {
+    return true;
+  }
+
+  // none found
+  return false;
+}
+
+
+  const hasActiveFilters = areFiltersActive(filters);
+
+
   useEffect(() => {
     return () => {
       // This cleanup runs when JobApplications unmounts
@@ -289,6 +348,7 @@ const JobApplications = () => {
       }
 
       setTotalPages(Math.ceil(totalCount / limit));
+      setCurrentCount(response.pagination.totalApplications);
       setCurrentPage(page);
 
       return response.applications || []; // Ensure we always return an array
@@ -1545,6 +1605,26 @@ const JobApplications = () => {
         }}
       >
         Filters & Search
+        {hasActiveFilters && (
+    <Box
+      component="span"
+      sx={{
+        ml: 1,
+        bgcolor: "#1976d2",
+        color: "white",
+        px: 1.5,
+        py: 0.3,
+        borderRadius: "12px",
+        fontSize: "13px",
+        fontWeight: 600,
+        fontFamily: "Satoshi",
+        minWidth: "24px",
+        textAlign: "center",
+      }}
+    >
+      {filteredApps.length}
+    </Box>
+  )}
       </Button>
     </Box>
   ) : (
@@ -1572,6 +1652,21 @@ const JobApplications = () => {
         }}
       >
         Filters & Search
+        {hasActiveFilters && (
+    <Box
+      component="span"
+      sx={{
+        fontFamily: "Satoshi",
+                fontWeight: 600,
+                fontSize: "14px",
+                color: "#334155",
+                pl: 1,
+                mb: 1,
+      }}
+    >
+      ( {currentCount} <span style={{fontSize: "11px", fontWeight: "bold"}}>candidates</span> )
+    </Box>
+  )}
       </Typography>
       {FiltersContent}
     </Box>
@@ -1619,6 +1714,26 @@ const JobApplications = () => {
         }}
       >
         Filters & Search
+        {hasActiveFilters && (
+    <Box
+      component="span"
+      sx={{
+        ml: 1,
+        bgcolor: "#1976d2",
+        color: "white",
+        px: 1.5,
+        py: 0.3,
+        borderRadius: "12px",
+        fontSize: "13px",
+        fontWeight: 600,
+        fontFamily: "Satoshi",
+        minWidth: "24px",
+        textAlign: "center",
+      }}
+    >
+      {filteredApps.length}
+    </Box>
+  )}
       </Typography>
       {FiltersContent}
     </Box>
@@ -1712,7 +1827,7 @@ const JobApplications = () => {
                         whiteSpace: "nowrap",
                       }}
                     >
-                      {step}
+                      {step} 
                     </Typography>
 
                     <Box
@@ -1739,25 +1854,53 @@ const JobApplications = () => {
           <Box
             sx={{
               display: "flex",
-              justifyContent: "space-between",
+              justifyContent: selectedApplications.size > 0 ? "space-between" : "flex-end",
               alignItems: "center",
               mb: 2,
               px: 1,
             }}
           >
-            <Typography
-              variant="h6"
-              sx={{
-                fontFamily: "Satoshi",
-                fontWeight: 600,
-                fontSize: "16px",
-                color: "#334155",
-                pl: 1,
-                mb: 1,
-              }}
-            >
-              {steps[activeStep]}
-            </Typography>
+
+             {/* Selection Badge */}
+                  {selectedApplications.size > 0 && (
+                    <Box
+                      sx={{
+                        bgcolor: "#dcfce7",
+                        color: "#166534",
+                        px: 2,
+                        py: 0.75,
+                        borderRadius: 2,
+                        border: "1px solid #bbf7d0",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 0.5,
+                        minHeight: "36px",
+                      }}
+                    >
+                      <Typography
+                        sx={{
+                          fontFamily: "Satoshi",
+                          fontWeight: 600,
+                          fontSize: "13px",
+                          lineHeight: 1,
+                        }}
+                      >
+                        {selectedApplications.size} selected
+                      </Typography>
+                      <IconButton
+                        size="small"
+                        onClick={clearSelection}
+                        sx={{
+                          color: "#166534",
+                          p: 0.25,
+                          ml: 0.5,
+                          "&:hover": { bgcolor: "rgba(22, 101, 52, 0.1)" },
+                        }}
+                      >
+                        <CancelOutlinedIcon sx={{ fontSize: 16 }} />
+                      </IconButton>
+                    </Box>
+                  )}
 
             <Box
               sx={{
@@ -1767,6 +1910,7 @@ const JobApplications = () => {
                 flexWrap: "wrap",
               }}
             >
+              
               {matchTiers.map((tier) => {
                 const isActive = matchTab === tier.id;
                 return (
@@ -1928,46 +2072,6 @@ const JobApplications = () => {
                     </FormControl>
                   </Box>
 
-                  {/* Selection Badge */}
-                  {selectedApplications.size > 0 && (
-                    <Box
-                      sx={{
-                        bgcolor: "#dcfce7",
-                        color: "#166534",
-                        px: 2,
-                        py: 0.75,
-                        borderRadius: 2,
-                        border: "1px solid #bbf7d0",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 0.5,
-                        minHeight: "36px",
-                      }}
-                    >
-                      <Typography
-                        sx={{
-                          fontFamily: "Satoshi",
-                          fontWeight: 600,
-                          fontSize: "13px",
-                          lineHeight: 1,
-                        }}
-                      >
-                        {selectedApplications.size} selected
-                      </Typography>
-                      <IconButton
-                        size="small"
-                        onClick={clearSelection}
-                        sx={{
-                          color: "#166534",
-                          p: 0.25,
-                          ml: 0.5,
-                          "&:hover": { bgcolor: "rgba(22, 101, 52, 0.1)" },
-                        }}
-                      >
-                        <CancelOutlinedIcon sx={{ fontSize: 16 }} />
-                      </IconButton>
-                    </Box>
-                  )}
                 </Box>
 
                 {/* Right Section - Action Buttons */}
