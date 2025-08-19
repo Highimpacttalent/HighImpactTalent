@@ -81,6 +81,18 @@ export function highlight(text, keywords) {
   );
 }
 
+const formatMonthYear = (value) => {
+  if (!value) return "Present";
+  try {
+    // If value is like "2021-06" or "2021-06-01" this will work
+    const date = new Date(value);
+    if (isNaN(date.getTime())) return value;
+    return date.toLocaleDateString("en-US", { year: "numeric", month: "short" });
+  } catch (e) {
+    return value;
+  }
+};
+
 const ViewProfile = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -217,6 +229,40 @@ const ViewProfile = () => {
       alert("Unable to reject candidate.");
     }
   };
+
+  const renderSkills = (
+    <React.Fragment>
+      {userData?.skills?.length > 0 ? (
+        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
+          {userData.skills.map((skill, index) => (
+            <Chip
+              key={index}
+              label={skill}
+              size="small"
+              sx={{
+                bgcolor: "#EEF2FF",
+                color: "#4338CA",
+                fontFamily: "Poppins",
+                fontWeight: 500,
+                fontSize: "12px",
+                border: "1px solid #C7D2FE",
+              }}
+            />
+          ))}
+        </Box>
+      ) : (
+        <Typography
+          sx={{
+            fontSize: "14px",
+            color: "#9CA3AF",
+            fontFamily: "Poppins",
+          }}
+        >
+          No skills specified
+        </Typography>
+      )}
+    </React.Fragment>
+  );
 
   return (
     <Box sx={{ bgcolor: "white", minHeight: "100vh", py: 4 }}>
@@ -672,6 +718,17 @@ const ViewProfile = () => {
                   </>
                 ) : null}
               </Stack>
+
+              {/* === Skills moved into left sidebar for desktop === */}
+              <Box sx={{ mt: 3, display: { xs: "none", lg: "block" } }}>
+                <ProfileSection
+                  title="Skills & Expertise"
+                  icon={<TimelineIcon sx={{ fontSize: 20, color: "#6B7280" }} />}
+                >
+                  {renderSkills}
+                </ProfileSection>
+              </Box>
+              
             </Paper>
           </Grid>
 
@@ -778,71 +835,91 @@ const ViewProfile = () => {
                       }
                     />
                   </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <InfoField
+                      label="Highest Education"
+                     value={
+                        userData.highestQualification?.join(", ") ||
+                        "Not Provided"
+                      }
+                    />
+                  </Grid>
                 </Grid>
               </ProfileSection>
 
-              {/* Education */}
-              {userData?.highestQualification?.length > 0 && (
+               {/* Education Details (NEW) - placed directly below Preferences */}
+              {userData?.educationDetails?.length > 0 && (
                 <ProfileSection
-                  title="Education"
+                  title="Education Details"
                   icon={
                     <SchoolOutlinedIcon
                       sx={{ fontSize: 20, color: "#6B7280" }}
                     />
                   }
                 >
-                  <Stack spacing={1}>
-                    {userData.highestQualification.map((qual, index) => (
-                      <Typography
-                        key={index}
+                  <Stack spacing={2}>
+                    {userData.educationDetails.map((edu, idx) => (
+                      <Paper
+                        key={edu._id || idx}
+                        elevation={0}
                         sx={{
-                          fontSize: "14px",
-                          fontFamily: "Poppins",
-                          color: "#374151",
+                          p: 3,
+                          border: "1px solid #E5E7EB",
+                          borderRadius: "8px",
+                          bgcolor: "white",
                         }}
                       >
-                        • {qual}
-                      </Typography>
+                        <Box
+                          sx={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "flex-start",
+                          }}
+                        >
+                          <Box sx={{ flex: 1 }}>
+                            <Typography
+                              sx={{
+                                fontSize: "16px",
+                                fontWeight: 700,
+                                fontFamily: "Satoshi",
+                                color: "#111827",
+                                mb: 0.5,
+                              }}
+                            >
+                              {edu.instituteName}
+                            </Typography>
+
+                            <Typography
+                              sx={{
+                                fontSize: "14px",
+                                fontWeight: 600,
+                                fontFamily: "Poppins",
+                                color: "#374151",
+                                mb: 0.5,
+                              }}
+                            >
+                              {edu.courseName}
+                              {edu.specialization ? ` — ${edu.specialization}` : ""}
+                            </Typography>
+
+                            <Typography
+                              sx={{
+                                fontSize: "12px",
+                                fontFamily: "Poppins",
+                                color: "#6B7280",
+                              }}
+                            >
+                              {formatMonthYear(edu.startYear)} {" - "}{" "}
+                              {edu.endYear ? formatMonthYear(edu.endYear) : "Present"}
+                            </Typography>
+                          </Box>
+                        </Box>
+                      </Paper>
                     ))}
                   </Stack>
                 </ProfileSection>
               )}
 
-              {/* Skills */}
-              <ProfileSection
-                title="Skills & Expertise"
-                icon={<TimelineIcon sx={{ fontSize: 20, color: "#6B7280" }} />}
-              >
-                {userData?.skills?.length > 0 ? (
-                  <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
-                    {userData.skills.map((skill, index) => (
-                      <Chip
-                        key={index}
-                        label={skill}
-                        size="small"
-                        sx={{
-                          bgcolor: "#EEF2FF",
-                          color: "#4338CA",
-                          fontFamily: "Poppins",
-                          fontWeight: 500,
-                          fontSize: "12px",
-                          border: "1px solid #C7D2FE",
-                        }}
-                      />
-                    ))}
-                  </Box>
-                ) : (
-                  <Typography
-                    sx={{
-                      fontSize: "14px",
-                      color: "#9CA3AF",
-                      fontFamily: "Poppins",
-                    }}
-                  >
-                    No skills specified
-                  </Typography>
-                )}
-              </ProfileSection>
 
               {/* Experience History */}
               {userData?.experienceHistory?.length > 0 && (
@@ -951,6 +1028,16 @@ const ViewProfile = () => {
                   </Stack>
                 </ProfileSection>
               )}
+
+              {/* === Skills (mobile/tablet only) === */}
+              <Box sx={{ display: { xs: "block", lg: "none" } }}>
+                <ProfileSection
+                  title="Skills & Expertise"
+                  icon={<TimelineIcon sx={{ fontSize: 20, color: "#6B7280" }} />}
+                >
+                  {renderSkills}
+                </ProfileSection>
+              </Box>
 
               {/* Screening Questions */}
               {ScreeningQues?.length > 0 && (
