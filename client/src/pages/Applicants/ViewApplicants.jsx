@@ -125,6 +125,7 @@ const JobApplications = () => {
     loadFromSession("apps_limit", 20, jobId)
   );
   const [filterLoading, setFilterLoading] = useState(false);
+  const latestFetchId = useRef(0);
   const [error, setError] = useState(null);
   const [activeStep, setActiveStep] = useState(
     loadFromSession("apps_activeStep", 0, jobId)
@@ -163,8 +164,10 @@ const JobApplications = () => {
   });
 
   useEffect(() => {
-    applyFilters();
-  }, [matchTab, sortOption, limit]);
+  if (!jobId) return;
+  applyFilters();
+}, [matchTab, sortOption, limit, jobId]);
+
 
   // Bulk selection states
   const [selectedApplications, setSelectedApplications] = useState(new Set());
@@ -295,70 +298,84 @@ const JobApplications = () => {
   }, [jobId]);
 
   // Fetch applications with server-side filtering
-  const fetchApplications = async (
-    filterParams = {},
-    status = null,
-    page = currentPage
-  ) => {
-    try {
-      setFilterLoading(true);
+const fetchApplications = async (
+  filterParams = {},
+  status = null,
+  page = currentPage
+) => {
+  const thisFetchId = ++latestFetchId.current; // increment and capture id for this request
+  try {
+    // only set loading for the latest request
+    if (thisFetchId === latestFetchId.current) setFilterLoading(true);
 
-      const queryParams = new URLSearchParams();
+    const queryParams = new URLSearchParams();
 
-      // Add status if provided
-      if (status) {
-        queryParams.append("status", status);
-      }
-
-      // Add filter parameters
-      Object.entries(filterParams).forEach(([key, value]) => {
-        if (value !== undefined && value !== null && value !== "") {
-          // Special handling for screeningFilters
-          if (key === "screeningFilters" && typeof value === "object") {
-            queryParams.append(key, JSON.stringify(value));
-          } else {
-            queryParams.append(key, value.toString().trim());
-          }
-        }
-      });
-
-      queryParams.append("page", page);
-      queryParams.append("limit", limit.toString());
-      queryParams.append("sortBy", sortOption);
-      if (matchTab !== "all") {
-        queryParams.append("matchPercentageTier", matchTab);
-      }
-
-      console.log("Fetching applications with params:", queryParams.toString());
-
-      const response = await apiRequest({
-        url: `application/get-applications/${jobId}?${queryParams.toString()}`,
-        method: "GET",
-      });
-
-      if (!response.success) {
-        throw new Error(response.message || "Failed to fetch applications");
-      }
-
-      const totalCount = response.totalApplications || response.totalCount || 0;
-
-      // Safe check for job title - only set if applications exist
-      if (response.applications && response.applications.length > 0) {
-        setJobTitle(response.applications[0].job.jobTitle);
-      }
-
-      setTotalPages(Math.ceil(totalCount / limit));
-      setCurrentCount(response.pagination.totalApplications);
-      setCurrentPage(page);
-
-      return response.applications || []; // Ensure we always return an array
-    } catch (err) {
-      setError(err.message);
-      return [];
-    } finally {
-      setFilterLoading(false);
+    // Add status if provided
+    if (status) {
+      queryParams.append("status", status);
     }
-  };
+
+    // Add filter parameters
+    Object.entries(filterParams).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== "") {
+        // Special handling for screeningFilters
+        if (key === "screeningFilters" && typeof value === "object") {
+          queryParams.append(key, JSON.stringify(value));
+        } else {
+          queryParams.append(key, value.toString().trim());
+        }
+      }
+    });
+
+    queryParams.append("page", page);
+    queryParams.append("limit", limit.toString());
+    queryParams.append("sortBy", sortOption);
+    if (matchTab !== "all") {
+      queryParams.append("matchPercentageTier", matchTab);
+    }
+
+    console.log("Fetching applications with params:", queryParams.toString());
+
+    const response = await apiRequest({
+      url: `application/get-applications/${jobId}?${queryParams.toString()}`,
+      method: "GET",
+    });
+
+    // If a newer request was started, ignore this response
+    if (thisFetchId !== latestFetchId.current) {
+      console.warn("Stale fetch ignored:", queryParams.toString());
+      return [];
+    }
+
+    if (!response.success) {
+      throw new Error(response.message || "Failed to fetch applications");
+    }
+
+    const totalCount = response.totalApplications || response.totalCount || 0;
+
+    // Safe check for job title - only set if applications exist (and still latest)
+    if (response.applications && response.applications.length > 0 && thisFetchId === latestFetchId.current) {
+      setJobTitle(response.applications[0].job.jobTitle);
+    }
+
+    if (thisFetchId === latestFetchId.current) {
+      setTotalPages(Math.ceil(totalCount / limit));
+      setCurrentCount(response.pagination?.totalApplications);
+      setCurrentPage(page);
+    }
+
+    return response.applications || [];
+  } catch (err) {
+    // Only set error for the latest request
+    if (thisFetchId === latestFetchId.current) setError(err.message);
+    return [];
+  } finally {
+    // Only turn off loading if this is still the latest request
+    if (thisFetchId === latestFetchId.current) setFilterLoading(false);
+  }
+};
+// ---- END replacement ----
+
 
   //Fetch stage counts
   const fetchStageCounts = async () => {
@@ -408,16 +425,6 @@ const JobApplications = () => {
       try {
         // Filter by current step
         const currentStatus = steps[activeStep];
-
-        // Fetch all applications for initial load
-        const allApps = await fetchApplications({}, currentStatus);
-        setAllApplications(allApps);
-
-        const filteredByStatus = allApps.filter(
-          (app) => app.status === currentStatus
-        );
-        setApplications(filteredByStatus);
-        setFilteredApps(filteredByStatus);
 
         // Fetch stage counts
         await fetchStageCounts();
@@ -571,6 +578,10 @@ const JobApplications = () => {
     const filtered = await fetchApplications(filterParams);
     setApplications(filtered);
     setFilteredApps(filtered);
+    // If no filters are active, keep a local cache of "all applications"
+    if (!areFiltersActive(filters)) {
+      setAllApplications(filtered);
+    }
     setSelectedApplications(new Set());
 
     if (isMobile) {
