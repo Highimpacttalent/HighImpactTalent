@@ -11,12 +11,21 @@ import {
   Divider,
   Grid,
   Stack,
+  Fab, 
   Snackbar,
   Badge,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
 } from "@mui/material";
 import MailIcon from "@mui/icons-material/Mail";
 import PhoneIcon from "@mui/icons-material/Phone";
+import QuestionAnswerIcon from "@mui/icons-material/QuestionAnswer";
+import CloseIcon from "@mui/icons-material/Close";
 import AssignmentIcon from "@mui/icons-material/Assignment";
+import { Tooltip } from "@mui/material";
+
 import LocationOnIcon from "@mui/icons-material/LocationOn";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import { useNavigate } from "react-router-dom";
@@ -103,6 +112,9 @@ const ViewProfile = () => {
   const applicationId = location.state?.applicationId || "";
   const [expanded, setExpanded] = useState({});
   const [expandedExperience, setExpandedExperience] = useState({});
+  const [screeningModalOpen, setScreeningModalOpen] = useState(false);
+  const openScreeningModal = () => setScreeningModalOpen(true);
+  const closeScreeningModal = () => setScreeningModalOpen(false);
 
   const validStatuses = [
     "Application Viewed",
@@ -1039,82 +1051,140 @@ const ViewProfile = () => {
                 </ProfileSection>
               </Box>
 
-              {/* Screening Questions */}
-              {ScreeningQues?.length > 0 && (
-                <ProfileSection
-                  title="Screening Questions"
-                  icon={
-                    <AssignmentTurnedInIcon
-                      sx={{ fontSize: 20, color: "#6B7280" }}
-                    />
-                  }
-                >
-                  <Stack spacing={2}>
-                    {ScreeningQues.map((item, index) => (
-                      <Paper
-                        key={item._id || index}
-                        elevation={0}
-                        sx={{
-                          border: "1px solid #E5E7EB",
-                          borderRadius: "8px",
-                          overflow: "hidden",
-                        }}
-                      >
-                        <Box
-                          sx={{
-                            p: 2,
-                            bgcolor: "#F9FAFB",
-                            cursor: "pointer",
-                            display: "flex",
-                            justifyContent: "space-between",
-                            alignItems: "center",
-                          }}
-                          onClick={() => handleToggle(index)}
-                        >
-                          <Typography
-                            sx={{
-                              fontSize: "14px",
-                              fontWeight: 600,
-                              fontFamily: "Satoshi",
-                              color: "#111827",
-                              flex: 1,
-                              pr: 2,
-                            }}
-                          >
-                            Q{index + 1}: {item.question}
-                          </Typography>
-                          <IconButton size="small" sx={{ color: "#6B7280" }}>
-                            {expanded[index] ? (
-                              <ExpandLessIcon />
-                            ) : (
-                              <ExpandMoreIcon />
-                            )}
-                          </IconButton>
-                        </Box>
-                        {expanded[index] && (
-                          <Box sx={{ p: 3, bgcolor: "white" }}>
-                            <Typography
-                              sx={{
-                                fontSize: "14px",
-                                fontFamily: "Poppins",
-                                color: "#374151",
-                                lineHeight: 1.6,
-                                whiteSpace: "pre-wrap",
-                              }}
-                            >
-                              {item.answer}
-                            </Typography>
-                          </Box>
-                        )}
-                      </Paper>
-                    ))}
-                  </Stack>
-                </ProfileSection>
-              )}
             </Stack>
           </Grid>
         </Grid>
       </Container>
+
+
+       {/* Floating action: explicit pill on desktop, compact FAB on mobile */}
+        {ScreeningQues?.length > 0 && (
+          <Box
+            sx={{
+              position: "fixed",
+              top: { xs: 120, md: 150 },
+              right: { xs: 16, md: 28 },
+              zIndex: 1500,
+              display: "flex",
+              alignItems: "center",
+              gap: 1,
+            }}
+          >
+            {/* Desktop / large: pill button with text + count */}
+            <Box sx={{ display: { xs: "none", md: "block" } }}>
+              <Button
+                variant="contained"
+                onClick={openScreeningModal}
+                startIcon={<QuestionAnswerIcon />}
+                sx={{
+                  bgcolor: "#6366F1",
+                  "&:hover": { bgcolor: "#5048E5" },
+                  boxShadow: "0 6px 20px rgba(99,102,241,0.18)",
+                  px: 2.5,
+                  py: 1.05,
+                  borderRadius: "999px",
+                  textTransform: "none",
+                  fontWeight: 700,
+                  fontFamily: "Satoshi",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 1,
+                }}
+                aria-label={`Open screening answers (${ScreeningQues.length})`}
+              >
+                <Box component="span" style={{marginRight:"10px"}}>Screening Answers</Box>
+
+                {/* count badge style matches page aesthetics */}
+                <Badge
+                  badgeContent={ScreeningQues.length}
+                  color="default"
+                  sx={{
+                    "& .MuiBadge-badge": {
+                      backgroundColor: "#FFFFFF",
+                      color: "#111827",
+                      fontWeight: 700,
+                      fontSize: "12px",
+                      minWidth: 26,
+                      height: 26,
+                      borderRadius: "13px",
+                      boxShadow: "0 1px 0 rgba(0,0,0,0.04)",
+                      border: "1px solid #E5E7EB",
+                    },
+                  }}
+                />
+              </Button>
+            </Box>
+
+            {/* Mobile / small: compact FAB with tooltip */}
+            <Box sx={{ display: { xs: "block", md: "none" } }}>
+              <Tooltip title={`Screening Answers (${ScreeningQues.length})`}>
+                <Fab
+                  color="primary"
+                  aria-label="view-screening-answers"
+                  onClick={openScreeningModal}
+                  sx={{
+                    bgcolor: "#6366F1",
+                    "&:hover": { bgcolor: "#5048E5" },
+                    boxShadow: "0 6px 20px rgba(99,102,241,0.18)",
+                  }}
+                >
+                  <QuestionAnswerIcon />
+                </Fab>
+              </Tooltip>
+            </Box>
+          </Box>
+        )}
+
+
+      {/* Screening Answers Modal */}
+      <Dialog
+        open={screeningModalOpen}
+        onClose={closeScreeningModal}
+        fullWidth
+        maxWidth="sm"
+        aria-labelledby="screening-answers-title"
+      >
+        <DialogTitle sx={{ pb: 0, display: "flex", alignItems: "center", gap: 2 }}>
+          <QuestionAnswerIcon sx={{ color: "#6366F1" }} />
+          <Box sx={{ flex: 1 }}>
+            <Typography sx={{ fontSize: 18, fontWeight: 700, fontFamily: "Satoshi" }}>
+              Screening Answers
+            </Typography>
+            <Typography sx={{ fontSize: 13, color: "#6B7280" }}>
+              {ScreeningQues.length} question{ScreeningQues.length > 1 ? "s" : ""}
+            </Typography>
+          </Box>
+          <IconButton onClick={closeScreeningModal} aria-label="close" size="small" sx={{ color: "#6B7280" }}>
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
+
+        <DialogContent dividers sx={{ pt: 2 }}>
+          <Stack spacing={2}>
+            {ScreeningQues.map((item, idx) => (
+              <Paper key={item._id || idx} elevation={0} sx={{ border: "1px solid #E5E7EB", borderRadius: 2, overflow: "hidden" }}>
+                <Box sx={{ p: 2, bgcolor: "#F9FAFB" }}>
+                  <Typography sx={{ fontSize: 14, fontWeight: 600, fontFamily: "Satoshi", color: "#111827" }}>
+                    Q{idx + 1}: {item.question}
+                  </Typography>
+                </Box>
+                <Box sx={{ p: 2 }}>
+                  <Typography sx={{ fontSize: 14, fontFamily: "Poppins", color: "#374151", whiteSpace: "pre-wrap", lineHeight: 1.6 }}>
+                    {item.answer}
+                  </Typography>
+                </Box>
+              </Paper>
+            ))}
+          </Stack>
+        </DialogContent>
+
+        <DialogActions sx={{ p: 2 }}>
+          <Button onClick={closeScreeningModal} sx={{ textTransform: "none" }}>
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
+
       <Snackbar
         open={snackbarOpen}
         autoHideDuration={2000}
