@@ -370,7 +370,9 @@ export const getApplicationsOfAjob = async (req, res) => {
               preferredWorkTypes: 1,
               preferredWorkModes: 1,
               currentSalary: 1,
-              highestQualification: 1
+              highestQualification: 1,
+              experienceHistory: 1,
+              educationDetails: 1
             }
           }
         ]
