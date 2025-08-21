@@ -164,10 +164,9 @@ const JobApplications = () => {
   });
 
   useEffect(() => {
-  if (!jobId) return;
-  applyFilters();
-}, [matchTab, sortOption, limit, jobId]);
-
+    if (!jobId) return;
+    applyFilters();
+  }, [matchTab, sortOption, limit, jobId]);
 
   // Bulk selection states
   const [selectedApplications, setSelectedApplications] = useState(new Set());
@@ -225,62 +224,64 @@ const JobApplications = () => {
   const location = useLocation();
 
   function areFiltersActive(filters) {
-  if (!filters) return false;
+    if (!filters) return false;
 
-  const {
-    keywords = [],
-    locations = [],
-    designations = [],
-    screeningFilters = {},
-    totalYearsInConsulting = "",
-    minExperience = "",
-    maxExperience = "",
-    minSalary = "",
-    maxSalary = "",
-    matchPercentageTier = "",
-  } = filters;
+    const {
+      keywords = [],
+      locations = [],
+      designations = [],
+      screeningFilters = {},
+      totalYearsInConsulting = "",
+      minExperience = "",
+      maxExperience = "",
+      minSalary = "",
+      maxSalary = "",
+      matchPercentageTier = "",
+    } = filters;
 
-  // 1) any array-type filters non-empty?
-  if (Array.isArray(keywords) && keywords.length > 0) return true;
-  if (Array.isArray(locations) && locations.length > 0) return true;
-  if (Array.isArray(designations) && designations.length > 0) return true;
+    // 1) any array-type filters non-empty?
+    if (Array.isArray(keywords) && keywords.length > 0) return true;
+    if (Array.isArray(locations) && locations.length > 0) return true;
+    if (Array.isArray(designations) && designations.length > 0) return true;
 
-  // 2) screeningFilters: consider nested arrays or non-empty values
-  if (
-    screeningFilters &&
-    typeof screeningFilters === "object" &&
-    Object.keys(screeningFilters).length > 0
-  ) {
-    for (const key of Object.keys(screeningFilters)) {
-      const val = screeningFilters[key];
-      if (Array.isArray(val) && val.length > 0) return true;
-      if (val !== undefined && val !== null && String(val).trim() !== "") {
-        return true;
+    // 2) screeningFilters: consider nested arrays or non-empty values
+    if (
+      screeningFilters &&
+      typeof screeningFilters === "object" &&
+      Object.keys(screeningFilters).length > 0
+    ) {
+      for (const key of Object.keys(screeningFilters)) {
+        const val = screeningFilters[key];
+        if (Array.isArray(val) && val.length > 0) return true;
+        if (val !== undefined && val !== null && String(val).trim() !== "") {
+          return true;
+        }
       }
     }
+
+    // 3) simple scalar fields (treat non-empty strings / numbers as active)
+    const simpleFields = [
+      totalYearsInConsulting,
+      minExperience,
+      maxExperience,
+      minSalary,
+      maxSalary,
+      matchPercentageTier,
+    ];
+
+    if (
+      simpleFields.some(
+        (v) => v !== undefined && v !== null && String(v).trim() !== ""
+      )
+    ) {
+      return true;
+    }
+
+    // none found
+    return false;
   }
-
-  // 3) simple scalar fields (treat non-empty strings / numbers as active)
-  const simpleFields = [
-    totalYearsInConsulting,
-    minExperience,
-    maxExperience,
-    minSalary,
-    maxSalary,
-    matchPercentageTier,
-  ];
-
-  if (simpleFields.some((v) => v !== undefined && v !== null && String(v).trim() !== "")) {
-    return true;
-  }
-
-  // none found
-  return false;
-}
-
 
   const hasActiveFilters = areFiltersActive(filters);
-
 
   useEffect(() => {
     return () => {
@@ -298,84 +299,87 @@ const JobApplications = () => {
   }, [jobId]);
 
   // Fetch applications with server-side filtering
-const fetchApplications = async (
-  filterParams = {},
-  status = null,
-  page = currentPage
-) => {
-  const thisFetchId = ++latestFetchId.current; // increment and capture id for this request
-  try {
-    // only set loading for the latest request
-    if (thisFetchId === latestFetchId.current) setFilterLoading(true);
+  const fetchApplications = async (
+    filterParams = {},
+    status = null,
+    page = currentPage
+  ) => {
+    const thisFetchId = ++latestFetchId.current; // increment and capture id for this request
+    try {
+      // only set loading for the latest request
+      if (thisFetchId === latestFetchId.current) setFilterLoading(true);
 
-    const queryParams = new URLSearchParams();
+      const queryParams = new URLSearchParams();
 
-    // Add status if provided
-    if (status) {
-      queryParams.append("status", status);
-    }
-
-    // Add filter parameters
-    Object.entries(filterParams).forEach(([key, value]) => {
-      if (value !== undefined && value !== null && value !== "") {
-        // Special handling for screeningFilters
-        if (key === "screeningFilters" && typeof value === "object") {
-          queryParams.append(key, JSON.stringify(value));
-        } else {
-          queryParams.append(key, value.toString().trim());
-        }
+      // Add status if provided
+      if (status) {
+        queryParams.append("status", status);
       }
-    });
 
-    queryParams.append("page", page);
-    queryParams.append("limit", limit.toString());
-    queryParams.append("sortBy", sortOption);
-    if (matchTab !== "all") {
-      queryParams.append("matchPercentageTier", matchTab);
-    }
+      // Add filter parameters
+      Object.entries(filterParams).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== "") {
+          // Special handling for screeningFilters
+          if (key === "screeningFilters" && typeof value === "object") {
+            queryParams.append(key, JSON.stringify(value));
+          } else {
+            queryParams.append(key, value.toString().trim());
+          }
+        }
+      });
 
-    console.log("Fetching applications with params:", queryParams.toString());
+      queryParams.append("page", page);
+      queryParams.append("limit", limit.toString());
+      queryParams.append("sortBy", sortOption);
+      if (matchTab !== "all") {
+        queryParams.append("matchPercentageTier", matchTab);
+      }
 
-    const response = await apiRequest({
-      url: `application/get-applications/${jobId}?${queryParams.toString()}`,
-      method: "GET",
-    });
+      console.log("Fetching applications with params:", queryParams.toString());
 
-    // If a newer request was started, ignore this response
-    if (thisFetchId !== latestFetchId.current) {
-      console.warn("Stale fetch ignored:", queryParams.toString());
+      const response = await apiRequest({
+        url: `application/get-applications/${jobId}?${queryParams.toString()}`,
+        method: "GET",
+      });
+
+      // If a newer request was started, ignore this response
+      if (thisFetchId !== latestFetchId.current) {
+        console.warn("Stale fetch ignored:", queryParams.toString());
+        return [];
+      }
+
+      if (!response.success) {
+        throw new Error(response.message || "Failed to fetch applications");
+      }
+
+      const totalCount = response.totalApplications || response.totalCount || 0;
+
+      // Safe check for job title - only set if applications exist (and still latest)
+      if (
+        response.applications &&
+        response.applications.length > 0 &&
+        thisFetchId === latestFetchId.current
+      ) {
+        setJobTitle(response.applications[0].job.jobTitle);
+      }
+
+      if (thisFetchId === latestFetchId.current) {
+        setTotalPages(Math.ceil(totalCount / limit));
+        setCurrentCount(response.pagination?.totalApplications);
+        setCurrentPage(page);
+      }
+
+      return response.applications || [];
+    } catch (err) {
+      // Only set error for the latest request
+      if (thisFetchId === latestFetchId.current) setError(err.message);
       return [];
+    } finally {
+      // Only turn off loading if this is still the latest request
+      if (thisFetchId === latestFetchId.current) setFilterLoading(false);
     }
-
-    if (!response.success) {
-      throw new Error(response.message || "Failed to fetch applications");
-    }
-
-    const totalCount = response.totalApplications || response.totalCount || 0;
-
-    // Safe check for job title - only set if applications exist (and still latest)
-    if (response.applications && response.applications.length > 0 && thisFetchId === latestFetchId.current) {
-      setJobTitle(response.applications[0].job.jobTitle);
-    }
-
-    if (thisFetchId === latestFetchId.current) {
-      setTotalPages(Math.ceil(totalCount / limit));
-      setCurrentCount(response.pagination?.totalApplications);
-      setCurrentPage(page);
-    }
-
-    return response.applications || [];
-  } catch (err) {
-    // Only set error for the latest request
-    if (thisFetchId === latestFetchId.current) setError(err.message);
-    return [];
-  } finally {
-    // Only turn off loading if this is still the latest request
-    if (thisFetchId === latestFetchId.current) setFilterLoading(false);
-  }
-};
-// ---- END replacement ----
-
+  };
+  // ---- END replacement ----
 
   //Fetch stage counts
   const fetchStageCounts = async () => {
@@ -1583,174 +1587,177 @@ const fetchApplications = async (
         }}
       >
         {/* Enhanced Filters Sidebar */}
-       {/* Enhanced Filters Sidebar */}
-<Box
-  sx={{
-    width: { xs: "100%", md: `${filterWidth}px` }, // use state here
-    flexShrink: 0,
-    position: "relative", // needed for resizer
-  }}
->
-  {isMobile ? (
-    <Box sx={{ mb: 3 }}>
-      {/* your mobile filter button unchanged */}
-      <Button
-        onClick={() => setDrawerOpen(true)}
-        variant="outlined"
-        startIcon={<FilterListIcon />}
-        sx={{
-          bgcolor: "white",
-          borderRadius: 3,
-          p: 2,
-          fontFamily: "Satoshi",
-          fontWeight: 600,
-          textTransform: "none",
-          border: "2px solid #e2e8f0",
-          color: "#24252C",
-          boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
-          "&:hover": {
-            bgcolor: "#f8fafc",
-            border: "2px solid #1976d2",
-            transform: "translateY(-1px)",
-          },
-        }}
-      >
-        Filters & Search
-        {hasActiveFilters && (
-    <Box
-      component="span"
-      sx={{
-        ml: 1,
-        bgcolor: "#1976d2",
-        color: "white",
-        px: 1.5,
-        py: 0.3,
-        borderRadius: "12px",
-        fontSize: "13px",
-        fontWeight: 600,
-        fontFamily: "Satoshi",
-        minWidth: "24px",
-        textAlign: "center",
-      }}
-    >
-      {filteredApps.length}
-    </Box>
-  )}
-      </Button>
-    </Box>
-  ) : (
-    <Box
-      sx={{
-        bgcolor: "white",
-        p: 3,
-        borderRight: "2px solid #e2e8f0",
-        position: "sticky",
-        top: 20,
-        height: "calc(100vh - 40px)",
-        overflowY: "auto",
-        pb: 8,
-      }}
-    >
-      <Typography
-        sx={{
-          fontFamily: "Satoshi",
-          fontWeight: 600,
-          fontSize: "22px",
-          color: "#24252C",
-          mb: 3,
-          borderBottom: "2px solid #f1f5f9",
-          pb: 2,
-        }}
-      >
-        Filters & Search
-        {hasActiveFilters && (
-    <Box
-      component="span"
-      sx={{
-        fontFamily: "Satoshi",
-                fontWeight: 600,
-                fontSize: "14px",
-                color: "#334155",
-                pl: 1,
-                mb: 1,
-      }}
-    >
-      ( {currentCount} <span style={{fontSize: "11px", fontWeight: "bold"}}>candidates</span> )
-    </Box>
-  )}
-      </Typography>
-      {FiltersContent}
-    </Box>
-  )}
+        {/* Enhanced Filters Sidebar */}
+        <Box
+          sx={{
+            width: { xs: "100%", md: `${filterWidth}px` }, // use state here
+            flexShrink: 0,
+            position: "relative", // needed for resizer
+          }}
+        >
+          {isMobile ? (
+            <Box sx={{ mb: 3 }}>
+              {/* your mobile filter button unchanged */}
+              <Button
+                onClick={() => setDrawerOpen(true)}
+                variant="outlined"
+                startIcon={<FilterListIcon />}
+                sx={{
+                  bgcolor: "white",
+                  borderRadius: 3,
+                  p: 2,
+                  fontFamily: "Satoshi",
+                  fontWeight: 600,
+                  textTransform: "none",
+                  border: "2px solid #e2e8f0",
+                  color: "#24252C",
+                  boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
+                  "&:hover": {
+                    bgcolor: "#f8fafc",
+                    border: "2px solid #1976d2",
+                    transform: "translateY(-1px)",
+                  },
+                }}
+              >
+                Filters & Search
+                {hasActiveFilters && (
+                  <Box
+                    component="span"
+                    sx={{
+                      ml: 1,
+                      bgcolor: "#1976d2",
+                      color: "white",
+                      px: 1.5,
+                      py: 0.3,
+                      borderRadius: "12px",
+                      fontSize: "13px",
+                      fontWeight: 600,
+                      fontFamily: "Satoshi",
+                      minWidth: "24px",
+                      textAlign: "center",
+                    }}
+                  >
+                    {filteredApps.length}
+                  </Box>
+                )}
+              </Button>
+            </Box>
+          ) : (
+            <Box
+              sx={{
+                bgcolor: "white",
+                p: 3,
+                borderRight: "2px solid #e2e8f0",
+                position: "sticky",
+                top: 20,
+                height: "calc(100vh - 40px)",
+                overflowY: "auto",
+                pb: 8,
+              }}
+            >
+              <Typography
+                sx={{
+                  fontFamily: "Satoshi",
+                  fontWeight: 600,
+                  fontSize: "22px",
+                  color: "#24252C",
+                  mb: 3,
+                  borderBottom: "2px solid #f1f5f9",
+                  pb: 2,
+                }}
+              >
+                Filters & Search
+                {hasActiveFilters && (
+                  <Box
+                    component="span"
+                    sx={{
+                      fontFamily: "Satoshi",
+                      fontWeight: 600,
+                      fontSize: "14px",
+                      color: "#334155",
+                      pl: 1,
+                      mb: 1,
+                    }}
+                  >
+                    ( {currentCount}{" "}
+                    <span style={{ fontSize: "11px", fontWeight: "bold" }}>
+                      candidates
+                    </span>{" "}
+                    )
+                  </Box>
+                )}
+              </Typography>
+              {FiltersContent}
+            </Box>
+          )}
 
-  {/* Resizer handle (only on desktop) */}
-  {!isMobile && (
-    <Box
-      onMouseDown={startResizing}
-      sx={{
-        position: "absolute",
-        right: 0,
-        top: 0,
-        width: "6px",
-        height: "100%",
-        cursor: "col-resize",
-        "&:hover": { backgroundColor: "#e5e7eb" },
-      }}
-    />
-  )}
+          {/* Resizer handle (only on desktop) */}
+          {!isMobile && (
+            <Box
+              onMouseDown={startResizing}
+              sx={{
+                position: "absolute",
+                right: 0,
+                top: 0,
+                width: "6px",
+                height: "100%",
+                cursor: "col-resize",
+                "&:hover": { backgroundColor: "#e5e7eb" },
+              }}
+            />
+          )}
 
-  {/* Drawer for mobile stays the same */}
-  <Drawer
-    anchor="left"
-    open={drawerOpen}
-    onClose={() => setDrawerOpen(false)}
-    PaperProps={{
-      sx: {
-        width: 320,
-        bgcolor: "white",
-        borderRadius: "0 16px 16px 0",
-      },
-    }}
-  >
-    <Box sx={{ p: 3 }}>
-      <Typography
-        sx={{
-          fontFamily: "Satoshi",
-          fontWeight: 700,
-          fontSize: "18px",
-          color: "#24252C",
-          mb: 3,
-          borderBottom: "2px solid #f1f5f9",
-          pb: 2,
-        }}
-      >
-        Filters & Search
-        {hasActiveFilters && (
-    <Box
-      component="span"
-      sx={{
-        ml: 1,
-        bgcolor: "#1976d2",
-        color: "white",
-        px: 1.5,
-        py: 0.3,
-        borderRadius: "12px",
-        fontSize: "13px",
-        fontWeight: 600,
-        fontFamily: "Satoshi",
-        minWidth: "24px",
-        textAlign: "center",
-      }}
-    >
-      {filteredApps.length}
-    </Box>
-  )}
-      </Typography>
-      {FiltersContent}
-    </Box>
-  </Drawer>
-</Box>
-
+          {/* Drawer for mobile stays the same */}
+          <Drawer
+            anchor="left"
+            open={drawerOpen}
+            onClose={() => setDrawerOpen(false)}
+            PaperProps={{
+              sx: {
+                width: 320,
+                bgcolor: "white",
+                borderRadius: "0 16px 16px 0",
+              },
+            }}
+          >
+            <Box sx={{ p: 3 }}>
+              <Typography
+                sx={{
+                  fontFamily: "Satoshi",
+                  fontWeight: 700,
+                  fontSize: "18px",
+                  color: "#24252C",
+                  mb: 3,
+                  borderBottom: "2px solid #f1f5f9",
+                  pb: 2,
+                }}
+              >
+                Filters & Search
+                {hasActiveFilters && (
+                  <Box
+                    component="span"
+                    sx={{
+                      ml: 1,
+                      bgcolor: "#1976d2",
+                      color: "white",
+                      px: 1.5,
+                      py: 0.3,
+                      borderRadius: "12px",
+                      fontSize: "13px",
+                      fontWeight: 600,
+                      fontFamily: "Satoshi",
+                      minWidth: "24px",
+                      textAlign: "center",
+                    }}
+                  >
+                    {filteredApps.length}
+                  </Box>
+                )}
+              </Typography>
+              {FiltersContent}
+            </Box>
+          </Drawer>
+        </Box>
 
         {/* Applications Section */}
         <Box sx={{ flex: 1 }}>
@@ -1838,7 +1845,7 @@ const fetchApplications = async (
                         whiteSpace: "nowrap",
                       }}
                     >
-                      {step} 
+                      {step}
                     </Typography>
 
                     <Box
@@ -1865,53 +1872,53 @@ const fetchApplications = async (
           <Box
             sx={{
               display: "flex",
-              justifyContent: selectedApplications.size > 0 ? "space-between" : "flex-end",
+              justifyContent:
+                selectedApplications.size > 0 ? "space-between" : "flex-end",
               alignItems: "center",
               mb: 2,
               px: 1,
             }}
           >
-
-             {/* Selection Badge */}
-                  {selectedApplications.size > 0 && (
-                    <Box
-                      sx={{
-                        bgcolor: "#dcfce7",
-                        color: "#166534",
-                        px: 2,
-                        py: 0.75,
-                        borderRadius: 2,
-                        border: "1px solid #bbf7d0",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 0.5,
-                        minHeight: "36px",
-                      }}
-                    >
-                      <Typography
-                        sx={{
-                          fontFamily: "Satoshi",
-                          fontWeight: 600,
-                          fontSize: "13px",
-                          lineHeight: 1,
-                        }}
-                      >
-                        {selectedApplications.size} selected
-                      </Typography>
-                      <IconButton
-                        size="small"
-                        onClick={clearSelection}
-                        sx={{
-                          color: "#166534",
-                          p: 0.25,
-                          ml: 0.5,
-                          "&:hover": { bgcolor: "rgba(22, 101, 52, 0.1)" },
-                        }}
-                      >
-                        <CancelOutlinedIcon sx={{ fontSize: 16 }} />
-                      </IconButton>
-                    </Box>
-                  )}
+            {/* Selection Badge */}
+            {selectedApplications.size > 0 && (
+              <Box
+                sx={{
+                  bgcolor: "#dcfce7",
+                  color: "#166534",
+                  px: 2,
+                  py: 0.75,
+                  borderRadius: 2,
+                  border: "1px solid #bbf7d0",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 0.5,
+                  minHeight: "36px",
+                }}
+              >
+                <Typography
+                  sx={{
+                    fontFamily: "Satoshi",
+                    fontWeight: 600,
+                    fontSize: "13px",
+                    lineHeight: 1,
+                  }}
+                >
+                  {selectedApplications.size} selected
+                </Typography>
+                <IconButton
+                  size="small"
+                  onClick={clearSelection}
+                  sx={{
+                    color: "#166534",
+                    p: 0.25,
+                    ml: 0.5,
+                    "&:hover": { bgcolor: "rgba(22, 101, 52, 0.1)" },
+                  }}
+                >
+                  <CancelOutlinedIcon sx={{ fontSize: 16 }} />
+                </IconButton>
+              </Box>
+            )}
 
             <Box
               sx={{
@@ -1921,7 +1928,6 @@ const fetchApplications = async (
                 flexWrap: "wrap",
               }}
             >
-              
               {matchTiers.map((tier) => {
                 const isActive = matchTab === tier.id;
                 return (
@@ -1977,165 +1983,448 @@ const fetchApplications = async (
               }}
             >
               {/* Compact Header with Inline Actions */}
-              <Box
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  flexWrap: "wrap",
-                  gap: 2,
-                  mb: 2,
-                }}
-              >
-                {/* Left Section - Selection Info */}
+              {!isMobile ? (
                 <Box
                   sx={{
                     display: "flex",
                     alignItems: "center",
+                    justifyContent: "space-between",
+                    flexWrap: "wrap",
                     gap: 2,
-                    flex: 1,
-                    minWidth: "250px",
+                    mb: 2,
                   }}
                 >
-                  <Button
-                    variant="outlined"
-                    startIcon={<SelectAllIcon />}
-                    onClick={handleSelectAll}
-                    sx={{
-                      fontFamily: "Satoshi",
-                      fontWeight: 600,
-                      fontSize: "13px",
-                      borderRadius: 2.5,
-                      textTransform: "none",
-                      px: 2.5,
-                      py: 1,
-                      border: "1.5px solid #e2e8f0",
-                      color: "#475569",
-                      bgcolor: "white",
-                      minHeight: "36px",
-                      "&:hover": {
-                        border: "1.5px solid #1976d2",
-                        color: "#1976d2",
-                        bgcolor: "#f0f7ff",
-                        transform: "translateY(-1px)",
-                      },
-                    }}
-                  >
-                    {selectedApplications.size === filteredApps.length
-                      ? "Deselect"
-                      : "Select All"}
-                  </Button>
-
+                  {/* Left Section - Selection Info */}
                   <Box
                     sx={{
                       display: "flex",
                       alignItems: "center",
-                      gap: 1,
-                      bgcolor: "#f0f7ff",
-                      px: 2.5,
-                      py: 1,
-                      borderRadius: 2.5,
-                      border: "1px solid #bfdbfe",
-                      minHeight: "36px",
+                      gap: 2,
+                      flex: 1,
+                      minWidth: "250px",
                     }}
                   >
-                    <Typography
+                    <Button
+                      variant="outlined"
+                      startIcon={<SelectAllIcon />}
+                      onClick={handleSelectAll}
                       sx={{
-                        color: "#1976d2",
-                        fontFamily: "Satoshi, sans-serif",
-                        fontWeight: 700,
-                        fontSize: "15px",
-                        lineHeight: 1,
-                        whiteSpace: "nowrap",
+                        fontFamily: "Satoshi",
+                        fontWeight: 600,
+                        fontSize: "13px",
+                        borderRadius: 2.5,
+                        textTransform: "none",
+                        px: 2.5,
+                        py: 1,
+                        border: "1.5px solid #e2e8f0",
+                        color: "#475569",
+                        bgcolor: "white",
+                        minHeight: "36px",
+                        "&:hover": {
+                          border: "1.5px solid #1976d2",
+                          color: "#1976d2",
+                          bgcolor: "#f0f7ff",
+                          transform: "translateY(-1px)",
+                        },
                       }}
                     >
-                      Visible Profiles
-                    </Typography>
+                      {selectedApplications.size === filteredApps.length
+                        ? "Deselect"
+                        : "Select All"}
+                    </Button>
 
-                    <FormControl size="small" variant="standard">
-                      <Select
-                        value={limit}
-                        onChange={(e) => setLimit(+e.target.value)}
-                        disableUnderline
+                    <Box
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 1,
+                        bgcolor: "#f0f7ff",
+                        px: 2.5,
+                        py: 1,
+                        borderRadius: 2.5,
+                        border: "1px solid #bfdbfe",
+                        minHeight: "36px",
+                      }}
+                    >
+                      <Typography
                         sx={{
+                          color: "#1976d2",
                           fontFamily: "Satoshi, sans-serif",
                           fontWeight: 700,
                           fontSize: "15px",
-                          color: "#1976d2",
-                          minWidth: 48,
-                          "& .MuiSelect-select": {
-                            py: 0,
-                            px: 0.5,
-                            textAlign: "right",
-                          },
-                          "& .MuiSvgIcon-root": {
-                            color: "#1976d2",
-                            fontSize: "1rem",
-                          },
+                          lineHeight: 1,
+                          whiteSpace: "nowrap",
                         }}
                       >
-                        {[20, 50, 100].map((n) => (
-                          <MenuItem key={n} value={n}>
-                            {n}
-                          </MenuItem>
-                        ))}
+                        Visible Profiles
+                      </Typography>
+
+                      <FormControl size="small" variant="standard">
+                        <Select
+                          value={limit}
+                          onChange={(e) => setLimit(+e.target.value)}
+                          disableUnderline
+                          sx={{
+                            fontFamily: "Satoshi, sans-serif",
+                            fontWeight: 700,
+                            fontSize: "15px",
+                            color: "#1976d2",
+                            minWidth: 48,
+                            "& .MuiSelect-select": {
+                              py: 0,
+                              px: 0.5,
+                              textAlign: "right",
+                            },
+                            "& .MuiSvgIcon-root": {
+                              color: "#1976d2",
+                              fontSize: "1rem",
+                            },
+                          }}
+                        >
+                          {[20, 50, 100].map((n) => (
+                            <MenuItem key={n} value={n}>
+                              {n}
+                            </MenuItem>
+                          ))}
+                        </Select>
+                      </FormControl>
+                    </Box>
+                  </Box>
+
+                  {/* Right Section - Action Buttons */}
+                  <Box
+                    sx={{
+                      display: "flex",
+                      gap: 1.5,
+                      alignItems: "center",
+                      flexWrap: "wrap",
+                    }}
+                  >
+                    <Button
+                      variant="contained"
+                      disabled={
+                        selectedApplications.size === 0 || downloadLoading
+                      }
+                      onClick={handleBulkDownload}
+                      startIcon={
+                        downloadLoading ? (
+                          <CircularProgress size={14} color="inherit" />
+                        ) : (
+                          <GetAppIcon sx={{ fontSize: 16 }} />
+                        )
+                      }
+                      sx={{
+                        fontFamily: "Satoshi",
+                        fontWeight: 600,
+                        fontSize: "13px",
+                        textTransform: "none",
+                        borderRadius: 2.5,
+                        px: 2.5,
+                        py: 1,
+                        minHeight: "36px",
+                        bgcolor: "#10b981",
+                        boxShadow: "0 2px 8px rgba(16, 185, 129, 0.25)",
+                        "&:hover": {
+                          bgcolor: "#059669",
+                          transform: "translateY(-1px)",
+                          boxShadow: "0 4px 12px rgba(16, 185, 129, 0.35)",
+                        },
+                        "&:disabled": {
+                          bgcolor: "#e2e8f0",
+                          color: "#94a3b8",
+                        },
+                      }}
+                    >
+                      {downloadLoading ? "Downloading" : "Download Resumes"}
+                    </Button>
+
+                    {/* Primary Actions */}
+                    <Tooltip title="Shortlist">
+                      <span>
+                        <IconButton
+                          disabled={
+                            selectedApplications.size === 0 ||
+                            bulkActionLoading ||
+                            steps[activeStep] === "Shortlisted"
+                          }
+                          onClick={() =>
+                            openConfirmDialog(
+                              "advance",
+                              "Advance Selected Candidates",
+                              `Move ${
+                                selectedApplications.size
+                              } selected candidate${
+                                selectedApplications.size !== 1 ? "s" : ""
+                              } to Shortlisted stage?`
+                            )
+                          }
+                          sx={{
+                            backgroundColor: "#FFFFFF",
+                            border: "2px solid #10B981",
+                            color: "#10B981",
+                            borderRadius: "0.25rem",
+                            width: "30px",
+                            height: "30px",
+                            "&:hover": {
+                              backgroundColor: "#F0FDF4",
+                            },
+                            "&.Mui-disabled": {
+                              backgroundColor: "#F9FAFB",
+                              borderColor: "#E5E7EB",
+                              color: "#9CA3AF",
+                            },
+                          }}
+                        >
+                          {bulkActionLoading ? (
+                            <CircularProgress size={16} color="inherit" />
+                          ) : (
+                            <CheckRounded />
+                          )}
+                        </IconButton>
+                      </span>
+                    </Tooltip>
+
+                    <Tooltip title="Reject">
+                      <span>
+                        <IconButton
+                          disabled={
+                            selectedApplications.size === 0 || bulkActionLoading
+                          }
+                          onClick={() =>
+                            openConfirmDialog(
+                              "reject",
+                              "Reject Selected Candidates",
+                              `Mark ${
+                                selectedApplications.size
+                              } selected candidate${
+                                selectedApplications.size !== 1 ? "s" : ""
+                              } as "Not Progressing"?`
+                            )
+                          }
+                          sx={{
+                            backgroundColor: "#FFF",
+                            border: "2px solid #F87171",
+                            color: "#EF4444",
+                            borderRadius: "0.25rem", // Square with slightly rounded corners
+                            width: "30px",
+                            height: "30px",
+                            "&:hover": {
+                              backgroundColor: "#FEF2F2",
+                              color: "#B91C1C",
+                              borderColor: "#DC2626",
+                            },
+                            "&.Mui-disabled": {
+                              backgroundColor: "#F9FAFB",
+                              borderColor: "#E5E7EB",
+                              color: "#9CA3AF",
+                            },
+                          }}
+                        >
+                          {bulkActionLoading ? (
+                            <CircularProgress size={16} color="inherit" />
+                          ) : (
+                            <CloseRounded />
+                          )}
+                        </IconButton>
+                      </span>
+                    </Tooltip>
+
+                    {/* Divider */}
+                    <Divider
+                      orientation="vertical"
+                      sx={{
+                        height: "24px",
+                        borderColor: "#e2e8f0",
+                        mx: 0.5,
+                      }}
+                    />
+                    <FormControl
+                      size="small"
+                      sx={{
+                        minWidth: 200,
+                        borderRadius: 2.5,
+                        backgroundColor: "white",
+                        border: "1.5px solid #e2e8f0",
+                        fontFamily: "Satoshi",
+                        fontWeight: 600,
+                        "& .MuiInputLabel-root": {
+                          fontSize: "13px",
+                          fontWeight: 600,
+                          color: "#64748b",
+                          fontFamily: "Satoshi",
+                        },
+                        "& .MuiOutlinedInput-root": {
+                          borderRadius: 2.5,
+                          fontSize: "13px",
+                          fontWeight: 600,
+                          fontFamily: "Satoshi",
+                          backgroundColor: "white",
+                          paddingY: 0.5,
+                          "& fieldset": {
+                            border: "none",
+                          },
+                          "&:hover fieldset": {
+                            border: "none",
+                          },
+                          "&.Mui-focused fieldset": {
+                            border: "none",
+                          },
+                        },
+                        "& .MuiSelect-select": {
+                          padding: "10px 14px",
+                          color: "#1f2937",
+                        },
+                        "& .MuiSelect-icon": {
+                          color: "#6b7280",
+                          right: "12px",
+                        },
+                      }}
+                    >
+                      <InputLabel id="sort-by-label">Sort By</InputLabel>
+                      <Select
+                        labelId="sort-by-label"
+                        value={sortOption}
+                        onChange={(e) => setSortOption(e.target.value)}
+                        label="Sort By"
+                      >
+                        <MenuItem value="matchHighToLow">
+                          Match Score: High to Low
+                        </MenuItem>
+                        <MenuItem value="matchLowToHigh">
+                          Match Score: Low to High
+                        </MenuItem>
+                        <MenuItem value="az">Name: A to Z</MenuItem>
+                        <MenuItem value="za">Name: Z to A</MenuItem>
                       </Select>
                     </FormControl>
                   </Box>
-
                 </Box>
-
-                {/* Right Section - Action Buttons */}
+              ) : (
                 <Box
                   sx={{
                     display: "flex",
-                    gap: 1.5,
-                    alignItems: "center",
-                    flexWrap: "wrap",
+                    flexDirection: { xs: "column", md: "row" },
+                    gap: 2,
+                    width: "100%",
                   }}
                 >
-                  <Button
-                    variant="contained"
-                    disabled={
-                      selectedApplications.size === 0 || downloadLoading
-                    }
-                    onClick={handleBulkDownload}
-                    startIcon={
-                      downloadLoading ? (
-                        <CircularProgress size={14} color="inherit" />
-                      ) : (
-                        <GetAppIcon sx={{ fontSize: 16 }} />
-                      )
-                    }
+                  {/* Row 1 - Select All + Visible Profiles */}
+                  <Box
                     sx={{
-                      fontFamily: "Satoshi",
-                      fontWeight: 600,
-                      fontSize: "13px",
-                      textTransform: "none",
-                      borderRadius: 2.5,
-                      px: 2.5,
-                      py: 1,
-                      minHeight: "36px",
-                      bgcolor: "#10b981",
-                      boxShadow: "0 2px 8px rgba(16, 185, 129, 0.25)",
-                      "&:hover": {
-                        bgcolor: "#059669",
-                        transform: "translateY(-1px)",
-                        boxShadow: "0 4px 12px rgba(16, 185, 129, 0.35)",
-                      },
-                      "&:disabled": {
-                        bgcolor: "#e2e8f0",
-                        color: "#94a3b8",
-                      },
+                      display: "flex",
+                      flexDirection: { xs: "column", sm: "row" },
+                      gap: 1.5,
+                      flex: 1,
                     }}
                   >
-                    {downloadLoading ? "Downloading" : "Download Resumes"}
-                  </Button>
+                    {/* Select All / Deselect */}
+                    <Button
+                      variant="outlined"
+                      fullWidth
+                      onClick={handleSelectAll}
+                      startIcon={<SelectAllIcon />}
+                      sx={{
+                        fontFamily: "Satoshi",
+                        fontWeight: 600,
+                        textTransform: "none",
+                        borderRadius: 2,
+                        px: 2,
+                        py: 1,
+                      }}
+                    >
+                      {selectedApplications.size === filteredApps.length
+                        ? "Deselect All"
+                        : "Select All"}
+                    </Button>
 
-                  {/* Primary Actions */}
-                  <Tooltip title="Shortlist">
-                    <span>
-                      <IconButton
+                    {/* Visible Profiles */}
+                    <Box
+                      sx={{
+                        flex: 1,
+                        display: "flex",
+                        alignItems: "center",
+                        border: "1px solid #e2e8f0",
+                        borderRadius: 2,
+                        px: 2,
+                        py: 1,
+                        bgcolor: "#f9fafb",
+                        justifyContent: "space-between",
+                      }}
+                    >
+                      <Typography sx={{ fontWeight: 600, fontSize: 14 }}>
+                        Visible Profiles
+                      </Typography>
+                      <FormControl size="small" variant="standard">
+                        <Select
+                          value={limit}
+                          onChange={(e) => setLimit(+e.target.value)}
+                          disableUnderline
+                          sx={{
+                            fontWeight: 700,
+                            fontSize: 14,
+                            color: "#1976d2",
+                            "& .MuiSelect-select": { py: 0 },
+                          }}
+                        >
+                          {[20, 50, 100].map((n) => (
+                            <MenuItem key={n} value={n}>
+                              {n}
+                            </MenuItem>
+                          ))}
+                        </Select>
+                      </FormControl>
+                    </Box>
+                  </Box>
+
+                  {/* Row 2 - Download + Actions */}
+                  <Box
+                    sx={{
+                      display: "flex",
+                      flexDirection: { xs: "column", sm: "row" },
+                      gap: 1.5,
+                      flex: 1,
+                    }}
+                  >
+                    {/* Download Resumes */}
+                    <Button
+                      variant="contained"
+                      fullWidth
+                      disabled={
+                        selectedApplications.size === 0 || downloadLoading
+                      }
+                      onClick={handleBulkDownload}
+                      startIcon={
+                        downloadLoading ? (
+                          <CircularProgress size={16} color="inherit" />
+                        ) : (
+                          <GetAppIcon />
+                        )
+                      }
+                      sx={{
+                        fontFamily: "Satoshi",
+                        fontWeight: 600,
+                        textTransform: "none",
+                        borderRadius: 2,
+                        px: 2,
+                        py: 1,
+                        bgcolor: "#10b981",
+                        "&:hover": { bgcolor: "#059669" },
+                      }}
+                    >
+                      {downloadLoading ? "Downloading..." : "Download Resumes"}
+                    </Button>
+
+                    {/* Shortlist & Reject */}
+                    <Box
+                      sx={{
+                        display: "flex",
+                        gap: 1.5,
+                        justifyContent: "center",
+                        width: "100%",
+                      }}
+                    >
+                      <Button
+                        variant="outlined"
                         disabled={
                           selectedApplications.size === 0 ||
                           bulkActionLoading ||
@@ -2144,155 +2433,51 @@ const fetchApplications = async (
                         onClick={() =>
                           openConfirmDialog(
                             "advance",
-                            "Advance Selected Candidates",
-                            `Move ${
-                              selectedApplications.size
-                            } selected candidate${
-                              selectedApplications.size !== 1 ? "s" : ""
-                            } to Shortlisted stage?`
+                            "Advance Selected",
+                            `Move ${selectedApplications.size} candidate(s) to Shortlisted?`
                           )
                         }
                         sx={{
-                          backgroundColor: "#FFFFFF",
-                          border: "2px solid #10B981",
+                          flex: 1,
+                          fontWeight: 600,
+                          textTransform: "none",
+                          borderRadius: 2,
                           color: "#10B981",
-                          borderRadius: "0.25rem",
-                          width: "30px",
-                          height: "30px",
-                          "&:hover": {
-                            backgroundColor: "#F0FDF4",
-                          },
-                          "&.Mui-disabled": {
-                            backgroundColor: "#F9FAFB",
-                            borderColor: "#E5E7EB",
-                            color: "#9CA3AF",
-                          },
+                          borderColor: "#10B981",
+                          "&:hover": { bgcolor: "#ECFDF5" },
                         }}
                       >
-                        {bulkActionLoading ? (
-                          <CircularProgress size={16} color="inherit" />
-                        ) : (
-                          <CheckRounded />
-                        )}
-                      </IconButton>
-                    </span>
-                  </Tooltip>
+                        Shortlist
+                      </Button>
 
-                  <Tooltip title="Reject">
-                    <span>
-                      <IconButton
+                      <Button
+                        variant="outlined"
                         disabled={
                           selectedApplications.size === 0 || bulkActionLoading
                         }
                         onClick={() =>
                           openConfirmDialog(
                             "reject",
-                            "Reject Selected Candidates",
-                            `Mark ${
-                              selectedApplications.size
-                            } selected candidate${
-                              selectedApplications.size !== 1 ? "s" : ""
-                            } as "Not Progressing"?`
+                            "Reject Selected",
+                            `Reject ${selectedApplications.size} candidate(s)?`
                           )
                         }
                         sx={{
-                          backgroundColor: "#FFF",
-                          border: "2px solid #F87171",
+                          flex: 1,
+                          fontWeight: 600,
+                          textTransform: "none",
+                          borderRadius: 2,
                           color: "#EF4444",
-                          borderRadius: "0.25rem", // Square with slightly rounded corners
-                          width: "30px",
-                          height: "30px",
-                          "&:hover": {
-                            backgroundColor: "#FEF2F2",
-                            color: "#B91C1C",
-                            borderColor: "#DC2626",
-                          },
-                          "&.Mui-disabled": {
-                            backgroundColor: "#F9FAFB",
-                            borderColor: "#E5E7EB",
-                            color: "#9CA3AF",
-                          },
+                          borderColor: "#EF4444",
+                          "&:hover": { bgcolor: "#FEF2F2" },
                         }}
                       >
-                        {bulkActionLoading ? (
-                          <CircularProgress size={16} color="inherit" />
-                        ) : (
-                          <CloseRounded />
-                        )}
-                      </IconButton>
-                    </span>
-                  </Tooltip>
-
-                  {/* Divider */}
-                  <Divider
-                    orientation="vertical"
-                    sx={{
-                      height: "24px",
-                      borderColor: "#e2e8f0",
-                      mx: 0.5,
-                    }}
-                  />
-                  <FormControl
-                    size="small"
-                    sx={{
-                      minWidth: 200,
-                      borderRadius: 2.5,
-                      backgroundColor: "white",
-                      border: "1.5px solid #e2e8f0",
-                      fontFamily: "Satoshi",
-                      fontWeight: 600,
-                      "& .MuiInputLabel-root": {
-                        fontSize: "13px",
-                        fontWeight: 600,
-                        color: "#64748b",
-                        fontFamily: "Satoshi",
-                      },
-                      "& .MuiOutlinedInput-root": {
-                        borderRadius: 2.5,
-                        fontSize: "13px",
-                        fontWeight: 600,
-                        fontFamily: "Satoshi",
-                        backgroundColor: "white",
-                        paddingY: 0.5,
-                        "& fieldset": {
-                          border: "none",
-                        },
-                        "&:hover fieldset": {
-                          border: "none",
-                        },
-                        "&.Mui-focused fieldset": {
-                          border: "none",
-                        },
-                      },
-                      "& .MuiSelect-select": {
-                        padding: "10px 14px",
-                        color: "#1f2937",
-                      },
-                      "& .MuiSelect-icon": {
-                        color: "#6b7280",
-                        right: "12px",
-                      },
-                    }}
-                  >
-                    <InputLabel id="sort-by-label">Sort By</InputLabel>
-                    <Select
-                      labelId="sort-by-label"
-                      value={sortOption}
-                      onChange={(e) => setSortOption(e.target.value)}
-                      label="Sort By"
-                    >
-                      <MenuItem value="matchHighToLow">
-                        Match Score: High to Low
-                      </MenuItem>
-                      <MenuItem value="matchLowToHigh">
-                        Match Score: Low to High
-                      </MenuItem>
-                      <MenuItem value="az">Name: A to Z</MenuItem>
-                      <MenuItem value="za">Name: Z to A</MenuItem>
-                    </Select>
-                  </FormControl>
+                        Reject
+                      </Button>
+                    </Box>
+                  </Box>
                 </Box>
-              </Box>
+              )}
             </Box>
           )}
 

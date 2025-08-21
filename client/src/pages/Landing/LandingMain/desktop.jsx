@@ -192,6 +192,16 @@ const DesktopLanding = () => {
     } else {
       navigate("/u-login");
     }
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+  const handleClickRec = () => {
+    const userInfo = localStorage.getItem("userInfo");
+    if (userInfo) {
+      navigate("/view-jobs");
+    } else {
+      navigate("/r-login");
+    }
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   useEffect(() => {
@@ -377,8 +387,7 @@ const DesktopLanding = () => {
 
                     <Button
                       variant="contained"
-                      component={Link}
-                      to="/r-login"
+                      onClick={handleClickRec}
                       size="large"
                       sx={{
                         bgcolor: "#10B981", // Emerald green for recruiters

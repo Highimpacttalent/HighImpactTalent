@@ -43,6 +43,8 @@ function CompanyLoginForm() {
         localStorage.setItem("userInfo", JSON.stringify(userData));
         navigate("/view-jobs");
       }
+      
+      window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (error) {
       console.log(error);
       setErrMsg("Something went wrong. Please try again.");
