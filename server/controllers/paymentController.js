@@ -12,7 +12,7 @@ const PAYU_MERCHANT_SALT = process.env.PAYU_MERCHANT_SALT;
 const PAYU_BASE_URL = process.env.PAYU_BASE_URL;
 
 // Fixed payment amount
-const STANDARD_AMOUNT = "19999.00"; // Ensure it's a valid float
+const STANDARD_AMOUNT = "1.00"; // Ensure it's a valid float
 
 // Initialize payment
 export const initializePayment = async (req, res) => {
@@ -107,16 +107,44 @@ export const getPaymentStatus = async (req, res) => {
 
 export const payuWebhook = async (req, res, status) => {
     try {
-        console.log("Webhook received with status:", status);
-        console.log("Request body:", req.body);
+        console.log("Webhook received:", req.body);
 
-        const { txnid } = req.body;
+        // Step 1: Extract data and the hash sent by PayU from the request body
+        const receivedHash = req.body.hash;
+        const {
+            txnid,
+            status,
+            amount,
+            productinfo,
+            firstname,
+            email
+        } = req.body;
 
-        // Validate required fields
-        if (!txnid) {
-            console.error("Missing required field: txnid");
-            return res.status(400).json({ message: "Missing transaction ID" });
+        // A basic check for essential data
+        if (!receivedHash || !txnid || !status) {
+            return res.status(400).json({ message: "Webhook data is incomplete." });
         }
+
+        // Step 2: Construct the string for hash calculation EXACTLY as per PayU Webhook docs
+        // The format is: salt|status|||||||||||email|firstname|productinfo|amount|txnid|key
+        const hashString =
+            `${PAYU_MERCHANT_SALT}|${status}|||||||||||${email}|${firstname}|${productinfo}|${amount}|${txnid}|${PAYU_MERCHANT_KEY}`;
+
+        // Step 3: Calculate the SHA-512 hash on your server using the generated string
+        const calculatedHash = crypto
+            .createHash("sha512")
+            .update(hashString)
+            .digest("hex");
+
+        // Step 4: CRITICAL SECURITY CHECK: Compare your calculated hash with the one PayU sent
+        if (receivedHash !== calculatedHash) {
+            console.error("Webhook Hash Mismatch! Request is not authentic.");
+            // If hashes don't match, reject the request.
+            return res.status(401).json({ message: "Unauthorized. Hash verification failed." });
+        }
+
+        // --- If we reach here, the webhook is authentic and can be trusted ---
+        console.log("Webhook hash verified successfully for txnid:", txnid);
 
         // Find payment by transactionId
         const payment = await Payment.findOne({ transactionId: txnid });

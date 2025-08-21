@@ -12,6 +12,7 @@
   "author": "Harsh",
   "license": "ISC",
   "dependencies": {
+    "@pinecone-database/pinecone": "^6.1.2",
     "@sparticuz/chromium": "^137.0.1",
     "aws-sdk": "^2.1692.0",
     "axios": "^1.9.0",
