@@ -105,20 +105,47 @@ export const getPaymentStatus = async (req, res) => {
     }
 };
 
-export const payuWebhook = async (req, res, status) => {
+export const payuWebhook = async (req, res) => {
     try {
-        console.log("Webhook received with status:", status);
-        console.log("Request body:", req.body);
+        console.log("Webhook received:", req.body);
 
-        const { txnid } = req.body;
+        // Step 1: Extract data and the hash sent by PayU from the request body
+        const receivedHash = req.body.hash;
+        const {
+            txnid,
+            status,
+            amount,
+            productinfo,
+            firstname,
+            email
+        } = req.body;
 
-        // Validate required fields
-        if (!txnid) {
-            console.error("Missing required field: txnid");
-            return res.status(400).json({ message: "Missing transaction ID" });
+        // A basic check for essential data
+        if (!receivedHash || !txnid || !status) {
+            return res.status(400).json({ message: "Webhook data is incomplete." });
         }
 
-        // Find payment by transactionId
+        // Step 2: Construct the string for hash calculation EXACTLY as per PayU Webhook docs
+        // The format is: salt|status|||||||||||email|firstname|productinfo|amount|txnid|key
+        const hashString =
+            `${PAYU_MERCHANT_SALT}|${status}|||||||||||${email}|${firstname}|${productinfo}|${amount}|${txnid}|${PAYU_MERCHANT_KEY}`;
+
+        // Step 3: Calculate the SHA-512 hash on your server using the generated string
+        const calculatedHash = crypto
+            .createHash("sha512")
+            .update(hashString)
+            .digest("hex");
+
+        // Step 4: CRITICAL SECURITY CHECK: Compare your calculated hash with the one PayU sent
+        if (receivedHash !== calculatedHash) {
+            console.error("Webhook Hash Mismatch! Request is not authentic.");
+            // If hashes don't match, reject the request.
+            return res.status(401).json({ message: "Unauthorized. Hash verification failed." });
+        }
+
+        // --- If we reach here, the webhook is authentic and can be trusted ---
+        console.log("Webhook hash verified successfully for txnid:", txnid);
+
         const payment = await Payment.findOne({ transactionId: txnid });
 
         if (!payment) {
@@ -126,13 +153,16 @@ export const payuWebhook = async (req, res, status) => {
             return res.status(404).json({ message: "Payment not found" });
         }
 
-        console.log("Payment found:", payment);
+        // Best Practice: Idempotency Check. Only update if the status is still PENDING.
+        // This prevents re-processing if PayU sends the same webhook twice.
+        if (payment.status !== "PENDING") {
+            console.log(`Payment ${txnid} is already processed with status: ${payment.status}. Ignoring webhook.`);
+            // Acknowledge the webhook to stop PayU from retrying, but don't change anything.
+            return res.status(200).json({ message: "Payment already processed." });
+        }
 
-        // Update payment status based on the event type
-        // Use the status from PayU if available, otherwise use the provided status parameter
-        const finalStatus = (req.body.status && req.body.status.toLowerCase()) || status;
-        
-        switch (finalStatus) {
+        // Update the payment status based on the verified status from the webhook
+        switch (status.toLowerCase()) {
             case "success":
                 payment.status = "SUCCESS";
                 break;
@@ -141,25 +171,21 @@ export const payuWebhook = async (req, res, status) => {
                 payment.status = "FAILED";
                 break;
             case "refund":
-                payment.status = "REFUNDED";
-                break;
-            case "dispute":
-                payment.status = "DISPUTED";
-                break;
+                 payment.status = "REFUNDED";
+                 break;
             default:
-                payment.status = "PENDING";
+                payment.status = status.toUpperCase();
                 break;
         }
 
-        console.log("Updating payment status to:", payment.status);
-
         await payment.save();
+        console.log("Payment status updated successfully to:", payment.status);
 
-        console.log("Payment status updated successfully");
+        // Finally, send a 200 OK response to PayU to acknowledge receipt.
+        return res.status(200).json({ message: "Webhook received and payment status updated." });
 
-        return res.status(200).json({ message: "Webhook received and payment status updated" });
     } catch (error) {
-        console.error("Webhook error:", error);
+        console.error("Webhook processing error:", error);
         return res.status(500).json({ message: "Webhook processing failed", error: error.message });
     }
 };
