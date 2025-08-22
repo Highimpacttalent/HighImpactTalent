@@ -283,7 +283,6 @@ const ViewProfile = () => {
           <Button
             onClick={() => {
               navigate(-1);
-              window.scrollTo({ top: 0, behavior: "smooth" });
             }}
             startIcon={<ArrowBackIcon />}
             sx={{

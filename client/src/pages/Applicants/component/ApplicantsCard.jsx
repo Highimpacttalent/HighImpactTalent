@@ -41,6 +41,8 @@ import {
 } from "@mui/icons-material";
 import { useTheme } from "@mui/material";
 import PersonOutline from "@mui/icons-material/PersonOutline";
+import LinkedInIcon from "@mui/icons-material/LinkedIn";
+import DownloadIcon from "@mui/icons-material/Download";
 import WorkOutlineIcon from "@mui/icons-material/WorkOutline";
 import CheckRounded from "@mui/icons-material/CheckRounded";
 import CheckCircleRounded from "@mui/icons-material/CheckCircleRounded";
@@ -237,582 +239,304 @@ const ApplicationCard = ({ app, navigate, markAsViewed, onStageSelect, filterKey
 
  if (isMobile) {
   // fallback source (keeps your existing applicant usage intact)
-  const profileSource = applicant;
+  const doHighlight = typeof highlight === "function" ? highlight : (t) => t;
+
+  const [showExperiences, setShowExperiences] = useState(false);
+  const [showMoreDetails, setShowMoreDetails] = useState(false);
+
+  // normalize data
+  const profileSource = applicant || {};
+  const fullName = `${profileSource.firstName || ""} ${profileSource.lastName || ""}`.trim();
+  const designation = profileSource.currentDesignation || "";
+  const company = profileSource.currentCompany || "";
+  const avatarUrl = profileSource.profileUrl || "";
+  const experienceYears = profileSource.experience ?? profileSource.years ?? "";
+  const salary = profileSource.currentSalary ? `₹${profileSource.currentSalary}L` : "N/A";
+  const location = (profileSource.currentLocation || "").split?.(",")?.[0] || "";
+  const skills = Array.isArray(profileSource.skills) ? profileSource.skills : (profileSource.skillsString ? profileSource.skillsString.split(",").map(s=>s.trim()) : []);
+  const expHistory = Array.isArray(profileSource.experienceHistory) ? profileSource.experienceHistory : [];
+
+  const formatMonthYear = (dateOrString) => {
+    if (!dateOrString) return "";
+    const d = new Date(dateOrString);
+    if (isNaN(d)) return String(dateOrString);
+    return d.toLocaleDateString("en-GB", { month: "short", year: "numeric" });
+  };
+
+  // show top two experiences, expand to show all
+  const displayedExperiences = showExperiences ? expHistory : expHistory.slice(0, 2);
 
   return (
     <Card
+      elevation={0}
       sx={{
         backgroundColor: "#ffffff",
-        border: "1px solid #e5e7eb",
-        borderRadius: 3,
-        boxShadow: "0 2px 8px 0 rgba(0, 0, 0, 0.08)",
+        border: "1px solid #E6EEF8",
+        borderRadius: 2,
+        boxShadow: "0 4px 12px rgba(16,24,40,0.06)",
         mb: 2,
         overflow: "hidden",
-        "&:active": {
-          transform: "scale(0.98)",
-          transition: "transform 0.1s ease",
-        },
+        fontFamily: "Poppins, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial",
       }}
     >
       <CardContent sx={{ p: 0 }}>
-        {/* Header with gradient background */}
-        <Box
-          sx={{
-            background: "linear-gradient(135deg, #667eea 0%, #3C7EFC 100%)",
-            p: 3,
-            color: "white",
-            position: "relative",
-          }}
-        >
-          {/* Status and Match Score Badges */}
-          <Box
+        {/* Header - compact, professional */}
+        <Box sx={{ display: "flex", gap: 2, alignItems: "center", px: 2, py: 2 }}>
+          <Avatar
+            src={avatarUrl}
+            onClick={handleViewProfile}
             sx={{
-              position: "absolute",
-              top: 16,
-              right: 16,
-              display: "flex",
-              gap: 1,
+              width: 64,
+              height: 64,
+              border: "2px solid #E6EEF8",
+              bgcolor: "#F8FAFC",
+              cursor: "pointer",
+              fontSize: "1.1rem",
+              fontWeight: 700,
             }}
           >
-            <Chip
-              label={`${matchPercentage}%`}
-              size="small"
-              sx={{
-                backgroundColor: "rgba(255, 255, 255, 0.2)",
-                color: "white",
-                backdropFilter: "blur(10px)",
-                fontFamily: "Satoshi, sans-serif",
-                fontWeight: 700,
-                fontSize: "0.75rem",
-                height: 28,
-                border: "1px solid rgba(255, 255, 255, 0.3)",
-              }}
-            />
-          </Box>
+            {(!avatarUrl && fullName) ? fullName.split(" ").map(n=>n[0]).slice(0,2).join("") : ""}
+          </Avatar>
 
-          {/* Avatar and Basic Info */}
-          <Box sx={{ display: "flex", alignItems: "center", gap: 3, mt: 2 }}>
-            <Avatar
-              src={profileSource.profileUrl || applicant.profileUrl}
+          <Box sx={{ flex: 1, minWidth: 0 }}>
+            <Typography
+              onClick={handleViewProfile}
               sx={{
-                width: 72,
-                height: 72,
-                border: "3px solid rgba(255, 255, 255, 0.3)",
-                fontSize: "1.5rem",
                 fontWeight: 700,
-                backgroundColor: "rgba(255, 255, 255, 0.2)",
-                backdropFilter: "blur(10px)",
+                fontSize: "1.05rem",
+                lineHeight: 1.15,
+                color: "#0f172a",
+                cursor: "pointer",
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
               }}
             >
-              {(profileSource.firstName || applicant.firstName)?.[0]}
-              {(profileSource.lastName || applicant.lastName)?.[0]}
-            </Avatar>
+              {doHighlight(fullName, filterKeywords)}
+            </Typography>
 
-            <Box sx={{ flex: 1, minWidth: 0 }}>
-              <Typography
-                variant="h6"
-                sx={{
-                  fontFamily: "Poppins, sans-serif",
-                  fontWeight: 700,
-                  fontSize: isSmallMobile ? "1.1rem" : "1.25rem",
-                  lineHeight: 1.2,
-                  mb: 0.5,
-                  color: "white",
-                  cursor: "pointer",
-                  "&:hover": {
-                    textDecoration: "underline",
-                    color: "#e0e7ff",
-                  },
-                }}
-                onClick={handleViewProfile}
-              >
-                {highlight(
-                  `${profileSource.firstName || ""} ${profileSource.lastName || ""}`,
-                  filterKeywords
-                )}
-              </Typography>
+            <Typography
+              sx={{
+                fontSize: "0.85rem",
+                color: "#334155",
+                fontWeight: 600,
+                mt: 0.5,
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+              }}
+            >
+              {doHighlight(designation || "—", filterKeywords)}
+              {company ? ` • ${company}` : ""}
+            </Typography>
 
-              <Typography
-                variant="body2"
-                sx={{
-                  color: "rgba(255, 255, 255, 0.9)",
-                  fontFamily: "Satoshi, sans-serif",
-                  fontWeight: 500,
-                  fontSize: "0.85rem",
-                  mb: 1,
-                }}
-              >
-                {highlight(profileSource.currentDesignation || applicant.currentDesignation || "", filterKeywords)}
-              </Typography>
-
-              <Typography
-                variant="body2"
-                sx={{
-                  color: "rgba(255, 255, 255, 0.8)",
-                  fontFamily: "Satoshi, sans-serif",
-                  fontWeight: 500,
-                  fontSize: "0.8rem",
-                }}
-              >
-                {highlight(profileSource.currentCompany || applicant.currentCompany || "", filterKeywords)}
-              </Typography>
-            </Box>
-          </Box>
-        </Box>
-
-        {/* Quick Stats Row */}
-        <Box
-          sx={{
-            p: 2,
-            backgroundColor: "#f8fafc",
-            borderBottom: "1px solid #e2e8f0",
-          }}
-        >
-          <Box
-            sx={{
-              display: "grid",
-              gridTemplateColumns: "1fr 1fr 1fr",
-              gap: 2,
-              textAlign: "center",
-            }}
-          >
-            <Box>
-              <Typography
-                variant="h6"
-                sx={{
-                  fontFamily: "Poppins, sans-serif",
-                  fontWeight: 700,
-                  color: "#1e293b",
-                  fontSize: "1rem",
-                  mb: 0.25,
-                }}
-              >
-                {profileSource.experience ?? applicant.experience}
-              </Typography>
-              <Typography
-                variant="caption"
-                sx={{
-                  color: "#64748b",
-                  fontFamily: "Satoshi, sans-serif",
-                  fontWeight: 500,
-                  fontSize: "0.7rem",
-                  textTransform: "uppercase",
-                  letterSpacing: "0.05em",
-                }}
-              >
-                Years Exp
-              </Typography>
-            </Box>
-
-            <Box>
-              <Typography
-                variant="h6"
-                sx={{
-                  fontFamily: "Poppins, sans-serif",
-                  fontWeight: 700,
-                  color: "#1e293b",
-                  fontSize: "1rem",
-                  mb: 0.25,
-                }}
-              >
-                ₹{profileSource.currentSalary ?? applicant.currentSalary}L
-              </Typography>
-              <Typography
-                variant="caption"
-                sx={{
-                  color: "#64748b",
-                  fontFamily: "Satoshi, sans-serif",
-                  fontWeight: 500,
-                  fontSize: "0.7rem",
-                  textTransform: "uppercase",
-                  letterSpacing: "0.05em",
-                }}
-              >
-               Salary
-              </Typography>
-            </Box>
-
-            <Box>
-              <Typography
-                variant="h6"
-                sx={{
-                  fontFamily: "Poppins, sans-serif",
-                  fontWeight: 700,
-                  color: "#1e293b",
-                  fontSize: "1rem",
-                  mb: 0.25,
-                }}
-              >
-                {(profileSource.currentLocation ?? applicant.currentLocation)?.split?.(",")?.[0]}
-              </Typography>
-              <Typography
-                variant="caption"
-                sx={{
-                  color: "#64748b",
-                  fontFamily: "Satoshi, sans-serif",
-                  fontWeight: 500,
-                  fontSize: "0.7rem",
-                  textTransform: "uppercase",
-                  letterSpacing: "0.05em",
-                }}
-              >
-                Location
-              </Typography>
-            </Box>
-          </Box>
-        </Box>
-
-        {/* Skills Section */}
-        <Box sx={{ p: 3 }}>
-          <Typography
-            variant="subtitle2"
-            sx={{
-              fontFamily: "Poppins, sans-serif",
-              fontWeight: 600,
-              color: "#1e293b",
-              mb: 2,
-              fontSize: "0.9rem",
-            }}
-          >
-            Top Skills ({skills.length})
-          </Typography>
-
-          <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mb: 2 }}>
-            {displayedSkills.map((skill, index) => (
+            {/* match badge small */}
+            <Box sx={{ mt: 0.75 }}>
               <Chip
-                key={skill}
-                label={highlight(skill, filterKeywords)}
+                label={`${matchPercentage}% match`}
                 size="small"
                 sx={{
-                  backgroundColor: index < 2 ? "#e0f2fe" : "#f1f5f9",
-                  color: index < 2 ? "#0277bd" : "#475569",
-                  fontFamily: "Satoshi, sans-serif",
-                  fontWeight: 600,
-                  fontSize: "0.75rem",
-                  height: 28,
-                  border: index < 2 ? "1px solid #b3e5fc" : "1px solid #e2e8f0",
+                  backgroundColor: "#EAF2FF",
+                  color: "#0353A4",
+                  fontWeight: 700,
+                  borderRadius: 1,
+                  fontSize: "0.72rem",
                 }}
               />
-            ))}
+            </Box>
           </Box>
+        </Box>
 
-          {skills.length > 4 && (
-            <Button
-              size="small"
-              onClick={() => setShowAllSkills(!showAllSkills)}
-              sx={{
-                textTransform: "none",
-                fontFamily: "Satoshi, sans-serif",
-                fontWeight: 600,
-                color: "#6366f1",
-                fontSize: "0.8rem",
-                p: 0,
-                minWidth: "auto",
-              }}
-            >
-              {showAllSkills ? "Show Less" : `+${skills.length - 4} more skills`}
-            </Button>
+        <Divider sx={{ borderColor: "#EEF3F8" }} />
+
+        {/* Experience History (TOP) */}
+        <Box sx={{ px: 2, py: 2, backgroundColor: "#fff" }}>
+          <Typography sx={{ fontWeight: 700, fontSize: "0.9rem", color: "#0f172a", mb: 1 }}>
+            Experience History
+          </Typography>
+
+          {displayedExperiences.length === 0 ? (
+            <Typography sx={{ color: "#64748b", fontSize: "0.85rem" }}>
+              No experience history provided
+            </Typography>
+          ) : (
+            <Stack spacing={1}>
+              {displayedExperiences.map((exp, idx) => (
+                <Paper
+                  key={exp._id || idx}
+                  elevation={0}
+                  sx={{
+                    p: 1.25,
+                    borderRadius: 1,
+                    border: "1px solid #F1F5F9",
+                    backgroundColor: "#FBFDFF",
+                  }}
+                >
+                  <Box sx={{ display: "flex", justifyContent: "space-between", gap: 1 }}>
+                    <Box sx={{ minWidth: 0 }}>
+                      <Typography sx={{ fontWeight: 700, fontSize: "0.9rem", color: "#0f172a", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                        {exp.designation || "—"}
+                      </Typography>
+                      <Typography sx={{ fontSize: "0.82rem", color: "#2563eb", fontWeight: 600 }}>
+                        {exp.companyName || "—"}
+                      </Typography>
+                      <Typography sx={{ fontSize: "0.78rem", color: "#64748b" }}>
+                        {formatMonthYear(exp.from)} — {exp.to ? formatMonthYear(exp.to) : "Present"}
+                      </Typography>
+                    </Box>
+                    {/* small icon area (work icon) */}
+                    <Box sx={{ display: "flex", alignItems: "center", color: "#94a3b8" }}>
+                      <WorkOutlineIcon fontSize="small" />
+                    </Box>
+                  </Box>
+                </Paper>
+              ))}
+
+              {/* Expand control */}
+              {expHistory.length > 2 && (
+                <Button
+                  onClick={() => setShowExperiences((s) => !s)}
+                  size="small"
+                  sx={{
+                    alignSelf: "flex-start",
+                    mt: 0.5,
+                    px: 1,
+                    textTransform: "none",
+                    color: "#2563eb",
+                    fontWeight: 700,
+                    fontSize: "0.82rem",
+                  }}
+                  endIcon={showExperiences ? <ExpandLess /> : <ExpandMore />}
+                >
+                  {showExperiences ? "Show less" : `Show ${expHistory.length - 2} more`}
+                </Button>
+              )}
+            </Stack>
           )}
         </Box>
 
-        {/* Expandable Details */}
-        <Box sx={{ borderTop: "1px solid #e2e8f0" }}>
+        <Divider sx={{ borderColor: "#EEF3F8" }} />
+
+        {/* Quick Stats Row */}
+        <Box sx={{ px: 2, py: 2, backgroundColor: "#ffffff" }}>
+          <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 1 }}>
+            <Box sx={{ textAlign: "center" }}>
+              <Typography sx={{ fontWeight: 700, color: "#0f172a" }}>{experienceYears ?? "—"}</Typography>
+              <Typography sx={{ fontSize: "0.72rem", color: "#64748b", mt: 0.25 }}>Years Exp</Typography>
+            </Box>
+
+            <Box sx={{ textAlign: "center" }}>
+              <Typography sx={{ fontWeight: 700, color: "#0f172a" }}>{salary}</Typography>
+              <Typography sx={{ fontSize: "0.72rem", color: "#64748b", mt: 0.25 }}>Salary</Typography>
+            </Box>
+
+            <Box sx={{ textAlign: "center" }}>
+              <Typography sx={{ fontWeight: 700, color: "#0f172a" }}>{location || "—"}</Typography>
+              <Typography sx={{ fontSize: "0.72rem", color: "#64748b", mt: 0.25 }}>Location</Typography>
+            </Box>
+          </Box>
+        </Box>
+
+        <Divider sx={{ borderColor: "#EEF3F8" }} />
+
+        
+
+        <Divider sx={{ borderColor: "#EEF3F8" }} />
+
+        {/* Expandable More Details: Education, Preferences etc */}
+        <Box sx={{ px: 2, pt: 1, pb: 2 }}>
           <Button
             fullWidth
-            onClick={() => setExpandedDetails(!expandedDetails)}
+            onClick={() => setShowMoreDetails((s) => !s)}
             sx={{
-              p: 2,
               textTransform: "none",
-              color: "#475569",
-              fontFamily: "Satoshi, sans-serif",
-              fontWeight: 600,
+              color: "#334155",
+              fontWeight: 700,
+              display: "flex",
               justifyContent: "space-between",
-              "&:hover": { backgroundColor: "#f8fafc" },
             }}
-            endIcon={expandedDetails ? <ExpandLess /> : <ExpandMore />}
+            endIcon={showMoreDetails ? <ExpandLess /> : <ExpandMore />}
           >
-            More Details
+            {showMoreDetails ? "Hide Details" : "More Details"}
           </Button>
 
-          <Collapse in={expandedDetails}>
-            <Box sx={{ p: 3, pt: 0, backgroundColor: "#f8fafc" }}>
-              <Stack spacing={3}>
+          <Collapse in={showMoreDetails}>
+            <Box sx={{ mt: 1 }}>
+              {/* Education */}
+              {Array.isArray(profileSource.educationDetails) && profileSource.educationDetails.length > 0 && (
+                <Box sx={{ mb: 1 }}>
+                  <Typography sx={{ fontWeight: 700, fontSize: "0.85rem", color: "#0f172a", mb: 1 }}>
+                    Education
+                  </Typography>
+                  <Stack spacing={1}>
+                    {profileSource.educationDetails.map((edu, i) => (
+                      <Paper key={edu._id || i} elevation={0} sx={{ p: 1.25, borderRadius: 1, border: "1px solid #F1F5F9" }}>
+                        <Typography sx={{ fontWeight: 700 }}>{edu.courseName || edu.instituteName}</Typography>
+                        <Typography sx={{ color: "#64748b", fontSize: "0.82rem" }}>
+                          {edu.instituteName} {edu.specialization ? `• ${edu.specialization}` : ""}
+                        </Typography>
+                        <Typography sx={{ color: "#94a3b8", fontSize: "0.78rem" }}>
+                          {edu.startYear || ""} {edu.endYear ? ` - ${edu.endYear}` : ""}
+                        </Typography>
+                      </Paper>
+                    ))}
+                  </Stack>
+                </Box>
+              )}
 
-
-                {/* Experience History */}
-                { (profileSource?.experienceHistory?.length ?? 0) > 0 && (
-                  <ProfileSection
-                    title="Experience History"
-                    icon={<WorkOutlineIcon sx={{ fontSize: 20, color: "#6B7280" }} />}
-                  >
-                    <Stack spacing={2}>
-                      {profileSource.experienceHistory.map((exp, index) => (
-                        <Paper
-                          key={index}
-                          elevation={0}
-                          sx={{
-                            p: 3,
-                            border: "1px solid #E5E7EB",
-                            borderRadius: "8px",
-                            bgcolor: "white",
-                          }}
-                        >
-                          <Box
-                            sx={{
-                              display: "flex",
-                              justifyContent: "space-between",
-                              alignItems: "flex-start",
-                              cursor: exp.description ? "pointer" : "default",
-                            }}
-                            onClick={() => exp.description && handleExperienceToggle(index)}
-                          >
-                            <Box sx={{ flex: 1 }}>
-                              <Typography
-                                sx={{
-                                  fontSize: "16px",
-                                  fontWeight: 600,
-                                  fontFamily: "Satoshi",
-                                  color: "#111827",
-                                  mb: 0.5,
-                                }}
-                              >
-                                {exp.designation}
-                              </Typography>
-                              <Typography
-                                sx={{
-                                  fontSize: "14px",
-                                  fontWeight: 500,
-                                  fontFamily: "Poppins",
-                                  color: "#6366F1",
-                                  mb: 0.5,
-                                }}
-                              >
-                                {exp.companyName}
-                              </Typography>
-                              <Typography
-                                sx={{
-                                  fontSize: "12px",
-                                  fontFamily: "Poppins",
-                                  color: "#6B7280",
-                                }}
-                              >
-                                {new Date(exp.from).toLocaleDateString("en-US", { year: "numeric", month: "short" })}
-                                {" - "}
-                                {new Date(exp.to).toLocaleDateString("en-US", { year: "numeric", month: "short" })}
-                              </Typography>
-                            </Box>
-                            {exp.description && (
-                              <IconButton size="small" sx={{ color: "#6B7280" }}>
-                                {expandedExperience[index] ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-                              </IconButton>
-                            )}
-                          </Box>
-                          {expandedExperience[index] && exp.description && (
-                            <Box sx={{ mt: 2, pt: 2, borderTop: "1px solid #F3F4F6" }}>
-                              <Typography sx={{ fontSize: "14px", fontFamily: "Poppins", color: "#374151", lineHeight: 1.6 }}>
-                                {exp.description}
-                              </Typography>
-                            </Box>
-                          )}
-                        </Paper>
-                      ))}
-                    </Stack>
-                  </ProfileSection>
-                )}
-                
-
-                {/* Education Details (NEW) - placed directly below Preferences */}
-                { (profileSource?.educationDetails?.length ?? 0) > 0 && (
-                  <ProfileSection
-                    title="Education Details"
-                    icon={<SchoolOutlinedIcon sx={{ fontSize: 20, color: "#6B7280" }} />}
-                  >
-                    <Stack spacing={2}>
-                      {profileSource.educationDetails.map((edu, idx) => (
-                        <Paper
-                          key={edu._id || idx}
-                          elevation={0}
-                          sx={{
-                            p: 3,
-                            border: "1px solid #E5E7EB",
-                            borderRadius: "8px",
-                            bgcolor: "white",
-                          }}
-                        >
-                          <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                            <Box sx={{ flex: 1 }}>
-                              <Typography
-                                sx={{
-                                  fontSize: "16px",
-                                  fontWeight: 700,
-                                  fontFamily: "Satoshi",
-                                  color: "#111827",
-                                  mb: 0.5,
-                                }}
-                              >
-                                {edu.instituteName}
-                              </Typography>
-
-                              <Typography
-                                sx={{
-                                  fontSize: "14px",
-                                  fontWeight: 600,
-                                  fontFamily: "Poppins",
-                                  color: "#374151",
-                                  mb: 0.5,
-                                }}
-                              >
-                                {edu.courseName}{edu.specialization ? ` — ${edu.specialization}` : ""}
-                              </Typography>
-
-                              <Typography
-                                sx={{
-                                  fontSize: "12px",
-                                  fontFamily: "Poppins",
-                                  color: "#6B7280",
-                                }}
-                              >
-                                {formatMonthYear?.(edu.startYear) ?? edu.startYear} {" - "} {edu.endYear ? formatMonthYear?.(edu.endYear) ?? edu.endYear : "Present"}
-                              </Typography>
-                            </Box>
-                          </Box>
-                        </Paper>
-                      ))}
-                    </Stack>
-                  </ProfileSection>
-                )}
-
-              </Stack>
+              {/* Additional preferences / summary */}
+              {profileSource.summary && (
+                <Box sx={{ mt: 1 }}>
+                  <Typography sx={{ fontWeight: 700, fontSize: "0.85rem", color: "#0f172a", mb: 1 }}>
+                    Summary
+                  </Typography>
+                  <Typography sx={{ color: "#475569", fontSize: "0.9rem" }}>{profileSource.summary}</Typography>
+                </Box>
+              )}
             </Box>
           </Collapse>
         </Box>
 
+        <Divider sx={{ borderColor: "#EEF3F8" }} />
+
         {/* Action Buttons */}
-        <Box
-          sx={{
-            p: 3,
-            backgroundColor: "#ffffff",
-            borderTop: "1px solid #e2e8f0",
-            display: "grid",
-            gridTemplateColumns: "1fr 1fr 1fr",
-            gap: 2,
-          }}
-        >
+        <Box sx={{ display: "flex", gap: 1.5, px: 2, py: 2, backgroundColor: "#ffffff" }}>
           {profileSource.linkedinLink && (
             <Button
               variant="outlined"
-              size="small"
+              fullWidth
               onClick={() => window.open(profileSource.linkedinLink, "_blank")}
+              startIcon={<LinkedInIcon />}
               sx={{
                 textTransform: "none",
-                fontFamily: "Satoshi, sans-serif",
-                fontWeight: 600,
-                borderColor: "#0077b5",
-                color: "#0077b5",
-                py: 1,
-                fontSize: "0.75rem",
-                "&:hover": {
-                  borderColor: "#005885",
-                  backgroundColor: "#f0f8ff",
-                },
+                borderColor: "#E6EEF8",
+                color: "#0f172a",
+                fontWeight: 700,
               }}
+              size="small"
             >
-              <LinkedIn sx={{ fontSize: 16, mr: 0.5 }} />
               LinkedIn
             </Button>
           )}
 
           <Button
             variant="contained"
-            size="small"
+            fullWidth
             onClick={handleViewResume}
+            startIcon={<DownloadIcon />}
             sx={{
               textTransform: "none",
-              fontFamily: "Satoshi, sans-serif",
-              fontWeight: 600,
-              backgroundColor: "#1e293b",
-              py: 1,
-              fontSize: "0.75rem",
-              "&:hover": { backgroundColor: "#0f172a" },
+              backgroundColor: "#0f172a",
+              "&:hover": { backgroundColor: "#0b1220" },
+              fontWeight: 700,
             }}
+            size="small"
           >
-            <Download sx={{ fontSize: 16, mr: 0.5 }} />
             Resume
           </Button>
         </Box>
       </CardContent>
-
-      {/* Resume Drawer (unchanged) */}
-      <Drawer
-        anchor="bottom"
-        open={resumeOpen}
-        onClose={() => setResumeOpen(false)}
-        PaperProps={{
-          sx: {
-            height: "90vh",
-            borderTopLeftRadius: 16,
-            borderTopRightRadius: 16,
-            backgroundColor: "#ffffff",
-          },
-        }}
-      >
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            p: 3,
-            borderBottom: "1px solid #e2e8f0",
-            position: "sticky",
-            top: 0,
-            backgroundColor: "#ffffff",
-            zIndex: 1,
-          }}
-        >
-          <Typography
-            variant="h6"
-            sx={{
-              fontFamily: "Poppins, sans-serif",
-              fontWeight: 600,
-              color: "#1e293b",
-            }}
-          >
-            Resume Preview
-          </Typography>
-          <IconButton
-            onClick={() => setResumeOpen(false)}
-            sx={{
-              backgroundColor: "#f1f5f9",
-              "&:hover": { backgroundColor: "#e2e8f0" },
-            }}
-          >
-            <CloseIcon />
-          </IconButton>
-        </Box>
-        {profileSource.cvUrl ? (
-          <Box sx={{ flex: 1, p: 2 }}>
-            <iframe
-              src={profileSource.cvUrl}
-              title="Resume Preview"
-              width="100%"
-              height="100%"
-              style={{
-                border: "none",
-                borderRadius: "8px",
-                backgroundColor: "#ffffff",
-              }}
-            />
-          </Box>
-        ) : (
-          <Box sx={{ p: 4, textAlign: "center", flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <Typography variant="body1" sx={{ fontFamily: "Satoshi, sans-serif", color: "#64748b" }}>
-              No resume available
-            </Typography>
-          </Box>
-        )}
-      </Drawer>
-    </Card>
-  );
+    </Card>)
 }
 
 

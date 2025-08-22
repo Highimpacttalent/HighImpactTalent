@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useLayoutEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useLocation } from "react-router-dom";
 import {
@@ -222,6 +222,26 @@ const JobApplications = () => {
   }, [jobId, currentPage, limit, sortOption, matchTab, filters, activeStep]);
 
   const location = useLocation();
+
+  useLayoutEffect(() => {
+  const el = topRef.current;
+  if (!el) return;
+  // Reset the list’s scroll
+  el.scrollTop = 0;
+  // Run once more after paint (browser sometimes restores old scroll)
+  requestAnimationFrame(() => { el.scrollTop = 0; });
+  // Also reset window in case anything slipped through
+  window.scrollTo({ top: 0, left: 0 });
+}, [location.key]);
+
+
+  const topRef = useRef(null);
+
+  useEffect(() => {
+    if (topRef.current) {
+      topRef.current.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  }, [location.pathname]);
 
   function areFiltersActive(filters) {
     if (!filters) return false;
@@ -1760,7 +1780,15 @@ const JobApplications = () => {
         </Box>
 
         {/* Applications Section */}
-        <Box sx={{ flex: 1 }}>
+        <Box
+  ref={topRef}
+  sx={{
+    flex: 1,
+    height: "calc(100vh - 40px)", // give it fixed height
+    overflowY: "auto",            // so this box scrolls
+  }}
+>
+
           {/* Header Section */}
           <Box
             sx={{
