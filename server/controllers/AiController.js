@@ -13,8 +13,10 @@ import { uploadJsonAsCsvToS3 } from "../utils/UploadChecker.js";
 import filterAndRankCandidates from "../utils/filterRank.js";
 import { fileURLToPath } from "url";
 import Users from "../models/userModel.js";
+import dotenv from "dotenv";
+dotenv.config();
 
-const GEMINI_API_KEY = "AIzaSyCXj7iUCYWDQXPW3i6ky4Y24beLiINeDBw";
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
