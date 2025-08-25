@@ -34,7 +34,9 @@ import {
 import FilterListIcon from "@mui/icons-material/FilterList";
 import { skillsList } from "../../assets/mock";
 import EmailIcon from "@mui/icons-material/Email";
+import PremiumLoader from "./Loader/view";
 import { useNavigate } from "react-router-dom";
+import ResumeCard from "./ResumeCard/view";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
 import WorkIcon from "@mui/icons-material/Work";
 import SearchIcon from "@mui/icons-material/Search";
@@ -220,7 +222,7 @@ const ResumeSearch = () => {
     setCurrentPage(page);
   };
 
-  const ResumeCard = ({ resume, index }) => {
+  const ResumeCardN = ({ resume, index }) => {
     const [openDrawer, setOpenDrawer] = useState(false);
 
     const formatExperience = (exp) => {
@@ -1184,34 +1186,7 @@ const ResumeSearch = () => {
         </Drawer>
 
         {/* Loading */}
-        {loading && (
-          <Paper
-            elevation={0}
-            sx={{
-              p: 4,
-              borderRadius: "12px",
-              border: "1px solid #e9ecef",
-              mb: 4,
-              backgroundColor: "#fafafa",
-            }}
-          >
-            <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 3 }}>
-              <AutoAwesomeIcon sx={{ color: "#6c757d", fontSize: 20 }} />
-              <Typography sx={{ fontWeight: 600, color: "#495057" }}>
-                Analyzing candidates...
-              </Typography>
-            </Box>
-            <LinearProgress
-              sx={{
-                borderRadius: "4px",
-                backgroundColor: "#e9ecef",
-                "& .MuiLinearProgress-bar": {
-                  backgroundColor: "#212529",
-                },
-              }}
-            />
-          </Paper>
-        )}
+        <PremiumLoader loading={loading} />
 
         {/* Error */}
         {error && (
