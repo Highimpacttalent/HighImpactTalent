@@ -9,11 +9,10 @@ const PremiumLoader = ({ loading }) => {
 
   const loadingMessages = [
   { percentage: 10, message: "Identifying required skills & experience..." },
-  { percentage: 30, message: "Searching the candidate database..." },
+  { percentage: 25, message: "Searching the candidate database..." },
   { percentage: 50, message: "Scoring candidates against role criteria..." },
-  { percentage: 70, message: "Enriching profiles with signals & endorsements..." },
-  { percentage: 85, message: "Building ranked shortlist..." },
-  { percentage: 100, message: "Shortlist ready - view top candidates." }
+  { percentage: 75, message: "Enriching profiles with signals & endorsements..." },
+  { percentage: 90, message: "Building ranked shortlist..." },
 ];
 
 

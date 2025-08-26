@@ -17,6 +17,7 @@ import {
   Pagination,
   LinearProgress,
   Autocomplete,
+  Tooltip,
   useMediaQuery,
   IconButton,
   Drawer,
@@ -810,27 +811,7 @@ const ResumeSearch = () => {
           }}
         />
 
-        <Grid container spacing={2}>
-          <Grid item xs={6}>
-            <TextField
-              label="Year of Passout"
-              name="yearOfPassout"
-              fullWidth
-              size="small"
-              value={filters.yearOfPassout}
-              onChange={handleFilterChange}
-              variant="outlined"
-              sx={{
-                "& .MuiOutlinedInput-root": {
-                  borderRadius: "8px",
-                  backgroundColor: "#ffffff",
-                  fontSize: "0.9rem",
-                },
-              }}
-            />
-          </Grid>
-          <Grid item xs={6}>
-            <TextField
+        <TextField
               label="Min Experience"
               name="minWorkExp"
               fullWidth
@@ -846,8 +827,6 @@ const ResumeSearch = () => {
                 },
               }}
             />
-          </Grid>
-        </Grid>
 
         <TextField
           label="Work Experience Company"
@@ -1001,33 +980,47 @@ const ResumeSearch = () => {
             backgroundColor: "#ffffff",
           }}
         >
-          <Grid container spacing={3} alignItems="flex-end">
-            <Grid item xs={12} md={7}>
-              <Box sx={{ mb: 2 }}>
+          <Grid container spacing={3} alignItems="center">
+            {/* Job Description — wider on desktop */}
+            <Grid item xs={12} md={8}>
+              <Box sx={{ mb: { xs: 2, md: 0 } }}>
                 <Typography
                   variant="subtitle1"
                   sx={{
                     fontWeight: 600,
                     color: "#212529",
-                    mb: 1.5,
+                    mb: 1,
                     fontSize: "1rem",
                   }}
                 >
                   Job Description
                 </Typography>
+
                 <TextField
-                  multiline
-                  rows={4}
                   fullWidth
                   value={jobDescription}
                   onChange={(e) => setJobDescription(e.target.value)}
-                  placeholder="Describe the role, required skills, and experience level..."
+                  placeholder="Describe the role, required skills and experience level..."
                   variant="outlined"
+                  InputProps={{
+                    sx: {
+                      height: "48px",
+                      borderRadius: "8px",
+                      backgroundColor: "#fafafa",
+                      fontSize: "0.95rem",
+                      display: "flex",
+                      alignItems: "center",
+                      "& .MuiOutlinedInput-input": {
+                        padding: "10px 12px",
+                        height: "auto",
+                      },
+                    },
+                  }}
                   sx={{
                     "& .MuiOutlinedInput-root": {
                       borderRadius: "8px",
                       backgroundColor: "#fafafa",
-                      fontSize: "0.9rem",
+                      fontSize: "0.95rem",
                       "&:hover .MuiOutlinedInput-notchedOutline": {
                         borderColor: "#6c757d",
                       },
@@ -1040,14 +1033,15 @@ const ResumeSearch = () => {
               </Box>
             </Grid>
 
-            <Grid item xs={12} md={3}>
-              <Box sx={{ mb: 2 }}>
+            {/* Results Count — compact */}
+            <Grid item xs={12} md={2}>
+              <Box sx={{ mb: { xs: 2, md: 0 } }}>
                 <Typography
                   variant="subtitle1"
                   sx={{
                     fontWeight: 600,
                     color: "#212529",
-                    mb: 1.5,
+                    mb: 1,
                     fontSize: "1rem",
                   }}
                 >
@@ -1059,6 +1053,7 @@ const ResumeSearch = () => {
                     onChange={(e) => setNumberOfResumes(e.target.value)}
                     variant="outlined"
                     sx={{
+                      height: "48px",
                       borderRadius: "8px",
                       backgroundColor: "#fafafa",
                       fontSize: "0.9rem",
@@ -1070,86 +1065,83 @@ const ResumeSearch = () => {
                       },
                     }}
                   >
-                    <MenuItem value={5}>5 Results</MenuItem>
-                    <MenuItem value={10}>10 Results</MenuItem>
-                    <MenuItem value={15}>15 Results</MenuItem>
-                    <MenuItem value={20}>20 Results</MenuItem>
+                    <MenuItem value={5}>5</MenuItem>
+                    <MenuItem value={10}>10</MenuItem>
+                    <MenuItem value={15}>15</MenuItem>
+                    <MenuItem value={20}>20</MenuItem>
                   </Select>
                 </FormControl>
               </Box>
             </Grid>
 
+            {/* Actions — compact controls, right aligned */}
             <Grid item xs={12} md={2}>
               <Box
                 sx={{
-                  mb: 2,
+                  mt: 4,
+                  mb: { xs: 2, md: 0 },
                   display: "flex",
-                  gap: 2,
-                  flexDirection: { xs: "row", md: "column" },
+                  gap: 1,
+                  alignItems: "center",
+                  justifyContent: { xs: "center", md: "flex-end" },
+                  width: "100%",
                 }}
               >
+                {/* Primary search button — expands to available width on mobile */}
                 <Button
                   variant="contained"
-                  fullWidth
                   onClick={handleRAGSearch}
                   disabled={loading}
                   size="large"
+                  startIcon={loading ? null : <SearchIcon />}
                   sx={{
                     height: "48px",
+                    px: { xs: 3, md: 2 },
                     backgroundColor: "#212529",
                     color: "white",
                     fontWeight: 600,
                     borderRadius: "8px",
                     textTransform: "none",
                     fontSize: "0.95rem",
-                    "&:hover": {
-                      backgroundColor: "#343a40",
-                    },
-                    "&:disabled": {
-                      backgroundColor: "#6c757d",
-                    },
+                    minWidth: { xs: "48%", md: "auto" },
+                    "&:hover": { backgroundColor: "#343a40" },
+                    "&:disabled": { backgroundColor: "#6c757d" },
                   }}
-                  startIcon={loading ? null : <SearchIcon />}
                 >
                   {loading ? "Searching..." : "Search"}
                 </Button>
 
-                {!isMobile && (
-                  <Button
-                    variant="outlined"
-                    fullWidth
-                    onClick={toggleDrawer(true)}
-                    size="large"
-                    sx={{
-                      height: "48px",
-                      borderColor: "#e9ecef",
-                      color: "#6c757d",
-                      fontWeight: 600,
-                      borderRadius: "8px",
-                      textTransform: "none",
-                      fontSize: "0.95rem",
-                      "&:hover": {
-                        borderColor: "#6c757d",
-                        backgroundColor: "#f8f9fa",
-                      },
-                    }}
-                    startIcon={<TuneIcon />}
-                    endIcon={
-                      showAdvancedSearch ? (
-                        <ExpandLessIcon />
-                      ) : (
-                        <ExpandMoreIcon />
-                      )
-                    }
+                {/* Compact Filters control — icon button with tooltip (fits small column) */}
+                {!isMobile ? (
+                  <Tooltip
+                    title={showAdvancedSearch ? "Hide Filters" : "Open Filters"}
                   >
-                    Filters
-                  </Button>
-                )}
+                    <IconButton
+                      onClick={toggleDrawer(true)}
+                      size="large"
+                      sx={{
+                        height: "48px",
+                        width: "48px",
+                        borderRadius: "8px",
+                        border: "1px solid #e9ecef",
+                        color: "#6c757d",
+                        backgroundColor: "#fafafa",
+                        "&:hover": {
+                          backgroundColor: "#f8f9fa",
+                          borderColor: "#6c757d",
+                        },
+                      }}
+                      aria-label="toggle-filters"
+                    >
+                      <TuneIcon />
+                    </IconButton>
+                  </Tooltip>
+                ) : null}
               </Box>
             </Grid>
           </Grid>
 
-          {/* Mobile Filter Button */}
+          {/* Mobile Filter Button — still exposed below for easy access */}
           {isMobile && (
             <Box sx={{ mt: 3, display: "flex", justifyContent: "center" }}>
               <Button
