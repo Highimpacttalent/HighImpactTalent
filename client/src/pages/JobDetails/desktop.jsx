@@ -37,7 +37,7 @@ const JobDetail = () => {
   const checkProfileCompletion = () => {
     const profileFields = [
       "firstName",
-      "lastName", 
+      //"lastName", 
       "email",
       "currentSalary",
       "currentCompany",

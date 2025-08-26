@@ -53,7 +53,7 @@ const JobCard = ({ job, flag = false, enable = false, profileComplete = false })
   const checkProfileCompletion = () => {
     const profileFields = [
       "firstName",
-      "lastName", 
+      //"lastName", 
       "email",
       "currentSalary",
       "currentCompany",
