@@ -72,7 +72,7 @@ export function highlight(text, keywords) {
 // --- Helper component for structured details (from your example) ---
 const DetailItem = ({ icon, label, value }) => (
   <Box sx={{ display: "flex", alignItems: "flex-start", gap: 1 }}>
-    <Box sx={{ mt: 0.25 }}>{icon}</Box>
+    <Box sx={{ display:"flex", alignItems: "flex-start"}}>{icon}</Box>
     <Box sx={{ flex: 1, minWidth: 0 }}>
       <Typography
         variant="caption"
@@ -825,7 +825,7 @@ const WorkExperienceNode = (
                       textTransform: "none",
                       fontFamily: "Satoshi, sans-serif",
                       fontWeight: 600,
-                      color: "#6366f1",
+                      color: "#374151",
                       fontSize: "0.75rem",
                       p: 0,
                       minWidth: "auto",
