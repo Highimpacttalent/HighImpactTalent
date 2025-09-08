@@ -4,7 +4,6 @@ import { AiOutlineSearch } from "react-icons/ai";
 import JobCard from "./component/MobJobcard";
 import FilterListIcon from "@mui/icons-material/FilterList";
 import CloseIcon from "@mui/icons-material/Close";
-//import { FaSortAmountDown } from "react-icons/fa";
 import { Grid } from "@mui/material";
 
 import {
@@ -19,19 +18,17 @@ import {
   Stack,
   TextField,
   InputAdornment,
+  Button,
+  Drawer,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
+  FormControlLabel,
+  Checkbox,
 } from "@mui/material";
 import { MdLocationOn } from "react-icons/md";
 import { FaSortAmountDown } from "react-icons/fa";
-import Accordion from "@mui/material/Accordion";
-import AccordionSummary from "@mui/material/AccordionSummary";
-import AccordionDetails from "@mui/material/AccordionDetails";
-import FormControlLabel from "@mui/material/FormControlLabel";
-import Checkbox from "@mui/material/Checkbox";
-import Drawer from "@mui/material/Drawer";
-import Button from "@mui/material/Button";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-//import SwapVertIcon from "@mui/icons-material/SwapVert";
-//import InfoIcon from "@mui/icons-material/Info";
 import { apiRequest } from "../../utils";
 import Loader from "../Landing/LandingMain/loader";
 import NoJobFound from "./NoJob";
@@ -86,10 +83,10 @@ const mobileView = () => {
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const Statelocation = useLocation();
   const { searchKeywordProp, searchLocationProp } = Statelocation.state || {};
-  const [minExperience, setMinExperience] = useState('');
-  const [maxExperience, setMaxExperience] = useState('');
-  const [minSalary, setMinSalary] = useState('');
-  const [maxSalary, setMaxSalary] = useState('');
+  const [minExperience, setMinExperience] = useState("");
+  const [maxExperience, setMaxExperience] = useState("");
+  const [minSalary, setMinSalary] = useState("");
+  const [maxSalary, setMaxSalary] = useState("");
 
   // Changed to match desktop implementation - separate input tracking from actual query states
   const [searchKeyword, setSearchKeyword] = useState(searchKeywordProp || "");
@@ -328,6 +325,94 @@ const mobileView = () => {
       salaryRangeFilter.length +
       datePostedFilter.length
     );
+  };
+
+  // --- NEW: gather active filters into uniform array (for chips)
+  const getActiveFilters = () => {
+    const items = [];
+
+    experienceFilter.forEach((range) =>
+      items.push({
+        type: "experience",
+        value: range,
+        label: range.includes("-") ? `${range} yrs` : `${range}+ yrs`,
+        key: `exp-${range}`,
+      })
+    );
+
+    salaryRangeFilter.forEach((range) =>
+      items.push({
+        type: "salary",
+        value: range,
+        label: `${range} LPA`,
+        key: `sal-${range}`,
+      })
+    );
+
+    workModeFilter.forEach((item) =>
+      items.push({
+        type: "workMode",
+        value: item,
+        label: item,
+        key: `wm-${item}`,
+      })
+    );
+
+    workTypeFilter.forEach((item) =>
+      items.push({
+        type: "workType",
+        value: item,
+        label: item,
+        key: `wt-${item}`,
+      })
+    );
+
+    locationFilter.forEach((item) =>
+      items.push({
+        type: "location",
+        value: item,
+        label: item,
+        key: `loc-${item}`,
+      })
+    );
+
+    datePostedFilter.forEach((item) =>
+      items.push({
+        type: "datePosted",
+        value: item,
+        label: item,
+        key: `date-${item}`,
+      })
+    );
+
+    return items;
+  };
+
+  // --- NEW: unified remover for all filter types
+  const removeFilter = (type, value) => {
+    switch (type) {
+      case "experience":
+        setExperienceFilter((prev) => prev.filter((p) => p !== value));
+        break;
+      case "salary":
+        setSalaryRangeFilter((prev) => prev.filter((p) => p !== value));
+        break;
+      case "workMode":
+        setWorkModeFilter((prev) => prev.filter((p) => p !== value));
+        break;
+      case "workType":
+        setWorkTypeFilter((prev) => prev.filter((p) => p !== value));
+        break;
+      case "location":
+        setLocationFilter((prev) => prev.filter((p) => p !== value));
+        break;
+      case "datePosted":
+        setDatePostedFilter((prev) => prev.filter((p) => p !== value));
+        break;
+      default:
+        break;
+    }
+    setPage(1);
   };
 
   const FilterOption = ({ label, value, state, setState }) => {
@@ -601,6 +686,71 @@ const mobileView = () => {
               </Box>
             </Box>
           </Box>
+
+          {/* --- NEW: Active Filters chips bar (mobile friendly) --- */}
+          <Box sx={{ px: 3, mt: 1 }}>
+            <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 1 }}>
+              <Typography variant="body2" sx={{ color: "#6B7280", fontWeight: 500, fontFamily: "Poppins", fontSize: "0.85rem" }}>
+                Filters
+              </Typography>
+
+              {getActiveFilterCount() > 0 && (
+                <Button
+                  variant="text"
+                  size="small"
+                  onClick={handleResetFilters}
+                  sx={{
+                    textTransform: "none",
+                    color: "text.secondary",
+                    fontSize: "0.75rem",
+                    minWidth: "auto",
+                    px: 1,
+                    "&:hover": { backgroundColor: "rgba(0,0,0,0.04)" },
+                  }}
+                >
+                  Clear all
+                </Button>
+              )}
+            </Box>
+
+            <Box
+              sx={{
+                mt: 1,
+                display: "flex",
+                overflowX: "auto",
+                pb: 1,
+                gap: 1,
+                alignItems: "center",
+                // hide scrollbar but keep scroll
+                "&::-webkit-scrollbar": { display: "none" },
+              }}
+            >
+              {getActiveFilters().length === 0 ? (
+                <Typography variant="body2" sx={{ color: "#9CA3AF", fontSize: "0.85rem" }}>
+                  None
+                </Typography>
+              ) : (
+                getActiveFilters().map((f) => (
+                  <Chip
+                    key={f.key}
+                    label={f.label}
+                    onDelete={() => removeFilter(f.type, f.value)}
+                    deleteIcon={<CloseIcon sx={{ fontSize: 16 }} />}
+                    size="small"
+                    sx={{
+                      borderRadius: "16px",
+                      fontWeight: 500,
+                      bgcolor: "#f5f6fa",
+                      color: "#444",
+                      height: 30,
+                      fontSize: "0.78rem",
+                    }}
+                  />
+                ))
+              )}
+            </Box>
+          </Box>
+          {/* --- END: Active Filters chips bar --- */}
 
           {/* Filter Drawer */}
           <Drawer

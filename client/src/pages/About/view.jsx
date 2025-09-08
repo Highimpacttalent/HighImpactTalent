@@ -26,7 +26,7 @@ const About = () => {
         sx={{
           mb: 8,
           fontFamily: "Poppins",
-          color: "#808195",
+          color: "#474E68",
           fontSize: { xs: 16, md: 20 },
         }}
       >

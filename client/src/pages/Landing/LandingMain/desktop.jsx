@@ -519,32 +519,6 @@ const DesktopLanding = () => {
                       my: 3,
                     }}
                   />
-
-                  {/* Jobs Parsed stat (smaller underneath) */}
-                  <Box sx={{ textAlign: "center", mt: 1 }}>
-                    <Typography
-                      variant="h6"
-                      sx={{
-                        fontWeight: 700,
-                        fontSize: "1.25rem",
-                        color: "#0a0a0a",
-                        fontFamily:
-                          "Satoshi, -apple-system, BlinkMacSystemFont, sans-serif",
-                      }}
-                    >
-                      500+
-                    </Typography>
-                    <Typography
-                      variant="body2"
-                      sx={{
-                        color: "#8794A1",
-                        fontSize: "0.95rem",
-                        fontFamily: "Poppins, sans-serif",
-                      }}
-                    >
-                      Jobs Parsed
-                    </Typography>
-                  </Box>
                 </Box>
               </AnimatedSection>
             </Grid>

@@ -242,6 +242,7 @@ const DesktopView = () => {
 
   useEffect(() => {
     fetchJobs();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     page,
     sort,
@@ -320,6 +321,94 @@ const DesktopView = () => {
       salaryRangeFilter.length +
       datePostedFilter.length
     );
+  };
+
+  // NEW: Gather active filters into a uniform array for the chip bar
+  const getActiveFilters = () => {
+    const items = [];
+
+    experienceFilter.forEach((range) =>
+      items.push({
+        type: "experience",
+        value: range,
+        label: range.includes("-") ? `${range} yrs` : `${range}+ yrs`,
+        key: `exp-${range}`,
+      })
+    );
+
+    salaryRangeFilter.forEach((range) =>
+      items.push({
+        type: "salary",
+        value: range,
+        label: `${range} LPA`,
+        key: `sal-${range}`,
+      })
+    );
+
+    workModeFilter.forEach((item) =>
+      items.push({
+        type: "workMode",
+        value: item,
+        label: item,
+        key: `wm-${item}`,
+      })
+    );
+
+    workTypeFilter.forEach((item) =>
+      items.push({
+        type: "workType",
+        value: item,
+        label: item,
+        key: `wt-${item}`,
+      })
+    );
+
+    locationFilter.forEach((item) =>
+      items.push({
+        type: "location",
+        value: item,
+        label: item,
+        key: `loc-${item}`,
+      })
+    );
+
+    datePostedFilter.forEach((item) =>
+      items.push({
+        type: "datePosted",
+        value: item,
+        label: item,
+        key: `date-${item}`,
+      })
+    );
+
+    return items;
+  };
+
+  // NEW: unified remover for all filter types
+  const removeFilter = (type, value) => {
+    switch (type) {
+      case "experience":
+        setExperienceFilter((prev) => prev.filter((p) => p !== value));
+        break;
+      case "salary":
+        setSalaryRangeFilter((prev) => prev.filter((p) => p !== value));
+        break;
+      case "workMode":
+        setWorkModeFilter((prev) => prev.filter((p) => p !== value));
+        break;
+      case "workType":
+        setWorkTypeFilter((prev) => prev.filter((p) => p !== value));
+        break;
+      case "location":
+        setLocationFilter((prev) => prev.filter((p) => p !== value));
+        break;
+      case "datePosted":
+        setDatePostedFilter((prev) => prev.filter((p) => p !== value));
+        break;
+      default:
+        break;
+    }
+    setPage(1);
   };
 
   const FilterOption = ({ label, value, state, setState }) => {
@@ -488,6 +577,7 @@ const DesktopView = () => {
           px: { md: 4, xs: 2, sm: 2 },
           justifyContent: "space-between",
           display: "flex",
+          alignItems: "center",
         }}
       >
         <Box>
@@ -551,6 +641,67 @@ const DesktopView = () => {
               />
             )}
           </Tabs>
+        </Box>
+
+        {/* NEW: Active Filters Bar placed aside to the tabs to show active filter chips */}
+        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            <Typography
+              variant="body2"
+              sx={{ color: "#6B7280", fontWeight: 500, fontFamily: "Poppins" }}
+            >
+              Filters:
+            </Typography>
+
+            <Stack direction="row" spacing={1} flexWrap="wrap" sx={{ maxWidth: 600 }}>
+              {getActiveFilters().length === 0 ? (
+                <Typography
+                  variant="body2"
+                  sx={{
+                    color: "#9CA3AF",
+                    fontFamily: "Poppins",
+                    fontSize: "0.95rem",
+                  }}
+                >
+                  None
+                </Typography>
+              ) : (
+                getActiveFilters().map((f) => (
+                  <Chip
+                    key={f.key}
+                    label={f.label}
+                    onDelete={() => removeFilter(f.type, f.value)}
+                    deleteIcon={<CloseIcon sx={{ fontSize: 16 }} />}
+                    sx={{
+                      borderRadius: "8px",
+                      fontWeight: 500,
+                      bgcolor: "#f5f6fa",
+                      color: "#444",
+                      height: 32,
+                      fontSize: "0.875rem",
+                      mr: 0.5,
+                    }}
+                  />
+                ))
+              )}
+            </Stack>
+          </Box>
+
+          {getActiveFilterCount() > 0 && (
+            <Button
+              variant="text"
+              size="small"
+              onClick={handleResetFilters}
+              sx={{
+                textTransform: "none",
+                color: "text.secondary",
+                fontSize: "0.875rem",
+                "&:hover": { backgroundColor: "rgba(0,0,0,0.04)" },
+              }}
+            >
+              Clear all
+            </Button>
+          )}
         </Box>
       </Box>
 
