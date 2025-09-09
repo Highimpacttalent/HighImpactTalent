@@ -341,7 +341,7 @@ const DesktopLanding = () => {
                     >
                       Right roles
                     </Box>{" "}
-                    Fast.
+                    .
                   </Typography>
 
                   <Typography
