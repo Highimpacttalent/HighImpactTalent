@@ -340,7 +340,7 @@ const DesktopLanding = () => {
                       }}
                     >
                       Right roles
-                    </Box>{" "}
+                    </Box>
                     .
                   </Typography>
 
