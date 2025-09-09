@@ -935,65 +935,6 @@ const calculateExperienceYears = (history = []) => {
           </Box>
         </Box>
 
-        {/* --- Experience History --- */}
-        {formData.experienceHistory.length > 0 && (
-          <Box mt={3} sx={{ px: 18, pb: 2 }}>
-            <Typography
-              sx={{
-                fontFamily: "Satoshi",
-                fontWeight: 600,
-                mb: 1,
-              }}
-            >
-              Your Entries:
-            </Typography>
-
-            {formData.experienceHistory.map((e, i) => (
-              <Box
-                key={i}
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  bgcolor: "#F9FAFB",
-                  borderRadius: 2,
-                  p: 2,
-                  mb: 1,
-                }}
-              >
-                <Box>
-                  <Typography sx={{ fontFamily: "Satoshi", fontWeight: 500 }}>
-                    {e.designation} at {e.companyName}
-                  </Typography>
-                  <Typography
-                    sx={{
-                      fontFamily: "Poppins",
-                      fontSize: 12,
-                      color: "#6B7280",
-                    }}
-                  >
-                    {e.from} — {e.to}
-                  </Typography>
-                  {e.description && (
-                    <Typography
-                      sx={{ fontFamily: "Poppins", fontSize: 12, mt: 0.5 }}
-                    >
-                      {e.description}
-                    </Typography>
-                  )}
-                </Box>
-                <IconButton
-                  size="small"
-                  onClick={() => handleDeleteExperience(i)}
-                  sx={{ color: "#EF4444" }}
-                >
-                  <DeleteIcon />
-                </IconButton>
-              </Box>
-            ))}
-          </Box>
-        )}
-
         {/* --- Experience History (styled like Consulting Background) --- */}
         <Box
           sx={{
@@ -1223,8 +1164,8 @@ const calculateExperienceYears = (history = []) => {
           </Box>
         </Box>
 
-        {/*Education List */}
-        {formData.educationDetails.length > 0 && (
+        {/* --- Experience History --- */}
+        {formData.experienceHistory.length > 0 && (
           <Box mt={3} sx={{ px: 18, pb: 2 }}>
             <Typography
               sx={{
@@ -1236,7 +1177,7 @@ const calculateExperienceYears = (history = []) => {
               Your Entries:
             </Typography>
 
-            {formData.educationDetails.map((edu, i) => (
+            {formData.experienceHistory.map((e, i) => (
               <Box
                 key={i}
                 sx={{
@@ -1251,7 +1192,7 @@ const calculateExperienceYears = (history = []) => {
               >
                 <Box>
                   <Typography sx={{ fontFamily: "Satoshi", fontWeight: 500 }}>
-                    {edu.course} in {edu.specialization} at {edu.institute}
+                    {e.designation} at {e.companyName}
                   </Typography>
                   <Typography
                     sx={{
@@ -1260,19 +1201,19 @@ const calculateExperienceYears = (history = []) => {
                       color: "#6B7280",
                     }}
                   >
-                    {edu.from} — {edu.to}
+                    {e.from} — {e.to}
                   </Typography>
+                  {e.description && (
+                    <Typography
+                      sx={{ fontFamily: "Poppins", fontSize: 12, mt: 0.5 }}
+                    >
+                      {e.description}
+                    </Typography>
+                  )}
                 </Box>
                 <IconButton
                   size="small"
-                  onClick={() =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      educationDetails: prev.educationDetails.filter(
-                        (_, idx) => idx !== i
-                      ),
-                    }))
-                  }
+                  onClick={() => handleDeleteExperience(i)}
                   sx={{ color: "#EF4444" }}
                 >
                   <DeleteIcon />
@@ -1281,6 +1222,8 @@ const calculateExperienceYears = (history = []) => {
             ))}
           </Box>
         )}
+
+        
 
         {/* Education Details Section */}
         {/* --- Education Details --- */}
@@ -1527,6 +1470,65 @@ const calculateExperienceYears = (history = []) => {
             </Box>
           </Box>
         </Box>
+
+        {/*Education List */}
+        {formData.educationDetails.length > 0 && (
+          <Box mt={3} sx={{ px: 18, pb: 2 }}>
+            <Typography
+              sx={{
+                fontFamily: "Satoshi",
+                fontWeight: 600,
+                mb: 1,
+              }}
+            >
+              Your Entries:
+            </Typography>
+
+            {formData.educationDetails.map((edu, i) => (
+              <Box
+                key={i}
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  bgcolor: "#F9FAFB",
+                  borderRadius: 2,
+                  p: 2,
+                  mb: 1,
+                }}
+              >
+                <Box>
+                  <Typography sx={{ fontFamily: "Satoshi", fontWeight: 500 }}>
+                    {edu.course} in {edu.specialization} at {edu.institute}
+                  </Typography>
+                  <Typography
+                    sx={{
+                      fontFamily: "Poppins",
+                      fontSize: 12,
+                      color: "#6B7280",
+                    }}
+                  >
+                    {edu.from} — {edu.to}
+                  </Typography>
+                </Box>
+                <IconButton
+                  size="small"
+                  onClick={() =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      educationDetails: prev.educationDetails.filter(
+                        (_, idx) => idx !== i
+                      ),
+                    }))
+                  }
+                  sx={{ color: "#EF4444" }}
+                >
+                  <DeleteIcon />
+                </IconButton>
+              </Box>
+            ))}
+          </Box>
+        )}
 
         {/* Consulting Questions */}
 
