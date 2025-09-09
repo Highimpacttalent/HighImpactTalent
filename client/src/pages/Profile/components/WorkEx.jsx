@@ -17,7 +17,7 @@ import dayjs from "dayjs";
 // EditIcon and SaveIcon are no longer needed in the header
 import WorkIcon from "@mui/icons-material/Work";
 import { VisibilityOff, Visibility } from "@mui/icons-material";
-import { Delete, Add } from "@mui/icons-material";
+import { Delete, Add, Edit } from "@mui/icons-material";
 import AlertModal from "../../../components/Alerts/view";
 import "react-datepicker/dist/react-datepicker.css";
 // InputMask, Visibility icons, axios, useDispatch, useSelector, AdapterDayjs, DatePicker, LocalizationProvider, UpdateUser imports remain the same
@@ -52,7 +52,7 @@ const ExperienceHistory = ({ userId, experienceHistory, about }) => {
   const [desc, setDesc] = useState(false); // Controls visibility of Description *in the display list*
   // isEditing state is removed
   const [isSaving, setIsSaving] = useState(false); // Used for saving progress (Add or Delete)
-  const [dateError, setDateError] = useState(""); 
+  const [dateError, setDateError] = useState("");
   const [alert, setAlert] = useState({
     open: false,
     type: "",
@@ -69,21 +69,37 @@ const ExperienceHistory = ({ userId, experienceHistory, about }) => {
   });
 
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editIndex, setEditIndex] = useState(null); // index of experience being edited (null = add mode)
 
   useEffect(() => {
     // Sync local state when the prop changes (e.g., on initial load or after a successful save fetch)
     setExperiences(experienceHistory || []);
   }, [experienceHistory]);
 
-  // Handler to open the modal and reset the form
-  const handleOpenModal = () => {
-    setNewExperience({
-      companyName: "",
-      designation: "",
-      from: null,
-      to: null,
-      description: "",
-    });
+  // Handler to open the modal and reset the form OR pre-fill for edit
+  const handleOpenModal = (index = null) => {
+    if (index !== null && experiences && experiences[index]) {
+      // Pre-fill with selected experience for editing
+      setNewExperience({
+        companyName: experiences[index].companyName || "",
+        designation: experiences[index].designation || "",
+        from: experiences[index].from || null,
+        to: experiences[index].to || null,
+        description: experiences[index].description || "",
+      });
+      setEditIndex(index);
+    } else {
+      // Add mode: reset fields
+      setNewExperience({
+        companyName: "",
+        designation: "",
+        from: null,
+        to: null,
+        description: "",
+      });
+      setEditIndex(null);
+    }
+    setDateError("");
     setIsModalOpen(true);
   };
 
@@ -98,6 +114,8 @@ const ExperienceHistory = ({ userId, experienceHistory, about }) => {
       to: null,
       description: "",
     });
+    setEditIndex(null);
+    setDateError("");
   };
 
   const handleInputChange = (e) => {
@@ -107,30 +125,36 @@ const ExperienceHistory = ({ userId, experienceHistory, about }) => {
 
   // Handler for DatePicker 'From'
   const handleFromChange = (date) => {
-  const newFrom = date ? date.toISOString() : null;
-  setNewExperience((prev) => ({ ...prev, from: newFrom }));
+    const newFrom = date ? date.toISOString() : null;
+    setNewExperience((prev) => ({ ...prev, from: newFrom }));
 
-  // Validation: From cannot be after To
-  if (newFrom && newExperience.to && dayjs(newFrom).isAfter(dayjs(newExperience.to))) {
-    setDateError('"From" date cannot be after "To" date.');
-  } else {
-    setDateError("");
-  }
-};
+    // Validation: From cannot be after To
+    if (
+      newFrom &&
+      newExperience.to &&
+      dayjs(newFrom).isAfter(dayjs(newExperience.to))
+    ) {
+      setDateError('"From" date cannot be after "To" date.');
+    } else {
+      setDateError("");
+    }
+  };
 
-const handleToChange = (date) => {
-  const newTo = date ? date.toISOString() : null;
-  setNewExperience((prev) => ({ ...prev, to: newTo }));
+  const handleToChange = (date) => {
+    const newTo = date ? date.toISOString() : null;
+    setNewExperience((prev) => ({ ...prev, to: newTo }));
 
-  // Validation: To cannot be before From
-  if (newExperience.from && newTo && dayjs(newExperience.from).isAfter(dayjs(newTo))) {
-    setDateError('"From" date cannot be after "To" date.');
-  } else {
-    setDateError("");
-  }
-};
-
-
+    // Validation: To cannot be before From
+    if (
+      newExperience.from &&
+      newTo &&
+      dayjs(newExperience.from).isAfter(dayjs(newTo))
+    ) {
+      setDateError('"From" date cannot be after "To" date.');
+    } else {
+      setDateError("");
+    }
+  };
 
   const calculateExperienceYears = (history = []) => {
     if (!Array.isArray(history) || history.length === 0) return 0;
@@ -150,18 +174,17 @@ const handleToChange = (date) => {
     return Math.floor(totalMonths / 12); // floor years (4.2 -> 4)
   };
 
-  // --- MODIFIED handleAddExperience ---
-  // Adds the new experience from modal form to the local state AND SAVES IMMEDIATELY
+  // --- handleAddExperience now supports both Add and Update based on editIndex ---
   const handleAddExperience = async () => {
     if (dateError) {
-    setAlert({
-      open: true,
-      type: "warning",
-      title: "Invalid Dates",
-      message: dateError,
-    });
-    return; // Stop execution
-  }
+      setAlert({
+        open: true,
+        type: "warning",
+        title: "Invalid Dates",
+        message: dateError,
+      });
+      return; // Stop execution
+    }
     // Basic validation
     if (!newExperience.companyName || !newExperience.designation) {
       setAlert({
@@ -173,18 +196,34 @@ const handleToChange = (date) => {
       return;
     }
 
-    // Create a new experience object to add to the array
-    const experienceToAdd = {
-      companyName: newExperience.companyName,
-      designation: newExperience.designation,
-      // Ensure dates are stored consistently (e.g., ISO strings or null)
-      from: newExperience.from,
-      to: newExperience.to,
-      description: newExperience.description,
-    };
-
-    // Create the updated array with the new experience
-    const updatedExperiences = [...experiences, experienceToAdd];
+    // If editIndex is set -> update existing; else -> add new
+    let updatedExperiences;
+    if (editIndex !== null && editIndex !== undefined) {
+      // Replace the object at editIndex
+      updatedExperiences = experiences.map((exp, i) =>
+        i === editIndex
+          ? {
+              companyName: newExperience.companyName,
+              designation: newExperience.designation,
+              from: newExperience.from,
+              to: newExperience.to,
+              description: newExperience.description,
+            }
+          : exp
+      );
+    } else {
+      // Create a new experience object to add to the array
+      const experienceToAdd = {
+        companyName: newExperience.companyName,
+        designation: newExperience.designation,
+        // Ensure dates are stored consistently (e.g., ISO strings or null)
+        from: newExperience.from,
+        to: newExperience.to,
+        description: newExperience.description,
+      };
+      // Create the updated array with the new experience
+      updatedExperiences = [...experiences, experienceToAdd];
+    }
 
     setIsSaving(true); // Start saving state
     try {
@@ -199,7 +238,10 @@ const handleToChange = (date) => {
           open: true,
           type: "success",
           title: "Success",
-          message: "Experience added successfully!",
+          message:
+            editIndex !== null
+              ? "Experience updated successfully!"
+              : "Experience added successfully!",
         });
 
         // Reset the form fields
@@ -213,11 +255,11 @@ const handleToChange = (date) => {
         // Close the modal
         handleCloseModal();
       } else {
-        throw new Error(resData?.message || "Add failed");
+        throw new Error(resData?.message || "Add/Update failed");
       }
     } catch (error) {
       console.error(
-        "Error while adding experience:",
+        "Error while adding/updating experience:",
         error?.response?.data?.message || error.message
       );
       setAlert({
@@ -226,10 +268,8 @@ const handleToChange = (date) => {
         title: "Error",
         message:
           error?.response?.data?.message ||
-          "Failed to add experience. Please try again.",
+          "Failed to save experience. Please try again.",
       });
-      // Consider rolling back the local state if the API failed to add it
-      // setExperiences(experiences); // Revert to state before optimistic add (if you did an optimistic update)
     } finally {
       setIsSaving(false); // End saving state
     }
@@ -302,8 +342,8 @@ const handleToChange = (date) => {
     }
   };
 
-  // handleEditClick and handleSaveClick are removed
-
+  // No separate handleEditClick; we open the same modal (pre-filled) when user clicks the left info area of any job
+  // NOTE: This does not change visible UI elements — only adds the ability to open modal for editing.
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
       <Box p={2}>
@@ -403,6 +443,8 @@ const handleToChange = (date) => {
                   gap={2}
                   justifyContent={"space-between"}
                   alignItems={{ xs: "flex-start", sm: "center" }} // Adjusted alignment for smaller screens
+                  // NEW: clicking the left info area opens modal pre-filled for editing
+                  onClick={() => handleOpenModal(index)}
                 >
                   <Box>
                     <Typography
@@ -500,6 +542,12 @@ const handleToChange = (date) => {
                 >
                   {/* Show delete button always */}
                   <IconButton
+                    onClick={() => handleOpenModal(index)}
+                    disabled={isSaving}
+                  >
+                    <Edit />
+                  </IconButton>
+                  <IconButton
                     onClick={() => handleDeleteExperience(index)}
                     disabled={isSaving}
                   >
@@ -550,7 +598,7 @@ const handleToChange = (date) => {
                 <Add />
               )
             } // Show loader icon when saving
-            onClick={handleOpenModal}
+            onClick={() => handleOpenModal()} // open in add mode
             disabled={isSaving} // Disable button while saving any experience
             sx={{
               textTransform: "none",
@@ -626,7 +674,7 @@ const handleToChange = (date) => {
                       textField: {
                         fullWidth: true,
                         size: "medium",
-                        error: !!dateError,                 // ✅ show error
+                        error: !!dateError, // ✅ show error
                         helperText: dateError,
                         inputProps: {
                           readOnly: true, // Prevent manual typing
@@ -647,8 +695,8 @@ const handleToChange = (date) => {
                     slotProps={{
                       textField: {
                         fullWidth: true,
-                        error: !!dateError,                 // ✅ show error
-                        helperText: dateError,   
+                        error: !!dateError, // ✅ show error
+                        helperText: dateError,
                         size: "medium",
                         inputProps: {
                           readOnly: true,
@@ -681,7 +729,7 @@ const handleToChange = (date) => {
                     </Button>
                     <Button
                       variant="contained"
-                      onClick={handleAddExperience} // This button now triggers save
+                      onClick={handleAddExperience} // This button now handles both add & edit save
                       startIcon={
                         isSaving ? (
                           <CircularProgress size={20} color="inherit" />

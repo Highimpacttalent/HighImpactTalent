@@ -10,15 +10,17 @@ import {
   Tabs,
   Tab,
   CircularProgress,
-  Modal,
-  Fade,
+  Modal, // Import Modal
+  Fade, // Optional: for modal transition
 } from "@mui/material";
 import dayjs from "dayjs";
+// EditIcon and SaveIcon are no longer needed in the header
 import WorkIcon from "@mui/icons-material/Work";
 import { VisibilityOff, Visibility } from "@mui/icons-material";
-import { Delete, Add } from "@mui/icons-material";
+import { Delete, Add, Edit } from "@mui/icons-material";
 import AlertModal from "../../../components/Alerts/view";
 import "react-datepicker/dist/react-datepicker.css";
+// InputMask, Visibility icons, axios, useDispatch, useSelector, AdapterDayjs, DatePicker, LocalizationProvider, UpdateUser imports remain the same
 import axios from "axios";
 import { useDispatch } from "react-redux";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
@@ -27,61 +29,84 @@ import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { UpdateUser } from "../../../redux/userSlice";
 import { useSelector } from "react-redux";
 
+// Modal style for centering
 const modalStyle = {
   position: "absolute",
   top: "50%",
   left: "50%",
   transform: "translate(-50%, -50%)",
-  width: { xs: "90%", sm: "80%", md: "60%", lg: "50%" },
+  width: { xs: "90%", sm: "80%", md: "60%", lg: "50%" }, // Responsive width
   bgcolor: "background.paper",
   border: "1px solid #000",
   boxShadow: 24,
   p: 4,
   borderRadius: 2,
-  maxHeight: "90vh",
-  overflowY: "auto",
+  maxHeight: "90vh", // Prevent modal from exceeding viewport height
+  overflowY: "auto", // Add scroll if content overflows
 };
 
 const ExperienceHistory = ({ userId, experienceHistory, about }) => {
   const dispatch = useDispatch();
   const user = useSelector((state) => state.user);
   const [experiences, setExperiences] = useState(experienceHistory || []);
+  const [desc, setDesc] = useState(false); // Controls visibility of Description *in the display list*
+  // isEditing state is removed
+  const [isSaving, setIsSaving] = useState(false); // Used for saving progress (Add or Delete)
   const [dateError, setDateError] = useState("");
-  const [desc, setDesc] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
   const [alert, setAlert] = useState({
     open: false,
     type: "",
     title: "",
     message: "",
   });
+  // State for the form *within the modal*
   const [newExperience, setNewExperience] = useState({
     companyName: "",
     designation: "",
-    from: null,
-    to: null,
+    from: null, // Use null for DatePicker initially
+    to: null, // Use null for DatePicker initially
     description: "",
   });
 
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editIndex, setEditIndex] = useState(null); // index of experience being edited (null = add mode)
 
   useEffect(() => {
+    // Sync local state when the prop changes (e.g., on initial load or after a successful save fetch)
     setExperiences(experienceHistory || []);
   }, [experienceHistory]);
 
-  const handleOpenModal = () => {
-    setNewExperience({
-      companyName: "",
-      designation: "",
-      from: null,
-      to: null,
-      description: "",
-    });
+  // Handler to open the modal and reset the form OR pre-fill for edit
+  const handleOpenModal = (index = null) => {
+    if (index !== null && experiences && experiences[index]) {
+      // Pre-fill with selected experience for editing
+      setNewExperience({
+        companyName: experiences[index].companyName || "",
+        designation: experiences[index].designation || "",
+        from: experiences[index].from || null,
+        to: experiences[index].to || null,
+        description: experiences[index].description || "",
+      });
+      setEditIndex(index);
+    } else {
+      // Add mode: reset fields
+      setNewExperience({
+        companyName: "",
+        designation: "",
+        from: null,
+        to: null,
+        description: "",
+      });
+      setEditIndex(null);
+    }
+    setDateError("");
     setIsModalOpen(true);
   };
 
+  // Handler to close the modal
   const handleCloseModal = () => {
     setIsModalOpen(false);
+    // Optional: Reset the form if closed without adding
     setNewExperience({
       companyName: "",
       designation: "",
@@ -89,17 +114,26 @@ const ExperienceHistory = ({ userId, experienceHistory, about }) => {
       to: null,
       description: "",
     });
+    setEditIndex(null);
+    setDateError("");
   };
 
   const handleInputChange = (e) => {
+    // This handler is only used for text inputs in the modal form
     setNewExperience({ ...newExperience, [e.target.name]: e.target.value });
   };
 
+  // Handler for DatePicker 'From'
   const handleFromChange = (date) => {
     const newFrom = date ? date.toISOString() : null;
     setNewExperience((prev) => ({ ...prev, from: newFrom }));
 
-    if (newFrom && newExperience.to && dayjs(newFrom).isAfter(dayjs(newExperience.to))) {
+    // Validation: From cannot be after To
+    if (
+      newFrom &&
+      newExperience.to &&
+      dayjs(newFrom).isAfter(dayjs(newExperience.to))
+    ) {
       setDateError('"From" date cannot be after "To" date.');
     } else {
       setDateError("");
@@ -110,7 +144,12 @@ const ExperienceHistory = ({ userId, experienceHistory, about }) => {
     const newTo = date ? date.toISOString() : null;
     setNewExperience((prev) => ({ ...prev, to: newTo }));
 
-    if (newExperience.from && newTo && dayjs(newExperience.from).isAfter(dayjs(newTo))) {
+    // Validation: To cannot be before From
+    if (
+      newExperience.from &&
+      newTo &&
+      dayjs(newExperience.from).isAfter(dayjs(newTo))
+    ) {
       setDateError('"From" date cannot be after "To" date.');
     } else {
       setDateError("");
@@ -123,17 +162,19 @@ const ExperienceHistory = ({ userId, experienceHistory, about }) => {
     const now = dayjs();
 
     for (const entry of history) {
+      // entry.from / entry.to are stored as ISO strings (or null)
       const from = entry?.from ? dayjs(entry.from) : null;
       const to = entry?.to ? dayjs(entry.to) : now;
 
       if (!from || !from.isValid()) continue;
-      const months = to.diff(from, "month") + 1;
+      const months = to.diff(from, "month") + 1; // inclusive
       if (months > 0) totalMonths += months;
     }
 
-    return Math.floor(totalMonths / 12);
+    return Math.floor(totalMonths / 12); // floor years (4.2 -> 4)
   };
 
+  // --- handleAddExperience now supports both Add and Update based on editIndex ---
   const handleAddExperience = async () => {
     if (dateError) {
       setAlert({
@@ -142,8 +183,9 @@ const ExperienceHistory = ({ userId, experienceHistory, about }) => {
         title: "Invalid Dates",
         message: dateError,
       });
-      return;
+      return; // Stop execution
     }
+    // Basic validation
     if (!newExperience.companyName || !newExperience.designation) {
       setAlert({
         open: true,
@@ -154,18 +196,38 @@ const ExperienceHistory = ({ userId, experienceHistory, about }) => {
       return;
     }
 
-    const experienceToAdd = {
-      companyName: newExperience.companyName,
-      designation: newExperience.designation,
-      from: newExperience.from,
-      to: newExperience.to,
-      description: newExperience.description,
-    };
+    // If editIndex is set -> update existing; else -> add new
+    let updatedExperiences;
+    if (editIndex !== null && editIndex !== undefined) {
+      // Replace the object at editIndex
+      updatedExperiences = experiences.map((exp, i) =>
+        i === editIndex
+          ? {
+              companyName: newExperience.companyName,
+              designation: newExperience.designation,
+              from: newExperience.from,
+              to: newExperience.to,
+              description: newExperience.description,
+            }
+          : exp
+      );
+    } else {
+      // Create a new experience object to add to the array
+      const experienceToAdd = {
+        companyName: newExperience.companyName,
+        designation: newExperience.designation,
+        // Ensure dates are stored consistently (e.g., ISO strings or null)
+        from: newExperience.from,
+        to: newExperience.to,
+        description: newExperience.description,
+      };
+      // Create the updated array with the new experience
+      updatedExperiences = [...experiences, experienceToAdd];
+    }
 
-    const updatedExperiences = [...experiences, experienceToAdd];
-
-    setIsSaving(true);
+    setIsSaving(true); // Start saving state
     try {
+      // Save the entire updated array to the backend
       const resData = await updateExperienceHistory(userId, updatedExperiences);
 
       if (resData?.success) {
@@ -176,9 +238,13 @@ const ExperienceHistory = ({ userId, experienceHistory, about }) => {
           open: true,
           type: "success",
           title: "Success",
-          message: "Experience added successfully!",
+          message:
+            editIndex !== null
+              ? "Experience updated successfully!"
+              : "Experience added successfully!",
         });
 
+        // Reset the form fields
         setNewExperience({
           companyName: "",
           designation: "",
@@ -186,13 +252,14 @@ const ExperienceHistory = ({ userId, experienceHistory, about }) => {
           to: null,
           description: "",
         });
+        // Close the modal
         handleCloseModal();
       } else {
-        throw new Error(resData?.message || "Add failed");
+        throw new Error(resData?.message || "Add/Update failed");
       }
     } catch (error) {
       console.error(
-        "Error while adding experience:",
+        "Error while adding/updating experience:",
         error?.response?.data?.message || error.message
       );
       setAlert({
@@ -201,26 +268,31 @@ const ExperienceHistory = ({ userId, experienceHistory, about }) => {
         title: "Error",
         message:
           error?.response?.data?.message ||
-          "Failed to add experience. Please try again.",
+          "Failed to save experience. Please try again.",
       });
     } finally {
-      setIsSaving(false);
+      setIsSaving(false); // End saving state
     }
   };
 
+  // --- MODIFIED handleDeleteExperience ---
+  // Filters the local state array AND SAVES IMMEDIATELY
   const handleDeleteExperience = async (indexToDelete) => {
+    // Filter the local state array
     const updatedExperiences = experiences.filter(
       (_, i) => i !== indexToDelete
     );
 
+    // Optimistically update local state for immediate feedback
     setExperiences(updatedExperiences);
 
-    setIsSaving(true);
+    setIsSaving(true); // Start saving state
     try {
+      // Save the entire updated array to the backend
       const resData = await updateExperienceHistory(userId, updatedExperiences);
 
       if (resData?.success) {
-        dispatch(UpdateUser(resData?.user));
+        dispatch(UpdateUser(resData?.user)); // Update Redux which triggers useEffect
         setAlert({
           open: true,
           type: "success",
@@ -228,6 +300,8 @@ const ExperienceHistory = ({ userId, experienceHistory, about }) => {
           message: "Experience deleted successfully!",
         });
       } else {
+        // If API fails, show error and the useEffect will likely revert the local state
+        // back to the server's version when Redux is updated (or on next component load)
         throw new Error(resData?.message || "Delete failed");
       }
     } catch (error) {
@@ -243,11 +317,13 @@ const ExperienceHistory = ({ userId, experienceHistory, about }) => {
           error?.response?.data?.message ||
           "Failed to delete experience. Please try again.",
       });
+      // The useEffect should handle syncing state on error, but a manual refetch could be added here if needed
     } finally {
-      setIsSaving(false);
+      setIsSaving(false); // End saving state
     }
   };
 
+  // updateExperienceHistory function remains the same, called by add/delete handlers
   const updateExperienceHistory = async (userId, experienceData) => {
     const computedYears = calculateExperienceYears(experienceData);
     try {
@@ -266,6 +342,8 @@ const ExperienceHistory = ({ userId, experienceHistory, about }) => {
     }
   };
 
+  // No separate handleEditClick; we open the same modal (pre-filled) when user clicks the left info area of any job
+  // NOTE: This does not change visible UI elements — only adds the ability to open modal for editing.
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
       <Box p={2}>
@@ -277,6 +355,8 @@ const ExperienceHistory = ({ userId, experienceHistory, about }) => {
             alignItems: "center",
           }}
         >
+          {" "}
+          {/* Added alignItems */}
           <AlertModal
             open={alert.open}
             onClose={() => setAlert({ ...alert, open: false })}
@@ -285,6 +365,8 @@ const ExperienceHistory = ({ userId, experienceHistory, about }) => {
             message={alert.message}
           />
           <Tabs value={0} sx={{ mb: 0 }}>
+            {" "}
+            {/* Removed mb from Tabs */}
             <Tab
               sx={{
                 "&.MuiTab-root": {
@@ -297,8 +379,10 @@ const ExperienceHistory = ({ userId, experienceHistory, about }) => {
               label="Experience"
             />
           </Tabs>
+          {/* Removed Edit/Save buttons from the header */}
         </Box>
 
+        {/* Existing Experiences Display */}
         {experiences.length === 0 ? (
           <Paper
             sx={{
@@ -315,6 +399,7 @@ const ExperienceHistory = ({ userId, experienceHistory, about }) => {
               sx={{
                 fontFamily: "Poppins",
                 fontWeight: 550,
+
                 mb: 1,
                 color: "#24252C",
               }}
@@ -353,11 +438,13 @@ const ExperienceHistory = ({ userId, experienceHistory, about }) => {
                   display="flex"
                   sx={{
                     width: { xs: "100%", sm: "90%", md: "60%", lg: "60%" },
-                  }}
+                  }} // Adjusted width
                   flexDirection={{ xs: "column", sm: "row" }}
                   gap={2}
                   justifyContent={"space-between"}
-                  alignItems={{ xs: "flex-start", sm: "center" }}
+                  alignItems={{ xs: "flex-start", sm: "center" }} // Adjusted alignment for smaller screens
+                  // NEW: clicking the left info area opens modal pre-filled for editing
+                  onClick={() => handleOpenModal(index)}
                 >
                   <Box>
                     <Typography
@@ -365,7 +452,7 @@ const ExperienceHistory = ({ userId, experienceHistory, about }) => {
                         color: "#24252C",
                         fontFamily: "Poppins",
                         fontSize: "14px",
-                        fontWeight: 600,
+                        fontWeight: 600, // Added some weight
                       }}
                     >
                       Company Name:
@@ -419,6 +506,7 @@ const ExperienceHistory = ({ userId, experienceHistory, about }) => {
                         fontSize: "12px",
                       }}
                     >
+                      {/* Format date string for display */}
                       {exp.from ? dayjs(exp.from).format("MMM YYYY") : ""}
                     </Typography>
                   </Box>
@@ -440,6 +528,7 @@ const ExperienceHistory = ({ userId, experienceHistory, about }) => {
                         fontSize: "12px",
                       }}
                     >
+                      {/* Format date string for display */}
                       {exp.to ? dayjs(exp.to).format("MMM YYYY") : ""}
                     </Typography>
                   </Box>
@@ -451,6 +540,13 @@ const ExperienceHistory = ({ userId, experienceHistory, about }) => {
                     mt: { xs: 2, sm: 0 },
                   }}
                 >
+                  {/* Show delete button always */}
+                  <IconButton
+                    onClick={() => handleOpenModal(index)}
+                    disabled={isSaving}
+                  >
+                    <Edit />
+                  </IconButton>
                   <IconButton
                     onClick={() => handleDeleteExperience(index)}
                     disabled={isSaving}
@@ -459,7 +555,9 @@ const ExperienceHistory = ({ userId, experienceHistory, about }) => {
                   </IconButton>
                 </Box>
               </Box>
-              {exp.description && (
+              {/* Description box visibility controlled by `desc` state */}
+              {/* NOTE: This currently toggles the description for ALL entries simultaneously based on the single `desc` state. If you want per-experience description toggle, `desc` should be an array or object. Keeping as is for now based on original code. */}
+              {exp.description && ( // Only show description box if description exists
                 <Box sx={{ mt: 1 }}>
                   <Typography
                     sx={{
@@ -477,7 +575,7 @@ const ExperienceHistory = ({ userId, experienceHistory, about }) => {
                       fontFamily: "Poppins",
                       fontSize: "12px",
                       whiteSpace: "pre-wrap",
-                    }}
+                    }} // Preserve line breaks
                   >
                     {exp.description}
                   </Typography>
@@ -487,27 +585,32 @@ const ExperienceHistory = ({ userId, experienceHistory, about }) => {
           ))
         )}
 
+        {/* --- ADD EXPERIENCE BUTTON (Bottom Left) --- */}
         <Box sx={{ mt: 3, mb: 2 }}>
+          {" "}
+          {/* Added margin for spacing */}
           <Button
-            variant="contained"
+            variant="contained" // or 'outlined'
             startIcon={
               isSaving ? (
                 <CircularProgress size={20} color="inherit" />
               ) : (
                 <Add />
               )
-            }
-            onClick={handleOpenModal}
-            disabled={isSaving}
+            } // Show loader icon when saving
+            onClick={() => handleOpenModal()} // open in add mode
+            disabled={isSaving} // Disable button while saving any experience
             sx={{
               textTransform: "none",
-              fontFamily: "Poppins",
+              fontFamily: "Poppins", // Apply Poppins font
+              // justifyContent: 'flex-start', // Align icon/text to the left if desired
             }}
           >
             {isSaving ? "Adding Experience..." : "Add Experience"}
           </Button>
         </Box>
 
+        {/* --- ADD EXPERIENCE MODAL --- */}
         <Modal
           open={isModalOpen}
           onClose={handleCloseModal}
@@ -533,8 +636,8 @@ const ExperienceHistory = ({ userId, experienceHistory, about }) => {
                     fullWidth
                     value={newExperience.companyName}
                     onChange={handleInputChange}
-                    required
-                    error={isModalOpen && !newExperience.companyName}
+                    required // Added required
+                    error={isModalOpen && !newExperience.companyName} // Simple validation feedback
                     helperText={
                       isModalOpen && !newExperience.companyName
                         ? "Required"
@@ -549,8 +652,8 @@ const ExperienceHistory = ({ userId, experienceHistory, about }) => {
                     fullWidth
                     value={newExperience.designation}
                     onChange={handleInputChange}
-                    required
-                    error={isModalOpen && !newExperience.designation}
+                    required // Added required
+                    error={isModalOpen && !newExperience.designation} // Simple validation feedback
                     helperText={
                       isModalOpen && !newExperience.designation
                         ? "Required"
@@ -571,12 +674,12 @@ const ExperienceHistory = ({ userId, experienceHistory, about }) => {
                       textField: {
                         fullWidth: true,
                         size: "medium",
-                        error: !!dateError,          
+                        error: !!dateError, // ✅ show error
                         helperText: dateError,
                         inputProps: {
-                          readOnly: true,
+                          readOnly: true, // Prevent manual typing
                         },
-                        onKeyDown: (e) => e.preventDefault(),
+                        onKeyDown: (e) => e.preventDefault(), // Block all keyboard input
                       },
                     }}
                   />
@@ -592,9 +695,9 @@ const ExperienceHistory = ({ userId, experienceHistory, about }) => {
                     slotProps={{
                       textField: {
                         fullWidth: true,
-                        size: "medium",
-                        error: !!dateError,          
+                        error: !!dateError, // ✅ show error
                         helperText: dateError,
+                        size: "medium",
                         inputProps: {
                           readOnly: true,
                         },
@@ -610,7 +713,7 @@ const ExperienceHistory = ({ userId, experienceHistory, about }) => {
                     label="Description"
                     fullWidth
                     multiline
-                    rows={3}
+                    rows={3} // Increased rows slightly
                     value={newExperience.description}
                     onChange={handleInputChange}
                   />
@@ -626,19 +729,19 @@ const ExperienceHistory = ({ userId, experienceHistory, about }) => {
                     </Button>
                     <Button
                       variant="contained"
-                      onClick={handleAddExperience}
+                      onClick={handleAddExperience} // This button now handles both add & edit save
                       startIcon={
                         isSaving ? (
                           <CircularProgress size={20} color="inherit" />
                         ) : (
                           <Add />
                         )
-                      }
+                      } // Show loader
                       disabled={
                         !newExperience.companyName ||
                         !newExperience.designation ||
                         isSaving
-                      }
+                      } // Disable if required fields are empty OR saving
                       sx={{ textTransform: "none" }}
                     >
                       {isSaving ? "Adding..." : "Add Experience"}
