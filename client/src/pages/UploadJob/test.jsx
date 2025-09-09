@@ -466,66 +466,6 @@ const JobUploadPage = () => {
     { value: "Other", label: "Other" },
   ];
 
-  // Handle JD Analysis (Updated to populate new screening question structure)
-  const handleAnalysis = async () => {
-    if (!formData.jobDescription.trim()) {
-      alert("Please enter Job Description to analyze.");
-      return;
-    }
-    setAnalysing(true);
-    try {
-      const response = await fetch(
-        "https://highimpacttalent.onrender.com/api-v1/ai/analyse-jd", // Verify this endpoint
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ jobDescription: formData.jobDescription }),
-        }
-      );
-      const data = await response.json();
-
-      if (data.success) {
-        setFormData((f) => ({
-          ...f,
-          requirements: Array.isArray(data.requirements)
-            ? data.requirements.filter((r) => r.trim() !== "")
-            : [],
-          qualifications: Array.isArray(data.qualifications)
-            ? data.qualifications.filter((q) => q.trim() !== "")
-            : [],
-          // Map analysis questions to the new structure
-          screeningQuestions: Array.isArray(data.screeningQuestions)
-            ? data.screeningQuestions
-                .filter((q) => q.trim() !== "")
-                .map((q) => ({
-                  question: q,
-                  questionType: "short_answer", // Default type from analysis
-                  options: [], // Analysis doesn't provide options
-                  isMandatory: false, // Default mandatory to false
-                }))
-            : [
-                {
-                  question: "",
-                  questionType: "short_answer",
-                  options: [],
-                  isMandatory: false,
-                },
-              ], // Ensure at least one empty question if analysis returns none
-        }));
-        alert(
-          "Job Description analyzed successfully! Requirements, Qualifications, and Screening Questions have been populated."
-        );
-      } else {
-        console.error("Analysis failed:", data.message || data);
-        alert(`Analysis failed: ${data.message || "Unknown error"}`);
-      }
-    } catch (err) {
-      console.error("Error calling analyse-jd API:", err);
-      alert("An error occurred during JD analysis.");
-    } finally {
-      setAnalysing(false);
-    }
-  };
 
   // Handle dynamic array field changes (requirements) - Qualifications now uses Multi-select
   const handleArrayChange = (fieldName, index, value) => {
