@@ -43,6 +43,7 @@ const EducationHistory = ({ userId, educationDetails }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [alert, setAlert] = useState({ open: false, type: "", title: "", message: "" });
+  const [alertstatus, setalertstatus] = useState(false);
 
   const [newEdu, setNewEdu] = useState({
     instituteName: "",
@@ -64,6 +65,7 @@ const EducationHistory = ({ userId, educationDetails }) => {
     const { instituteName, courseName, startYear, endYear } = newEdu;
 
     if (!instituteName || !courseName || !startYear || !endYear) {
+      setalertstatus(true); 
       return setAlert({
         open: true,
         type: "warning",
@@ -73,6 +75,7 @@ const EducationHistory = ({ userId, educationDetails }) => {
     }
 
     if (dayjs(startYear).isAfter(dayjs(endYear))) {
+      setalertstatus(true); 
       return setAlert({
         open: true,
         type: "error",
@@ -107,6 +110,7 @@ const EducationHistory = ({ userId, educationDetails }) => {
           endYear: null,
         });
         setIsModalOpen(false);
+        setalertstatus(true); 
         setAlert({
           open: true,
           type: "success",
@@ -117,6 +121,7 @@ const EducationHistory = ({ userId, educationDetails }) => {
         throw new Error(res?.data?.message || "Failed to update");
       }
     } catch (err) {
+      setalertstatus(true); 
       setAlert({
         open: true,
         type: "error",
@@ -127,6 +132,24 @@ const EducationHistory = ({ userId, educationDetails }) => {
       setIsSaving(false);
     }
   };
+
+  useEffect(() => {
+    let autoCloseTimer;
+    if (alertstatus) {
+      autoCloseTimer = setTimeout(() => {
+        setAlert({
+          open: false,
+          type: "",
+          title: "",
+          message: "",
+        });
+        setalertstatus(false);
+      }, 3000);
+    }
+    return () => {
+      if (autoCloseTimer) clearTimeout(autoCloseTimer);
+    };
+  }, [alertstatus]);
 
   const handleDelete = async (index) => {
     const updatedEducation = education.filter((_, i) => i !== index);
@@ -141,6 +164,7 @@ const EducationHistory = ({ userId, educationDetails }) => {
       if (res?.data?.success) {
         dispatch(UpdateUser(res.data.user));
         setEducation(res.data.user.educationDetails);
+        setalertstatus(true); 
         setAlert({
           open: true,
           type: "success",
@@ -151,6 +175,7 @@ const EducationHistory = ({ userId, educationDetails }) => {
         throw new Error(res?.data?.message);
       }
     } catch (err) {
+      setalertstatus(true); 
       setAlert({
         open: true,
         type: "error",
