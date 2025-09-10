@@ -59,6 +59,7 @@ const ExperienceHistory = ({ userId, experienceHistory, about }) => {
     title: "",
     message: "",
   });
+  const [alertstatus, setalertstatus] = useState(false);
   // State for the form *within the modal*
   const [newExperience, setNewExperience] = useState({
     companyName: "",
@@ -102,6 +103,24 @@ const ExperienceHistory = ({ userId, experienceHistory, about }) => {
     setDateError("");
     setIsModalOpen(true);
   };
+
+  useEffect(() => {
+  let autoCloseTimer;
+  if (alertstatus) {
+    autoCloseTimer = setTimeout(() => {
+      setAlert({
+        open: false,
+        type: "",
+        title: "",
+        message: "",
+      });
+      setalertstatus(false);
+    }, 3000);
+  }
+  return () => {
+    if (autoCloseTimer) clearTimeout(autoCloseTimer);
+  };
+}, [alertstatus]);
 
   // Handler to close the modal
   const handleCloseModal = () => {
@@ -177,6 +196,7 @@ const ExperienceHistory = ({ userId, experienceHistory, about }) => {
   // --- handleAddExperience now supports both Add and Update based on editIndex ---
   const handleAddExperience = async () => {
     if (dateError) {
+      setalertstatus(true);
       setAlert({
         open: true,
         type: "warning",
@@ -187,6 +207,7 @@ const ExperienceHistory = ({ userId, experienceHistory, about }) => {
     }
     // Basic validation
     if (!newExperience.companyName || !newExperience.designation) {
+      setalertstatus(true);
       setAlert({
         open: true,
         type: "warning",
@@ -234,6 +255,7 @@ const ExperienceHistory = ({ userId, experienceHistory, about }) => {
         dispatch(UpdateUser(resData?.user));
         setExperiences(resData?.user?.experienceHistory);
 
+        setalertstatus(true);
         setAlert({
           open: true,
           type: "success",
@@ -262,6 +284,8 @@ const ExperienceHistory = ({ userId, experienceHistory, about }) => {
         "Error while adding/updating experience:",
         error?.response?.data?.message || error.message
       );
+
+      setalertstatus(true);
       setAlert({
         open: true,
         type: "error",
@@ -293,6 +317,7 @@ const ExperienceHistory = ({ userId, experienceHistory, about }) => {
 
       if (resData?.success) {
         dispatch(UpdateUser(resData?.user)); // Update Redux which triggers useEffect
+        setalertstatus(true);
         setAlert({
           open: true,
           type: "success",
@@ -309,6 +334,7 @@ const ExperienceHistory = ({ userId, experienceHistory, about }) => {
         "Error while deleting experience:",
         error?.response?.data?.message || error.message
       );
+      setalertstatus(true);
       setAlert({
         open: true,
         type: "error",

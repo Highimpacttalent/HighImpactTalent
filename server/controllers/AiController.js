@@ -938,7 +938,7 @@ export const analyseIdealCandidate = async (req, res) => {
         success: false,
         message:
           "Invalid input: 'jobDescription' (string) is required in the request body.",
-      });
+      });                   
     }
 
     // validate that bodySkills is an array of strings
