@@ -307,7 +307,7 @@ const JobCard = ({ job, flag = false, enable = false, profileComplete = false })
             <Box display="flex" alignItems="center" gap={1}>
               <Business color="#404258" />
               <Typography fontWeight={500} sx={{ color: "#24252C", fontFamily: "Poppins" }}>
-                {job?.company?.name}
+               {job?.hide ? "Confidential Company" : job?.company?.name}
               </Typography>
             </Box>
           </Box>

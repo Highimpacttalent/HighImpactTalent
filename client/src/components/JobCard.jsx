@@ -463,7 +463,7 @@ const JobCard = ({ job, flag = false, enable = false, profileComplete = null }) 
               color="#404258"
               fontFamily="Poppins"
             >
-              {job?.company?.name}
+              {job?.hide ? "Confidential Company" : job?.company?.name}
             </Typography>
           </Box>
         </Box>
@@ -578,7 +578,7 @@ const JobCard = ({ job, flag = false, enable = false, profileComplete = null }) 
               fontWeight={600}
               sx={{ color: "#404258", fontFamily: "Poppins" }}
             >
-              {job?.company?.name}
+              {job?.hide ? "Confidential Company" : job?.company?.name}
             </Typography>
           </Box>
         </Box>

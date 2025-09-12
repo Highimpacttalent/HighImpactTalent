@@ -245,7 +245,7 @@ const JobCard = ({ job, flag = false, enable = false }) => {
                   color="#404258"
                   fontFamily="Poppins"
                 >
-                  {job?.company?.name}
+                  {job?.hide ? "Confidential Company" : job?.company?.name}
                 </Typography>
                 {isAlreadyApplied && (
                                 <Chip

@@ -238,7 +238,7 @@ const JobUploadPage = () => {
   // Initial formData state matching backend schema and original fields
   const [formData, setFormData] = useState({
     jobTitle: "", // string
-    companyType: "N/A",// string
+    companyType: "N/A", // string
     jobLocation: "", // string (set from city select/custom)
     salary: { minSalary: "", maxSalary: "" }, // object
     salaryCategory: "", // string
@@ -272,6 +272,7 @@ const JobUploadPage = () => {
     category: "N/A", // string - Now handled by Select
     functionalArea: "N/A", // string - Now handled by Select
     isPremiumJob: false, // boolean
+    hide: false,
   });
 
   const [experienceGapMessage, setExperienceGapMessage] = useState("");
@@ -321,7 +322,6 @@ const JobUploadPage = () => {
     }
   }, [formData.experience.minExperience, formData.experience.maxExperience]);
 
-
   // Generic handler for simple text/number/single-select/radio fields
   // Modified to also handle react-select single value changes by expecting an 'event-like' object
   const handleChange = (e) => {
@@ -360,66 +360,72 @@ const JobUploadPage = () => {
 
   // Handler for TextField based Min/Max Range fields (salary)
   const handleRangeInputChange = (field, type, value) => {
-  const numValue = value === "" ? "" : Number(value);
+    const numValue = value === "" ? "" : Number(value);
 
-  // Prevent invalid values (negative numbers and zero for salary fields)
-  if (value !== "" && (isNaN(numValue) || numValue < 0 || (field === "salary" && numValue === 0))) {
-    // Optionally, set an error message here or just prevent the update
-    console.warn(`Invalid input for ${field} ${type}:`, value);
-    return; // Stop execution if validation fails
-  }
-
-  // Update the form data first
-  const updatedFormData = {
-    ...formData,
-    [field]: {
-      ...formData[field],
-      [type]: numValue,
-    },
-  };
-
-  setFormData(updatedFormData);
-
-  // Validation: for salary only
-  if (field === "salary") {
-    const currentMin =
-      type === "minSalary" ? numValue : updatedFormData.salary.minSalary;
-    const currentMax =
-      type === "maxSalary" ? numValue : updatedFormData.salary.maxSalary;
-
-    const newErrors = { ...salaryErrors };
-
-    // Max cap validation
-    if (numValue > 1000) {
-      newErrors[type] = "Cannot exceed 1000. Please mention in INR Lakhs & not INR";
-    } else if (numValue === 0 && field === "salary") { // Explicitly handle zero if it somehow bypasses earlier check
-      newErrors[type] = "Salary cannot be zero.";
-    }
-    else {
-      newErrors[type] = "";
-    }
-
-    // Min > Max check
+    // Prevent invalid values (negative numbers and zero for salary fields)
     if (
-      currentMin !== "" &&
-      currentMax !== "" &&
-      Number(currentMin) > Number(currentMax)
+      value !== "" &&
+      (isNaN(numValue) ||
+        numValue < 0 ||
+        (field === "salary" && numValue === 0))
     ) {
-      newErrors.minSalary = "Min salary cannot be greater than max salary";
-      newErrors.maxSalary = "Max salary cannot be less than min salary";
-    } else {
-      // Clear if previously errored and now valid
-      if (
-        newErrors.minSalary === "Min salary cannot be greater than max salary"
-      )
-        newErrors.minSalary = "";
-      if (newErrors.maxSalary === "Max salary cannot be less than min salary")
-        newErrors.maxSalary = "";
+      // Optionally, set an error message here or just prevent the update
+      console.warn(`Invalid input for ${field} ${type}:`, value);
+      return; // Stop execution if validation fails
     }
 
-    setSalaryErrors(newErrors);
-  }
-};
+    // Update the form data first
+    const updatedFormData = {
+      ...formData,
+      [field]: {
+        ...formData[field],
+        [type]: numValue,
+      },
+    };
+
+    setFormData(updatedFormData);
+
+    // Validation: for salary only
+    if (field === "salary") {
+      const currentMin =
+        type === "minSalary" ? numValue : updatedFormData.salary.minSalary;
+      const currentMax =
+        type === "maxSalary" ? numValue : updatedFormData.salary.maxSalary;
+
+      const newErrors = { ...salaryErrors };
+
+      // Max cap validation
+      if (numValue > 1000) {
+        newErrors[type] =
+          "Cannot exceed 1000. Please mention in INR Lakhs & not INR";
+      } else if (numValue === 0 && field === "salary") {
+        // Explicitly handle zero if it somehow bypasses earlier check
+        newErrors[type] = "Salary cannot be zero.";
+      } else {
+        newErrors[type] = "";
+      }
+
+      // Min > Max check
+      if (
+        currentMin !== "" &&
+        currentMax !== "" &&
+        Number(currentMin) > Number(currentMax)
+      ) {
+        newErrors.minSalary = "Min salary cannot be greater than max salary";
+        newErrors.maxSalary = "Max salary cannot be less than min salary";
+      } else {
+        // Clear if previously errored and now valid
+        if (
+          newErrors.minSalary === "Min salary cannot be greater than max salary"
+        )
+          newErrors.minSalary = "";
+        if (newErrors.maxSalary === "Max salary cannot be less than min salary")
+          newErrors.maxSalary = "";
+      }
+
+      setSalaryErrors(newErrors);
+    }
+  };
 
   // Handler for React-Select Multi-Select fields (Skills, Tags, Qualifications)
   const handleMultiSelectChange = (fieldName, selectedOptions) => {
@@ -465,7 +471,6 @@ const JobUploadPage = () => {
       .map((city) => ({ value: city, label: city })),
     { value: "Other", label: "Other" },
   ];
-
 
   // Handle dynamic array field changes (requirements) - Qualifications now uses Multi-select
   const handleArrayChange = (fieldName, index, value) => {
@@ -646,18 +651,25 @@ const JobUploadPage = () => {
       "salaryCategory",
     ];
 
-
-    if (formData.experience.minExperience === "" || formData.experience.maxExperience === "") {
-        alert("Please provide both minimum and maximum years of experience.");
-        return;
+    if (
+      formData.experience.minExperience === "" ||
+      formData.experience.maxExperience === ""
+    ) {
+      alert("Please provide both minimum and maximum years of experience.");
+      return;
     }
 
     // UPDATED: Simplified Salary Validation
     // Require min/max salary UNLESS the category is "Confidential"
-    if (formData.salaryCategory !== "Confidential" && (formData.salary.minSalary === "" || formData.salary.maxSalary === "")) {
-         alert("Please provide both minimum and maximum annual salary, or select 'Confidential'.");
-         return;
-     }
+    if (
+      formData.salaryCategory !== "Confidential" &&
+      (formData.salary.minSalary === "" || formData.salary.maxSalary === "")
+    ) {
+      alert(
+        "Please provide both minimum and maximum annual salary, or select 'Confidential'."
+      );
+      return;
+    }
 
     for (const field of requiredFields) {
       const value = formData[field];
@@ -725,8 +737,6 @@ const JobUploadPage = () => {
     if (!validateRange("salary", "salary")) return;
     if (!validateRange("experience", "experience")) return;
     if (!validateRange("graduationYear", "batch year")) return;
-
-    
 
     // Validation for screening questions
     const validScreeningQuestions = formData.screeningQuestions.filter((q) => {
@@ -858,7 +868,7 @@ const JobUploadPage = () => {
         sx={{
           display: "flex",
           flexDirection: { xs: "column", md: "row" },
-          justifyContent: "center", 
+          justifyContent: "center",
           gap: { xs: 3, md: 4 },
           mb: 6,
         }}
@@ -1122,7 +1132,10 @@ const JobUploadPage = () => {
 
           {/* Job Location - Kept existing react-select implementation */}
           <div className="mb-4">
-            <Typography sx={{ ...formLabelStyle }}>Job Location (Optional — skip this if you're hiring for a remote position)</Typography>
+            <Typography sx={{ ...formLabelStyle }}>
+              Job Location (Optional — skip this if you're hiring for a remote
+              position)
+            </Typography>
             <Select
               options={filteredCities}
               value={selectedCity}
@@ -1276,9 +1289,7 @@ const JobUploadPage = () => {
 
           {/* Graduation Year Range (Min - Max Batch) - Using Selects matching image & backend structure */}
           <div className="mb-4">
-            <Typography sx={{ ...formLabelStyle }}>
-              Graduation Year 
-            </Typography>
+            <Typography sx={{ ...formLabelStyle }}>Graduation Year</Typography>
             <Grid container spacing={2}>
               <Grid item xs={12} sm={6}>
                 <Select
@@ -1357,7 +1368,7 @@ const JobUploadPage = () => {
 
             <Typography
               variant="body2"
-              sx={{ mb: 2, fontSize: "0.875rem" ,color:"textSecondary"}}
+              sx={{ mb: 2, fontSize: "0.875rem", color: "textSecondary" }}
             >
               Added Questions (
               {
@@ -1766,6 +1777,44 @@ const JobUploadPage = () => {
               sx={{ mr: 0 }}
             />
           </Box> */}
+          {/* Confidential Job Checkbox */}
+          <Box
+            sx={{
+              mt: 3,
+              p: 2,
+              border: "1px solid #d1d5db",
+              borderRadius: 1,
+              display: "flex",
+              alignItems: "center",
+            }}
+          >
+            <FormControlLabel
+              control={
+                <Checkbox
+                  name="hide"
+                  checked={formData.hide}
+                  onChange={handleCheckboxChange}
+                  size="medium"
+                  sx={{
+                    color: "#3C7EFC",
+                    "&.Mui-checked": { color: "#3C7EFC" },
+                  }}
+                />
+              }
+              label={
+                <Typography
+                  sx={{
+                    fontWeight: 600,
+                    fontSize: "0.9rem",
+                    color: "#374151",
+                    fontFamily: "Satoshi",
+                  }}
+                >
+                  Make this job confidential
+                </Typography>
+              }
+            />
+          </Box>
 
           {/* Form Buttons - Post Job, Cancel */}
           <Box sx={{ display: "flex", gap: 2, mt: 4, mb: 2 }}>
@@ -1822,7 +1871,7 @@ const JobUploadPage = () => {
         {/* Guidelines Box - Positioned next to form on medium+ screens */}
         <Box
           sx={{
-            display: 'none',
+            display: "none",
             width: "40%",
             flexShrink: 0,
             mt: { xs: 0, md: "4rem" },

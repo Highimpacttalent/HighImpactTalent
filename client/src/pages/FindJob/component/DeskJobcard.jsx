@@ -239,7 +239,7 @@ const JobCard = ({ job, flag = false }) => {
                   fontFamily: "Poppins",
                 }}
               >
-                {job?.company?.name}
+              {job?.hide ? "Confidential Company" : job?.company?.name}
               </Typography>
               {isAlreadyApplied && (
                 <Chip

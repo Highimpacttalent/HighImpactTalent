@@ -189,7 +189,7 @@ export default function JobEditForm() {
       },
     ], // Structure based on UploadJob example
     experience: { minExperience: "", maxExperience: "" }, // Kept as TextFields based on original edit UI
-    companyType: "N/A",  // Acts as Industry, changed to Select based on UploadJob example
+    companyType: "N/A", // Acts as Industry, changed to Select based on UploadJob example
     applicationLink: "",
     graduationYear: { minBatch: "", maxBatch: "" }, // Kept as TextFields based on original edit UI
     tags: ["N/A"], // Creatable Multi-select
@@ -203,6 +203,7 @@ export default function JobEditForm() {
     category: "N/A", // Changed to Select
     functionalArea: "N/A", // Changed to Select
     isPremiumJob: false, // Switch
+    hide: false,
   });
 
   const [notification, setNotification] = useState({
@@ -568,6 +569,7 @@ export default function JobEditForm() {
           category: fetchedJob.category || "",
           functionalArea: fetchedJob.functionalArea || "",
           isPremiumJob: fetchedJob.isPremiumJob ?? false,
+          hide: fetchedJob.hide ?? false,
         });
 
         // Add one empty screening question field if the filtered list is still empty
@@ -1228,6 +1230,7 @@ export default function JobEditForm() {
       category: jobData.category,
       functionalArea: jobData.functionalArea,
       isPremiumJob: jobData.isPremiumJob,
+      hide: jobData.hide,
     };
 
     console.log("Prepared Data for Save:", dataToSend);
@@ -1537,7 +1540,6 @@ export default function JobEditForm() {
                         styles={customSelectStyle}
                       />
                     </Grid>
-
 
                     <Grid item xs={12} md={4}>
                       <Box>
@@ -2312,6 +2314,27 @@ export default function JobEditForm() {
                     sx={{ mb: 2 }}
                     InputLabelProps={{ shrink: !!jobData.applicationLink }}
                     size="small"
+                  />
+                </Box>
+
+                {/* Confidential Job Checkbox */}
+                <Box sx={{ mb: 3 }}>
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={jobData.hide}
+                        onChange={(e) =>
+                          handleInputChange("hide", e.target.checked)
+                        }
+                        color="primary"
+                        size="small"
+                      />
+                    }
+                    label={
+                      <Typography variant="body2" sx={{ fontSize: "0.875rem" }}>
+                        Make this job confidential
+                      </Typography>
+                    }
                   />
                 </Box>
 

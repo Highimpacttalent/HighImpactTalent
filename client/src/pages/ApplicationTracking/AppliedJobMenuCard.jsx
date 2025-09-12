@@ -119,7 +119,7 @@ const AppliedJobMenuCard = ({ job, flag = false, enable = false }) => {
             fontSize: "14px",
           }}
         >
-          {job?.company?.name || "Company"} • {job?.job?.jobLocation || "City, state"}
+          {job?.job?.hide ? "Confidential Company" : job?.company?.name} • {job?.job?.jobLocation || "City, state"}
         </Typography>
 
         {/* Job Details Chips */}
