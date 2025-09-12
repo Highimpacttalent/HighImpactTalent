@@ -17,6 +17,7 @@ export const createJob = async (req, res, next) => {
     const {
       jobTitle,
       jobLocation,
+      hide, 
       salary,
       salaryCategory,
       salaryConfidential,
@@ -56,6 +57,7 @@ export const createJob = async (req, res, next) => {
     // Create job post object
     const jobPost = {
       jobTitle,
+      hide, 
       jobLocation: jobLocation || 'Hybrid',
       ...(salary && !salaryConfidential && { salary }),
       salaryConfidential,
