@@ -114,27 +114,27 @@ export const getResumes = async (req, res, next) => {
     }
 };
 
-// export const getResumeById = async (req, res, next) => {
-//   try {
-//     const { resumeId } = req.body;
-//     console.log(resumeId)
+export const getResumeById = async (req, res, next) => {
+  try {
+    const { resumeId } = req.body;
+    console.log(resumeId)
 
-//     const resume = await ResumePool.findById(resumeId);
+    const resume = await ResumePool.findById(resumeId);
 
-//     if (!resume) {
-//       return res.status(404).json({
-//         success: false,
-//         message: "Resume not found",
-//       });
-//     }
+    if (!resume) {
+      return res.status(404).json({
+        success: false,
+        message: "Resume not found",
+      });
+    }
 
-//     res.status(200).json({
-//       success: true,
-//       data: resume,
-//     });
-//   } catch (error) {
-//     next(error);
-//   }
-// };
+    res.status(200).json({
+      success: true,
+      data: resume,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
 
 
