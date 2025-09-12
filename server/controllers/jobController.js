@@ -474,6 +474,7 @@ export const getJobPosts = async (req, res, next) => {
         createdAt: 1,
         status: 1,
         company: 1,
+        hide: 1, 
         // Only include jobDescription for search purposes, can be excluded if not needed in frontend
         jobDescription: 1,
         // Include application count instead of full array
@@ -704,6 +705,7 @@ export const getJobById = async (req, res, next) => {
             isPremiumJob: 1,
             createdAt: 1,
             company: 1,
+            hide: 1,
             applicationCount: { $size: { $ifNull: ["$application", []] } }
           }
         },
