@@ -1123,7 +1123,7 @@ export const ApplicationStatusUpdate = async (req, res) => {
     const jobTitle = application.job?.jobTitle || "Position";
     const companyName = application.company?.name || "Company";
 
-    await sendStatusUpdateEmail(email, status, name, jobTitle, companyName);
+    if(status != "Application Viewed") await sendStatusUpdateEmail(email, status, name, jobTitle, companyName);
 
     res.status(200).json({
       success: true,
